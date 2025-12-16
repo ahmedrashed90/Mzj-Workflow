@@ -377,15 +377,22 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
 
 <style>
-  /* ===== Sales Safe Refactor: hide legacy topbar/tabs (keep DOM for JS) ===== */
+  /* ===== Sales Safe Refactor: hide legacy topbar ONLY (keep #tabsBar visible) ===== */
   .legacy-sales .topbar,
-  .legacy-sales .tabs,
+  .legacy-sales .topbar .tabs,
   .legacy-sales .nav-tabs,
   .legacy-sales .header,
   .legacy-sales header:not(.mzj-topbar){display:none !important;}
 
   /* Keep content spacing nice */
   .legacy-sales{padding-top: 6px;}
+</style>
+
+
+<style>
+  /* Ensure the functional tabs bar (بحث عن طلب / كل الطلبات) is visible when JS enables it */
+  .legacy-sales #tabsBar{ display:flex !important; }
+  .legacy-sales #tabsBar[style*="display: none"]{ display:none !important; } /* respect JS when it hides */
 </style>
 
 </head>

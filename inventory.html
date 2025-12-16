@@ -614,41 +614,64 @@
   .cell-notes:hover{background:#fff3e8}
 
 </style>
+<link rel="stylesheet" href="./mzj-ui.css"/>
 </head>
-<body>
+<body class="mzj"> 
 
-<!-- Topbar + Tabs -->
-<div class="topbar">
-  <div class="topbar-inner">
+<!-- MZJ Unified Topbar -->
+<header class="mzj-topbar">
+  <div class="topbar-left">
+    <button class="icon-btn" id="mzjSidebarBtn" aria-label="القائمة">
+      <i class="fa-solid fa-bars"></i>
+    </button>
     <div class="brand">
-      <div class="logo-box">
-        <i class="fa-solid fa-star"></i>
+      <div class="brand-mark">MZJ</div>
+      <div class="brand-text">
+        <div class="brand-title">محمد بن ذعار العجمي للسيارات</div>
+        <div class="brand-sub">Workspace</div>
       </div>
-      <div>
-        <h1>إدارة المخزون</h1>
-        <small>مجموعة محمد بن ذعار العجمي للسيارات</small>
-      </div>
-    </div>
-    <div class="tabs">
-      <a class="tab" href="admin.html">الإدارة</a>
-      <a class="tab active" href="inventory.html">المخزون</a>
-      <a class="tab" href="dashboard.html">الداش بورد</a>
-      <a class="tab" href="vt.html">نقل السيارات</a>
-      <a class="tab" href="photoshoot-user.html">إدارة الطلبات</a>
-      <a class="tab" href="cars.html">كل السيارات</a>
-      <a class="tab" href="Activity.html">سجل النشاط</a>
-    </div>
-    <div class="tabs" style="gap:10px">
-      <div class="status-badge" id="connBadge">
-        <span class="dot warn" id="connDot"></span>
-        <span id="connText">جارِ الاتصال…</span>
-      </div>
-      <button class="btn btn-ghost" id="btnSignOut" style="display:none">
-        <i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج
-      </button>
     </div>
   </div>
-</div>
+
+  <div class="topbar-center">
+    <div class="mzj-breadcrumb">
+      <span class="crumb">الرئيسية</span>
+      <i class="fa-solid fa-chevron-left"></i>
+      <span class="crumb current">المخزون</span>
+    </div>
+  </div>
+
+  <div class="topbar-right">
+    <div class="mzj-chip">
+      <span class="dot warn" id="connDot" style="margin-inline-start:2px"></span>
+      <span id="connText">جارِ الاتصال…</span>
+    </div>
+    <button class="mzj-btn mzj-btn-ghost" id="btnSignOut" style="display:none" type="button">
+      <i class="fa-solid fa-right-from-bracket"></i>
+      <span>تسجيل الخروج</span>
+    </button>
+  </div>
+</header>
+
+<div class="mzj-shell" id="mzjShell">
+  <aside class="mzj-sidebar" id="mzjSidebar">
+    <div class="side-section">
+      <div class="side-title">الإدارة</div>
+      <nav class="side-nav">
+        <a class="side-link tab" href="admin.html"><i class="fa-solid fa-screwdriver-wrench"></i><span>الإدارة</span></a>
+        <a class="side-link tab active" href="inventory.html"><i class="fa-solid fa-warehouse"></i><span>المخزون</span></a>
+        <a class="side-link tab" href="dashboard.html"><i class="fa-solid fa-gauge"></i><span>الداش بورد</span></a>
+        <a class="side-link tab" href="vt.html"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
+        <a class="side-link tab" href="photoshoot-user.html"><i class="fa-solid fa-diagram-project"></i><span>إدارة الطلبات</span></a>
+        <a class="side-link tab" href="cars.html"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
+        <a class="side-link tab" href="Activity.html"><i class="fa-regular fa-clipboard"></i><span>سجل النشاط</span></a>
+        <a class="side-link tab" href="sales.html"><i class="fa-solid fa-receipt"></i><span>المبيعات</span></a>
+      </nav>
+    </div>
+  </aside>
+
+  <div class="mzj-backdrop" id="mzjBackdrop"></div>
+  <main class="mzj-content">
 
 <!-- Auth Gate -->
 <div id="authGate" class="auth-wrap">
@@ -860,6 +883,11 @@
   </div>
 </div>
 
+
+  </main>
+</div>
+
+<script src="./mzj-ui.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <!-- Firebase (Modules) -->

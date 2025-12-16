@@ -1,28 +1,114 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>MZJ Mobile — الداش بورد</title>
+  <meta name="color-scheme" content="light"/>
+  <title>لوحة المؤشرات — MZJ Cars</title>
+
+  <link rel="prefetch" href="admin.html">
+  <link rel="prefetch" href="inventory.html">
+  <link rel="prefetch" href="dashboard.html">
+  <link rel="prefetch" href="vt.html">
+  <link rel="prefetch" href="photoshoot-user.html">
+  <link rel="prefetch" href="cars.html">
+  <link rel="prefetch" href="Activity.html">
+  <link rel="prefetch" href="sales.html">
+
+  <style id="noFlash">
+html{background:#fff8ef}
+body{opacity:0}
+</style>
 
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
 
-  <link rel="prefetch" href="admin.html">
-<link rel="prefetch" href="inventory.html">
-<link rel="prefetch" href="dashboard.html">
-<link rel="prefetch" href="vt.html">
-<link rel="prefetch" href="photoshoot-user.html">
-<link rel="prefetch" href="cars.html">
-<link rel="prefetch" href="Activity.html">
-<style id="noFlash">
-html{background:#fff8ef}
-body{opacity:0}
-</style>
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <!-- UI shared files -->
+  <link rel="stylesheet" href="./mzj-ui.css"/>
 
-<style>
+  <style>
+  /* ===== Sidebar-only Mobile Shell (no topbar) ===== */
+  :root{
+    --brown:#3e2420; --beige:#bc8f74; --cream:#fff8ef;
+    --text:#1f2937; --muted:#6b7280; --line:#e8e5e2;
+    --card:#ffffff; --bg:#faf7f3; --radius:14px;
+    --shadow:0 12px 28px rgba(0,0,0,.06);
+    --ok:#16a34a; --danger:#ef4444; --info:#0ea5e9; --warn:#f59e0b;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:"Tajawal",system-ui,Arial}
+
+  .mzj-shell{display:flex;min-height:100vh;overflow:hidden}
+  .mzj-sidebar{
+    width:260px;background:#fff;border-left:1px solid var(--line);
+    padding:16px 12px;flex-shrink:0
+  }
+  .side-title{font-weight:900;color:var(--brown);margin:0 0 10px}
+  .side-link{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 12px;border-radius:12px;
+    text-decoration:none;color:#111;font-weight:800;
+    border:1px solid transparent;
+  }
+  .side-link i{color:var(--beige)}
+  .side-link.active,.side-link:hover{background:var(--cream);border-color:var(--line);color:var(--brown)}
+
+  .mzj-content{flex:1;min-width:0}
+  .mzj-page{padding:14px;max-width:1280px;margin:0 auto}
+
+  /* Mobile sidebar */
+  @media (max-width:900px){
+    .mzj-sidebar{position:fixed;inset:0 auto 0 0;transform:translateX(100%);transition:.25s;z-index:1000}
+    .mzj-sidebar.open{transform:translateX(0)}
+    .mzj-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;z-index:900}
+    .mzj-backdrop.show{display:block}
+    .mzj-page{padding:12px}
+  }
+
+  /* Floating menu + status chip */
+  .fab-menu{
+    position:fixed;bottom:16px;left:16px;
+    width:54px;height:54px;border-radius:999px;border:none;
+    background:var(--brown);color:#fff;font-size:20px;
+    box-shadow:0 14px 34px rgba(0,0,0,.22);
+    z-index:1100;
+  }
+  .conn-chip{
+    position:fixed;bottom:16px;right:16px;
+    display:flex;align-items:center;gap:8px;
+    background:#fff;border:1px solid var(--line);
+    border-radius:999px;padding:10px 12px;
+    box-shadow:0 10px 24px rgba(0,0,0,.12);
+    z-index:1100;
+    max-width:min(92vw,520px);
+    overflow:hidden;
+  }
+  .conn-chip span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dot{width:10px;height:10px;border-radius:999px;background:var(--warn)}
+  .dot.ok{background:var(--ok)} .dot.err{background:var(--danger)} .dot.warn{background:var(--warn)}
+
+  /* ===== Bring dashboard cards to mobile portrait ===== */
+  .container{max-width:100%;margin:0;padding:0;display:grid;gap:14px}
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media (max-width:1100px){.cards{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:680px){.cards{grid-template-columns:1fr}}
+
+  /* Make modal full width on mobile */
+  .modal{width:min(1400px,98vw);max-height:90vh}
+  @media(max-width:680px){
+    .modal{width:96vw;border-radius:14px}
+    .modal header{flex-direction:column;align-items:stretch;gap:8px}
+    #modalSearch{min-width:unset !important;width:100%}
+  }
+
+  /* Table wrap mobile */
+  .table-wrap{border:1px solid var(--line);border-radius:14px;overflow:auto;-webkit-overflow-scrolling:touch;background:#fff}
+  table{min-width:980px}
+
+  /* Keep the original dashboard styles (buttons, cards, modal, etc.) */
+  
   :root{
     --brown:#3e2420; --beige:#bc8f74; --cream:#fff8ef;
     --text:#1f2937; --muted:#6b7280; --line:#e8e5e2;
@@ -215,127 +301,33 @@ tr:has(.tag[data-status="مكتملة"]){
 }
 
 tr:hover{ filter: brightness(0.98); }
-</style>
-  <link rel="stylesheet" href="./mzj-ui.css" />
 
-<style>
-  /* ===== Dashboard Safe Refactor: hide legacy topbar/tabs (keep DOM for JS) ===== */
-  .legacy-dash .dashboard-topbar{display:none !important;}
-  .legacy-dash .topbar,
-  .legacy-dash .tabs,
-  .legacy-dash .nav-tabs,
-  .legacy-dash .header,
-  .legacy-dash header:not(.mzj-topbar){display:none !important;}
-  .legacy-dash{padding-top: 6px;}
-</style>
-
-  <link rel="stylesheet" href="./mzj-mobile-ui.css"/>
+  </style>
 </head>
-<body class="mzj-mobile">
-  <header class="mzj-m-topbar" id="mzjTopbar">
-    <div class="mzj-m-brand">
-      <div class="mzj-m-mark">MZJ</div>
-      <div class="mzj-m-brandtext">
-        <div class="mzj-m-title">الداش بورد</div>
-        <div class="mzj-m-sub">Workspace Mobile</div>
-      </div>
-    </div>
-    <div class="mzj-m-chip"><i class="fa-regular fa-clock"></i><span id="mzjNow">—</span></div>
-  </header>
 
-  <main class="mzj-m-page">
+<body data-page="dashboard">
 
+<div class="mzj-shell">
+  <!-- Sidebar -->
+  <aside class="mzj-sidebar" id="mzjSidebar">
+    <h3 class="side-title">القائمة</h3>
 
-  <!-- MZJ Unified Topbar -->
-  <header class="mzj-topbar">
-    <div class="topbar-left">
-      <button class="icon-btn" id="mzjSidebarBtn" aria-label="القائمة"><i class="fa-solid fa-bars"></i></button>
-      <div class="brand">
-        <div class="brand-mark">MZJ</div>
-        <div class="brand-text">
-          <div class="brand-title">محمد بن ذعار العجمي للسيارات</div>
-          <div class="brand-sub">Workspace</div>
-        </div>
-      </div>
-    </div>
-    <div class="topbar-center">
-      <div class="mzj-breadcrumb">
-        <span class="crumb">الرئيسية</span>
-        <i class="fa-solid fa-chevron-left"></i>
-        <span class="crumb current">الداش بورد</span>
-      </div>
-    </div>
-    <div class="topbar-right">
-      <div class="mzj-chip"><i class="fa-regular fa-clock"></i><span id="mzjNow">—</span></div>
-      <button class="mzj-btn mzj-btn-ghost" id="mzjThemeBtn" type="button"><i class="fa-solid fa-moon"></i><span>وضع ليلي</span></button>
-      <div class="mzj-user">
-        <div class="avatar">DB</div>
-        <div class="user-text">
-          <div class="user-name">الداش بورد</div>
-          <div class="user-role">Dashboard</div>
-        </div>
-      </div>
-    </div>
-  </header>
+    <a class="side-link" data-page="admin" href="admin.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
+    <a class="side-link active" data-page="dashboard" href="dashboard.html"><i class="fa-solid fa-gauge"></i><span>لوحة المؤشرات</span></a>
+    <a class="side-link" data-page="inventory" href="inventory.html"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
+    <a class="side-link" data-page="vt" href="vt.html"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
+    <a class="side-link" data-page="photoshoot" href="photoshoot-user.html"><i class="fa-solid fa-camera"></i><span>إدارة الطلبات</span></a>
+    <a class="side-link" data-page="cars" href="cars.html"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
+    <a class="side-link" data-page="activity" href="Activity.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل النشاط</span></a>
+    <a class="side-link" data-page="sales" href="sales.html"><i class="fa-solid fa-location-dot"></i><span>التتبع</span></a>
+  </aside>
 
-  <div class="mzj-shell" id="mzjShell">
-    <aside class="mzj-sidebar" id="mzjSidebar">
-      <div class="side-section">
-        <div class="side-title">العمليات</div>
-        <nav class="side-nav">
-          <a class="side-link tab" href="./sales.html"><i class="fa-solid fa-handshake"></i><span>المبيعات</span></a>
-          <a class="side-link tab active" href="./dashboard.html"><i class="fa-solid fa-gauge"></i><span>الداش بورد</span></a>
-          <a class="side-link tab" href="./inventory.html"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
-          <a class="side-link tab" href="./vt.html"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
-          <a class="side-link tab" href="./photoshoot-user.html"><i class="fa-solid fa-camera"></i><span>إدارة الطلبات</span></a>
-          <a class="side-link tab" href="./cars.html"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
-          <a class="side-link tab" href="./admin.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
-          <a class="side-link tab" href="./Activity.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل النشاط</span></a>
-        </nav>
-      </div>
-    </aside>
+  <div class="mzj-backdrop" id="mzjBackdrop"></div>
 
-    <div class="mzj-backdrop" id="mzjBackdrop"></div>
-
-    <main class="mzj-content">
-      <section class="mzj-pagehead">
-        <div class="pagehead-left">
-          <h1 class="page-title">لوحة الداش بورد</h1>
-          <p class="page-desc">نفس الداتا والمنطق — واجهة موحّدة.</p>
-        </div>
-      </section>
-
-      <div class="legacy legacy-dash">
-
-
-<!-- Topbar -->
-<div class="topbar">
-  <div class="topbar-inner">
-    <div class="brand">
-      <div class="logo">MZJ</div>
-      <div>
-        <h1>لوحة المؤشرات</h1>
-        <small class="hint">مجموعة محمد بن ذعار العجمي للسيارات</small>
-      </div>
-    </div>
-    <div class="tabs">
-      <a class="tab" href="admin.html">الإدارة</a>
-      <a class="tab" href="inventory.html">المخزون</a>
-      <a class="tab" href="vt.html">نقل السيارات</a>
-      <a class="tab" href="photoshoot-user.html">إدارة الطلبات</a>
-      <a class="tab" href="cars.html">كل السيارات</a>
-      <a class="tab" href="Activity.html">سجل النشاط</a>
-      <a class="tab" href="sales.html"> التتبع</a>
-
-    </div>
-    <div class="row">
-      <div class="status-badge"><span id="connDot" class="dot warn"></span><span id="connText">جارِ الاتصال…</span></div>
-      <button id="btnSignOut" class="btn btn-ghost" style="display:none"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</button>
-    </div>
-  </div>
-</div>
-
-<!-- Auth Gate -->
+  <!-- Content -->
+  <main class="mzj-content">
+    <div class="mzj-page">
+      
 <div id="authGate" style="min-height:60vh;display:none;place-items:center;padding:24px">
   <div class="card" style="max-width:440px;width:96%">
     <h2 style="margin:0 0 10px;color:var(--brown)">تسجيل الدخول</h2>
@@ -541,8 +533,45 @@ tr:hover{ filter: brightness(0.98); }
 
 <div id="toast" class="toast">تم</div>
 
+
+    </div>
+  </main>
+</div>
+
+<!-- Mobile sidebar toggle -->
+<button class="fab-menu" id="menuBtn" aria-label="القائمة"><i class="fa-solid fa-bars"></i></button>
+
+<!-- Connection chip (instead of topbar status) -->
+<div class="conn-chip" title="حالة الاتصال">
+  <span id="connDot" class="dot warn"></span>
+  <span id="connText">جارِ الاتصال…</span>
+</div>
+
+<script>
+  // Sidebar toggle (mobile)
+  const sidebar = document.getElementById('mzjSidebar');
+  const backdrop = document.getElementById('mzjBackdrop');
+  const btn = document.getElementById('menuBtn');
+
+  function openSB(){
+    sidebar.classList.add('open');
+    backdrop.classList.add('show');
+  }
+  function closeSB(){
+    sidebar.classList.remove('open');
+    backdrop.classList.remove('show');
+  }
+  btn.addEventListener('click', ()=> {
+    if(sidebar.classList.contains('open')) closeSB();
+    else openSB();
+  });
+  backdrop.addEventListener('click', closeSB);
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
 <script type="module">
+
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
   import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, getDocs, limit, orderBy } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
@@ -2437,24 +2466,8 @@ try{
 
   /* ===== Start ===== */
   setStatus('warn','جارِ الاتصال…');
+
 </script>
-  <script src="./mzj-ui.js"></script>
 
-      </div>
-    </main>
-  </div>
-
-
-  </main>
-
-  <nav class="mzj-m-bottomnav" id="mzjBottom" aria-label="تنقل سريع">
-    <a class="mzj-m-bnav active" href="./dashboard-mobile.html"><i class="fa-solid fa-gauge"></i><span>الداش</span></a>
-    <a class="mzj-m-bnav " href="./inventory-mobile.html"><i class="fa-solid fa-boxes-stacked"></i><span>مخزون</span></a>
-    <a class="mzj-m-bnav " href="./sales-mobile.html"><i class="fa-solid fa-handshake"></i><span>مبيعات</span></a>
-    <a class="mzj-m-bnav " href="./photoshoot-user-mobile.html"><i class="fa-solid fa-camera"></i><span>طلبات</span></a>
-    <a class="mzj-m-bnav " href="./admin-mobile.html"><i class="fa-solid fa-shield-halved"></i><span>إدارة</span></a>
-  </nav>
-
-  <script src="./mzj-mobile-ui.js"></script>
 </body>
 </html>

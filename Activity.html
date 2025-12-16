@@ -1,16 +1,13 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>سجل نشاط الأعضاء — MZJ Cars</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
-  <link rel="stylesheet" href="./mzj-ui.css" />
-  <style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>سجل نشاط الأعضاء — MZJ Cars</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
 
+<style>
   :root{
     --brown:#3e2420; --beige:#bc8f74; --cream:#fff8ef;
     --text:#1f2937; --muted:#6b7280; --line:#e8e5e2;
@@ -20,8 +17,8 @@
     --black:#0b0b0b;
   }
   *{box-sizing:border-box}
-  .legacy{height:100%}
-  .legacy{margin:0;background:var(--bg);color:var(--text);font-family:"Tajawal",system-ui,Arial}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:"Tajawal",system-ui,Arial}
 
   /* Topbar + Tabs */
   .topbar{position:sticky;top:0;z-index:60;background:#fff;border-bottom:1px solid var(--line)}
@@ -85,73 +82,35 @@
   .toast{position:fixed;bottom:18px;right:18px;background:#111827;color:#fff;padding:10px 14px;border-radius:12px;box-shadow:0 10px 24px rgba(0,0,0,.25);display:none;z-index:100;font-size:13px}
   .toast.show{display:block;animation:fade .2s ease-out}
   @keyframes fade{from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)}}
-
 </style>
-  <style>
-    /* isolate legacy page styles under .legacy */
-    .legacy { all: initial; font-family: "Tajawal", system-ui, Arial; direction: rtl; unicode-bidi: plaintext; }
-    .legacy *, .legacy *::before, .legacy *::after { box-sizing: border-box; font-family: inherit; }
-  </style>
 </head>
-<body class="mzj">
-  <header class="mzj-topbar">
-    <div class="topbar-left">
-      <button class="icon-btn" id="mzjSidebarBtn" aria-label="القائمة"><i class="fa-solid fa-bars"></i></button>
-      <div class="brand">
-        <div class="brand-mark">MZJ</div>
-        <div class="brand-text">
-          <div class="brand-title">محمد بن ذعار العجمي للسيارات</div>
-          <div class="brand-sub">Workspace</div>
-        </div>
+<body>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="logo">MZJ</div>
+      <div>
+        <h1>سجل نشاط الأعضاء</h1>
+        <small class="hint">تتبع كل حركة يقوم بها الأعضاء داخل النظام</small>
       </div>
     </div>
-    <div class="topbar-center">
-      <div class="mzj-breadcrumb">
-        <span class="crumb">الرئيسية</span>
-        <i class="fa-solid fa-chevron-left"></i>
-        <span class="crumb current">سجل النشاط</span>
-      </div>
+    <div class="tabs">
+      <a class="tab" href="admin.html">الإدارة</a>
+      <a class="tab" href="inventory.html">المخزون</a>
+      <a class="tab" href="dashboard.html">الداش بورد</a>
+      <a class="tab" href="vt.html">نقل السيارات</a>
+      <a class="tab" href="photoshoot-user.html">إدارة الطلبات</a>
+      <a class="tab" href="cars.html">كل السيارات</a>
+      <a class="tab active" href="activity.html">سجل النشاط</a>
     </div>
-    <div class="topbar-right">
-      <div class="mzj-chip"><i class="fa-regular fa-clock"></i><span id="mzjNow">—</span></div>
-      <button class="mzj-btn mzj-btn-ghost" id="mzjThemeBtn" type="button"><i class="fa-solid fa-moon"></i><span>وضع ليلي</span></button>
-      <div class="mzj-user">
-        <div class="avatar">H</div>
-        <div class="user-text"><div class="user-name">Hossam</div><div class="user-role">Workspace</div></div>
-      </div>
+    <div class="row">
+      <div class="status-badge"><span id="connDot" class="dot warn"></span><span id="connText">جارِ الاتصال…</span></div>
+      <button id="btnSignOut" class="btn btn-ghost" style="display:none"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</button>
     </div>
-  </header>
-
-  <div class="mzj-shell" id="mzjShell">
-    <aside class="mzj-sidebar" id="mzjSidebar">
-      <div class="side-section">
-        <div class="side-title">القائمة</div>
-        <nav class="side-nav">
-          <a class="side-link" href="./dashboard.html"><i class="fa-solid fa-gauge"></i><span>Dashboard</span></a>
-          <a class="side-link" href="./sales.html"><i class="fa-solid fa-handshake"></i><span>المبيعات</span></a>
-          <a class="side-link" href="./inventory.html"><i class="fa-solid fa-warehouse"></i><span>المخزون</span></a>
-          <a class="side-link" href="./vt.html"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
-          <a class="side-link" href="./photoshoot-user.html"><i class="fa-solid fa-diagram-project"></i><span>إدارة الطلبات</span></a>
-          <a class="side-link" href="./cars.html"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
-          <a class="side-link" href="./Activity.html"><i class="fa-solid fa-clock-rotate-left"></i><span>سجل النشاط</span></a>
-          <a class="side-link" href="./admin.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
-        </nav>
-      </div>
-    </aside>
-    <div class="mzj-backdrop" id="mzjBackdrop"></div>
-
-    <main class="mzj-content">
-      <section class="mzj-pagehead">
-        <div class="pagehead-left">
-          <h1 class="page-title">سجل النشاط</h1>
-          <p class="page-desc">متابعة نشاط المستخدمين والتغييرات.</p>
-        </div>
-      </section>
-
-      <section class="mzj-card">
-        <div class="card-body">
-          <div class="legacy">
-            
+  </div>
+</div>
 
 <!-- Auth Gate -->
 <div id="authGate" style="min-height:60vh;display:grid;place-items:center;padding:24px">
@@ -660,401 +619,6 @@ $('#btnLogin').addEventListener('click', async ()=>{
   /* ===== Init ===== */
   setStatus('warn','جارِ الاتصال…');
 </script>
-
-          </div>
-        </div>
-      </section>
-
-      <footer class="mzj-footer"><span>© MZJ Workspace</span><span class="sep">•</span><span>نجم الطريق</span></footer>
-    </main>
-  </div>
-
-  <script src="./mzj-ui.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-  import { 
-    getAuth, onAuthStateChanged, signInWithEmailAndPassword, 
-    createUserWithEmailAndPassword, signOut 
-  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-  import {
-    getFirestore, collection, query, orderBy, limit, onSnapshot, doc, getDoc
-  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-
-  /* ===== Firebase ===== */
-  const firebaseConfig = {
-    apiKey: "AIzaSyC614bGqnYf4Q-weTNemzWENTpa8DjGeHw",
-    authDomain: "mzj-agenda.firebaseapp.com",
-    projectId: "mzj-agenda",
-    storageBucket: "mzj-agenda.firebasestorage.app",
-    messagingSenderId: "834700407721",
-    appId: "1:834700407721:web:75c17665d4f032fd65cab8"
-  };
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db   = getFirestore(app);
-
-  /* ===== Roles & Permissions ===== */
-  const ROLE_ADMIN   = 'الادارة';
-  const ROLE_IDARI   = 'اداري';
-  const ROLE_BRANCH  = 'مدراء فروع';
-
-  // الصفحات المسموح بها لكل تصنيف (للتابات)
-  const ROLE_PAGES = {
-    [ROLE_ADMIN] : 'ALL',
-    [ROLE_IDARI] : ['photoshoot.html','photoshoot-user.html','cars.html'],
-    [ROLE_BRANCH]: ['dashboard.html']
-  };
-
-  // صفحة سجل النشاط متاحة للإدارة فقط
-  const PAGE_ALLOWED_ROLES = [ROLE_ADMIN];
-
-  async function fetchUserRole(user){
-    try{
-      const snap = await getDoc(doc(db, 'user', user.uid));
-      if(snap.exists()){
-        const data = snap.data() || {};
-        return data.role || null;
-      }
-    }catch(e){
-      console.error('Error fetching user role', e);
-    }
-    return null;
-  }
-
-  function applyTabsVisibility(role){
-    const tabs = document.querySelectorAll('.tab');
-    tabs.forEach(tab=>{
-      const href = tab.getAttribute('href') || '';
-      const page = (href.split('/').pop() || '').split('?')[0];
-      if(!page) return;
-      const perm = ROLE_PAGES[role];
-      if(!perm){
-        tab.style.display='none';
-        return;
-      }
-      if(perm === 'ALL') return;
-      if(!perm.includes(page)){
-        tab.style.display='none';
-      }
-    });
-  }
-
-
-  /* ===== Helpers ===== */
-  const $ = s => document.querySelector(s);
-  const toastEl = $('#toast');
-  const pad = n => n<10?'0'+n:n;
-  const setStatus = (mode,txt)=>{
-    $('#connDot').className='dot '+(mode==='ok'?'ok':mode==='err'?'err':'warn');
-    $('#connText').textContent=txt;
-  };
-  const showToast = msg=>{
-    toastEl.textContent=msg;
-    toastEl.classList.add('show');
-    setTimeout(()=>toastEl.classList.remove('show'),1400);
-  };
-
-  const startOfDayStr = d=>{
-    const year=d.getFullYear(),m=d.getMonth(),day=d.getDate();
-    return `${year}-${pad(m+1)}-${pad(day)}`;
-  };
-
-  /* ===== State ===== */
-  let allLogs = [];
-  let filteredLogs = [];
-  let membersMap = new Map(); // memberKey -> memberLabel
-  let actionsSet = new Set();
-
-  /* ===== Auth Gate ===== */
-  onAuthStateChanged(auth, async (user)=>{
-    if(user){
-      const role = await fetchUserRole(user);
-
-      // لو ملوش دور أو مش من المسموح لهم يشوفوا سجل النشاط
-      if(!role || !PAGE_ALLOWED_ROLES.includes(role)){
-        window.location.href = 'unauthorized.html';
-        return;
-      }
-
-      $('#authGate').style.display='none';
-      $('#app').style.display='block';
-      $('#btnSignOut').style.display='inline-flex';
-      setStatus('ok', `متصل: ${user.email} — الدور: ${role}`);
-      applyTabsVisibility(role);
-      subscribeLogs();
-    }else{
-      $('#app').style.display='none';
-      $('#authGate').style.display='grid';
-      $('#btnSignOut').style.display='none';
-      setStatus('warn','لم يتم تسجيل الدخول');
-    }
-  });
-$('#btnLogin').addEventListener('click', async ()=>{
-    $('#authHint').textContent='';
-    try{
-      await signInWithEmailAndPassword(auth, $('#email').value.trim(), $('#password').value);
-    }catch(e){
-      $('#authHint').textContent='فشل تسجيل الدخول: '+(e?.message||e);
-    }
-  });
-
-  $('#btnSignup').addEventListener('click', async ()=>{
-    $('#authHint').textContent='';
-    try{
-      await createUserWithEmailAndPassword(auth, $('#email').value.trim(), $('#password').value);
-    }catch(e){
-      $('#authHint').textContent='تعذّر إنشاء الحساب: '+(e?.message||e);
-    }
-  });
-
-  $('#btnSignOut').addEventListener('click', ()=> signOut(auth));
-
-  /* ===== Subscribe Logs ===== */
-  function subscribeLogs(){
-    try{
-      const col = collection(db,'mzj_activity_log');
-      const qLogs = query(col, orderBy('createdAtTs','desc'), limit(1000));
-      onSnapshot(qLogs,(snap)=>{
-        allLogs = [];
-        snap.forEach(docSnap=>{
-          const d = docSnap.data() || {};
-          const email = (d.userEmail || '').trim();
-          const name  = (d.userName  || '').trim();
-          const memberKey   = (email || name).toLowerCase();
-          const memberLabel = name 
-            ? (email ? `${name} (${email})` : name)
-            : (email || '-');
-
-          allLogs.push({
-            _id: docSnap.id,
-            userEmail: email,
-            userName : name,
-            role     : d.role      || '',
-            action   : d.action    || '',
-            entityType: d.entityType || '',
-            entityId : d.entityId  || '',
-            details  : d.details   || '',
-            createdAt: d.createdAt || '',
-            createdAtTs: d.createdAtTs || null,
-            ip       : d.ip        || '',
-            userAgent: d.userAgent || '',
-            memberKey,
-            memberLabel
-          });
-        });
-        buildFiltersLists();
-        applyFilters();
-        setStatus('ok','مزامنة حيّة لسجل النشاط');
-      },(err)=>{
-        console.error(err);
-        setStatus('warn','تعذّر تحميل سجل النشاط مؤقتًا');
-      });
-    }catch(e){
-      console.error(e);
-      setStatus('warn','خطأ في الاشتراك في سجل النشاط');
-    }
-  }
-
-  /* ===== Filters ===== */
-  const memberFilterEl = $('#memberFilter');
-  const actionFilterEl = $('#actionFilter');
-  const dateFromEl = $('#dateFrom');
-  const dateToEl = $('#dateTo');
-  const searchInputEl = $('#searchInput');
-
-  function buildFiltersLists(){
-    membersMap = new Map();
-    actionsSet = new Set();
-
-    allLogs.forEach(l=>{
-      if(l.memberKey){
-        membersMap.set(l.memberKey, l.memberLabel || l.userEmail || l.userName || l.memberKey);
-      }
-      if(l.action) actionsSet.add(l.action);
-    });
-
-    const prevMember = memberFilterEl.value || 'ALL';
-    const prevAction = actionFilterEl.value || 'ALL';
-
-    // أعضاء
-    memberFilterEl.innerHTML = '<option value="ALL">الكل</option>';
-    Array.from(membersMap.entries())
-      .sort((a,b)=> a[1].localeCompare(b[1],'ar'))
-      .forEach(([key,label])=>{
-        const opt = document.createElement('option');
-        opt.value = key;
-        opt.textContent = label;
-        memberFilterEl.appendChild(opt);
-      });
-
-    // الأكشن
-    actionFilterEl.innerHTML = '<option value="ALL">الكل</option>';
-    Array.from(actionsSet).sort((a,b)=>a.localeCompare(b,'ar')).forEach(a=>{
-      const opt = document.createElement('option');
-      opt.value = a;
-      opt.textContent = a;
-      actionFilterEl.appendChild(opt);
-    });
-
-    if([...memberFilterEl.options].some(o=>o.value===prevMember)) memberFilterEl.value = prevMember;
-    if([...actionFilterEl.options].some(o=>o.value===prevAction)) actionFilterEl.value = prevAction;
-  }
-
-  function applyFilters(){
-    const memberVal = memberFilterEl.value || 'ALL';
-    const actionVal = actionFilterEl.value || 'ALL';
-    const q = (searchInputEl.value||'').toLowerCase().trim();
-    const fromVal = dateFromEl.value || '';
-    const toVal = dateToEl.value || '';
-
-    filteredLogs = allLogs.filter((l)=>{
-      // عضو
-      if(memberVal !== 'ALL' && l.memberKey !== memberVal) return false;
-
-      // أكشن
-      if(actionVal !== 'ALL' && l.action !== actionVal) return false;
-
-      // التاريخ (نعتمد على createdAt كـ "YYYY-MM-DD HH:MM")
-      if(fromVal){
-        if(!l.createdAt || l.createdAt.slice(0,10) < fromVal) return false;
-      }
-      if(toVal){
-        if(!l.createdAt || l.createdAt.slice(0,10) > toVal) return false;
-      }
-
-      // بحث حر
-      if(q){
-        const hay = [
-          l.userEmail,l.userName,l.role,l.action,l.entityType,l.entityId,
-          l.details,l.createdAt,l.ip,l.userAgent
-        ].join(' ').toLowerCase();
-        if(!hay.includes(q)) return false;
-      }
-
-      return true;
-    });
-
-    renderTable();
-    updateSummary();
-  }
-
-  function clearFilters(){
-    dateFromEl.value = '';
-    dateToEl.value = '';
-    memberFilterEl.value = 'ALL';
-    actionFilterEl.value = 'ALL';
-    searchInputEl.value = '';
-    applyFilters();
-    showToast('تم مسح الفلاتر');
-  }
-
-  $('#btnClearFilters').addEventListener('click', clearFilters);
-  memberFilterEl.addEventListener('change', applyFilters);
-  actionFilterEl.addEventListener('change', applyFilters);
-  dateFromEl.addEventListener('change', applyFilters);
-  dateToEl.addEventListener('change', applyFilters);
-  searchInputEl.addEventListener('input', ()=>{ applyFilters(); });
-
-  /* ===== Table Render ===== */
-  const logsTableBody = document.querySelector('#logsTable tbody');
-  const logsCountEl   = $('#logsCount');
-
-  function actionClass(action){
-    const a = (action||'').toLowerCase();
-    if(!a) return 'info';
-    if(a.includes('حذف') || a.includes('delete')) return 'danger';
-    if(a.includes('تعديل') || a.includes('update') || a.includes('edit')) return 'warn';
-    if(a.includes('إضافة') || a.includes('add') || a.includes('create') || a.includes('insert')) return 'ok';
-    return 'info';
-  }
-
-  function renderTable(){
-    logsTableBody.innerHTML = '';
-    filteredLogs.forEach((l,idx)=>{
-      const tr = document.createElement('tr');
-      const memberLabel = l.memberLabel || l.userEmail || l.userName || '-';
-      const entityLabel = l.entityType ? `${l.entityType}${l.entityId ? ' #' + l.entityId : ''}` : (l.entityId || '-');
-      const shortUA = l.userAgent ? (l.userAgent.length>35 ? l.userAgent.slice(0,35)+'…' : l.userAgent) : '';
-      tr.innerHTML = `
-        <td>${idx+1}</td>
-        <td>${l.createdAt || '-'}</td>
-        <td>${memberLabel}</td>
-        <td>${l.role || '-'}</td>
-        <td>
-          <span class="action-pill ${actionClass(l.action)}">
-            <i class="fa-solid fa-bolt"></i> ${l.action || '-'}
-          </span>
-        </td>
-        <td>${entityLabel}</td>
-        <td>${l.details || ''}</td>
-        <td>${l._id}</td>
-        <td>${l.ip || ''}</td>
-        <td title="${l.userAgent||''}">${shortUA}</td>
-      `;
-      logsTableBody.appendChild(tr);
-    });
-
-    logsCountEl.textContent = `عدد الحركات الظاهرة: ${filteredLogs.length.toLocaleString('ar-SA')} من ${allLogs.length.toLocaleString('ar-SA')}`;
-  }
-
-  /* ===== Summary ===== */
-  function updateSummary(){
-    $('#sumTotal').textContent = allLogs.length.toLocaleString('ar-SA');
-
-    const uniqMembers = new Set();
-    allLogs.forEach(l=>{
-      if(l.memberKey){
-        uniqMembers.add(l.memberKey);
-      }
-    });
-    $('#sumMembers').textContent = uniqMembers.size.toLocaleString('ar-SA');
-
-    const todayStr = startOfDayStr(new Date());
-    const todayCount = allLogs.filter(l => (l.createdAt||'').slice(0,10) === todayStr).length;
-    $('#sumToday').textContent = todayCount.toLocaleString('ar-SA');
-  }
-
-  /* ===== Export Excel ===== */
-  $('#btnExport').addEventListener('click', ()=>{
-    if(!filteredLogs.length){
-      showToast('لا توجد بيانات لتصديرها');
-      return;
-    }
-    const header = [
-      "رقم تسلسلي","التاريخ والوقت","العضو","البريد","الدور","نوع الحركة",
-      "نوع الكيان","معرّف الكيان","التفاصيل","معرّف السجل","IP","المتصفح الكامل"
-    ];
-    const data = [header];
-    filteredLogs.forEach((l,idx)=>{
-      data.push([
-        idx+1,
-        l.createdAt || '',
-        l.userName || '',
-        l.userEmail || '',
-        l.role || '',
-        l.action || '',
-        l.entityType || '',
-        l.entityId || '',
-        l.details || '',
-        l._id || '',
-        l.ip || '',
-        l.userAgent || ''
-      ]);
-    });
-
-    const ws = XLSX.utils.aoa_to_sheet(data);
-    ws['!cols'] = [
-      {wch:6},{wch:18},{wch:18},{wch:22},{wch:12},{wch:18},
-      {wch:14},{wch:14},{wch:40},{wch:24},{wch:14},{wch:40}
-    ];
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb,ws,"Activity Log");
-    XLSX.writeFile(wb, `mzj-activity-log-${Date.now()}.xlsx`);
-  });
-
-  /* ===== Init ===== */
-  setStatus('warn','جارِ الاتصال…');
-</script>
 </body>
 </html>
+

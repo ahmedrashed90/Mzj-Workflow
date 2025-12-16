@@ -4,13 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>MZJ Workspace — نجم الطريق</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
-  <link rel="stylesheet" href="./mzj-ui.css" />
-  <style>
 
+  <!-- Tajawal Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+
+  <style>
     :root {
       --brown: #3e2420;
       --beige: #bc8f74;
@@ -25,14 +25,14 @@
 
     * { box-sizing: border-box; }
 
-    .legacy {
+    html, body {
       margin: 0;
       padding: 0;
       height: 100%;
       font-family: "Tajawal", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
-    .legacy {
+    body {
       background:
         radial-gradient(circle at top, #3b221d 0, #050609 55%, #000 100%);
       color: #f9fafb;
@@ -634,73 +634,9 @@
       from { transform: translate3d(0,0,0); }
       to   { transform: translate3d(-18px,8px,0); }
     }
-  
-</style>
-  <style>
-    /* isolate legacy page styles under .legacy */
-    .legacy { all: initial; font-family: "Tajawal", system-ui, Arial; direction: rtl; unicode-bidi: plaintext; }
-    .legacy *, .legacy *::before, .legacy *::after { box-sizing: border-box; font-family: inherit; }
   </style>
 </head>
-<body class="mzj">
-  <header class="mzj-topbar">
-    <div class="topbar-left">
-      <button class="icon-btn" id="mzjSidebarBtn" aria-label="القائمة"><i class="fa-solid fa-bars"></i></button>
-      <div class="brand">
-        <div class="brand-mark">MZJ</div>
-        <div class="brand-text">
-          <div class="brand-title">محمد بن ذعار العجمي للسيارات</div>
-          <div class="brand-sub">Workspace</div>
-        </div>
-      </div>
-    </div>
-    <div class="topbar-center">
-      <div class="mzj-breadcrumb">
-        <span class="crumb">الرئيسية</span>
-        <i class="fa-solid fa-chevron-left"></i>
-        <span class="crumb current">MZJ Workspace — نجم الطريق</span>
-      </div>
-    </div>
-    <div class="topbar-right">
-      <div class="mzj-chip"><i class="fa-regular fa-clock"></i><span id="mzjNow">—</span></div>
-      <button class="mzj-btn mzj-btn-ghost" id="mzjThemeBtn" type="button"><i class="fa-solid fa-moon"></i><span>وضع ليلي</span></button>
-      <div class="mzj-user">
-        <div class="avatar">H</div>
-        <div class="user-text"><div class="user-name">Hossam</div><div class="user-role">Workspace</div></div>
-      </div>
-    </div>
-  </header>
-
-  <div class="mzj-shell" id="mzjShell">
-    <aside class="mzj-sidebar" id="mzjSidebar">
-      <div class="side-section">
-        <div class="side-title">القائمة</div>
-        <nav class="side-nav">
-          <a class="side-link" href="./dashboard.html"><i class="fa-solid fa-gauge"></i><span>Dashboard</span></a>
-          <a class="side-link" href="./sales.html"><i class="fa-solid fa-handshake"></i><span>المبيعات</span></a>
-          <a class="side-link" href="./inventory.html"><i class="fa-solid fa-warehouse"></i><span>المخزون</span></a>
-          <a class="side-link" href="./vt.html"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
-          <a class="side-link" href="./photoshoot-user.html"><i class="fa-solid fa-diagram-project"></i><span>إدارة الطلبات</span></a>
-          <a class="side-link" href="./cars.html"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
-          <a class="side-link" href="./Activity.html"><i class="fa-solid fa-clock-rotate-left"></i><span>سجل النشاط</span></a>
-          <a class="side-link" href="./admin.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
-        </nav>
-      </div>
-    </aside>
-    <div class="mzj-backdrop" id="mzjBackdrop"></div>
-
-    <main class="mzj-content">
-      <section class="mzj-pagehead">
-        <div class="pagehead-left">
-          <h1 class="page-title">MZJ Workspace — نجم الطريق</h1>
-          <p class="page-desc"></p>
-        </div>
-      </section>
-
-      <section class="mzj-card">
-        <div class="card-body">
-          <div class="legacy">
-            
+<body>
 
 <!-- شاشة تسجيل الدخول -->
 <div id="authGate" class="auth-wrap">
@@ -1072,208 +1008,9 @@
     }
   });
 </script>
-
-          </div>
-        </div>
-      </section>
-
-      <footer class="mzj-footer"><span>© MZJ Workspace</span><span class="sep">•</span><span>نجم الطريق</span></footer>
-    </main>
-  </div>
-
-  <script src="./mzj-ui.js"></script>
-  <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-  import {
-    getAuth,
-    onAuthStateChanged,
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword
-  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyC614bGqnYf4Q-weTNemzWENTpa8DjGeHw",
-    authDomain: "mzj-agenda.firebaseapp.com",
-    projectId: "mzj-agenda",
-    storageBucket: "mzj-agenda.firebasestorage.app",
-    messagingSenderId: "834700407721",
-    appId: "1:834700407721:web:75c17665d4f032fd65cab8"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-
-  // مسارات النسخ
-  const DESKTOP_URL = "admin.html";        // عدلها لصفحة نسخة الكمبيوتر
-  const MOBILE_URL  = "admin-mobile.html"; // عدلها لصفحة نسخة التليفون
-
-  const $ = (s) => document.querySelector(s);
-
-  const authGate = $("#authGate");
-  const appRoot = $("#app");
-  const emailInput = $("#email");
-  const passwordInput = $("#password");
-  const btnLogin = $("#btnLogin");
-  const btnSignup = $("#btnSignup");
-  const authHint = $("#authHint");
-
-  const splashOverlay = $("#splashOverlay");
-  const splashTargetLabel = $("#splashTargetLabel");
-  const splashCountdown = $("#splashCountdown");
-  const backToChoiceBtn = $("#backToChoice");
-
-  const toastEl = $("#toast");
-  const toastMsg = toastEl?.querySelector(".msg");
-  const toastClose = $("#toastClose");
-
-  let redirectTimer = null;
-  let currentTargetUrl = null;
-  let countdown = 5;
-
-  function showToast(message, type = "ok") {
-    if (!toastEl || !toastMsg) return;
-    toastMsg.textContent = message;
-    toastEl.classList.remove("ok", "err");
-    toastEl.classList.add(type);
-    toastEl.style.display = "flex";
-  }
-
-  function hideToast() {
-    if (!toastEl) return;
-    toastEl.style.display = "none";
-  }
-
-  if (toastClose) {
-    toastClose.addEventListener("click", hideToast);
-  }
-
-  function setAuthHint(message, isError = false) {
-    if (!authHint) return;
-    authHint.textContent = message || "";
-    authHint.classList.toggle("error", !!isError);
-  }
-
-  // حالة المستخدم
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      if (authGate) authGate.style.display = "none";
-      if (appRoot) appRoot.style.display = "block";
-      setAuthHint("");
-      hideToast();
-    } else {
-      if (appRoot) appRoot.style.display = "none";
-      if (splashOverlay) splashOverlay.style.display = "none";
-      if (authGate) authGate.style.display = "grid";
-    }
-  });
-
-  // تسجيل الدخول
-  if (btnLogin) {
-    btnLogin.addEventListener("click", async () => {
-      const email = (emailInput?.value || "").trim();
-      const pass = (passwordInput?.value || "").trim();
-
-      if (!email || !pass) {
-        setAuthHint("من فضلك أدخل البريد الإلكتروني وكلمة المرور.", true);
-        return;
-      }
-      try {
-        setAuthHint("جاري تسجيل الدخول…");
-        await signInWithEmailAndPassword(auth, email, pass);
-        setAuthHint("تم تسجيل الدخول بنجاح.");
-      } catch (err) {
-        console.error(err);
-        setAuthHint("فشل تسجيل الدخول، تأكد من البيانات وحاول مرة أخرى.", true);
-        showToast("خطأ في تسجيل الدخول.", "err");
-      }
-    });
-  }
-
-  // إنشاء حساب
-  if (btnSignup) {
-    btnSignup.addEventListener("click", async () => {
-      const email = (emailInput?.value || "").trim();
-      const pass = (passwordInput?.value || "").trim();
-
-      if (!email || !pass) {
-        setAuthHint("من فضلك أدخل البريد الإلكتروني وكلمة المرور لإنشاء حساب.", true);
-        return;
-      }
-      try {
-        setAuthHint("جاري إنشاء الحساب…");
-        await createUserWithEmailAndPassword(auth, email, pass);
-        setAuthHint("تم إنشاء الحساب وتسجيل الدخول بنجاح.");
-        showToast("تم إنشاء الحساب بنجاح.", "ok");
-      } catch (err) {
-        console.error(err);
-        setAuthHint("تعذر إنشاء الحساب. قد يكون البريد مستخدمًا من قبل.", true);
-        showToast("تعذر إنشاء الحساب.", "err");
-      }
-    });
-  }
-
-  // منطق شاشة التحويل المتحركة
-  function startSplash(version) {
-    if (!splashOverlay || !splashTargetLabel || !splashCountdown) return;
-
-    const isMobile = version === "mobile";
-    currentTargetUrl = isMobile ? MOBILE_URL : DESKTOP_URL;
-
-    splashTargetLabel.textContent = isMobile ? "نسخة التليفون" : "نسخة الكمبيوتر";
-    countdown = 5;
-    splashCountdown.textContent = String(countdown);
-
-    splashOverlay.style.display = "flex";
-
-    if (redirectTimer) {
-      clearInterval(redirectTimer);
-      redirectTimer = null;
-    }
-
-    redirectTimer = setInterval(() => {
-      countdown -= 1;
-      if (countdown <= 0) {
-        clearInterval(redirectTimer);
-        redirectTimer = null;
-        if (currentTargetUrl) {
-          window.location.href = currentTargetUrl;
-        }
-      } else {
-        splashCountdown.textContent = String(countdown);
-      }
-    }, 1000);
-  }
-
-  function stopSplash() {
-    if (!splashOverlay) return;
-    splashOverlay.style.display = "none";
-    if (redirectTimer) {
-      clearInterval(redirectTimer);
-      redirectTimer = null;
-    }
-  }
-
-  // الضغط على الاختيارات
-  document.querySelectorAll(".version-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const version = btn.getAttribute("data-version") || "desktop";
-      startSplash(version);
-    });
-  });
-
-  // زر الرجوع لاختيار النسخة
-  if (backToChoiceBtn) {
-    backToChoiceBtn.addEventListener("click", () => {
-      stopSplash();
-    });
-  }
-
-  // مفتاح Esc يقفل شاشة التحويل
-  window.addEventListener("keydown", (ev) => {
-    if (ev.key === "Escape") {
-      stopSplash();
-    }
-  });
-</script>
 </body>
 </html>
+
+
+
+

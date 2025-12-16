@@ -427,11 +427,3 @@ body.mzj.dark .mzj-table th{
 @media (min-width: 981px){
   .mzj-shell.sidebar-open .mzj-sidebar{ transform:none; }
 }
-
-
-/* ===== Desktop sidebar toggle ===== */
-@media (min-width: 981px){
-  .mzj-shell.sidebar-collapsed{ grid-template-columns: 1fr !important; }
-  .mzj-shell.sidebar-collapsed .mzj-sidebar{ display:none !important; }
-  .mzj-shell.sidebar-collapsed .mzj-content{ width:100%; }
-}

@@ -6,32 +6,20 @@
   const themeBtn = document.getElementById('mzjThemeBtn');
   const nowEl = document.getElementById('mzjNow');
 
-  // Sidebar toggle (mobile + desktop collapse)
-  const isMobile = () => window.matchMedia && window.matchMedia('(max-width: 980px)').matches;
-
+  // Sidebar toggle (mobile)
   function openSidebar(){ shell?.classList.add('sidebar-open'); }
   function closeSidebar(){ shell?.classList.remove('sidebar-open'); }
-  function toggleDesktopCollapse(){
-    if (!shell) return;
-    shell.classList.toggle('sidebar-collapsed');
-    try{
-      localStorage.setItem('mzj_sidebar', shell.classList.contains('sidebar-collapsed') ? 'collapsed' : 'open');
-    }catch(_){}
-  }
-
-  // restore desktop state
-  try{
-    const savedSide = localStorage.getItem('mzj_sidebar');
-    if (savedSide === 'collapsed') shell?.classList.add('sidebar-collapsed');
-  }catch(_){}
 
   sidebarBtn?.addEventListener('click', () => {
     if (!shell) return;
-    if (isMobile()) shell.classList.toggle('sidebar-open');
-    else toggleDesktopCollapse();
+    shell.classList.toggle('sidebar-open');
   });
-
   backdrop?.addEventListener('click', closeSidebar);
+
+  // ESC closes sidebar on mobile + any modal you add later
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeSidebar();
+  });
 
   // Dark mode (saved)
   const savedTheme = localStorage.getItem('mzj_theme');

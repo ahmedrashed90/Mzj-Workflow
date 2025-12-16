@@ -7,7 +7,6 @@
   <meta name="color-scheme" content="light"/>
   <title>{{PAGE_TITLE}} — MZJ Workspace</title>
 
-  <!-- Fonts / Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
 
@@ -28,116 +27,36 @@
       overflow-x:hidden;
     }
 
-    /* ===== Layout ===== */
-    .app{
-      min-height:100vh;
-      display:flex;
-      overflow:hidden;
-    }
+    /* ===== App ===== */
+    .app{min-height:100vh}
 
-    /* ===== Sidebar ===== */
-    .sidebar{
-      width:290px;
-      background:#fff;
-      border-left:1px solid var(--line);
-      padding:14px 12px;
-      flex-shrink:0;
-    }
-    .sb-brand{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      padding:6px 6px 12px;
-      border-bottom:1px solid var(--line);
-      margin-bottom:10px;
-    }
-    .logo{
-      width:38px;height:38px;border-radius:12px;
-      background:var(--brown);
-      color:#fff;
-      display:grid;place-items:center;
-      font-weight:900;
-      box-shadow:0 10px 20px rgba(0,0,0,.14);
-    }
-    .sb-brand b{display:block;color:var(--brown);font-size:14px}
-    .sb-brand span{display:block;color:var(--muted);font-size:12px;margin-top:2px}
-
-    .nav{display:grid;gap:6px}
-    .nav a{
-      text-decoration:none;
-      color:#111;
-      font-weight:800;
-      display:flex;
-      align-items:center;
-      gap:10px;
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid transparent;
-      user-select:none;
-    }
-    .nav a i{color:var(--beige);width:18px;text-align:center}
-    .nav a.active,
-    .nav a:hover{
-      background:var(--cream);
-      border-color:var(--line);
-      color:var(--brown);
-    }
-
-    /* ===== Mobile sidebar toggle ===== */
-    .sidebar{
-      position:fixed;
-      inset:0 auto 0 0; /* RTL: sidebar from left to cover content naturally */
-      transform:translateX(100%);
-      transition:transform .22s ease;
-      z-index:1000;
-      box-shadow: -16px 0 40px rgba(0,0,0,.18);
-    }
-    .sidebar.open{transform:translateX(0)}
-
-    .backdrop{
-      position:fixed;
-      inset:0;
-      background:rgba(15,23,42,.45);
-      opacity:0;
-      pointer-events:none;
-      transition:opacity .18s ease;
-      z-index:900;
-    }
-    .backdrop.show{
-      opacity:1;
-      pointer-events:auto;
-    }
-
-    /* ===== Content ===== */
-    .content{
-      flex:1;
-      min-width:0;
-      width:100%;
-    }
-    .page{
-      max-width:1200px;
-      margin:0 auto;
-      padding:12px;
-    }
-
-    /* Header داخل الصفحة */
-    .page-head{
-      background:#fff;
-      border:1px solid var(--line);
-      border-radius:18px;
-      padding:12px;
-      box-shadow:var(--shadow);
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
+    /* ===== Mini Top Bar (واضح على الموبايل) ===== */
+    .mini-bar{
       position:sticky;
       top:0;
-      z-index:50;
+      z-index:100;
+      background:#fff;
+      border-bottom:1px solid var(--line);
+      padding:10px 12px;
+      display:flex;
+      align-items:center;
+      gap:10px;
     }
-    .page-title b{display:block;color:var(--brown);font-size:16px;line-height:1.2}
-    .page-title span{display:block;color:var(--muted);font-size:12px;margin-top:2px}
-
+    .menu-btn{
+      border:none;
+      background:var(--brown);
+      color:#fff;
+      width:42px;
+      height:42px;
+      border-radius:14px;
+      display:grid;
+      place-items:center;
+      box-shadow:0 14px 30px rgba(0,0,0,.18);
+      flex-shrink:0;
+    }
+    .mini-title{min-width:0;flex:1}
+    .mini-title b{display:block;color:var(--brown);font-size:14px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .mini-title span{display:block;color:var(--muted);font-size:11px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .status-badge{
       display:inline-flex;
       gap:8px;
@@ -145,9 +64,9 @@
       border:1px solid var(--line);
       background:#fff;
       border-radius:999px;
-      padding:7px 10px;
+      padding:6px 9px;
       font-size:11px;
-      max-width:52vw;
+      max-width:40vw;
       overflow:hidden;
       white-space:nowrap;
       text-overflow:ellipsis;
@@ -157,23 +76,88 @@
     .dot.err{background:var(--danger)}
     .dot.warn{background:var(--warn)}
 
-    /* زرار فتح السايدبار */
-    .menu-btn{
-      border:none;
-      background:var(--brown);
-      color:#fff;
-      width:44px;
-      height:44px;
-      border-radius:14px;
-      display:grid;
-      place-items:center;
-      box-shadow:0 14px 30px rgba(0,0,0,.18);
-      flex-shrink:0;
+    /* ===== Sidebar (اختياري) ===== */
+    .sidebar{
+      width:290px;
+      background:#fff;
+      border-left:1px solid var(--line);
+      padding:14px 12px;
+      position:fixed;
+      inset:0 auto 0 0;
+      transform:translateX(100%);
+      transition:transform .22s ease;
+      z-index:1000;
+      box-shadow:-16px 0 40px rgba(0,0,0,.18);
     }
-    .menu-btn:active{transform:translateY(1px)}
+    .sidebar.open{transform:translateX(0)}
+    .backdrop{
+      position:fixed; inset:0;
+      background:rgba(15,23,42,.45);
+      opacity:0; pointer-events:none;
+      transition:opacity .18s ease;
+      z-index:900;
+    }
+    .backdrop.show{opacity:1; pointer-events:auto}
 
-    /* Content slot */
+    .sb-brand{
+      display:flex;align-items:center;gap:10px;
+      padding:6px 6px 12px;
+      border-bottom:1px solid var(--line);
+      margin-bottom:10px;
+    }
+    .logo{
+      width:38px;height:38px;border-radius:12px;
+      background:var(--brown);color:#fff;
+      display:grid;place-items:center;
+      font-weight:900;
+      box-shadow:0 10px 20px rgba(0,0,0,.14);
+    }
+    .sb-brand b{display:block;color:var(--brown);font-size:14px}
+    .sb-brand span{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+
+    .nav{display:grid;gap:6px}
+    .nav a{
+      text-decoration:none;color:#111;font-weight:800;
+      display:flex;align-items:center;gap:10px;
+      padding:10px 12px;border-radius:14px;border:1px solid transparent;
+      user-select:none;
+    }
+    .nav a i{color:var(--beige);width:18px;text-align:center}
+    .nav a.active,.nav a:hover{background:var(--cream);border-color:var(--line);color:var(--brown)}
+
+    /* ===== Page ===== */
+    .page{
+      max-width:1200px;
+      margin:0 auto;
+      padding:12px 12px 96px; /* مساحة للداون بار */
+    }
     .slot{margin-top:12px}
+
+    /* ===== Down Bar (ظاهر دايمًا) ===== */
+    .downbar{
+      position:fixed;
+      left:0; right:0; bottom:0;
+      background:#fff;
+      border-top:1px solid var(--line);
+      padding:10px 8px calc(10px + env(safe-area-inset-bottom));
+      z-index:950;
+    }
+    .downbar .wrap{
+      max-width:1200px;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns:repeat(4,1fr); /* 8 عناصر = صفين */
+      gap:6px;
+    }
+    .d-item{
+      display:grid;place-items:center;gap:4px;
+      text-decoration:none;color:#111;
+      padding:8px 6px;border-radius:14px;border:1px solid transparent;
+      font-weight:800;font-size:11px;line-height:1.1;
+      user-select:none;
+    }
+    .d-item i{color:var(--beige);font-size:16px}
+    .d-item.active{background:var(--cream);border-color:var(--line);color:var(--brown)}
 
     /* ===== Page specific CSS placeholder ===== */
     /* {{PAGE_CSS}} */
@@ -183,8 +167,25 @@
 <body data-page="{{PAGE_ID}}">
   <div class="app">
 
-    <!-- Sidebar -->
-    <aside class="sidebar" id="mzjSidebar" aria-label="القائمة">
+    <!-- Mini bar visible (حل مشكلة "مخفي") -->
+    <header class="mini-bar">
+      <button class="menu-btn" id="mzjMenuBtn" type="button" aria-label="القائمة">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+
+      <div class="mini-title">
+        <b id="pageTitle">{{PAGE_TITLE}}</b>
+        <span id="pageSub">{{PAGE_SUBTITLE}}</span>
+      </div>
+
+      <div class="status-badge" id="connBadge" title="حالة الاتصال">
+        <span class="dot warn" id="connDot"></span>
+        <span id="connText">جاهز</span>
+      </div>
+    </header>
+
+    <!-- Sidebar (للي يحب يستخدمها) -->
+    <aside class="sidebar" id="mzjSidebar" aria-label="القائمة الجانبية">
       <div class="sb-brand">
         <div class="logo">MZJ</div>
         <div>
@@ -193,75 +194,55 @@
         </div>
       </div>
 
-      <!-- ✅ الترتيب النهائي -->
       <nav class="nav">
-        <a href="admin-mobile.html" data-href="admin-mobile.html">
-          <i class="fa-solid fa-shield-halved"></i> الإدارة
-        </a>
-        <a href="inventory-mobile.html" data-href="inventory-mobile.html">
-          <i class="fa-solid fa-boxes-stacked"></i> المخزون
-        </a>
-        <a href="dashboard-mobile.html" data-href="dashboard-mobile.html">
-          <i class="fa-solid fa-gauge"></i> الداش بورد
-        </a>
-        <a href="vt-mobile.html" data-href="vt-mobile.html">
-          <i class="fa-solid fa-right-left"></i> نقل السيارات
-        </a>
-        <a href="photoshoot-user-mobile.html" data-href="photoshoot-user-mobile.html">
-          <i class="fa-solid fa-camera"></i> إدارة الطلبات
-        </a>
-        <a href="cars-mobile.html" data-href="cars-mobile.html">
-          <i class="fa-solid fa-car"></i> كل السيارات
-        </a>
-        <a href="sales-mobile.html" data-href="sales-mobile.html">
-          <i class="fa-solid fa-location-dot"></i> التتبع
-        </a>
-        <a href="activity-mobile.html" data-href="activity-mobile.html">
-          <i class="fa-solid fa-clipboard-list"></i> سجل النشاط
-        </a>
+        <a href="admin-mobile.html" data-href="admin-mobile.html"><i class="fa-solid fa-shield-halved"></i> الإدارة</a>
+        <a href="inventory-mobile.html" data-href="inventory-mobile.html"><i class="fa-solid fa-boxes-stacked"></i> المخزون</a>
+        <a href="dashboard-mobile.html" data-href="dashboard-mobile.html"><i class="fa-solid fa-gauge"></i> الداش بورد</a>
+        <a href="vt-mobile.html" data-href="vt-mobile.html"><i class="fa-solid fa-right-left"></i> نقل السيارات</a>
+        <a href="photoshoot-user-mobile.html" data-href="photoshoot-user-mobile.html"><i class="fa-solid fa-camera"></i> إدارة الطلبات</a>
+        <a href="cars-mobile.html" data-href="cars-mobile.html"><i class="fa-solid fa-car"></i> كل السيارات</a>
+        <a href="sales-mobile.html" data-href="sales-mobile.html"><i class="fa-solid fa-location-dot"></i> التتبع</a>
+        <a href="activity-mobile.html" data-href="activity-mobile.html"><i class="fa-solid fa-clipboard-list"></i> سجل النشاط</a>
       </nav>
     </aside>
-
     <div class="backdrop" id="mzjBackdrop"></div>
 
-    <!-- Content -->
-    <main class="content">
-      <div class="page">
-        <div class="page-head">
-          <button class="menu-btn" id="mzjMenuBtn" type="button" aria-label="فتح القائمة">
-            <i class="fa-solid fa-bars"></i>
-          </button>
-
-          <div class="page-title" style="flex:1;min-width:0">
-            <b id="pageTitle">{{PAGE_TITLE}}</b>
-            <span id="pageSub">{{PAGE_SUBTITLE}}</span>
-          </div>
-
-          <div class="status-badge" id="connBadge" title="حالة الاتصال">
-            <span class="dot warn" id="connDot"></span>
-            <span id="connText">جاهز</span>
-          </div>
-        </div>
-
-        <div class="slot" id="pageRoot">
-          {{PAGE_CONTENT}}
-        </div>
+    <!-- Page -->
+    <main class="page">
+      <div class="slot" id="pageRoot">
+        {{PAGE_CONTENT}}
       </div>
     </main>
+
+    <!-- Down Bar (التنقل الأساسي على الموبايل) -->
+    <nav class="downbar" aria-label="التنقل السفلي">
+      <div class="wrap">
+        <a class="d-item" href="admin-mobile.html" data-href="admin-mobile.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
+        <a class="d-item" href="inventory-mobile.html" data-href="inventory-mobile.html"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
+        <a class="d-item" href="dashboard-mobile.html" data-href="dashboard-mobile.html"><i class="fa-solid fa-gauge"></i><span>الداش</span></a>
+        <a class="d-item" href="vt-mobile.html" data-href="vt-mobile.html"><i class="fa-solid fa-right-left"></i><span>نقل</span></a>
+
+        <a class="d-item" href="photoshoot-user-mobile.html" data-href="photoshoot-user-mobile.html"><i class="fa-solid fa-camera"></i><span>الطلبات</span></a>
+        <a class="d-item" href="cars-mobile.html" data-href="cars-mobile.html"><i class="fa-solid fa-car"></i><span>السيارات</span></a>
+        <a class="d-item" href="sales-mobile.html" data-href="sales-mobile.html"><i class="fa-solid fa-location-dot"></i><span>التتبع</span></a>
+        <a class="d-item" href="activity-mobile.html" data-href="activity-mobile.html"><i class="fa-solid fa-clipboard-list"></i><span>النشاط</span></a>
+      </div>
+    </nav>
 
   </div>
 
   <script>
-    // ✅ Active تلقائي
+    // Active تلقائي للسايدبار + الداون بار
     (function(){
       const current = location.pathname.split('/').pop();
-      document.querySelectorAll('.nav a').forEach(a=>{
-        const href = a.getAttribute('data-href') || a.getAttribute('href');
-        if(href === current) a.classList.add('active');
+      document.querySelectorAll('[data-href]').forEach(a=>{
+        if((a.getAttribute('data-href')||a.getAttribute('href')) === current){
+          a.classList.add('active');
+        }
       });
     })();
 
-    // ✅ Toggle sidebar (زرار + backdrop + ESC)
+    // Toggle sidebar
     (function(){
       const sb = document.getElementById('mzjSidebar');
       const bd = document.getElementById('mzjBackdrop');
@@ -273,13 +254,10 @@
       btn.addEventListener('click', ()=> sb.classList.contains('open') ? closeSB() : openSB());
       bd.addEventListener('click', closeSB);
       document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeSB(); });
-
-      // close on navigation
       document.querySelectorAll('.nav a').forEach(a=> a.addEventListener('click', closeSB));
     })();
   </script>
 
-  <!-- ✅ Page specific JS placeholder -->
   <script>
     /* {{PAGE_JS}} */
   </script>

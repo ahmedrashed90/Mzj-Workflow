@@ -12,7 +12,26 @@
 
   <style id="noFlash">
   html{background:#fff8ef}body{opacity:0;transition:.14s ease}
-  </style>
+  
+/* === FIX: إظهار كروت كل الطلبات على الموبايل === */
+@media (max-width: 820px) {
+  #ordersListCard {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  #ordersListCard thead {
+    display: none !important;
+  }
+
+  #ordersCards {
+    position: relative;
+    z-index: 2;
+  }
+}
+
+</style>
 
   <style>
     :root{

@@ -532,25 +532,11 @@
 </head>
 <body data-page="sales-mobile.html">
 
-<header class="topbar">
-  <div class="row">
-    <div class="title">
-      <b>المبيعات</b>
-      <span>التتبع وإدارة الطلبات — نسخة موبايل</span>
-    </div>
-    <div class="chip" title="حالة الاتصال">
-      <span class="dot warn" id="connDot"></span>
-      <span id="connText">جارِ الاتصال…</span>
-    </div>
-  </div>
-</header>
+
 
 <main class="page" id="pageRoot">
   <!-- Topbar (Matched with Admin) -->
-  <div class="topbar">
-    <div class="topbar-inner">
-      <div class="brand">
-        <div class="logo" title="MZJ">MZJ</div>
+  
         <div class="brand-text">
           <h1>لوحة إدارة المبيعات</h1>
           <small class="hint">مجموعة محمد بن ذعار العجمي للسيارات</small>
@@ -568,11 +554,7 @@
         <a class="tab" href="Activity.html">سجل النشاط</a>
       </div>
 
-      <div class="topbar-actions">
-        <div class="status-badge">
-          <span class="dot warn" id="connDot"></span>
-          <span id="connText">—</span>
-        </div>
+      
         <span id="whoami" class="whoami"></span>
         <button id="logoutBtn" class="tb-btn" style="display:none;">تسجيل الخروج</button>
       </div>
@@ -638,8 +620,7 @@
 
       <!-- اختيار رقم الهيكل لو الطلب فيه أكثر من VIN -->
       <div id="vinPickerBox" class="vin-box">
-        <div class="vin-box-header">
-          <div class="vin-box-title">اختر رقم الهيكل للعمل عليه</div>
+        
           <div class="vin-chip" id="vinCountChip"></div>
         </div>
         <select id="vinPicker"></select>

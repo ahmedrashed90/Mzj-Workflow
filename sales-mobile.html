@@ -1,13 +1,12 @@
-<!doctype html>
+
+
+
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>MZJ Mobile — المبيعات</title>
-
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MZJ – إدارة المبيعات</title>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
   <style>
     :root{
@@ -374,107 +373,87 @@
   .topbar-actions{justify-content:flex-start}
 }
 
+
+/* ===== MZJ Mobile Enhancements (Cards for Orders List + Down Bar) ===== */
+@media (max-width: 820px){
+  body{padding-bottom:110px;}
+  /* hide wide tables in orders list and show cards */
+  #ordersListCard .erp-table-wrap{display:none;}
+  #ordersListCards{display:grid;gap:10px;margin-top:12px;}
+  .m-order-card{
+    background:#fff;
+    border:1px solid var(--line, #e5e7eb);
+    border-radius:16px;
+    padding:12px;
+    box-shadow: var(--shadow, 0 10px 24px rgba(0,0,0,.06));
+  }
+  .m-order-card .row{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    align-items:flex-start;
+  }
+  .m-order-card .ord{
+    display:flex;flex-direction:column;gap:4px;min-width:0;
+  }
+  .m-order-card .ord b{color:var(--brown,#3e2420);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .m-order-card .ord .meta{color:#6b7280;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .m-order-card .badge{
+    border:1px solid var(--line,#e5e7eb);
+    background: #fff;
+    border-radius:999px;
+    padding:6px 10px;
+    font-size:12px;
+    color:#111827;
+    flex-shrink:0;
+    max-width:44vw;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .m-order-card .grid{
+    margin-top:10px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px 10px;
+    font-size:12px;
+  }
+  .m-order-card .kv{color:#111827}
+  .m-order-card .kv span{display:block;color:#6b7280;font-size:11px;margin-bottom:2px}
+  .m-order-card .kv b{display:block;font-size:12px}
+  .m-order-card .actions{margin-top:10px;}
+  .m-order-card .actions .link-btn{width:100%;justify-content:center}
+}
+
+/* Bottom Bar */
+.mzj-downbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:9999;
+  background:#fff;border-top:1px solid var(--line,#e5e7eb);
+  padding:10px 10px calc(10px + env(safe-area-inset-bottom));
+}
+.mzj-downbar .wrap{
+  max-width:1100px;margin:0 auto;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+}
+.mzj-downbar a{
+  text-decoration:none;
+  border:1px solid transparent;
+  background:#fff;
+  border-radius:16px;
+  padding:10px 6px;
+  display:grid;
+  place-items:center;
+  gap:6px;
+  color:#111;
+  font-weight:800;
+  font-size:12px;
+  line-height:1.1;
+  user-select:none;
+}
+.mzj-downbar a i{color:var(--beige,#bc8f74);font-size:18px}
+.mzj-downbar a.active{background:var(--cream,#fff8ef);border-color:var(--line,#e5e7eb);color:var(--brown,#3e2420);}
+
 </style>
-  <link rel="stylesheet" href="./mzj-ui.css" />
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
-
-<style>
-  /* ===== Sales Safe Refactor: hide legacy topbar ONLY (keep #tabsBar visible) ===== */
-  .legacy-sales .topbar,
-  .legacy-sales .topbar .tabs,
-  .legacy-sales .nav-tabs,
-  .legacy-sales .header,
-  .legacy-sales header:not(.mzj-topbar){display:none !important;}
-
-  /* Keep content spacing nice */
-  .legacy-sales{padding-top: 6px;}
-</style>
-
-
-<style>
-  /* Ensure the functional tabs bar (بحث عن طلب / كل الطلبات) is visible when JS enables it */
-  .legacy-sales #tabsBar{ display:flex !important; }
-  .legacy-sales #tabsBar[style*="display: none"]{ display:none !important; } /* respect JS when it hides */
-</style>
-
-  <link rel="stylesheet" href="./mzj-mobile-ui.css"/>
 </head>
-<body class="mzj-mobile">
-  <header class="mzj-m-topbar" id="mzjTopbar">
-    <div class="mzj-m-brand">
-      <div class="mzj-m-mark">MZJ</div>
-      <div class="mzj-m-brandtext">
-        <div class="mzj-m-title">المبيعات</div>
-        <div class="mzj-m-sub">Workspace Mobile</div>
-      </div>
-    </div>
-    <div class="mzj-m-chip"><i class="fa-regular fa-clock"></i><span id="mzjNow">—</span></div>
-  </header>
-
-  <main class="mzj-m-page">
-
-
-  <!-- MZJ Unified Topbar -->
-  <header class="mzj-topbar">
-    <div class="topbar-left">
-      <button class="icon-btn" id="mzjSidebarBtn" aria-label="القائمة"><i class="fa-solid fa-bars"></i></button>
-      <div class="brand">
-        <div class="brand-mark">MZJ</div>
-        <div class="brand-text">
-          <div class="brand-title">محمد بن ذعار العجمي للسيارات</div>
-          <div class="brand-sub">Workspace</div>
-        </div>
-      </div>
-    </div>
-    <div class="topbar-center">
-      <div class="mzj-breadcrumb">
-        <span class="crumb">الرئيسية</span>
-        <i class="fa-solid fa-chevron-left"></i>
-        <span class="crumb current">المبيعات</span>
-      </div>
-    </div>
-    <div class="topbar-right">
-      <div class="mzj-chip"><i class="fa-regular fa-clock"></i><span id="mzjNow">—</span></div>
-      <button class="mzj-btn mzj-btn-ghost" id="mzjThemeBtn" type="button"><i class="fa-solid fa-moon"></i><span>وضع ليلي</span></button>
-      <div class="mzj-user">
-        <div class="avatar">MZJ</div>
-        <div class="user-text">
-          <div class="user-name">المبيعات</div>
-          <div class="user-role">Sales</div>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <div class="mzj-shell" id="mzjShell">
-    <aside class="mzj-sidebar" id="mzjSidebar">
-      <div class="side-section">
-        <div class="side-title">المبيعات</div>
-        <nav class="side-nav">
-          <a class="side-link tab active" href="./sales.html"><i class="fa-solid fa-handshake"></i><span>المبيعات</span></a>
-          <a class="side-link tab" href="./dashboard.html"><i class="fa-solid fa-gauge"></i><span>الداش بورد</span></a>
-          <a class="side-link tab" href="./inventory.html"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
-          <a class="side-link tab" href="./vt.html"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
-          <a class="side-link tab" href="./photoshoot-user.html"><i class="fa-solid fa-camera"></i><span>إدارة الطلبات</span></a>
-          <a class="side-link tab" href="./cars.html"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
-          <a class="side-link tab" href="./admin.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
-          <a class="side-link tab" href="./Activity.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل النشاط</span></a>
-        </nav>
-      </div>
-    </aside>
-
-    <div class="mzj-backdrop" id="mzjBackdrop"></div>
-
-    <main class="mzj-content">
-      <section class="mzj-pagehead">
-        <div class="pagehead-left">
-          <h1 class="page-title">لوحة إدارة المبيعات</h1>
-          <p class="page-desc">نفس الداتا والمنطق — واجهة موحّدة.</p>
-        </div>
-      </section>
-
-      <div class="legacy legacy-sales">
-
+<body>
   
   <!-- Topbar (Matched with Admin) -->
   <div class="topbar">
@@ -634,6 +613,7 @@
           <tbody id="ordersListBody"></tbody>
         </table>
       </div>
+      <div id="ordersListCards"></div>
     </div>
 
     <!-- Stages -->
@@ -1542,6 +1522,7 @@ function clearErpTable() {
         const snap = await getDocs(q);
         if (snap.empty) {
           ordersListBody.innerHTML = "<tr><td class='muted' colspan='7'>لا توجد طلبات مسجلة حالياً.</td></tr>";
+          try{ renderOrdersCards([]); }catch(e){}
           return;
         }
         const rows = [];
@@ -1575,6 +1556,41 @@ function clearErpTable() {
           }
           rows.push({ orderNo, vinVal, customerName, customerPhone, branch, deliveryDate, statusLabel });
         }
+        
+        // ===== Mobile Cards (Orders List) =====
+        function renderOrdersCards(rows){
+          const box = document.getElementById("ordersListCards");
+          if(!box) return;
+          box.innerHTML = "";
+          if(!rows || !rows.length){
+            box.innerHTML = "<div class='m-order-card'><div class='meta'>لا توجد طلبات.</div></div>";
+            return;
+          }
+          rows.forEach(r=>{
+            const div = document.createElement("div");
+            div.className = "m-order-card";
+            div.innerHTML = `
+              <div class="row">
+                <div class="ord">
+                  <b>طلب رقم: ${r.orderNo || "—"}</b>
+                  <div class="meta">${r.customerName || "—"}</div>
+                </div>
+                <div class="badge">${r.statusLabel || "—"}</div>
+              </div>
+              <div class="grid">
+                <div class="kv"><span>الجوال</span><b>${r.customerPhone || "—"}</b></div>
+                <div class="kv"><span>الفرع</span><b>${r.branch || "—"}</b></div>
+                <div class="kv"><span>VIN</span><b>${r.vinVal || "—"}</b></div>
+                <div class="kv"><span>تاريخ التسليم</span><b>${r.deliveryDate || "—"}</b></div>
+              </div>
+              <div class="actions">
+                <button class="link-btn" data-order="${r.orderNo}">فتح الطلب</button>
+              </div>
+            `;
+            box.appendChild(div);
+          });
+        }
+
         ordersListBody.innerHTML = "";
         rows.forEach(r => {
           const tr = document.createElement("tr");
@@ -1589,6 +1605,7 @@ function clearErpTable() {
           `;
           ordersListBody.appendChild(tr);
         });
+        try{ renderOrdersCards(rows); }catch(e){ console.warn(e); }
       } catch (err) {
         console.error(err);
         ordersListBody.innerHTML = "<tr><td class='err' colspan='7'>تعذر تحميل قائمة الطلبات.</td></tr>";
@@ -1764,23 +1781,33 @@ function clearErpTable() {
   })();
 </script>
 
-  <script src="./mzj-ui.js"></script>
 
-      </div>
-    </main>
+<nav class="mzj-downbar" aria-label="التنقل">
+  <div class="wrap">
+    <a data-href="admin-mobile.html" href="admin-mobile.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
+    <a data-href="inventory-mobile.html" href="inventory-mobile.html"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
+    <a data-href="dashboard-mobile.html" href="dashboard-mobile.html"><i class="fa-solid fa-gauge"></i><span>الداش</span></a>
+    <a data-href="vt-mobile.html" href="vt-mobile.html"><i class="fa-solid fa-right-left"></i><span>نقل</span></a>
+
+    <a data-href="photoshoot-user-mobile.html" href="photoshoot-user-mobile.html"><i class="fa-solid fa-camera"></i><span>الطلبات</span></a>
+    <a data-href="cars-mobile.html" href="cars-mobile.html"><i class="fa-solid fa-car"></i><span>السيارات</span></a>
+    <a class="active" data-href="sales-mobile.html" href="sales-mobile.html"><i class="fa-solid fa-location-dot"></i><span>التتبع</span></a>
+    <a data-href="activity-mobile.html" href="activity-mobile.html"><i class="fa-solid fa-clipboard-list"></i><span>النشاط</span></a>
   </div>
+</nav>
+<script>
+  (function(){
+    const cur = location.pathname.split('/').pop();
+    document.querySelectorAll('.mzj-downbar a').forEach(a=>{
+      if((a.getAttribute('data-href')||a.getAttribute('href')) === cur){
+        a.classList.add('active');
+      } else {
+        a.classList.remove('active');
+      }
+    });
+  })();
+</script>
 
-
-  </main>
-
-  <nav class="mzj-m-bottomnav" id="mzjBottom" aria-label="تنقل سريع">
-    <a class="mzj-m-bnav " href="./dashboard-mobile.html"><i class="fa-solid fa-gauge"></i><span>الداش</span></a>
-    <a class="mzj-m-bnav " href="./inventory-mobile.html"><i class="fa-solid fa-boxes-stacked"></i><span>مخزون</span></a>
-    <a class="mzj-m-bnav active" href="./sales-mobile.html"><i class="fa-solid fa-handshake"></i><span>مبيعات</span></a>
-    <a class="mzj-m-bnav " href="./photoshoot-user-mobile.html"><i class="fa-solid fa-camera"></i><span>طلبات</span></a>
-    <a class="mzj-m-bnav " href="./admin-mobile.html"><i class="fa-solid fa-shield-halved"></i><span>إدارة</span></a>
-  </nav>
-
-  <script src="./mzj-mobile-ui.js"></script>
 </body>
 </html>
+

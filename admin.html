@@ -208,59 +208,14 @@
   body{opacity:0;}
 </style>
   <link rel="stylesheet" href="./mzj-ui.css" />
-
+<style>/* ===== Admin no-flash (safe) ===== */#authGate{display:none !important;}</style>
 <style>
-  /* ===== Admin No-Flash Auth Gate ===== */
-  body:not(.mzj-auth-ready):not(.mzj-auth-needlogin) #authGate,
-  body:not(.mzj-auth-ready):not(.mzj-auth-needlogin) #app{ display:none !important; }
-  body.mzj-auth-ready #app{ display:block !important; }
-  body.mzj-auth-ready #authGate{ display:none !important; }
-  body.mzj-auth-needlogin #authGate{ display:block !important; }
-  body.mzj-auth-needlogin #app{ display:none !important; }
-
-  .mzj-boot{
-    position:fixed; inset:0; background:rgba(255,248,239,.85);
-    display:flex; align-items:center; justify-content:center;
-    z-index:9999;
-    font-family:'Tajawal',system-ui;
-  }
-  body.mzj-auth-ready .mzj-boot, body.mzj-auth-needlogin .mzj-boot{ display:none; }
-</style>
-
-
-<style>
-  /* ===== Admin Safe Refactor: hide legacy topbar/nav ===== */
-  .legacy-admin .dashboard-topbar,
-  .legacy-admin .topbar,
-  .legacy-admin .tabs,
-  .legacy-admin .nav-tabs,
-  .legacy-admin .nav-pills,
-  .legacy-admin header:not(.mzj-topbar){
-    display:none !important;
-  }
-</style>
-
-</head>
-<body class="mzj">
-
-<header class="mzj-topbar">
+<body class="mzj"><header class="mzj-topbar">
   <div class="topbar-left">
     <button class="icon-btn" id="mzjSidebarBtn" aria-label="القائمة"><i class="fa-solid fa-bars"></i></button>
-    <div class="brand">
-      <div class="brand-mark">MZJ</div>
-      <div class="brand-text">
-        <div class="brand-title">محمد بن ذعار العجمي للسيارات</div>
-        <div class="brand-sub">Workspace</div>
-      </div>
-    </div>
+    <div class="brand"><div class="brand-mark">MZJ</div><div class="brand-text"><div class="brand-title">محمد بن ذعار العجمي للسيارات</div><div class="brand-sub">Workspace</div></div></div>
   </div>
-  <div class="topbar-center">
-    <div class="mzj-breadcrumb">
-      <span class="crumb">الرئيسية</span>
-      <i class="fa-solid fa-chevron-left"></i>
-      <span class="crumb current">الإدارة</span>
-    </div>
-  </div>
+  <div class="topbar-center"><div class="mzj-breadcrumb"><span class="crumb">الرئيسية</span><i class="fa-solid fa-chevron-left"></i><span class="crumb current">الإدارة</span></div></div>
   <div class="topbar-right">
     <div class="mzj-chip"><i class="fa-regular fa-clock"></i><span id="mzjNow">—</span></div>
     <button class="mzj-btn mzj-btn-ghost" id="mzjThemeBtn" type="button"><i class="fa-solid fa-moon"></i><span>وضع ليلي</span></button>
@@ -269,8 +224,7 @@
 
 <div class="mzj-shell" id="mzjShell">
   <aside class="mzj-sidebar" id="mzjSidebar">
-    <div class="side-section">
-      <div class="side-title">الإدارة</div>
+    <div class="side-section"><div class="side-title">الإدارة</div>
       <nav class="side-nav">
         <a class="side-link tab" href="./sales.html"><i class="fa-solid fa-handshake"></i><span>المبيعات</span></a>
         <a class="side-link tab" href="./dashboard.html"><i class="fa-solid fa-gauge"></i><span>الداش بورد</span></a>
@@ -287,16 +241,9 @@
   <div class="mzj-backdrop" id="mzjBackdrop"></div>
 
   <main class="mzj-content">
-    <section class="mzj-pagehead">
-      <div class="pagehead-left">
-        <h1 class="page-title">لوحة الإدارة</h1>
-        <p class="page-desc">إدارة المستخدمين والصلاحيات والإعدادات.</p>
-      </div>
-    </section>
-
+    <section class="mzj-pagehead"><div class="pagehead-left"><h1 class="page-title">لوحة الإدارة</h1><p class="page-desc">إدارة المستخدمين والصلاحيات والإعدادات.</p></div></section>
     <div class="legacy legacy-admin">
 
-<div class=\"mzj-boot\">جاري تحميل النظام…</div>
 <!-- Topbar -->
 <div class="topbar">
 <div class="topbar-inner">
@@ -813,7 +760,7 @@
 
   /* ===== Auth Gate ===== */
   
-  onAuthStateChanged(auth, async (user)=>{
+  onAuthStateChanged(auth, async (user)=>{const __gate=document.getElementById('authGate'); if(__gate) __gate.style.display = user ? 'none' : 'block';
   if(user){
     try{
       const role = await fetchUserRole(user);
@@ -1839,11 +1786,16 @@ if(!movedCount){
 
   </script>
 </div>  <script src="./mzj-ui.js"></script>
+</div></main></div></body>none';
+    });
+  }
+  if(moveToGlobal){
+    moveToGlobal.addEventListener('change', toggleNotesVisibility);
+    toggleNotesVisibility();
+  }
 
-    </div>
-  </main>
-</div>
-
+  </script>
+</div>  <script src="./mzj-ui.js"></script>
 </body>
 </html>
 

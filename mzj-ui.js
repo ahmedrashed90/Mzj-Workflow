@@ -19,12 +19,17 @@
     localStorage.setItem('mzj_sidebar_collapsed', v ? '1' : '0');
   }
 
-  if (isDesktop() && localStorage.getItem('mzj_sidebar_collapsed') === '1') setCollapsed(true);
+  // Restore only if explicitly set
+  if (isDesktop()){
+    const saved = localStorage.getItem('mzj_sidebar_collapsed');
+    if (saved === '1') setCollapsed(true);
+  }
 
   mqDesktop.addEventListener?.('change', () => {
     closeMobile();
     if (isDesktop()){
-      setCollapsed(localStorage.getItem('mzj_sidebar_collapsed') === '1');
+      const saved = localStorage.getItem('mzj_sidebar_collapsed');
+      setCollapsed(saved === '1');
     } else {
       shell?.classList.remove('sidebar-collapsed');
     }
@@ -57,12 +62,11 @@
 
   function tick(){
     try{
-      const dt = new Date();
       const fmt = new Intl.DateTimeFormat('ar-SA', {
         weekday:'short', year:'numeric', month:'2-digit', day:'2-digit',
         hour:'2-digit', minute:'2-digit', hour12:true, timeZone:'Asia/Riyadh'
       });
-      if (nowEl) nowEl.textContent = fmt.format(dt);
+      if (nowEl) nowEl.textContent = fmt.format(new Date());
     }catch(_){
       if (nowEl) nowEl.textContent = new Date().toLocaleString('ar-SA');
     }

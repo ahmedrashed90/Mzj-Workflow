@@ -97,6 +97,12 @@
   }
 </style>
 
+<style>
+  /* Prevent authGate flash while Firebase auth state loads */
+  html.auth-pending #authGate{opacity:0 !important; visibility:hidden !important; pointer-events:none !important;}
+  html.auth-pending #app{display:none !important;}
+</style>
+<script>document.documentElement.classList.add('auth-pending');</script>
 </head>
 <body class="mzj">
 

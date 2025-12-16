@@ -5,97 +5,131 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <meta name="color-scheme" content="light"/>
-  <title>لوحة المؤشرات — MZJ Workspace</title>
-
-  <style id="noFlash">
-html{background:#fff8ef}
-body{opacity:0}
-</style>
+  <title>الداش بورد — MZJ Workspace</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
 
+  <style id="noFlash">
+  
+html{background:#fff8ef}
+body{opacity:0}
+
+  </style>
+
   <style>
     :root{
       --brown:#3e2420; --beige:#bc8f74; --cream:#fff8ef;
-      --text:#1f2937; --muted:#6b7280; --line:#e7e5e4;
-      --card:#ffffff; --radius:14px; --shadow:0 10px 26px rgba(0,0,0,.06);
+      --text:#111827; --muted:#6b7280; --line:#e5e7eb;
+      --card:#ffffff; --shadow:0 10px 24px rgba(0,0,0,.06);
+      --radius:16px;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;font-family:"Tajawal",system-ui,Arial;background:var(--cream);color:var(--text)}
-
-    /* ✅ نخبي التوب بار القديم نهائي */
-    .topbar{display:none !important}
-
-    /* ===== Shell ===== */
-    .app{min-height:100vh;display:flex;overflow:hidden}
-    .sidebar{
-      width:270px;background:#fff;border-left:1px solid var(--line);
-      padding:14px 12px;flex-shrink:0
-    }
-    .sb-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
-    .brand{display:flex;align-items:center;gap:10px}
-    .logo{width:36px;height:36px;border-radius:10px;background:var(--brown);color:#fff;display:grid;place-items:center;font-weight:900}
-    .brand h1{font-size:14px;margin:0;color:var(--brown)}
-    .brand small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
-
-    .nav{display:grid;gap:6px;margin-top:10px}
-    .nav a{
-      text-decoration:none;color:#111;font-weight:800;
-      display:flex;align-items:center;gap:10px;
-      padding:10px 12px;border-radius:12px;border:1px solid transparent;
-    }
-    .nav a i{color:var(--beige);width:18px;text-align:center}
-    .nav a.active,.nav a:hover{background:var(--cream);border-color:var(--line);color:var(--brown)}
-
-    .content{flex:1;min-width:0}
-    .page{max-width:1200px;margin:0 auto;padding:14px 14px 92px} /* ✅ مساحة للداون بار */
-
-    /* ===== Top strip داخل المحتوى (بديل التوب بار) ===== */
-    .page-head{
-      background:#fff;border:1px solid var(--line);border-radius:16px;
-      padding:12px 12px;box-shadow:var(--shadow);
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
-      margin-bottom:12px
-    }
-    .page-title{display:flex;flex-direction:column;gap:2px}
-    .page-title b{font-size:16px;color:var(--brown)}
-    .page-title span{font-size:12px;color:var(--muted)}
-    .head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-    .status-badge{display:flex;align-items:center;gap:8px;border:1px solid var(--line);padding:8px 10px;border-radius:999px;background:#fff}
-    .dot{width:10px;height:10px;border-radius:999px;background:#f59e0b}
-    .dot.ok{background:#16a34a} .dot.err{background:#ef4444} .dot.warn{background:#f59e0b}
-
-    /* ===== Mobile behavior ===== */
-    @media (max-width:980px){
-      .sidebar{display:none}
-      .page{padding:12px 12px 92px}
-      .page-head{position:sticky;top:0;z-index:50}
+    body{
+      margin:0;
+      font-family:"Tajawal",system-ui,Arial;
+      background:var(--cream);
+      color:var(--text);
+      overflow-x:hidden;
     }
 
-    /* ===== Bottom Nav (Down Bar) ===== */
-    .bottom-nav{
-      position:fixed;left:0;right:0;bottom:0;
-      background:#fff;border-top:1px solid var(--line);
-      padding:10px 8px calc(10px + env(safe-area-inset-bottom));
-      display:none;z-index:1000
+    /* ===== Top Bar ===== */
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:50;
+      background:#fff;
+      border-bottom:1px solid var(--line);
     }
-    .bottom-nav .wrap{
-      max-width:1200px;margin:0 auto;
-      display:grid;grid-template-columns:repeat(5,1fr);gap:6px
+    .topbar .row{
+      max-width:1100px;
+      margin:0 auto;
+      padding:12px 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
     }
-    .b-item{
-      display:grid;place-items:center;gap:4px;
-      text-decoration:none;color:#111;
-      padding:8px 6px;border-radius:14px;border:1px solid transparent;
-      font-weight:800;font-size:11px
+    .title{display:flex;flex-direction:column;gap:2px;min-width:0}
+    .title b{
+      color:var(--brown);
+      font-size:16px;
+      line-height:1.2;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
     }
-    .b-item i{color:var(--beige);font-size:16px}
-    .b-item.active{background:var(--cream);border-color:var(--line);color:var(--brown)}
-    @media (max-width:980px){ .bottom-nav{display:block} }
+    .title span{
+      color:var(--muted);
+      font-size:12px;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    }
+    .chip{
+      display:flex;align-items:center;gap:8px;
+      border:1px solid var(--line);
+      background:#fff;
+      padding:8px 10px;
+      border-radius:999px;
+      box-shadow:var(--shadow);
+      font-size:12px;
+      flex-shrink:0;
+      max-width:48vw;
+      overflow:hidden;
+    }
+    .dot{width:10px;height:10px;border-radius:999px;background:#f59e0b;}
+    .dot.ok{background:#16a34a}
+    .dot.err{background:#ef4444}
+    .dot.warn{background:#f59e0b}
 
-    /* ===== Keep your original dashboard styles ===== */
+    /* ===== Page ===== */
+    .page{
+      max-width:1100px;
+      margin:0 auto;
+      padding:14px 12px 120px; /* space for bottom bar */
+    }
+
+    /* ===== Bottom Nav ===== */
+    .bottom{
+      position:fixed;
+      left:0; right:0; bottom:0;
+      background:#fff;
+      border-top:1px solid var(--line);
+      padding:10px 10px calc(10px + env(safe-area-inset-bottom));
+      z-index:60;
+    }
+    .bottom .wrap{
+      max-width:1100px;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns:repeat(4,1fr); /* 8 items => 2 rows */
+      gap:8px;
+    }
+    .navbtn{
+      border:1px solid transparent;
+      background:#fff;
+      border-radius:16px;
+      padding:10px 6px;
+      display:grid;
+      place-items:center;
+      gap:6px;
+      color:#111;
+      text-decoration:none;
+      font-weight:800;
+      font-size:12px;
+      line-height:1.1;
+      user-select:none;
+    }
+    .navbtn i{color:var(--beige);font-size:18px}
+    .navbtn.active{
+      background:var(--cream);
+      border-color:var(--line);
+      color:var(--brown);
+    }
+    @media (max-width:420px){
+      .navbtn{padding:9px 4px;font-size:11px}
+      .navbtn i{font-size:17px}
+    }
+
+    /* ===== Page CSS ===== */
     
   :root{
     --brown:#3e2420; --beige:#bc8f74; --cream:#fff8ef;
@@ -290,63 +324,25 @@ tr:has(.tag[data-status="مكتملة"]){
 
 tr:hover{ filter: brightness(0.98); }
 
-
-    /* Mobile table improvements (بدون كسر الداتا) */
-    .table-wrap{overflow:auto;-webkit-overflow-scrolling:touch;border-radius:14px}
-    thead th{position:sticky;top:0;z-index:5}
-    .modal{width:min(1400px,96vw);max-height:90vh}
-    @media(max-width:680px){ #modalSearch{min-width:unset !important;width:100%} }
   </style>
 </head>
+<body data-page="dashboard-mobile.html">
 
-<body>
-  <div class="app">
-    <!-- Desktop Sidebar -->
-    <aside class="sidebar">
-      <div class="sb-head">
-        <div class="brand">
-          <div class="logo">MZJ</div>
-          <div>
-            <h1>Workspace</h1>
-            <small>محمد بن ذعار العجمي للسيارات</small>
-          </div>
-        </div>
-      </div>
+<header class="topbar">
+  <div class="row">
+    <div class="title">
+      <b>الداش بورد</b>
+      <span>لوحة المؤشرات — نسخة موبايل</span>
+    </div>
+    <div class="chip" title="حالة الاتصال">
+      <span class="dot warn" id="connDot"></span>
+      <span id="connText">جارِ الاتصال…</span>
+    </div>
+  </div>
+</header>
 
-      <nav class="nav">
-        <a href="dashboard-mobile.html" class="active"><i class="fa-solid fa-gauge"></i> لوحة المؤشرات</a>
-        <a href="inventory-mobile.html"><i class="fa-solid fa-boxes-stacked"></i> المخزون</a>
-        <a href="vt-mobile.html"><i class="fa-solid fa-right-left"></i> نقل السيارات</a>
-        <a href="photoshoot-user-mobile.html"><i class="fa-solid fa-camera"></i> إدارة الطلبات</a>
-        <a href="activity-mobile.html"><i class="fa-solid fa-clipboard-list"></i> سجل النشاط</a>
-        <a href="admin-mobile.html"><i class="fa-solid fa-shield-halved"></i> الإدارة</a>
-      </nav>
-
-      <div style="margin-top:12px">
-        <button id="btnSignOut" class="btn btn-ghost" style="width:100%;justify-content:center">
-          <i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج
-        </button>
-      </div>
-    </aside>
-
-    <!-- Content -->
-    <main class="content">
-      <div class="page">
-        <div class="page-head">
-          <div class="page-title">
-            <b>لوحة المؤشرات</b>
-            <span>نسخة موبايل — Down Bar + تصميم نظيف</span>
-          </div>
-          <div class="head-actions">
-            <div class="status-badge">
-              <span id="connDot" class="dot warn"></span>
-              <span id="connText">جارِ الاتصال…</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- ===== Dashboard Body (من الكود الأصلي) ===== -->
-        
+<main class="page" id="pageRoot">
+  <!-- Auth Gate -->
 <div id="authGate" style="min-height:60vh;display:none;place-items:center;padding:24px">
   <div class="card" style="max-width:440px;width:96%">
     <h2 style="margin:0 0 10px;color:var(--brown)">تسجيل الدخول</h2>
@@ -553,25 +549,38 @@ tr:hover{ filter: brightness(0.98); }
 <div id="toast" class="toast">تم</div>
 
 
-      </div>
-    </main>
+</main>
+<button id="btnSignOut" style="display:none" aria-hidden="true"></button>
+
+<nav class="bottom" aria-label="التنقل">
+  <div class="wrap">
+    <a class="navbtn" data-href="admin-mobile.html" href="admin-mobile.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
+    <a class="navbtn" data-href="inventory-mobile.html" href="inventory-mobile.html"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
+    <a class="navbtn" data-href="dashboard-mobile.html" href="dashboard-mobile.html"><i class="fa-solid fa-gauge"></i><span>الداش</span></a>
+    <a class="navbtn" data-href="vt-mobile.html" href="vt-mobile.html"><i class="fa-solid fa-right-left"></i><span>نقل</span></a>
+
+    <a class="navbtn" data-href="photoshoot-user-mobile.html" href="photoshoot-user-mobile.html"><i class="fa-solid fa-camera"></i><span>الطلبات</span></a>
+    <a class="navbtn" data-href="cars-mobile.html" href="cars-mobile.html"><i class="fa-solid fa-car"></i><span>السيارات</span></a>
+    <a class="navbtn" data-href="sales-mobile.html" href="sales-mobile.html"><i class="fa-solid fa-location-dot"></i><span>التتبع</span></a>
+    <a class="navbtn" data-href="activity-mobile.html" href="activity-mobile.html"><i class="fa-solid fa-clipboard-list"></i><span>النشاط</span></a>
   </div>
+</nav>
 
-  <!-- Bottom Nav (Mobile) -->
-  <nav class="bottom-nav" aria-label="التنقل السفلي">
-    <div class="wrap">
-      <a class="b-item active" href="dashboard.html"><i class="fa-solid fa-gauge"></i><span>داش</span></a>
-      <a class="b-item" href="inventory.html"><i class="fa-solid fa-boxes-stacked"></i><span>مخزون</span></a>
-      <a class="b-item" href="vt.html"><i class="fa-solid fa-right-left"></i><span>نقل</span></a>
-      <a class="b-item" href="photoshoot-user.html"><i class="fa-solid fa-camera"></i><span>طلبات</span></a>
-      <a class="b-item" href="Activity.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل</span></a>
-    </div>
-  </nav>
+<script>
+  // Active nav
+  (function(){
+    const current = location.pathname.split('/').pop();
+    document.querySelectorAll('.navbtn').forEach(a=>{
+      if((a.getAttribute('data-href')||a.getAttribute('href')) === current) a.classList.add('active');
+    });
+  })();
+  // Safety: ensure page becomes visible even if app JS fails
+  setTimeout(()=>{ const nf=document.getElementById('noFlash'); if(nf) nf.remove(); document.body.style.opacity='1'; }, 700);
+</script>
 
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script type="module">
-
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
   import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, getDocs, limit, orderBy } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
@@ -2465,8 +2474,8 @@ try{
 
   /* ===== Start ===== */
   setStatus('warn','جارِ الاتصال…');
+</script>
 
-  </script>
+
 </body>
 </html>
-

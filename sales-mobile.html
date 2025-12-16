@@ -1986,5 +1986,35 @@ function clearErpTable() {
 })();
 </script>
 
+
+<script>
+(function(){
+  function forceListView(){
+    const tbody = document.getElementById('ordersListBody');
+    const count = tbody ? tbody.querySelectorAll('tr').length : 0;
+    if(!count) return;
+
+    const ordersListCard = document.getElementById('ordersListCard');
+    const orderCard = document.getElementById('orderCard');
+    const erpCard = document.getElementById('erpCard');
+    const stagesCard = document.getElementById('stagesCard');
+    if (ordersListCard) ordersListCard.style.display = '';
+    if (orderCard) orderCard.style.display = 'none';
+    if (erpCard) erpCard.style.display = 'none';
+    if (stagesCard) stagesCard.style.display = 'none';
+
+    const tabSearchBtn = document.getElementById('tabSearchBtn');
+    const tabListBtn = document.getElementById('tabListBtn');
+    if (tabSearchBtn) tabSearchBtn.classList.remove('tab-active');
+    if (tabListBtn) tabListBtn.classList.add('tab-active');
+  }
+
+  // run repeatedly for a few seconds
+  let n=0;
+  const t=setInterval(()=>{ n++; forceListView(); if(n>=12) clearInterval(t); }, 500);
+  window.addEventListener('load', ()=>setTimeout(forceListView, 900));
+})();
+</script>
+
 </body>
 </html>

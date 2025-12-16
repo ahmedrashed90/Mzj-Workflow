@@ -83,8 +83,10 @@
   .toast.show{display:block;animation:fade .2s ease-out}
   @keyframes fade{from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)}}
 </style>
+  <link rel="stylesheet" href="./mzj-ui.css" />
+
 <style>
-  /* ===== Activity Safe Refactor: hide legacy topbar/nav/login strip ===== */
+  /* ===== Activity Safe Refactor v2: hide legacy topbar/nav/login strip ===== */
   .legacy-activity .dashboard-topbar,
   .legacy-activity .topbar,
   .legacy-activity .tabs,
@@ -94,8 +96,63 @@
     display:none !important;
   }
 </style>
+
 </head>
-<body>
+<body class="mzj">
+
+<header class="mzj-topbar">
+  <div class="topbar-left">
+    <button class="icon-btn" id="mzjSidebarBtn" aria-label="القائمة"><i class="fa-solid fa-bars"></i></button>
+    <div class="brand">
+      <div class="brand-mark">MZJ</div>
+      <div class="brand-text">
+        <div class="brand-title">محمد بن ذعار العجمي للسيارات</div>
+        <div class="brand-sub">Workspace</div>
+      </div>
+    </div>
+  </div>
+  <div class="topbar-center">
+    <div class="mzj-breadcrumb">
+      <span class="crumb">الرئيسية</span>
+      <i class="fa-solid fa-chevron-left"></i>
+      <span class="crumb current">سجل النشاط</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="mzj-chip"><i class="fa-regular fa-clock"></i><span id="mzjNow">—</span></div>
+    <button class="mzj-btn mzj-btn-ghost" id="mzjThemeBtn" type="button"><i class="fa-solid fa-moon"></i><span>وضع ليلي</span></button>
+  </div>
+</header>
+
+<div class="mzj-shell" id="mzjShell">
+  <aside class="mzj-sidebar" id="mzjSidebar">
+    <div class="side-section">
+      <div class="side-title">العمليات</div>
+      <nav class="side-nav">
+        <a class="side-link tab" href="./sales.html"><i class="fa-solid fa-handshake"></i><span>المبيعات</span></a>
+        <a class="side-link tab" href="./dashboard.html"><i class="fa-solid fa-gauge"></i><span>الداش بورد</span></a>
+        <a class="side-link tab" href="./inventory.html"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
+        <a class="side-link tab" href="./vt.html"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
+        <a class="side-link tab" href="./photoshoot-user.html"><i class="fa-solid fa-camera"></i><span>إدارة الطلبات</span></a>
+        <a class="side-link tab" href="./cars.html"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
+        <a class="side-link tab" href="./admin.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
+        <a class="side-link tab active" href="./Activity.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل النشاط</span></a>
+      </nav>
+    </div>
+  </aside>
+
+  <div class="mzj-backdrop" id="mzjBackdrop"></div>
+
+  <main class="mzj-content">
+    <section class="mzj-pagehead">
+      <div class="pagehead-left">
+        <h1 class="page-title">سجل نشاط الأعضاء</h1>
+        <p class="page-desc">تتبع كل حركة يقوم بها الأعضاء داخل النظام.</p>
+      </div>
+    </section>
+
+    <div class="legacy legacy-activity">
+
 
 <!-- Topbar -->
 <div class="topbar">
@@ -630,6 +687,12 @@ $('#btnLogin').addEventListener('click', async ()=>{
   /* ===== Init ===== */
   setStatus('warn','جارِ الاتصال…');
 </script>
+  <script src="./mzj-ui.js"></script>
+
+    </div>
+  </main>
+</div>
+
 </body>
 </html>
 

@@ -374,19 +374,84 @@
 
 </style>
   <link rel="stylesheet" href="./mzj-ui.css" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
 
-  <style>
-    /* ===== MZJ Bridge (Sales) — visual only, no logic changes ===== */
-    body.mzj{background:linear-gradient(180deg,#fff8ef,#ffffff 34%);}
-    .topbar{background:rgba(255,255,255,.78)!important;backdrop-filter:blur(10px);border-bottom:1px solid rgba(231,229,228,.8)!important;}
-    .tab{border-radius:14px!important;border:1px solid #e7e5e4!important;font-weight:800!important;}
-    .tab.active{background:rgb(62,36,32)!important;border-color:rgb(62,36,32)!important;color:#fff!important;}
-    .btn-primary{background:rgb(62,36,32)!important;border-color:rgb(62,36,32)!important;}
-    .btn-outline{border-color:rgb(62,36,32)!important;color:rgb(62,36,32)!important;}
-  </style>
+<style>
+  /* ===== Sales Safe Refactor: hide legacy topbar/tabs (keep DOM for JS) ===== */
+  .legacy-sales .topbar,
+  .legacy-sales .tabs,
+  .legacy-sales .nav-tabs,
+  .legacy-sales .header,
+  .legacy-sales header:not(.mzj-topbar){display:none !important;}
+
+  /* Keep content spacing nice */
+  .legacy-sales{padding-top: 6px;}
+</style>
 
 </head>
 <body class="mzj">
+
+  <!-- MZJ Unified Topbar -->
+  <header class="mzj-topbar">
+    <div class="topbar-left">
+      <button class="icon-btn" id="mzjSidebarBtn" aria-label="القائمة"><i class="fa-solid fa-bars"></i></button>
+      <div class="brand">
+        <div class="brand-mark">MZJ</div>
+        <div class="brand-text">
+          <div class="brand-title">محمد بن ذعار العجمي للسيارات</div>
+          <div class="brand-sub">Workspace</div>
+        </div>
+      </div>
+    </div>
+    <div class="topbar-center">
+      <div class="mzj-breadcrumb">
+        <span class="crumb">الرئيسية</span>
+        <i class="fa-solid fa-chevron-left"></i>
+        <span class="crumb current">المبيعات</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="mzj-chip"><i class="fa-regular fa-clock"></i><span id="mzjNow">—</span></div>
+      <button class="mzj-btn mzj-btn-ghost" id="mzjThemeBtn" type="button"><i class="fa-solid fa-moon"></i><span>وضع ليلي</span></button>
+      <div class="mzj-user">
+        <div class="avatar">MZJ</div>
+        <div class="user-text">
+          <div class="user-name">المبيعات</div>
+          <div class="user-role">Sales</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="mzj-shell" id="mzjShell">
+    <aside class="mzj-sidebar" id="mzjSidebar">
+      <div class="side-section">
+        <div class="side-title">المبيعات</div>
+        <nav class="side-nav">
+          <a class="side-link tab active" href="./sales.html"><i class="fa-solid fa-handshake"></i><span>المبيعات</span></a>
+          <a class="side-link tab" href="./dashboard.html"><i class="fa-solid fa-gauge"></i><span>الداش بورد</span></a>
+          <a class="side-link tab" href="./inventory.html"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
+          <a class="side-link tab" href="./vt.html"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
+          <a class="side-link tab" href="./photoshoot-user.html"><i class="fa-solid fa-camera"></i><span>إدارة الطلبات</span></a>
+          <a class="side-link tab" href="./cars.html"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
+          <a class="side-link tab" href="./admin.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
+          <a class="side-link tab" href="./Activity.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل النشاط</span></a>
+        </nav>
+      </div>
+    </aside>
+
+    <div class="mzj-backdrop" id="mzjBackdrop"></div>
+
+    <main class="mzj-content">
+      <section class="mzj-pagehead">
+        <div class="pagehead-left">
+          <h1 class="page-title">لوحة إدارة المبيعات</h1>
+          <p class="page-desc">نفس الداتا والمنطق — واجهة موحّدة.</p>
+        </div>
+      </section>
+
+      <div class="legacy legacy-sales">
+
   
   <!-- Topbar (Matched with Admin) -->
   <div class="topbar">
@@ -1677,6 +1742,11 @@ function clearErpTable() {
 </script>
 
   <script src="./mzj-ui.js"></script>
+
+      </div>
+    </main>
+  </div>
+
 </body>
 </html>
 

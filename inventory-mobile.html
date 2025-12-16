@@ -1,23 +1,136 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>MZJ Mobile — المخزون</title>
+  <meta name="color-scheme" content="light"/>
+  <title>المخزون — MZJ Workspace</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
 
-  <!-- No-flash auth gate -->
-<style id="noFlash">
+  <style id="noFlash">
+  
   html{background:#fff8ef}
   body{opacity:0;transition:.14s ease}
-</style>
 
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  </style>
 
-<style>
+  <style>
+    :root{
+      --brown:#3e2420; --beige:#bc8f74; --cream:#fff8ef;
+      --text:#111827; --muted:#6b7280; --line:#e5e7eb;
+      --card:#ffffff; --shadow:0 10px 24px rgba(0,0,0,.06);
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:"Tajawal",system-ui,Arial;
+      background:var(--cream);
+      color:var(--text);
+      overflow-x:hidden;
+    }
+
+    /* ===== Top Bar ===== */
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:50;
+      background:#fff;
+      border-bottom:1px solid var(--line);
+    }
+    .topbar .row{
+      max-width:1100px;
+      margin:0 auto;
+      padding:12px 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .title{display:flex;flex-direction:column;gap:2px;min-width:0}
+    .title b{
+      color:var(--brown);
+      font-size:16px;
+      line-height:1.2;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    }
+    .title span{
+      color:var(--muted);
+      font-size:12px;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    }
+    .chip{
+      display:flex;align-items:center;gap:8px;
+      border:1px solid var(--line);
+      background:#fff;
+      padding:8px 10px;
+      border-radius:999px;
+      box-shadow:var(--shadow);
+      font-size:12px;
+      flex-shrink:0;
+      max-width:48vw;
+      overflow:hidden;
+    }
+    .dot{width:10px;height:10px;border-radius:999px;background:#f59e0b;}
+    .dot.ok{background:#16a34a}
+    .dot.err{background:#ef4444}
+    .dot.warn{background:#f59e0b}
+
+    /* ===== Page ===== */
+    .page{
+      max-width:1100px;
+      margin:0 auto;
+      padding:14px 12px 120px; /* space for bottom bar */
+    }
+
+    /* ===== Bottom Nav ===== */
+    .bottom{
+      position:fixed;
+      left:0; right:0; bottom:0;
+      background:#fff;
+      border-top:1px solid var(--line);
+      padding:10px 10px calc(10px + env(safe-area-inset-bottom));
+      z-index:60;
+    }
+    .bottom .wrap{
+      max-width:1100px;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns:repeat(4,1fr); /* 8 items => 2 rows */
+      gap:8px;
+    }
+    .navbtn{
+      border:1px solid transparent;
+      background:#fff;
+      border-radius:16px;
+      padding:10px 6px;
+      display:grid;
+      place-items:center;
+      gap:6px;
+      color:#111;
+      text-decoration:none;
+      font-weight:800;
+      font-size:12px;
+      line-height:1.1;
+      user-select:none;
+    }
+    .navbtn i{color:var(--beige);font-size:18px}
+    .navbtn.active{
+      background:var(--cream);
+      border-color:var(--line);
+      color:var(--brown);
+    }
+    @media (max-width:420px){
+      .navbtn{padding:9px 4px;font-size:11px}
+      .navbtn i{font-size:17px}
+    }
+
+    /* ===== Page CSS ===== */
+    
   :root{
     --brown:#3e2420; --beige:#bc8f74; --cream:#fff8ef;
     --text:#1f2937; --muted:#6b7280;
@@ -615,82 +728,26 @@
   .cell-notes{cursor:pointer}
   .cell-notes:hover{background:#fff3e8}
 
-</style>
-<link rel="stylesheet" href="./mzj-ui.css"/>
 
-  <link rel="stylesheet" href="./mzj-mobile-ui.css"/>
+  </style>
 </head>
-<body class="mzj-mobile">
-  <header class="mzj-m-topbar" id="mzjTopbar">
-    <div class="mzj-m-brand">
-      <div class="mzj-m-mark">MZJ</div>
-      <div class="mzj-m-brandtext">
-        <div class="mzj-m-title">المخزون</div>
-        <div class="mzj-m-sub">Workspace Mobile</div>
-      </div>
+<body data-page="inventory-mobile.html">
+
+<header class="topbar">
+  <div class="row">
+    <div class="title">
+      <b>المخزون</b>
+      <span>إدارة المخزون — نسخة موبايل</span>
     </div>
-    <div class="mzj-m-chip"><i class="fa-regular fa-clock"></i><span id="mzjNow">—</span></div>
-  </header>
-
-  <main class="mzj-m-page">
- 
-
-<!-- MZJ Unified Topbar -->
-<header class="mzj-topbar">
-  <div class="topbar-left">
-    <button class="icon-btn" id="mzjSidebarBtn" aria-label="القائمة">
-      <i class="fa-solid fa-bars"></i>
-    </button>
-    <div class="brand">
-      <div class="brand-mark">MZJ</div>
-      <div class="brand-text">
-        <div class="brand-title">محمد بن ذعار العجمي للسيارات</div>
-        <div class="brand-sub">Workspace</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="topbar-center">
-    <div class="mzj-breadcrumb">
-      <span class="crumb">الرئيسية</span>
-      <i class="fa-solid fa-chevron-left"></i>
-      <span class="crumb current">المخزون</span>
-    </div>
-  </div>
-
-  <div class="topbar-right">
-    <div class="mzj-chip">
-      <span class="dot warn" id="connDot" style="margin-inline-start:2px"></span>
+    <div class="chip" title="حالة الاتصال">
+      <span class="dot warn" id="connDot"></span>
       <span id="connText">جارِ الاتصال…</span>
     </div>
-    <button class="mzj-btn mzj-btn-ghost" id="btnSignOut" style="display:none" type="button">
-      <i class="fa-solid fa-right-from-bracket"></i>
-      <span>تسجيل الخروج</span>
-    </button>
   </div>
 </header>
 
-<div class="mzj-shell" id="mzjShell">
-  <aside class="mzj-sidebar" id="mzjSidebar">
-    <div class="side-section">
-      <div class="side-title">الإدارة</div>
-      <nav class="side-nav">
-        <a class="side-link tab" href="admin.html"><i class="fa-solid fa-screwdriver-wrench"></i><span>الإدارة</span></a>
-        <a class="side-link tab active" href="inventory.html"><i class="fa-solid fa-warehouse"></i><span>المخزون</span></a>
-        <a class="side-link tab" href="dashboard-mobile.html"><i class="fa-solid fa-gauge"></i><span>الداش بورد</span></a>
-        <a class="side-link tab" href="vt.html"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
-        <a class="side-link tab" href="photoshoot-user.html"><i class="fa-solid fa-diagram-project"></i><span>إدارة الطلبات</span></a>
-        <a class="side-link tab" href="cars.html"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
-        <a class="side-link tab" href="Activity.html"><i class="fa-regular fa-clipboard"></i><span>سجل النشاط</span></a>
-        <a class="side-link tab" href="sales.html"><i class="fa-solid fa-receipt"></i><span>المبيعات</span></a>
-      </nav>
-    </div>
-  </aside>
-
-  <div class="mzj-backdrop" id="mzjBackdrop"></div>
-  <main class="mzj-content">
-
-<!-- Auth Gate -->
+<main class="page" id="pageRoot">
+  <!-- Auth Gate -->
 <div id="authGate" class="auth-wrap">
   <div class="auth-card">
     <h2>تسجيل الدخول</h2>
@@ -900,16 +957,41 @@
   </div>
 </div>
 
-
-  </main>
-</div>
-
-<script src="./mzj-ui.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <!-- Firebase (Modules) -->
+
+</main>
+
+<nav class="bottom" aria-label="التنقل">
+  <div class="wrap">
+    <a class="navbtn" data-href="admin-mobile.html" href="admin-mobile.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
+    <a class="navbtn" data-href="inventory-mobile.html" href="inventory-mobile.html"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
+    <a class="navbtn" data-href="dashboard-mobile.html" href="dashboard-mobile.html"><i class="fa-solid fa-gauge"></i><span>الداش</span></a>
+    <a class="navbtn" data-href="vt-mobile.html" href="vt-mobile.html"><i class="fa-solid fa-right-left"></i><span>نقل</span></a>
+
+    <a class="navbtn" data-href="photoshoot-user-mobile.html" href="photoshoot-user-mobile.html"><i class="fa-solid fa-camera"></i><span>الطلبات</span></a>
+    <a class="navbtn" data-href="cars-mobile.html" href="cars-mobile.html"><i class="fa-solid fa-car"></i><span>السيارات</span></a>
+    <a class="navbtn" data-href="sales-mobile.html" href="sales-mobile.html"><i class="fa-solid fa-location-dot"></i><span>التتبع</span></a>
+    <a class="navbtn" data-href="activity-mobile.html" href="activity-mobile.html"><i class="fa-solid fa-clipboard-list"></i><span>النشاط</span></a>
+  </div>
+</nav>
+
+<script>
+  // Active nav
+  (function(){
+    const current = location.pathname.split('/').pop();
+    document.querySelectorAll('.navbtn').forEach(a=>{
+      if((a.getAttribute('data-href')||a.getAttribute('href')) === current) a.classList.add('active');
+    });
+  })();
+  // Safety: ensure page becomes visible even if app JS fails
+  setTimeout(()=>{ const nf=document.getElementById('noFlash'); if(nf) nf.remove(); document.body.style.opacity='1'; }, 700);
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
   import { getFirestore, doc, getDoc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
@@ -1680,16 +1762,6 @@
   createMoveRow();
 </script>
 
-  </main>
 
-  <nav class="mzj-m-bottomnav" id="mzjBottom" aria-label="تنقل سريع">
-    <a class="mzj-m-bnav " href="./dashboard-mobile.html"><i class="fa-solid fa-gauge"></i><span>الداش</span></a>
-    <a class="mzj-m-bnav active" href="./inventory-mobile.html"><i class="fa-solid fa-boxes-stacked"></i><span>مخزون</span></a>
-    <a class="mzj-m-bnav " href="./sales-mobile.html"><i class="fa-solid fa-handshake"></i><span>مبيعات</span></a>
-    <a class="mzj-m-bnav " href="./photoshoot-user-mobile.html"><i class="fa-solid fa-camera"></i><span>طلبات</span></a>
-    <a class="mzj-m-bnav " href="./admin-mobile.html"><i class="fa-solid fa-shield-halved"></i><span>إدارة</span></a>
-  </nav>
-
-  <script src="./mzj-mobile-ui.js"></script>
 </body>
 </html>

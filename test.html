@@ -4,18 +4,15 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <meta name="color-scheme" content="light"/>
-  <title>{{PAGE_TITLE}} — MZJ Workspace</title>
-
+  <title>MZJ Mobile UI Preview</title>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
-
   <style>
     :root{
       --brown:#3e2420; --beige:#bc8f74; --cream:#fff8ef;
-      --text:#1f2937; --muted:#6b7280; --line:#e5e7eb;
-      --card:#ffffff; --radius:16px; --shadow:0 10px 24px rgba(0,0,0,.06);
-      --ok:#16a34a; --danger:#ef4444; --warn:#f59e0b;
+      --text:#111827; --muted:#6b7280; --line:#e5e7eb;
+      --card:#ffffff; --shadow:0 10px 24px rgba(0,0,0,.06);
+      --radius:16px;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -24,242 +21,149 @@
       font-family:"Tajawal",system-ui,Arial;
       background:var(--cream);
       color:var(--text);
-      overflow-x:hidden;
     }
 
-    /* ===== App ===== */
-    .app{min-height:100vh}
-
-    /* ===== Mini Top Bar (واضح على الموبايل) ===== */
-    .mini-bar{
+    /* ===== Top Bar (واضح وبسيط) ===== */
+    .topbar{
       position:sticky;
       top:0;
-      z-index:100;
+      z-index:50;
       background:#fff;
       border-bottom:1px solid var(--line);
-      padding:10px 12px;
+    }
+    .topbar .row{
+      max-width:1100px;
+      margin:0 auto;
+      padding:12px 12px;
       display:flex;
       align-items:center;
+      justify-content:space-between;
       gap:10px;
     }
-    .menu-btn{
-      border:none;
-      background:var(--brown);
-      color:#fff;
-      width:42px;
-      height:42px;
-      border-radius:14px;
-      display:grid;
-      place-items:center;
-      box-shadow:0 14px 30px rgba(0,0,0,.18);
-      flex-shrink:0;
+    .title{
+      display:flex;flex-direction:column;gap:2px;min-width:0
     }
-    .mini-title{min-width:0;flex:1}
-    .mini-title b{display:block;color:var(--brown);font-size:14px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .mini-title span{display:block;color:var(--muted);font-size:11px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .status-badge{
-      display:inline-flex;
-      gap:8px;
-      align-items:center;
+    .title b{
+      color:var(--brown);
+      font-size:16px;
+      line-height:1.2;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    }
+    .title span{
+      color:var(--muted);
+      font-size:12px;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    }
+    .chip{
+      display:flex;align-items:center;gap:8px;
       border:1px solid var(--line);
       background:#fff;
+      padding:8px 10px;
       border-radius:999px;
-      padding:6px 9px;
-      font-size:11px;
-      max-width:40vw;
-      overflow:hidden;
-      white-space:nowrap;
-      text-overflow:ellipsis;
+      box-shadow:var(--shadow);
+      font-size:12px;
+      flex-shrink:0;
     }
-    .dot{width:9px;height:9px;border-radius:999px;background:var(--warn)}
-    .dot.ok{background:var(--ok)}
-    .dot.err{background:var(--danger)}
-    .dot.warn{background:var(--warn)}
-
-    /* ===== Sidebar (اختياري) ===== */
-    .sidebar{
-      width:290px;
-      background:#fff;
-      border-left:1px solid var(--line);
-      padding:14px 12px;
-      position:fixed;
-      inset:0 auto 0 0;
-      transform:translateX(100%);
-      transition:transform .22s ease;
-      z-index:1000;
-      box-shadow:-16px 0 40px rgba(0,0,0,.18);
+    .dot{
+      width:10px;height:10px;border-radius:999px;background:#f59e0b;
     }
-    .sidebar.open{transform:translateX(0)}
-    .backdrop{
-      position:fixed; inset:0;
-      background:rgba(15,23,42,.45);
-      opacity:0; pointer-events:none;
-      transition:opacity .18s ease;
-      z-index:900;
-    }
-    .backdrop.show{opacity:1; pointer-events:auto}
-
-    .sb-brand{
-      display:flex;align-items:center;gap:10px;
-      padding:6px 6px 12px;
-      border-bottom:1px solid var(--line);
-      margin-bottom:10px;
-    }
-    .logo{
-      width:38px;height:38px;border-radius:12px;
-      background:var(--brown);color:#fff;
-      display:grid;place-items:center;
-      font-weight:900;
-      box-shadow:0 10px 20px rgba(0,0,0,.14);
-    }
-    .sb-brand b{display:block;color:var(--brown);font-size:14px}
-    .sb-brand span{display:block;color:var(--muted);font-size:12px;margin-top:2px}
-
-    .nav{display:grid;gap:6px}
-    .nav a{
-      text-decoration:none;color:#111;font-weight:800;
-      display:flex;align-items:center;gap:10px;
-      padding:10px 12px;border-radius:14px;border:1px solid transparent;
-      user-select:none;
-    }
-    .nav a i{color:var(--beige);width:18px;text-align:center}
-    .nav a.active,.nav a:hover{background:var(--cream);border-color:var(--line);color:var(--brown)}
 
     /* ===== Page ===== */
     .page{
-      max-width:1200px;
+      max-width:1100px;
       margin:0 auto;
-      padding:12px 12px 96px; /* مساحة للداون بار */
+      padding:14px 12px 120px;
     }
-    .slot{margin-top:12px}
+    .hero{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:20px;
+      box-shadow:var(--shadow);
+      padding:14px;
+    }
+    .hero h2{margin:0;color:var(--brown);font-size:18px}
+    .hero p{margin:6px 0 0;color:var(--muted);font-size:13px}
 
-    /* ===== Down Bar (ظاهر دايمًا) ===== */
-    .downbar{
+    /* ===== Bottom Nav (8 items) ===== */
+    .bottom{
       position:fixed;
       left:0; right:0; bottom:0;
       background:#fff;
       border-top:1px solid var(--line);
-      padding:10px 8px calc(10px + env(safe-area-inset-bottom));
-      z-index:950;
+      padding:10px 10px calc(10px + env(safe-area-inset-bottom));
+      z-index:60;
     }
-    .downbar .wrap{
-      max-width:1200px;
+    .bottom .wrap{
+      max-width:1100px;
       margin:0 auto;
       display:grid;
-      grid-template-columns:repeat(4,1fr); /* 8 عناصر = صفين */
+      grid-template-columns:repeat(4,1fr);
+      gap:8px;
+    }
+    .navbtn{
+      border:1px solid transparent;
+      background:#fff;
+      border-radius:16px;
+      padding:10px 6px;
+      display:grid;
+      place-items:center;
       gap:6px;
+      color:#111;
+      text-decoration:none;
+      font-weight:800;
+      font-size:12px;
+      line-height:1.1;
     }
-    .d-item{
-      display:grid;place-items:center;gap:4px;
-      text-decoration:none;color:#111;
-      padding:8px 6px;border-radius:14px;border:1px solid transparent;
-      font-weight:800;font-size:11px;line-height:1.1;
-      user-select:none;
+    .navbtn i{color:var(--beige);font-size:18px}
+    .navbtn.active{
+      background:var(--cream);
+      border-color:var(--line);
+      color:var(--brown);
     }
-    .d-item i{color:var(--beige);font-size:16px}
-    .d-item.active{background:var(--cream);border-color:var(--line);color:var(--brown)}
 
-    /* ===== Page specific CSS placeholder ===== */
-    /* {{PAGE_CSS}} */
+    /* touch friendly */
+    @media (max-width:420px){
+      .navbtn{padding:9px 4px;font-size:11px}
+      .navbtn i{font-size:17px}
+    }
   </style>
 </head>
+<body>
 
-<body data-page="{{PAGE_ID}}">
-  <div class="app">
-
-    <!-- Mini bar visible (حل مشكلة "مخفي") -->
-    <header class="mini-bar">
-      <button class="menu-btn" id="mzjMenuBtn" type="button" aria-label="القائمة">
-        <i class="fa-solid fa-bars"></i>
-      </button>
-
-      <div class="mini-title">
-        <b id="pageTitle">{{PAGE_TITLE}}</b>
-        <span id="pageSub">{{PAGE_SUBTITLE}}</span>
-      </div>
-
-      <div class="status-badge" id="connBadge" title="حالة الاتصال">
-        <span class="dot warn" id="connDot"></span>
-        <span id="connText">جاهز</span>
-      </div>
-    </header>
-
-    <!-- Sidebar (للي يحب يستخدمها) -->
-    <aside class="sidebar" id="mzjSidebar" aria-label="القائمة الجانبية">
-      <div class="sb-brand">
-        <div class="logo">MZJ</div>
-        <div>
-          <b>Workspace</b>
-          <span>محمد بن ذعار العجمي للسيارات</span>
-        </div>
-      </div>
-
-      <nav class="nav">
-        <a href="admin-mobile.html" data-href="admin-mobile.html"><i class="fa-solid fa-shield-halved"></i> الإدارة</a>
-        <a href="inventory-mobile.html" data-href="inventory-mobile.html"><i class="fa-solid fa-boxes-stacked"></i> المخزون</a>
-        <a href="dashboard-mobile.html" data-href="dashboard-mobile.html"><i class="fa-solid fa-gauge"></i> الداش بورد</a>
-        <a href="vt-mobile.html" data-href="vt-mobile.html"><i class="fa-solid fa-right-left"></i> نقل السيارات</a>
-        <a href="photoshoot-user-mobile.html" data-href="photoshoot-user-mobile.html"><i class="fa-solid fa-camera"></i> إدارة الطلبات</a>
-        <a href="cars-mobile.html" data-href="cars-mobile.html"><i class="fa-solid fa-car"></i> كل السيارات</a>
-        <a href="sales-mobile.html" data-href="sales-mobile.html"><i class="fa-solid fa-location-dot"></i> التتبع</a>
-        <a href="activity-mobile.html" data-href="activity-mobile.html"><i class="fa-solid fa-clipboard-list"></i> سجل النشاط</a>
-      </nav>
-    </aside>
-    <div class="backdrop" id="mzjBackdrop"></div>
-
-    <!-- Page -->
-    <main class="page">
-      <div class="slot" id="pageRoot">
-        {{PAGE_CONTENT}}
-      </div>
-    </main>
-
-    <!-- Down Bar (التنقل الأساسي على الموبايل) -->
-    <nav class="downbar" aria-label="التنقل السفلي">
-      <div class="wrap">
-        <a class="d-item" href="admin-mobile.html" data-href="admin-mobile.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
-        <a class="d-item" href="inventory-mobile.html" data-href="inventory-mobile.html"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
-        <a class="d-item" href="dashboard-mobile.html" data-href="dashboard-mobile.html"><i class="fa-solid fa-gauge"></i><span>الداش</span></a>
-        <a class="d-item" href="vt-mobile.html" data-href="vt-mobile.html"><i class="fa-solid fa-right-left"></i><span>نقل</span></a>
-
-        <a class="d-item" href="photoshoot-user-mobile.html" data-href="photoshoot-user-mobile.html"><i class="fa-solid fa-camera"></i><span>الطلبات</span></a>
-        <a class="d-item" href="cars-mobile.html" data-href="cars-mobile.html"><i class="fa-solid fa-car"></i><span>السيارات</span></a>
-        <a class="d-item" href="sales-mobile.html" data-href="sales-mobile.html"><i class="fa-solid fa-location-dot"></i><span>التتبع</span></a>
-        <a class="d-item" href="activity-mobile.html" data-href="activity-mobile.html"><i class="fa-solid fa-clipboard-list"></i><span>النشاط</span></a>
-      </div>
-    </nav>
-
+<header class="topbar">
+  <div class="row">
+    <div class="title">
+      <b>لوحة المؤشرات</b>
+      <span>واجهة موبايل — بار واحد واضح</span>
+    </div>
+    <div class="chip" title="حالة الاتصال">
+      <span class="dot"></span>
+      <span>جارِ الاتصال…</span>
+    </div>
   </div>
+</header>
 
-  <script>
-    // Active تلقائي للسايدبار + الداون بار
-    (function(){
-      const current = location.pathname.split('/').pop();
-      document.querySelectorAll('[data-href]').forEach(a=>{
-        if((a.getAttribute('data-href')||a.getAttribute('href')) === current){
-          a.classList.add('active');
-        }
-      });
-    })();
+<main class="page">
+  <section class="hero">
+    <h2>محتوى الصفحة هنا</h2>
+    <p>ده مجرد Preview للشكل النهائي: Top Bar + Down Bar فقط (بدون Sidebar).</p>
+  </section>
+</main>
 
-    // Toggle sidebar
-    (function(){
-      const sb = document.getElementById('mzjSidebar');
-      const bd = document.getElementById('mzjBackdrop');
-      const btn = document.getElementById('mzjMenuBtn');
+<nav class="bottom" aria-label="التنقل">
+  <div class="wrap">
+    <a class="navbtn" href="#"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
+    <a class="navbtn" href="#"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
+    <a class="navbtn active" href="#"><i class="fa-solid fa-gauge"></i><span>الداش بورد</span></a>
+    <a class="navbtn" href="#"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
 
-      function openSB(){ sb.classList.add('open'); bd.classList.add('show'); }
-      function closeSB(){ sb.classList.remove('open'); bd.classList.remove('show'); }
+    <a class="navbtn" href="#"><i class="fa-solid fa-camera"></i><span>الطلبات</span></a>
+    <a class="navbtn" href="#"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
+    <a class="navbtn" href="#"><i class="fa-solid fa-location-dot"></i><span>التتبع</span></a>
+    <a class="navbtn" href="#"><i class="fa-solid fa-clipboard-list"></i><span>سجل النشاط</span></a>
+  </div>
+</nav>
 
-      btn.addEventListener('click', ()=> sb.classList.contains('open') ? closeSB() : openSB());
-      bd.addEventListener('click', closeSB);
-      document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeSB(); });
-      document.querySelectorAll('.nav a').forEach(a=> a.addEventListener('click', closeSB));
-    })();
-  </script>
-
-  <script>
-    /* {{PAGE_JS}} */
-  </script>
 </body>
 </html>
+

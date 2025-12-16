@@ -807,14 +807,232 @@ body.auth-checking #loginCard{display:none !important;}
   </div>
 </header>
 
-<div id="app">
-
 <div id="authGate" style="display:none"></div>
+<div id="app">
 <main class="page" id="pageRoot">
-  
-</main>
+  <div class="container">
+
+
+
+  <!-- LOGIN CARD -->
+  <div class="card" id="loginCard" style="display:none">
+    <div class="card-hd">
+      <h2>تسجيل الدخول</h2>
+      <div class="row">
+        <span class="badge" id="authState">جارٍ الاتصال…</span>
+        <span class="badge" id="roleBadge">—</span>
+        <span class="badge" id="locBadge">—</span>
+        <button class="btn" id="btnLogout" style="display:none"><i class="fa-solid fa-right-from-bracket"></i>تسجيل خروج</button>
+      </div>
+    </div>
+    <div class="card-bd">
+      <div class="row">
+        <input class="input" id="loginEmail" type="email" placeholder="البريد الإلكتروني" autocomplete="email">
+        <input class="input" id="loginPass" type="password" placeholder="كلمة المرور" autocomplete="current-password">
+        <button class="btn primary" id="btnLogin"><i class="fa-solid fa-right-to-bracket"></i>تسجيل الدخول</button>
+      </div>
+      <div class="alert" id="loginMsg" style="display:none"></div>
+      <div class="small" style="margin-top:8px">يفتح فقط من خلال https أو localhost (مش file://).</div>
+    </div>
+  </div>
+
+  <!-- ORDERS PAGE -->
+  <div class="card" id="page-orders" style="display:none; margin-top:14px">
+    <div class="card-hd">
+      <h2>الطلبات</h2>
+      <div class="inner-tabs">
+        <button class="inner-tab active" data-inner="create">إنشاء طلب</button>
+        <button class="inner-tab" data-inner="manage">إدارة الطلبات</button>
+        <button class="inner-tab" data-inner="done">الطلبات المكتملة</button>
+      </div>
+    </div>
+
+    <!-- Create -->
+    <div class="card-bd" id="inner-create">
+      <div class="row">
+        <input class="input" id="reqBy" placeholder="مقدم الطلب" readonly>
+        <select class="select" id="reqType">
+          <option value="auto" selected>تحديد تلقائي من الصفوف</option>
+          <option value="shoot">تصوير فقط</option>
+          <option value="move">نقل فقط</option>
+        </select>
+        <button class="btn" id="btnAddRow"><i class="fa-solid fa-plus"></i>إضافة سيارة</button>
+        <button class="btn" id="btnResetRows"><i class="fa-solid fa-rotate"></i>إعادة ضبط الجدول</button>
+        <span class="spacer"></span>
+        <button class="btn primary" id="btnSubmit"><i class="fa-solid fa-paper-plane"></i>ارسال الطلب</button>
+      </div>
+
+      <div class="hr"></div>
+
+      
+
+      <div class="tableWrap" style="margin-top:10px">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="width:60px" class="center">#</th>
+              <th style="width:120px">نوع</th>
+              <th style="width:60px">VIN</th>
+              <th>السيارة</th>
+              <th>الفئة</th>
+              <th style="width:40px">الخارجي</th>
+              <th style="width:40px">الداخلي</th>
+              <th style="width:90px" class="center">الموديل</th>
+              <th style="width:120px">المكان</th>
+              <th style="width:120px" id="placeHeader">مكان التصوير</th>
+              <th style="width:80px">ملاحظة</th>
+              <th style="width:70px" class="center">مسح</th>
+            </tr>
+          </thead>
+          <tbody id="reqRowsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Manage -->
+    <div class="card-bd" id="inner-manage" style="display:none">
+      <div class="row">
+        <select class="select" id="filterKind">
+          <option value="all">الكل</option>
+          <option value="shoot">تصوير</option>
+          <option value="move">نقل</option>
+          <option value="mixed">مختلط</option>
+        </select>
+        <input class="input" id="searchBox" placeholder="بحث: رقم الطلب / المنشئ / VIN">
+        <span class="spacer"></span>
+        <span class="badge" id="manageCount">—</span>
+      </div>
+
+      <div class="tableWrap" style="margin-top:10px">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="width:90px">رقم</th>
+              <th style="width:90px">النوع</th>
+              <th>الحالة</th>
+              <th style="width:200px">المنشئ</th>
+              <th style="width:170px">آخر تحديث</th>
+              <th style="width:130px">إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Done -->
+    <div class="card-bd" id="inner-done" style="display:none">
+      <div class="small">يعرض الطلبات المكتملة فقط.</div>
+      <div class="tableWrap" style="margin-top:10px">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="width:90px">رقم</th>
+              <th style="width:90px">النوع</th>
+              <th style="width:200px">المنشئ</th>
+              <th style="width:170px">وقت الإنهاء</th>
+              <th style="width:130px">فتح</th>
+            </tr>
+          </thead>
+          <tbody id="doneTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARS -->
+  <div class="card" id="page-cars" style="display:none; margin-top:14px">
+    <div class="card-hd"><h2>كل السيارات</h2><span class="small">مصدر الـ Auto-fill هو stock من mzj_admin_state/v1.</span></div>
+    <div class="card-bd">
+      <div class="row">
+        <input class="input mono" id="vinLookup" placeholder="ابحث عن VIN">
+        <button class="btn" id="btnLookup"><i class="fa-solid fa-magnifying-glass"></i>بحث</button>
+        <span class="spacer"></span>
+        <span class="badge" id="stockCount">—</span>
+      </div>
+      <div class="alert" id="lookupRes" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- ACTIVITY -->
+  <div class="card" id="page-activity" style="display:none; margin-top:14px">
+    <div class="card-hd"><h2>سجل النشاط</h2><span class="small">مرئي للإدارة فقط</span></div>
+    <div class="card-bd">
+      <div class="small" id="activityHint">—</div>
+      <div class="tableWrap" style="margin-top:10px">
+        <table class="table">
+          <thead><tr><th style="width:180px">الوقت</th><th style="width:200px">المستخدم</th><th>الإجراء</th><th>التفاصيل</th></tr></thead>
+          <tbody id="activityTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
 </div>
-<button id="btnSignOut" style="display:none"></button>
+
+<!-- MODAL -->
+<div class="modal-backdrop" id="modalBackdrop" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-hd">
+      <div class="title" id="modalTitle">تفاصيل الطلب</div>
+      <div class="row">
+        <span class="badge" id="modalMeta">—</span>
+        <button class="btn" id="btnCloseModal"><i class="fa-solid fa-xmark"></i>إغلاق</button>
+      </div>
+    </div>
+
+    <div class="modal-bd">
+      <div class="progress-wrap">
+        <div class="progress-row"><div class="p-title">Progress عام</div><div class="p-val" id="overallVal">0%</div></div>
+        <div class="bar"><div id="overallBar"></div></div>
+
+        <div class="stage-grid">
+          <div class="stage"><div class="s-title">1) تم استلام الطلب</div><div class="s-val" id="s1Val">0/0 — 0%</div><div class="bar" style="margin-top:6px"><div id="s1Bar"></div></div></div>
+          <div class="stage"><div class="s-title">2) تم إرسال السيارة</div><div class="s-val" id="s2Val">0/0 — 0%</div><div class="bar" style="margin-top:6px"><div id="s2Bar"></div></div></div>
+          <div class="stage"><div class="s-title">3) تم استلام السيارة</div><div class="s-val" id="s3Val">0/0 — 0%</div><div class="bar" style="margin-top:6px"><div id="s3Bar"></div></div></div>
+          <div class="stage"><div class="s-title">4) تم الانتهاء</div><div class="s-val" id="s4Val">—</div><div class="bar" style="margin-top:6px"><div id="s4Bar"></div></div></div>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="tableWrap">
+        <table class="table">
+          <thead><tr>
+            <th style="width:60px" class="center">#</th>
+            <th style="width:140px">VIN</th>
+            <th>السيارة</th>
+            <th style="width:170px">المكان</th>
+            <th style="width:170px">الوجهة</th>
+            <th style="width:110px">النوع</th>
+            <th style="width:160px">حالة التنفيذ</th>
+            <th style="width:140px">دورك الآن</th>
+            <th style="width:220px">تعديل الوجهة</th>
+          </tr></thead>
+          <tbody id="rowsTbody"></tbody>
+        </table>
+      </div>
+
+      <div class="small" style="margin-top:10px" id="permHint">—</div>
+    </div>
+
+    <div class="modal-ft">
+      <div class="ft-grid">
+        <button class="btn ft-btn" id="btnEditReq"><i class="fa-solid fa-pen-to-square"></i>تعديل الطلب</button>
+        <button class="btn primary ft-btn" id="btnStep1">1 تم استلام الطلب</button>
+        <button class="btn primary ft-btn" id="btnStep2">2 تم إرسال السيارة</button>
+        <button class="btn primary ft-btn" id="btnStep3">3 تم استلام السيارة</button>
+        <button class="btn primary ft-btn" id="btnStep4"><i class="fa-solid fa-flag-checkered"></i>4 تم الانتهاء</button>
+        <button class="btn ft-btn" id="btnRefreshModal"><i class="fa-solid fa-rotate"></i>تحديث</button>
+      </div>
+      <div class="small" style="margin-top:8px">ترتيب التنفيذ ثابت: 1 → 2 → 3 → 4 (الإنهاء لمقدم الطلب + الإدارة).</div>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase (Compat) -->
+</main>
+<button id="btnSignOut" style="display:none" aria-hidden="true"></button>
 
 <nav class="bottom" aria-label="التنقل">
   <div class="wrap">
@@ -857,6 +1075,17 @@ body.auth-checking #loginCard{display:none !important;}
       dot.classList.remove('warn','err');
       dot.classList.add('ok');
       text.textContent = 'متصل';
+    }
+  });
+</script>
+
+
+<script>
+  // ✅ Force show #app on mobile (fallback): يمنع صفحة فاضية بسبب app.display=none
+  window.addEventListener('load', () => {
+    const app = document.getElementById('app');
+    if (app && getComputedStyle(app).display === 'none') {
+      app.style.display = 'block';
     }
   });
 </script>

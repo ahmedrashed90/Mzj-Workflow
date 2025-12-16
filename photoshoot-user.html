@@ -682,12 +682,24 @@ body.auth-checking #loginCard{display:none !important;}
 
 <style>
   /* ===== Photoshoot Safe Refactor: hide legacy topbar/tabs (keep DOM for JS) ===== */
+  .legacy-ps .dashboard-topbar{display:none !important;}
   .legacy-ps .topbar,
   .legacy-ps .tabs,
   .legacy-ps .nav-tabs,
   .legacy-ps .header,
   .legacy-ps header:not(.mzj-topbar){display:none !important;}
   .legacy-ps{padding-top: 6px;}
+
+  /* Center inner tabs (إنشاء طلب / إدارة الطلبات / الطلبات المكتملة) */
+  .legacy-ps .card-hd{display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
+  .legacy-ps .card-hd h2{margin:0; white-space:nowrap;}
+  .legacy-ps .inner-tabs{margin-inline:auto; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;}
+  .legacy-ps .inner-tab{min-width:120px;}
+
+  /* Make table a bit more compact to reduce scrolling */
+  .legacy-ps table{font-size:13px;}
+  .legacy-ps th, .legacy-ps td{padding:8px 10px !important; vertical-align:middle;}
+  .legacy-ps .card{padding:14px !important;}
 </style>
 
 </head>

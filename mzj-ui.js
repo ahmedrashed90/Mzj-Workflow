@@ -1,54 +1,79 @@
 // MZJ UI helpers (no frameworks)
 (function () {
   const shell = document.getElementById('mzjShell');
+  const sidebar = document.getElementById('mzjSidebar');
   const sidebarBtn = document.getElementById('mzjSidebarBtn');
   const backdrop = document.getElementById('mzjBackdrop');
   const themeBtn = document.getElementById('mzjThemeBtn');
   const nowEl = document.getElementById('mzjNow');
 
-  // Sidebar toggle (mobile)
-  function openSidebar(){ shell?.classList.add('sidebar-open'); }
-  function closeSidebar(){ shell?.classList.remove('sidebar-open'); }
+  // --- Sidebar: mobile overlay + desktop collapse (saved) ---
+  const mqDesktop = window.matchMedia('(min-width: 1024px)');
+  const isDesktop = () => mqDesktop.matches;
+
+  function closeMobile(){ shell?.classList.remove('sidebar-open'); }
+  function toggleMobile(){ shell?.classList.toggle('sidebar-open'); }
+
+  function setCollapsed(v){
+    if (!shell) return;
+    shell.classList.toggle('sidebar-collapsed', !!v);
+    localStorage.setItem('mzj_sidebar_collapsed', v ? '1' : '0');
+  }
+
+  // Restore desktop preference
+  if (isDesktop()){
+    if (localStorage.getItem('mzj_sidebar_collapsed') === '1') setCollapsed(true);
+  }
+
+  // When breakpoint changes
+  mqDesktop.addEventListener?.('change', () => {
+    closeMobile();
+    if (isDesktop()){
+      setCollapsed(localStorage.getItem('mzj_sidebar_collapsed') === '1');
+    } else {
+      shell?.classList.remove('sidebar-collapsed');
+    }
+  });
 
   sidebarBtn?.addEventListener('click', () => {
     if (!shell) return;
-    shell.classList.toggle('sidebar-open');
-  });
-  backdrop?.addEventListener('click', closeSidebar);
-
-  // ESC closes sidebar on mobile + any modal you add later
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeSidebar();
+    if (isDesktop()){
+      setCollapsed(!shell.classList.contains('sidebar-collapsed'));
+    } else {
+      toggleMobile();
+    }
   });
 
-  // Dark mode (saved)
+  backdrop?.addEventListener('click', closeMobile);
+  window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMobile(); });
+
+  // Auto-close on mobile when clicking a link
+  sidebar?.addEventListener('click', (e) => {
+    const a = e.target && e.target.closest ? e.target.closest('a') : null;
+    if (!a) return;
+    if (!isDesktop()) closeMobile();
+  });
+
+  // --- Dark mode (saved) ---
   const savedTheme = localStorage.getItem('mzj_theme');
   if (savedTheme === 'dark') document.body.classList.add('dark');
-
   themeBtn?.addEventListener('click', () => {
     document.body.classList.toggle('dark');
     localStorage.setItem('mzj_theme', document.body.classList.contains('dark') ? 'dark' : 'light');
   });
 
-  // Clock (Riyadh by default)
+  // --- Clock (Riyadh) ---
   function tick(){
     try{
       const dt = new Date();
       const fmt = new Intl.DateTimeFormat('ar-SA', {
-        weekday: 'short',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-        timeZone: 'Asia/Riyadh'
+        weekday: 'short', year:'numeric', month:'2-digit', day:'2-digit',
+        hour:'2-digit', minute:'2-digit', hour12:true, timeZone:'Asia/Riyadh'
       });
       if (nowEl) nowEl.textContent = fmt.format(dt);
     }catch(_){
       if (nowEl) nowEl.textContent = new Date().toLocaleString('ar-SA');
     }
   }
-  tick();
-  setInterval(tick, 15000);
+  tick(); setInterval(tick, 15000);
 })();

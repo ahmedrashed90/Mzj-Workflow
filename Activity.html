@@ -83,56 +83,19 @@
   .toast.show{display:block;animation:fade .2s ease-out}
   @keyframes fade{from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)}}
 </style>
-  <link rel="stylesheet" href="./mzj-ui.css" />
-
 <style>
-  .legacy-activity header:not(.mzj-topbar){display:none !important;}
+  /* ===== Activity Safe Refactor: hide legacy topbar/nav/login strip ===== */
+  .legacy-activity .dashboard-topbar,
+  .legacy-activity .topbar,
+  .legacy-activity .tabs,
+  .legacy-activity .nav-tabs,
+  .legacy-activity .nav-pills,
+  .legacy-activity header:not(.mzj-topbar){
+    display:none !important;
+  }
 </style>
-
 </head>
-<body class="mzj">
-<header class="mzj-topbar">
-  <div class="topbar-left">
-    <button class="icon-btn" id="mzjSidebarBtn"><i class="fa-solid fa-bars"></i></button>
-    <div class="brand">
-      <div class="brand-mark">MZJ</div>
-      <div class="brand-text">
-        <div class="brand-title">محمد بن ذعار العجمي للسيارات</div>
-        <div class="brand-sub">Workspace</div>
-      </div>
-    </div>
-  </div>
-  <div class="topbar-center">
-    <div class="mzj-breadcrumb">
-      <span class="crumb">الرئيسية</span>
-      <i class="fa-solid fa-chevron-left"></i>
-      <span class="crumb current">سجل النشاط</span>
-    </div>
-  </div>
-</header>
-
-<div class="mzj-shell">
-  <aside class="mzj-sidebar" id="mzjSidebar">
-    <nav class="side-nav">
-      <a class="side-link tab" href="./dashboard.html"><i class="fa-solid fa-gauge"></i><span>الداش بورد</span></a>
-      <a class="side-link tab" href="./inventory.html"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
-      <a class="side-link tab" href="./sales.html"><i class="fa-solid fa-handshake"></i><span>المبيعات</span></a>
-      <a class="side-link tab" href="./vt.html"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
-      <a class="side-link tab" href="./photoshoot-user.html"><i class="fa-solid fa-camera"></i><span>إدارة الطلبات</span></a>
-      <a class="side-link tab" href="./cars.html"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
-      <a class="side-link tab active" href="./Activity.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل النشاط</span></a>
-    </nav>
-  </aside>
-
-  <div class="mzj-backdrop" id="mzjBackdrop"></div>
-
-  <main class="mzj-content">
-    <section class="mzj-pagehead">
-      <h1 class="page-title">سجل النشاط</h1>
-    </section>
-
-    <div class="legacy legacy-activity">
-
+<body>
 
 <!-- Topbar -->
 <div class="topbar">
@@ -667,11 +630,6 @@ $('#btnLogin').addEventListener('click', async ()=>{
   /* ===== Init ===== */
   setStatus('warn','جارِ الاتصال…');
 </script>
-  <script src="./mzj-ui.js"></script>
-
-    </div>
-  </main>
-</div>
 </body>
 </html>
 

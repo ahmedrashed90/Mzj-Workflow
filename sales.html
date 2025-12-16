@@ -372,60 +372,19 @@
   .topbar-actions{justify-content:flex-start}
 }
 
-
-/* ===== MZJ Template Overrides (Sales) ===== */
-body.mzj{
-  background: linear-gradient(180deg, #fff8ef, #ffffff 34%);
-}
-.topbar{
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  background: rgba(255,255,255,.78);
-  border-bottom: 1px solid rgba(231,229,228,.8);
-  backdrop-filter: blur(10px);
-}
-.topbar-inner{
-  max-width: 1400px;
-  padding: 10px 14px;
-  gap: 12px;
-}
-.logo{
-  background: rgb(62,36,32) !important;
-  color:#fff !important;
-  border-radius: 14px !important;
-  box-shadow: 0 8px 20px rgba(0,0,0,.05);
-}
-.brand-text h1{
-  color: rgb(62,36,32);
-  font-weight: 900;
-}
-.tabs .tab{
-  border-radius: 14px;
-  border: 1px solid rgba(188,143,116,.18);
-  background: rgba(188,143,116,.10);
-  color: #1f2937;
-  font-weight: 800;
-}
-.tabs .tab.active{
-  background: rgba(62,36,32,.10);
-  border-color: rgba(62,36,32,.18);
-  color: rgb(62,36,32);
-}
-.status-badge{
-  border-radius: 14px;
-  border: 1px solid rgba(231,229,228,.9);
-  background: #fff;
-}
-.tb-btn{
-  border-radius: 14px !important;
-}
-.wrap{
-  max-width: 1400px;
-}
-
 </style>
   <link rel="stylesheet" href="./mzj-ui.css" />
+
+  <style>
+    /* ===== MZJ Bridge (Sales) — visual only, no logic changes ===== */
+    body.mzj{background:linear-gradient(180deg,#fff8ef,#ffffff 34%);}
+    .topbar{background:rgba(255,255,255,.78)!important;backdrop-filter:blur(10px);border-bottom:1px solid rgba(231,229,228,.8)!important;}
+    .tab{border-radius:14px!important;border:1px solid #e7e5e4!important;font-weight:800!important;}
+    .tab.active{background:rgb(62,36,32)!important;border-color:rgb(62,36,32)!important;color:#fff!important;}
+    .btn-primary{background:rgb(62,36,32)!important;border-color:rgb(62,36,32)!important;}
+    .btn-outline{border-color:rgb(62,36,32)!important;color:rgb(62,36,32)!important;}
+  </style>
+
 </head>
 <body class="mzj">
   

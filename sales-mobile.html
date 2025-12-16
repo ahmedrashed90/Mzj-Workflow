@@ -1893,6 +1893,8 @@ function clearErpTable() {
       }
     });
     box.style.display = rows.length ? 'block' : 'none';
+    if (rows.length) document.body.classList.add('cards-ready');
+    else document.body.classList.remove('cards-ready');
   }
 
   function ensureAllOrdersVisible(){
@@ -1942,6 +1944,46 @@ function clearErpTable() {
       app.style.display = 'block';
     }
   });
+</script>
+
+
+<script>
+(function(){
+  function tryOpenAll(){
+    const btn = document.getElementById('tabListBtn') || document.querySelector('[data-tab="list"]') || document.querySelector('.tab-list');
+    if (btn) { btn.click(); }
+  }
+  // try a few times (module loads async)
+  let n=0;
+  const t = setInterval(()=>{
+    n++;
+    tryOpenAll();
+    if(n>=8) clearInterval(t);
+  }, 600);
+
+  window.addEventListener('load', ()=>setTimeout(tryOpenAll, 900));
+})();
+</script>
+
+
+<script>
+(function(){
+  const pill = document.createElement('div');
+  pill.style.cssText='position:fixed;left:10px;bottom:120px;z-index:99999;background:#fff;border:1px solid #eee;border-radius:999px;padding:6px 10px;font:12px Tajawal,Arial;color:#111;opacity:.9';
+  pill.textContent='تم التحميل: 0';
+  document.addEventListener('DOMContentLoaded',()=>document.body.appendChild(pill));
+  function update(){
+    const tbody = document.getElementById('ordersListBody');
+    const c = tbody ? tbody.querySelectorAll('tr').length : 0;
+    pill.textContent = 'تم التحميل: ' + c;
+  }
+  const tbody = document.getElementById('ordersListBody');
+  if (tbody){
+    const obs = new MutationObserver(update);
+    obs.observe(tbody,{childList:true,subtree:true});
+  }
+  window.addEventListener('load',()=>setTimeout(update,1200));
+})();
 </script>
 
 </body>

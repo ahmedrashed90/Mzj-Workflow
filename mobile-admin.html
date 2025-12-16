@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+  <title>MZJ — Admin (Mobile)</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+
+  <link rel="stylesheet" href="./mzj-mobile-ui.css"/>
+  <meta name="theme-color" content="#3e2420"/>
+</head>
+
+<body class="mzj mzj-mobile">
+
+  <!-- Topbar (auto-hide on scroll) -->
+  <header class="mzj-m-topbar" id="mzjTopbar">
+    <div class="mzj-m-brand">
+      <div class="mzj-m-mark">MZJ</div>
+      <div class="mzj-m-brandtext">
+        <div class="mzj-m-title">لوحة الإدارة</div>
+        <div class="mzj-m-sub">Workspace Mobile</div>
+      </div>
+    </div>
+
+    <div class="mzj-m-top-actions">
+      <div class="mzj-m-chip" title="الوقت">
+        <i class="fa-regular fa-clock"></i>
+        <span id="mzjNow">—</span>
+      </div>
+      <button class="mzj-icon-btn" id="mzjThemeBtn" aria-label="الوضع الليلي">
+        <i class="fa-solid fa-moon"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Page -->
+  <main class="mzj-m-page">
+
+    <section class="mzj-m-pagehead">
+      <div class="mzj-m-breadcrumb">
+        <span>الرئيسية</span>
+        <i class="fa-solid fa-chevron-left"></i>
+        <span class="current">الإدارة</span>
+      </div>
+
+      <h1 class="mzj-m-h1">إدارة المستخدمين والصلاحيات</h1>
+      <p class="mzj-m-p">
+        نسخة موبايل (عمودي) — نفس الهوية، والكروت بعرض الشاشة.
+      </p>
+
+      <div class="mzj-m-actions">
+        <button class="mzj-m-btn" type="button"><i class="fa-solid fa-user-plus"></i><span>مستخدم جديد</span></button>
+        <button class="mzj-m-btn mzj-m-btn-outline" type="button"><i class="fa-solid fa-shield"></i><span>صلاحيات</span></button>
+      </div>
+    </section>
+
+    <!-- KPI Cards -->
+    <section class="mzj-m-grid">
+      <article class="mzj-m-card">
+        <div class="mzj-m-card-top">
+          <div class="mzj-m-card-ico"><i class="fa-solid fa-users"></i></div>
+          <div class="mzj-m-card-meta">
+            <div class="mzj-m-card-title">عدد المستخدمين</div>
+            <div class="mzj-m-card-sub">إجمالي الحسابات</div>
+          </div>
+        </div>
+        <div class="mzj-m-card-value">—</div>
+      </article>
+
+      <article class="mzj-m-card">
+        <div class="mzj-m-card-top">
+          <div class="mzj-m-card-ico"><i class="fa-solid fa-user-shield"></i></div>
+          <div class="mzj-m-card-meta">
+            <div class="mzj-m-card-title">الأدوار</div>
+            <div class="mzj-m-card-sub">Roles المتاحة</div>
+          </div>
+        </div>
+        <div class="mzj-m-card-value">—</div>
+      </article>
+
+      <article class="mzj-m-card">
+        <div class="mzj-m-card-top">
+          <div class="mzj-m-card-ico"><i class="fa-solid fa-clipboard-check"></i></div>
+          <div class="mzj-m-card-meta">
+            <div class="mzj-m-card-title">طلبات بانتظار اعتماد</div>
+            <div class="mzj-m-card-sub">Finance / Admin</div>
+          </div>
+        </div>
+        <div class="mzj-m-card-value">—</div>
+      </article>
+    </section>
+
+    <!-- Search / Filter -->
+    <section class="mzj-m-card mzj-m-card-pad">
+      <div class="mzj-m-section-title">بحث سريع</div>
+      <div class="mzj-m-form">
+        <label class="mzj-m-field">
+          <span>ابحث عن مستخدم</span>
+          <input class="mzj-m-input" placeholder="اسم / إيميل / فرع"/>
+        </label>
+
+        <label class="mzj-m-field">
+          <span>الدور</span>
+          <select class="mzj-m-input">
+            <option>الكل</option>
+            <option>Admin</option>
+            <option>Sales</option>
+            <option>Branch</option>
+            <option>Viewer</option>
+          </select>
+        </label>
+
+        <button class="mzj-m-btn mzj-m-btn-full" type="button">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <span>بحث</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Users list (mobile cards) -->
+    <section class="mzj-m-card mzj-m-card-pad">
+      <div class="mzj-m-section-title">المستخدمين (شكل موبايل)</div>
+
+      <div class="mzj-m-list">
+        <article class="mzj-m-rowcard">
+          <div class="mzj-m-row-top">
+            <div class="mzj-m-row-title">Mohammed.ezat198</div>
+            <span class="mzj-m-badge">Admin</span>
+          </div>
+          <div class="mzj-m-row-meta">
+            <div><span>الإيميل:</span> <b>—</b></div>
+            <div><span>الفرع:</span> <b>الإدارة</b></div>
+            <div><span>آخر دخول:</span> <b>—</b></div>
+          </div>
+          <div class="mzj-m-row-actions">
+            <button class="mzj-m-chipbtn" type="button"><i class="fa-solid fa-pen"></i><span>تعديل</span></button>
+            <button class="mzj-m-chipbtn" type="button"><i class="fa-solid fa-ban"></i><span>تعطيل</span></button>
+          </div>
+        </article>
+
+        <article class="mzj-m-rowcard">
+          <div class="mzj-m-row-top">
+            <div class="mzj-m-row-title">Samir Ali</div>
+            <span class="mzj-m-badge mzj-m-badge-ok">Sales</span>
+          </div>
+          <div class="mzj-m-row-meta">
+            <div><span>الإيميل:</span> <b>—</b></div>
+            <div><span>الفرع:</span> <b>الشفا</b></div>
+            <div><span>آخر دخول:</span> <b>—</b></div>
+          </div>
+          <div class="mzj-m-row-actions">
+            <button class="mzj-m-chipbtn" type="button"><i class="fa-solid fa-pen"></i><span>تعديل</span></button>
+            <button class="mzj-m-chipbtn" type="button"><i class="fa-solid fa-key"></i><span>Reset</span></button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Recent activity -->
+    <section class="mzj-m-card mzj-m-card-pad">
+      <div class="mzj-m-section-title">آخر نشاط</div>
+
+      <div class="mzj-m-list">
+        <article class="mzj-m-rowcard">
+          <div class="mzj-m-row-top">
+            <div class="mzj-m-row-title">تعديل صلاحيات مستخدم</div>
+            <span class="mzj-m-badge">اليوم</span>
+          </div>
+          <div class="mzj-m-row-meta">
+            <div><span>بواسطة:</span> <b>—</b></div>
+            <div><span>العملية:</span> <b>Role Update</b></div>
+            <div><span>ملاحظات:</span> <b>—</b></div>
+          </div>
+        </article>
+
+        <article class="mzj-m-rowcard">
+          <div class="mzj-m-row-top">
+            <div class="mzj-m-row-title">إضافة مستخدم جديد</div>
+            <span class="mzj-m-badge mzj-m-badge-ok">تم</span>
+          </div>
+          <div class="mzj-m-row-meta">
+            <div><span>بواسطة:</span> <b>—</b></div>
+            <div><span>العملية:</span> <b>Create User</b></div>
+            <div><span>ملاحظات:</span> <b>—</b></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <div class="mzj-m-spacer"></div>
+  </main>
+
+  <!-- Bottom Nav -->
+  <nav class="mzj-m-bottomnav" aria-label="تنقل سريع">
+    <a class="mzj-m-bnav" href="./mobile-dashboard.html"><i class="fa-solid fa-gauge"></i><span>الرئيسية</span></a>
+    <a class="mzj-m-bnav" href="#"><i class="fa-solid fa-boxes-stacked"></i><span>مخزون</span></a>
+    <a class="mzj-m-bnav" href="#"><i class="fa-solid fa-handshake"></i><span>مبيعات</span></a>
+    <a class="mzj-m-bnav" href="#"><i class="fa-solid fa-camera"></i><span>طلبات</span></a>
+    <a class="mzj-m-bnav active" href="./mobile-admin.html"><i class="fa-solid fa-shield-halved"></i><span>إدارة</span></a>
+  </nav>
+
+  <script src="./mzj-mobile-ui.js"></script>
+</body>
+</html>

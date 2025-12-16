@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>لا توجد صلاحية</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="./mzj-ui.css" />
+  <style>
+
+    .legacy{
+      font-family:'Tajawal',sans-serif;
+      background:#faf7f3;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      height:100vh;
+    }
+    .card{
+      background:#fff;
+      padding:24px 32px;
+      border-radius:14px;
+      box-shadow:0 12px 28px rgba(0,0,0,.06);
+      text-align:center;
+      width:320px;
+    }
+    h1{margin-bottom:12px;font-size:22px;color:#3e2420;}
+    p{color:#6b7280;margin-bottom:20px;}
+    a{
+      display:inline-block;
+      text-decoration:none;
+      padding:10px 22px;
+      border-radius:999px;
+      border:1px solid #3e2420;
+      background:#3e2420;
+      color:#fff;
+      font-size:14px;
+      transition:0.3s;
+    }
+    a:hover{
+      background:#5a372f;
+      border-color:#5a372f;
+    }
+  
+</style>
+  <style>
+    /* isolate legacy page styles under .legacy */
+    .legacy { all: initial; font-family: "Tajawal", system-ui, Arial; direction: rtl; unicode-bidi: plaintext; }
+    .legacy *, .legacy *::before, .legacy *::after { box-sizing: border-box; font-family: inherit; }
+  </style>
+</head>
+<body class="mzj">
+  <header class="mzj-topbar">
+    <div class="topbar-left">
+      <button class="icon-btn" id="mzjSidebarBtn" aria-label="القائمة"><i class="fa-solid fa-bars"></i></button>
+      <div class="brand">
+        <div class="brand-mark">MZJ</div>
+        <div class="brand-text">
+          <div class="brand-title">محمد بن ذعار العجمي للسيارات</div>
+          <div class="brand-sub">Workspace</div>
+        </div>
+      </div>
+    </div>
+    <div class="topbar-center">
+      <div class="mzj-breadcrumb">
+        <span class="crumb">الرئيسية</span>
+        <i class="fa-solid fa-chevron-left"></i>
+        <span class="crumb current">عدم الصلاحية</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="mzj-chip"><i class="fa-regular fa-clock"></i><span id="mzjNow">—</span></div>
+      <button class="mzj-btn mzj-btn-ghost" id="mzjThemeBtn" type="button"><i class="fa-solid fa-moon"></i><span>وضع ليلي</span></button>
+      <div class="mzj-user">
+        <div class="avatar">H</div>
+        <div class="user-text"><div class="user-name">Hossam</div><div class="user-role">Workspace</div></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="mzj-shell" id="mzjShell">
+    <aside class="mzj-sidebar" id="mzjSidebar">
+      <div class="side-section">
+        <div class="side-title">القائمة</div>
+        <nav class="side-nav">
+          <a class="side-link" href="./dashboard.html"><i class="fa-solid fa-gauge"></i><span>Dashboard</span></a>
+          <a class="side-link" href="./sales.html"><i class="fa-solid fa-handshake"></i><span>المبيعات</span></a>
+          <a class="side-link" href="./inventory.html"><i class="fa-solid fa-warehouse"></i><span>المخزون</span></a>
+          <a class="side-link" href="./vt.html"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
+          <a class="side-link" href="./photoshoot-user.html"><i class="fa-solid fa-diagram-project"></i><span>إدارة الطلبات</span></a>
+          <a class="side-link" href="./cars.html"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
+          <a class="side-link" href="./Activity.html"><i class="fa-solid fa-clock-rotate-left"></i><span>سجل النشاط</span></a>
+          <a class="side-link" href="./admin.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
+        </nav>
+      </div>
+    </aside>
+    <div class="mzj-backdrop" id="mzjBackdrop"></div>
+
+    <main class="mzj-content">
+      <section class="mzj-pagehead">
+        <div class="pagehead-left">
+          <h1 class="page-title">لا توجد صلاحية</h1>
+          <p class="page-desc">حسابك لا يملك صلاحية الوصول.</p>
+        </div>
+      </section>
+
+      <section class="mzj-card">
+        <div class="card-body">
+          <div class="legacy">
+            
+  <div class="card">
+    <h1>🚫 لا تملك صلاحية الوصول لهذه الصفحة</h1>
+    <p>من فضلك تواصل مع الإدارة لتعديل صلاحيات حسابك.</p>
+
+    <!-- CTA الجديد -->
+    <a href="dashboard.html">العودة إلى لوحة التحكم</a>
+  </div>
+
+          </div>
+        </div>
+      </section>
+
+      <footer class="mzj-footer"><span>© MZJ Workspace</span><span class="sep">•</span><span>نجم الطريق</span></footer>
+    </main>
+  </div>
+
+  <script src="./mzj-ui.js"></script>
+  
+</body>
+</html>

@@ -1,4 +1,4 @@
-// MZJ UI helpers (no frameworks)
+// MZJ UI helpers (global)
 (function () {
   const shell = document.getElementById('mzjShell');
   const sidebar = document.getElementById('mzjSidebar');
@@ -7,7 +7,6 @@
   const themeBtn = document.getElementById('mzjThemeBtn');
   const nowEl = document.getElementById('mzjNow');
 
-  // --- Sidebar: mobile overlay + desktop collapse (saved) ---
   const mqDesktop = window.matchMedia('(min-width: 1024px)');
   const isDesktop = () => mqDesktop.matches;
 
@@ -20,12 +19,8 @@
     localStorage.setItem('mzj_sidebar_collapsed', v ? '1' : '0');
   }
 
-  // Restore desktop preference
-  if (isDesktop()){
-    if (localStorage.getItem('mzj_sidebar_collapsed') === '1') setCollapsed(true);
-  }
+  if (isDesktop() && localStorage.getItem('mzj_sidebar_collapsed') === '1') setCollapsed(true);
 
-  // When breakpoint changes
   mqDesktop.addEventListener?.('change', () => {
     closeMobile();
     if (isDesktop()){
@@ -47,14 +42,12 @@
   backdrop?.addEventListener('click', closeMobile);
   window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMobile(); });
 
-  // Auto-close on mobile when clicking a link
   sidebar?.addEventListener('click', (e) => {
     const a = e.target && e.target.closest ? e.target.closest('a') : null;
     if (!a) return;
     if (!isDesktop()) closeMobile();
   });
 
-  // --- Dark mode (saved) ---
   const savedTheme = localStorage.getItem('mzj_theme');
   if (savedTheme === 'dark') document.body.classList.add('dark');
   themeBtn?.addEventListener('click', () => {
@@ -62,12 +55,11 @@
     localStorage.setItem('mzj_theme', document.body.classList.contains('dark') ? 'dark' : 'light');
   });
 
-  // --- Clock (Riyadh) ---
   function tick(){
     try{
       const dt = new Date();
       const fmt = new Intl.DateTimeFormat('ar-SA', {
-        weekday: 'short', year:'numeric', month:'2-digit', day:'2-digit',
+        weekday:'short', year:'numeric', month:'2-digit', day:'2-digit',
         hour:'2-digit', minute:'2-digit', hour12:true, timeZone:'Asia/Riyadh'
       });
       if (nowEl) nowEl.textContent = fmt.format(dt);
@@ -76,43 +68,4 @@
     }
   }
   tick(); setInterval(tick, 15000);
-})();
-
-
-// --- Auth gate flash fix (pages using #authGate/#app) ---
-(function(){
-  const root = document.documentElement;
-  const gate = document.getElementById('authGate');
-  const app = document.getElementById('app');
-
-  if (!gate || !app) { 
-    root.classList.remove('auth-pending');
-    return; 
-  }
-
-  function showGate(){
-    gate.style.display = 'grid';
-    app.style.display = 'none';
-  }
-  function showApp(){
-    gate.style.display = 'none';
-    app.style.display = '';
-  }
-  function done(){
-    root.classList.remove('auth-pending');
-  }
-
-  // Firebase compat
-  try{
-    if (window.firebase && typeof window.firebase.auth === 'function'){
-      window.firebase.auth().onAuthStateChanged(function(user){
-        done();
-        if (user) showApp(); else showGate();
-      });
-      return;
-    }
-  }catch(_){}
-
-  // Fallback: unhide after short delay
-  setTimeout(done, 1200);
 })();

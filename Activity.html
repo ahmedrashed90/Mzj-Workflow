@@ -138,10 +138,7 @@
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-    import {
-      getFirestore, collection, query, orderBy, limit, onSnapshot,
-      doc, getDoc, where, getDocs
-    } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+    import {getFirestore, collection, query, orderBy, limit, onSnapshot, doc, getDoc, where, getDocs, addDoc, serverTimestamp} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
     const firebaseConfig = {
   "apiKey": "AIzaSyC614bGqnYf4Q-weTNemzWENTpa8DjGeHw",
@@ -154,6 +151,16 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+  window.mzjActivity?.initModular({ db, collection, addDoc, serverTimestamp, getDoc });
+
+  // Activity Logger wrappers (Modular)
+  async function mzjSetDoc(ref, data, options, meta){
+    return window.mzjActivity?.modularSetDoc({ setDoc, ref, data, options, meta }) ?? setDoc(ref, data, options);
+  }
+  async function mzjUpdateDoc(ref, data, meta){
+    return window.mzjActivity?.modularUpdateDoc({ updateDoc, ref, data, meta }) ?? updateDoc(ref, data);
+  }
+
 
     const $ = (id)=> document.getElementById(id);
     const safe = (v)=> (v===null || v===undefined) ? "" : String(v);
@@ -177,6 +184,17 @@
         if (!res.empty) return normalizeRole(res.docs[0].data()?.role);
       }catch(_){}
 
+      try{
+        const snap2 = await getDoc(doc(db,"members", user.uid));
+        if (snap2.exists()) return normalizeRole(snap2.data()?.role);
+      }catch(_){ }
+
+      try{
+        const q2 = query(collection(db,"members"), where("email","==",(user.email||"").toLowerCase()));
+        const res2 = await getDocs(q2);
+        if (!res2.empty) return normalizeRole(res2.docs[0].data()?.role);
+      }catch(_){ }
+
       return "";
     }
 
@@ -197,6 +215,7 @@
       try{
         if (!user) return deny("غير مسجّل دخول.");
         const role = await fetchUserRole(user);
+    window.__mzjUserRole = role || null;
         setUserUI(user, role);
 
         const email = (user.email||"").toLowerCase();

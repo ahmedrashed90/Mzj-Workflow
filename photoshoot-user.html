@@ -1057,6 +1057,11 @@ try{ firebase.initializeApp(firebaseConfig); }catch(e){}
 
 const auth = firebase.auth();
 const db   = firebase.firestore();
+// Activity Logger: auto-capture Firestore writes (compat)
+try{
+  window.mzjActivity?.wrapCompat(firebase, db, ()=>({ uid: (currentUser&&currentUser.uid)||null, email: myEmail(), name: myName(), role: myRole() }));
+}catch(_e){}
+
 
 
   
@@ -1846,6 +1851,8 @@ async function applyStep(stepNo){
 
   batch.set(reqRef, { updatedAt: now }, { merge:true });
   await batch.commit();
+    await logAction("تحديث مرحلة طلب", `تم تحديث المرحلة ${stepNo} في الطلب (${(openRequestDoc&&openRequestDoc.kind)||""}) | عدد السيارات: ${targets.length} | الطلب #${openRequestId}`);
+
 
   await logAction(
     stepNo===1 ? "تم استلام الطلب" : (stepNo===2 ? "تم إرسال السيارة" : "تم استلام السيارة"),

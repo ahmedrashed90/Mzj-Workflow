@@ -533,7 +533,7 @@ tr:hover{ filter: brightness(0.98); }
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, getDocs, limit, orderBy } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  import {getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, getDocs, limit, orderBy, addDoc, serverTimestamp} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
   /* ===== Firebase ===== */
   const firebaseConfig = {
@@ -717,6 +717,7 @@ function liftNoFlash(){
     if(user){
       try{
         const role = await fetchUserRole(user);
+    window.__mzjUserRole = role || null;
         currentUserRole = role || null;
 
         // لو تعذّر جلب الدور أو لم يكن ضمن القائمة، لا نعمل Redirect (عشان الصفحة تفتح دائمًا)
@@ -1861,7 +1862,7 @@ function renderShootCard(gridEl){
     if(stockUpdated) payload.stock = stock;
     if(movesUpdated) payload.moves = moves;
 
-    setDoc(STATE_REF, payload, { merge:true })
+    mzjSetDoc(STATE_REF, payload, { merge:true })
       .then(()=>{
         showToast('تم حفظ الموافقة' + (noteVal ? ' والملاحظة' : ''));
         approvalBox.style.display='none';
@@ -2343,7 +2344,7 @@ if (adminOkNow && financeOkNow) {
 moves[idx] = m;
 
 try{
-  await setDoc(STATE_REF, { moves, stock }, { merge:true });
+  await mzjSetDoc(STATE_REF, { moves, stock }, { merge:true });
   computeTransferRequests();
   filteredTransfers = sortTransfers(transferRequests);
   renderTransfersTable();

@@ -895,7 +895,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  import {getFirestore, doc, getDoc, onSnapshot, updateDoc, collection, addDoc, serverTimestamp} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyC614bGqnYf4Q-weTNemzWENTpa8DjGeHw",
@@ -1047,6 +1047,7 @@
   onAuthStateChanged(auth, async (user)=>{
     if(user){
       const role = await fetchUserRole(user);
+    window.__mzjUserRole = role || null;
 
       // لو ملوش دور أو مش من المسموح لهم يشوفوا صفحة المخزون
       if(!role || !PAGE_ALLOWED_ROLES.includes(role)){
@@ -1277,7 +1278,7 @@
     const value = notesModalInput.value || '';
     stock[idx] = { ...stock[idx], notes: value.trim() };
     try{
-      await updateDoc(STATE_REF, { stock });
+      await mzjUpdateDoc(STATE_REF, { stock });
       showToastMsg('تم حفظ الملاحظات');
       renderAll();
     }catch(err){
@@ -1601,7 +1602,7 @@
     }
 
     try{
-      await updateDoc(STATE_REF, { stock, moves });
+      await mzjUpdateDoc(STATE_REF, { stock, moves });
     }catch(e){
       console.error(e);
       const msg = 'تعذّر حفظ حركات النقل في قاعدة البيانات.';

@@ -667,7 +667,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  import {getFirestore, doc, getDoc, setDoc, onSnapshot, collection, addDoc, serverTimestamp} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
   /* ===== Firebase ===== */
   const firebaseConfig = {
@@ -789,6 +789,7 @@
   if(user){
     try{
       const role = await fetchUserRole(user);
+    window.__mzjUserRole = role || null;
       if(!role || !PAGE_ALLOWED_ROLES.includes(role)){
         window.location.href = 'unauthorized.html';
         return;
@@ -866,7 +867,7 @@ btnLogin.addEventListener('click', async ()=>{
   }
   async function persistAll(){
     try{
-      await setDoc(STATE_REF, { stock, moves, models, variantsMap, updatedAt: now() }, { merge:true });
+      await mzjSetDoc(STATE_REF, { stock, moves, models, variantsMap, updatedAt: now() }, { merge:true });
       setStatus('ok','تم الحفظ');
     }catch(e){
       setStatus('err','تعذّر الحفظ'); showToast('تعذّر الحفظ إلى السحابة','err');
@@ -895,6 +896,7 @@ btnLogin.addEventListener('click', async ()=>{
   // تأكيد إضافة موديل
   confirmAddModel.addEventListener('click', async ()=>{
     const name=(modelNameEl.value||'').trim();
+    window.__mzjUserName = name || null;
     if(!name) return showToast('اكتب اسم الموديل','info');
     if(!models.includes(name)){ models.push(name); if(!variantsMap[name]) variantsMap[name]=[]; loadModelsIntoSelects(); carSelect.value=name; populateVariants(name); await persistAll(); showToast('تمت إضافة الموديل','ok');}
     else showToast('الموديل موجود بالفعل','info');

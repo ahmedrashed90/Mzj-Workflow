@@ -375,15 +375,6 @@
   .topbar-actions{justify-content:flex-start}
 }
 
-
-/* ===== Tabs (Search / All Orders) ===== */
-.tabs{display:flex;gap:10px;margin:12px 0 14px;}
-.tab-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
-  padding:11px 14px;border-radius:999px;border:1px solid rgba(0,0,0,.10);background:#fff;
-  font-family:inherit;font-weight:900;color:var(--brown,#3e2420);cursor:pointer;}
-.tab-btn i{color:var(--beige,#bc8f74);}
-.tab-btn.tab-active{background:rgba(62,36,32,.10);border-color:rgba(62,36,32,.20);}
-
 </style>
   <link rel="stylesheet" href="./mzj-ui.css" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
@@ -516,15 +507,7 @@
           <label>البريد الإلكتروني</label>
           <input id="email" type="email" placeholder="user@mzjcars.com" />
         </div>
-        
-
-    <!-- Tabs Bar (Mobile) -->
-    <div class="tabs" id="tabsBar" style="display:none;">
-      <button class="tab-btn tab-active" id="tabSearchBtn"><i class="fa-solid fa-magnifying-glass"></i> بحث عن طلب</button>
-      <button class="tab-btn" id="tabListBtn"><i class="fa-solid fa-list"></i> كل الطلبات</button>
-    </div>
-
-<div class="col-4">
+        <div class="col-4">
           <label>كلمة السر</label>
           <input id="password" type="password" placeholder="••••••••" />
         </div>
@@ -550,7 +533,7 @@
         </div>
         <div class="col-4" style="display:flex;align-items:flex-end;gap:8px;">
           <button class="btn" id="loadBtn">فتح الطلب</button>
-          <button class="btn-outline" id="clearBtn">تفريغ</button>
+          <button id="showAllOrdersBtn" class="btn btn-outline"><i class="fa-solid fa-list"></i> كل الطلبات</button>
         </div>
       </div>
       <div id="orderMsg" class="muted" style="margin-top:6px;"></div>
@@ -1874,15 +1857,6 @@ function clearErpTable() {
     // إدارة حالة تسجيل الدخول وتوزيع الواجهات
     onAuthStateChanged(auth,(user)=>{ try{ window.__setConn(!!user);}catch(e){}
       if (user) {
-
-        // ✅ Mobile: show tabs + default list
-        try{
-          const tabsBar = document.getElementById('tabsBar');
-          if(tabsBar) tabsBar.style.display = 'flex';
-          if(window.__salesSetTab) window.__salesSetTab('list');
-          if(typeof window.loadOrdersList === 'function') window.loadOrdersList();
-        }catch(e){}
-
         // مستخدم مسجل دخول
         whoami.textContent = user.email || "";
         logoutBtn.style.display = "inline-flex";
@@ -1972,34 +1946,7 @@ function clearErpTable() {
     clearErpTable();
     buildStagesUI({ });
 
-  
-
-
-// ===== Tabs Wiring (Mobile) =====
-(function(){
-  const tabsBar = document.getElementById('tabsBar');
-  const tabSearchBtn = document.getElementById('tabSearchBtn');
-  const tabListBtn = document.getElementById('tabListBtn');
-  const orderCard = document.getElementById('orderCard');       // search card
-  const ordersListCard = document.getElementById('ordersListCard'); // list card
-  if(!tabsBar || !tabSearchBtn || !tabListBtn) return;
-
-  function setTab(which){
-    tabSearchBtn.classList.toggle('tab-active', which==='search');
-    tabListBtn.classList.toggle('tab-active', which==='list');
-    if(orderCard) orderCard.style.display = (which==='search') ? 'block' : 'none';
-    if(ordersListCard) ordersListCard.style.display = (which==='list') ? 'block' : 'none';
-  }
-  tabSearchBtn.addEventListener('click', ()=>setTab('search'));
-  tabListBtn.addEventListener('click', ()=>{
-    setTab('list');
-    try{ if(typeof window.loadOrdersList === 'function') window.loadOrdersList(); }catch(e){}
-  });
-
-  window.__salesSetTab = setTab;
-})();
-
-</script>
+  </script>
 
 <script>
   // Topbar connection badge helper (non-invasive)
@@ -2110,10 +2057,36 @@ function clearErpTable() {
   }
   window.__setConn = setConn;
 })();
-<script>
-try{ if(typeof loadOrdersList==="function") window.loadOrdersList=loadOrdersList; }catch(e){}
-</script>
 </script>
 
+<script>
+
+// ===== زر كل الطلبات (Mobile) =====
+(function(){
+  const btn = document.getElementById('showAllOrdersBtn');
+  if(!btn) return;
+
+  function showAll(){
+    // اخفاء كارت البحث (الاساسي في الكود الحالي)
+    const orderCard = document.getElementById('orderCard') || document.getElementById('searchCard') || document.getElementById('searchOrderCard');
+    if(orderCard) orderCard.style.display = 'none';
+
+    // اظهار كارت كل الطلبات
+    const listCard = document.getElementById('ordersListCard') || document.getElementById('ordersCard') || document.getElementById('allOrdersCard');
+    if(listCard) listCard.style.display = 'block';
+
+    // تحميل الطلبات
+    try{
+      if(typeof loadOrdersList === 'function') loadOrdersList();
+      else if(typeof window.loadOrdersList === 'function') window.loadOrdersList();
+    }catch(e){
+      console.error('loadOrdersList error', e);
+    }
+  }
+
+  btn.addEventListener('click', showAll);
+})();
+
+</script>
 </body>
 </html>

@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
@@ -226,8 +227,16 @@
     createUserWithEmailAndPassword, signOut 
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
   import {
-    getFirestore, collection, query, orderBy, limit, onSnapshot,
-    getDocs, where
+    getFirestore,
+    collection,
+    query,
+    orderBy,
+    limit,
+    onSnapshot,
+    getDocs,
+    where,
+    doc,
+    getDoc
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -244,6 +253,22 @@
   const db = getFirestore(app);
 
   const ROLE_ADMIN = 'الادارة';
+
+  // ===== Role normalization (avoid mismatches: الادارة vs الإدارة vs admin) =====
+  const ADMIN_ALIASES = ['الادارة','الإدارة','اداره','ادارة','admin','administrator','superadmin','sysadmin','system admin','مدير النظام','مدير','إداري عام'];
+  function normStr(s){
+    return (s||'').toString().trim().toLowerCase()
+      .replace(/[أإآ]/g,'ا')
+      .replace(/ة/g,'ه')
+      .replace(/\s+/g,' ');
+  }
+  function canonicalRole(role){
+    const r = normStr(role);
+    if(!r) return null;
+    if (r.includes('ادار') || ADMIN_ALIASES.includes(r)) return ROLE_ADMIN;
+    return role;
+  }
+
   const PAGE_ALLOWED_ROLES = [ROLE_ADMIN];
 
   const $ = (s)=>document.querySelector(s);
@@ -257,25 +282,46 @@
   // Cache: email -> role
   const roleByEmail = new Map();
 
-  async function lookupRoleByEmail(email){
-    const key = (email||'').trim().toLowerCase();
-    if(!key) return '';
-    if(roleByEmail.has(key)) return roleByEmail.get(key);
+  async function lookupRole(user){
+    if(!user) return '';
+    const emailKey = (user.email||'').trim().toLowerCase();
+    const uidKey   = (user.uid||'').trim();
+    const cacheKey = uidKey || emailKey;
+    if(!cacheKey) return '';
+    if(roleByEmail.has(cacheKey)) return roleByEmail.get(cacheKey);
 
+    // 1) Fast path: doc id = uid
     try{
-      // Try: user collection has field "email"
-      const q1 = query(collection(db,'user'), where('email','==', key), limit(1));
-      const s1 = await getDocs(q1);
-      if(!s1.empty){
-        const d = s1.docs[0].data() || {};
-        const role = d.role || '';
-        roleByEmail.set(key, role);
-        return role;
+      if(uidKey){
+        const s = await getDoc(doc(db,'user', uidKey));
+        if(s.exists()){
+          const d = s.data() || {};
+          const role = d.role || '';
+          roleByEmail.set(cacheKey, role);
+          if(emailKey) roleByEmail.set(emailKey, role);
+          return role;
+        }
       }
     }catch(e){ /* ignore */ }
 
-    // Fallback: unknown
-    roleByEmail.set(key, '');
+    // 2) Query by possible email fields
+    const emailFields = ['email','userEmail','mail'];
+    for(const f of emailFields){
+      try{
+        if(!emailKey) break;
+        const q1 = query(collection(db,'user'), where(f,'==', emailKey), limit(1));
+        const s1 = await getDocs(q1);
+        if(!s1.empty){
+          const d = s1.docs[0].data() || {};
+          const role = d.role || '';
+          roleByEmail.set(cacheKey, role);
+          if(emailKey) roleByEmail.set(emailKey, role);
+          return role;
+        }
+      }catch(e){ /* ignore */ }
+    }
+
+    roleByEmail.set(cacheKey,'');
     return '';
   }
 
@@ -284,7 +330,8 @@
     try{
       if(user){
         // Check role from user collection (by email) for this session
-        const myRole = await lookupRoleByEmail(user.email);
+        const myRoleRaw = await lookupRole(user);
+        const myRole = canonicalRole(myRoleRaw);
         if(!myRole || !PAGE_ALLOWED_ROLES.includes(myRole)){
           window.location.href = 'unauthorized.html';
           return;

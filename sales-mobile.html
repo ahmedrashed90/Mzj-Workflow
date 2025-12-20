@@ -635,13 +635,16 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import {
-      getAuth,
       onAuthStateChanged,
       signInWithEmailAndPassword,
       createUserWithEmailAndPassword,
-      signOut
+      signOut,
+      setPersistence,
+      browserLocalPersistence,
+      initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import {
+      getAuth
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
     import {
       getFirestore,
@@ -679,6 +682,10 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    // اجبار حفظ الجلسة على الجهاز (مهم للموبايل)
+    try { await setPersistence(auth, browserLocalPersistence); } catch (e) {
+      /* ignore */ }
+
     const db = getFirestore(app);
 
     // UI refs
@@ -972,9 +979,11 @@
         msgModalMsg.innerHTML = "<span class='err'>حصل خطأ أثناء الإرسال.</span>";
       }finally{
         msgModalSend.disabled = false;
-      }
+    } finally {
+      loginBtn.disabled = false;
+      loginBtn.classList.remove("loading");
+    }
     });
-
     // ===== Dynamic QR (click to open tracking) =====
     const trackQrBtn = document.getElementById("trackQrBtn");
     const trackQrModal = document.getElementById("trackQrModal");
@@ -1888,8 +1897,11 @@ function clearErpTable() {
     });
 
     // زر تسجيل الدخول
-    loginBtn.addEventListener("click", async () => {
+    loginBtn?.addEventListener("click", async () => {
       authMsg.textContent = "";
+      loginBtn.disabled = true;
+      loginBtn.classList.add("loading");
+      try{ await setPersistence(auth, browserLocalPersistence); }catch(e){}
       const emailVal = (email.value || "").trim();
       const passVal  = (password.value || "").trim();
 
@@ -1908,7 +1920,7 @@ function clearErpTable() {
     });
 
     // زر إنشاء حساب جديد (للمشرف فقط)
-    signupBtn.addEventListener("click", async () => {
+    signupBtn?.addEventListener("click", async () => {
       authMsg.textContent = "";
       const emailVal = (email.value || "").trim();
       const passVal  = (password.value || "").trim();

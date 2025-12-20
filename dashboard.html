@@ -1,6 +1,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -480,12 +481,11 @@ tr:hover{ filter: brightness(0.98); }
               <th>#</th>
               <th>رقم الطلب</th>
               <th>اسم العميل</th>
-              <th>رقم الجوال</th>
+              <th>الجوال</th>
               <th>الفرع</th>
-              <th>رقم الهيكل VIN</th>
-              <th>تاريخ التسليم</th>
-              <th>آخر مرحلة</th>
+              <th>VIN</th>
               <th>الحالة</th>
+              <th>تتبع</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -562,6 +562,7 @@ tr:hover{ filter: brightness(0.98); }
   const ERP_COLLECTION  = "erp_orders";
   const TRACK_COLLECTION = "orders";
   const STAGES_COUNT = 10;
+  const TRACK_PUBLIC_BASE = "https://mzj-tracking.vercel.app/Test-Track.html?vin=";
 
 
   /* ===== Roles & Permissions ===== */
@@ -834,16 +835,32 @@ $('#btnLogin').addEventListener('click', async ()=>{
         const phone = getField(d, ['Phone','phone','mobile','Mobile','customerPhone','CustomerPhone']);
         const branch = getField(d, ['Branch','branch','BranchName','branchName']);
         const vin = getField(d, ['VIN','vin','chassis','Chassis','vehicleVin']);
-        const deliveryDate = getField(d, ['DeliveryDate','deliveryDate','delivery_date','expectedDelivery','ExpectedDeliveryDate']);
+        const deliveryDate = ''; // تم إلغاء عرض تاريخ التسليم في الداشبورد
 
+        let trackedVin = '';
         let doneCount = 0;
         let lastStage = 0;
 
         // قراءة التتبع من orders/{orderNo}_1 (لو موجود)
         try{
-          const tSnap = await getDoc(doc(trackingDb, TRACK_COLLECTION, String(orderNo) + "_1"));
+          // جلب حالة الطلب + VIN من: orders/{OrderNo_ItemNo}/public/status
+          let trackDocId = String(orderNo);
+          const itemNo = getField(d, ['itemNo','ItemNo','item_no','item','itemNumber']);
+          if(!trackDocId.includes('_') && itemNo) trackDocId = trackDocId + "_" + itemNo;
+
+          let tSnap = await getDoc(doc(trackingDb, TRACK_COLLECTION, trackDocId, "public", "status"));
+
+          // Fallbacks (لو الـ ERP بيرجع OrderId بدون ItemNo)
+          if(!tSnap.exists() && !String(orderNo).includes('_')){
+            tSnap = await getDoc(doc(trackingDb, TRACK_COLLECTION, String(orderNo) + "_1", "public", "status"));
+            if(!tSnap.exists()){
+              tSnap = await getDoc(doc(trackingDb, TRACK_COLLECTION, String(orderNo) + "_2", "public", "status"));
+            }
+          }
           if(tSnap.exists()){
             const tData = tSnap.data() || {};
+            // VIN من قاعدة التتبع (هو المصدر الأساسي)
+            trackedVin = (tData.vin || tData.VIN || '').toString().trim();
             const stagesObj = tData.stages || {};
             const keys = Object.keys(stagesObj);
 
@@ -879,7 +896,7 @@ $('#btnLogin').addEventListener('click', async ()=>{
           customerName: String(customerName||''),
           phone: String(phone||''),
           branch: String(branch||''),
-          vin: String(vin||''),
+          vin: String(trackedVin || vin || ''),
           deliveryDate: String(deliveryDate||''),
           doneCount,
           lastStage,
@@ -971,7 +988,7 @@ $('#btnLogin').addEventListener('click', async ()=>{
   }
 
   /* ===== Shortages logic (branches) ===== */
-  const comboKey = r => [trim(r.car), trim(r.variant), trim(r.extColor), trim(r.modelYear)].join('⇢');
+  const comboKey = r => [trim(r.car), trim(r.variant), trim(r.extColor), trim(r.intColor), trim(r.modelYear)].join('⇢');
   function countByCombo(rows){
     const m=new Map();
     rows.forEach(r=>{ const k=comboKey(r); if(!k) return; m.set(k,(m.get(k)||0)+1); });
@@ -987,8 +1004,8 @@ $('#btnLogin').addEventListener('click', async ()=>{
       const countBranch = byComboBranch.get(k) || 0;
       // نقص = مفيش ولا عربية من التركيبة دي في الفرع، لكن موجودة في الإجمالي
       if(countBranch===0){
-        const [car,variant,extColor,modelYear] = k.split('⇢');
-        res.push({ car, variant, modelYear, countBranch, countGlobal });
+        const [car,variant,extColor,intColor,modelYear] = k.split('⇢');
+        res.push({ car, variant, extColor, intColor, modelYear, countBranch, countGlobal });
       }
     });
     res.sort((a,b)=>
@@ -1397,16 +1414,17 @@ function renderShootCard(gridEl){
     modalTableSalesBody.innerHTML = '';
     (filteredSales||[]).forEach((o,idx)=>{
       const tr = document.createElement('tr');
+      const vin = String(o.vin||'').trim();
+      const trackUrl = vin ? (TRACK_PUBLIC_BASE + encodeURIComponent(vin)) : '';
       tr.innerHTML = `
         <td>${idx+1}</td>
         <td>${o.orderNo||''}</td>
         <td>${o.customerName||''}</td>
         <td>${o.phone||''}</td>
         <td>${o.branch||''}</td>
-        <td>${o.vin||''}</td>
-        <td>${o.deliveryDate||''}</td>
-        <td>${o.lastStageLabel||'—'}</td>
+        <td>${vin || '—'}</td>
         <td><span class="tag">${o.status||''}</span></td>
+        <td>${vin ? `<a class="btn btn-xs btn-outline" href="${trackUrl}" target="_blank" rel="noopener">تتبع</a>` : '<span class="sub">—</span>'}</td>
       `;
       modalTableSalesBody.appendChild(tr);
     });
@@ -2433,3 +2451,8 @@ try{
 
 </body>
 </html>
+
+
+
+
+

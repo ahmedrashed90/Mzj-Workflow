@@ -343,7 +343,7 @@ tr:hover{ filter: brightness(0.98); }
   <div class="container">
 
     <!-- Shortages Summary Card (Branches only) -->
-    <div class="card short-card" id="shortagesCard" title="عرض النواقص لأفرع المعارض (حسب السيارة + البيان + الألوان + الموديل | العدد داخل الفرع = 5)">
+    <div class="card short-card" id="shortagesCard" title="عرض النواقص لأفرع المعارض (حسب السيارة + البيان + الألوان + الموديل | العدد داخل الفرع = 0)">
       <div class="group-head">
         <div class="group-left">
           <h3 class="group-title"><i class="fa-solid fa-list-check"></i> النواقص — الفروع فقط</h3>
@@ -351,7 +351,7 @@ tr:hover{ filter: brightness(0.98); }
             <span class="metric"><i class="fa-solid fa-equals"></i> ملخص</span>
           </div>
         </div>
-        <div class="group-total" id="shortagesTotal">5</div>
+        <div class="group-total" id="shortagesTotal">0</div>
       </div>
       <div class="short-pills" id="shortagesPills"></div>
     </div>
@@ -418,6 +418,8 @@ tr:hover{ filter: brightness(0.98); }
             <tr>
               <th>السيارة</th>
               <th>البيان</th>
+              <th>اللون الخارجي</th>
+              <th>اللون الداخلي</th>
               <th>الموديل</th>
               <th>عدد الفرع</th>
               <th>الإجمالي العام</th>

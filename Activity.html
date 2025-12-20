@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -170,6 +171,75 @@
     const $ = (id)=> document.getElementById(id);
     const safe = (v)=> (v===null || v===undefined) ? "" : String(v);
 
+    const roleCache = new Map(); // emailLower -> roleLabel
+
+    function fmtDate(dt){
+      try{
+        const fmt = new Intl.DateTimeFormat('ar-SA', {
+          year:'numeric', month:'2-digit', day:'2-digit',
+          hour:'2-digit', minute:'2-digit', hour12:true,
+          timeZone:'Asia/Riyadh'
+        });
+        return fmt.format(dt);
+      }catch(_){
+        return dt.toLocaleString('ar-SA');
+      }
+    }
+
+    function tsToDate(v){
+      if(!v) return null;
+      // Firestore Timestamp (modular) has toDate()
+      if (typeof v.toDate === 'function') return v.toDate();
+      // Timestamp-like {seconds, nanoseconds}
+      if (typeof v.seconds === 'number') return new Date(v.seconds*1000);
+      // ISO string
+      if (typeof v === 'string'){
+        const d = new Date(v);
+        return isNaN(d.getTime()) ? null : d;
+      }
+      // millis number
+      if (typeof v === 'number') return new Date(v);
+      return null;
+    }
+
+    function getCreatedAtDisplay(d){
+      // Prefer explicit formatted string
+      if (d.createdAt && typeof d.createdAt === 'string' && d.createdAt.trim()) return d.createdAt.trim();
+      // createdAtTs / ts / updatedAt etc.
+      const dt = tsToDate(d.createdAtTs) || tsToDate(d.ts) || tsToDate(d.createdAt);
+      if (dt) return fmtDate(dt);
+      // fallback date field like '2025-12-20'
+      if (d.date) return String(d.date);
+      return "";
+    }
+
+    async function resolveRoleByEmail(email){
+      const em = (email||"").toLowerCase().trim();
+      if(!em) return "";
+      if(roleCache.has(em)) return roleCache.get(em) || "";
+      // 1) try doc id as email (some setups)
+      try{
+        const s1 = await getDoc(doc(db,"user", em));
+        if(s1.exists()){
+          const r = normalizeRole(s1.data()?.role);
+          roleCache.set(em, r||"");
+          return r||"";
+        }
+      }catch(_){}
+      // 2) query by email field
+      try{
+        const q1 = query(collection(db,"user"), where("email","==", em));
+        const res = await getDocs(q1);
+        if(!res.empty){
+          const r = normalizeRole(res.docs[0].data()?.role);
+          roleCache.set(em, r||"");
+          return r||"";
+        }
+      }catch(_){}
+      roleCache.set(em, "");
+      return "";
+    }
+
     function normalizeRole(r){
       r = (r||"").toString().trim().toLowerCase();
       if (["admin","administrator","مدير","المدير","أدمن","ادمن","الإدارة","الادارة","إدارة","اداره","management","manager"].includes(r)) return "الإدارة";
@@ -250,13 +320,25 @@
           rowsEl.insertAdjacentHTML("beforeend", `
             <tr>
               <td>${++i}</td>
-              <td>${safe(d.createdAt)||"—"}</td>
+              <td>${safe(getCreatedAtDisplay(d))||"—"}</td>
               <td>${member}</td>
-              <td>${safe(d.role)||"—"}</td>
+              <td class="role-cell" data-email="${safe(d.userEmail||'')}" data-doc="${docSnap.id}">${safe(d.role)||"—"}</td>
               <td>${safe(d.action)||"—"}</td>
               <td>${safe(d.details)||"—"}</td>
             </tr>
           `);
+        });
+
+
+        // Fill missing roles lazily (from user collection)
+        const roleCells = rowsEl.querySelectorAll('.role-cell');
+        roleCells.forEach(async (cell)=>{
+          try{
+            if(cell.textContent && cell.textContent.trim() && cell.textContent.trim() !== '—') return;
+            const em = cell.getAttribute('data-email') || '';
+            const r = await resolveRoleByEmail(em);
+            if(r) cell.textContent = r;
+          }catch(_){}
         });
 
         if (!i) rowsEl.innerHTML = `<tr><td colspan="6" class="subtle">لا يوجد سجلات بعد.</td></tr>`;

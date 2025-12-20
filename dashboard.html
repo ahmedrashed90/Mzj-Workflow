@@ -2,6 +2,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -1695,10 +1696,10 @@ function renderShootCard(gridEl){
   function renderRowsTable(){
     buildRowsHeader();
     modalTableRowsBody.innerHTML='';
-    filteredRows.forEach(r=>{
+    filteredRows.forEach((r, idx)=>{
       const tr=document.createElement('tr');
       tr.innerHTML=`
-        <td>${r.id||''}</td>
+        <td>${idx+1}</td>
         <td>${r.car||''}</td>
         <td>${r.variant||''}</td>
         <td><span class="tag">${r.dealer||'-'}</span></td>
@@ -1753,43 +1754,133 @@ function renderShootCard(gridEl){
     approvalBox.scrollIntoView({behavior:'smooth',block:'start'});
   }
 
-  async function saveApproval(){
-    if(!approvalContext){
-      showToast('اختر السيارة من زر "إداري" أو "مالية" أولاً');
+  // فتح صندوق الموافقات لطلبات النقل (يعتمد على moves + يكتب ملاحظات اختيارية)
+  function openApprovalBoxForTransfer(moveIdx, kind){
+    const idx = Number(moveIdx);
+    if (isNaN(idx) || !moves || !moves[idx]) {
+      showToast('تعذّر العثور على طلب النقل');
       return;
     }
-    const { vin, kind } = approvalContext;
-    const idx = stock.findIndex(r => String(r.vin)===String(vin));
-    if(idx===-1){
-      showToast('تعذّر العثور على السيارة في المخزون');
+    const m = moves[idx];
+    const vin = (m && (m.vin || m.VIN || m.chassis || m.chassisNo || m.chassisNumber)) ? (m.vin || m.VIN || m.chassis || m.chassisNo || m.chassisNumber) : '';
+    if(!vin){
+      showToast('رقم الهيكل غير موجود في طلب النقل');
       return;
     }
-    const row = stock[idx];
+
+    // اجعل صندوق الموافقات ظاهر + اضبط العنوان
+    approvalBox.style.display = 'block';
+    approvalBox.querySelector('h4').textContent = (kind === 'finance') ? 'موافقة مالية على طلب النقل' : 'موافقة إدارية على طلب النقل';
+    approvalTarget.textContent = `VIN: ${vin}`;
+
+    // ضع القيم الحالية إن وجدت
+    const stockIdx = stock.findIndex(r => String(r.vin)===String(vin));
     const isAdmin = (kind==='admin');
     const apprKey = isAdmin ? 'adminApproved' : 'financeApproved';
     const noteKey = isAdmin ? 'adminNotes' : 'financeNotes';
 
-    const statusVal = approvalStatus.value;
-    let newVal = null;
-    if(statusVal==='true') newVal = true;
-    else if(statusVal==='false') newVal = false;
-    else newVal = null;
-
-    row[apprKey] = newVal;
-    row[noteKey] = approvalNotes.value || '';
-
-    stock[idx] = row;
-
-    try{
-      await setDoc(STATE_REF,{stock},{merge:true});
-      showToast('تم حفظ الموافقات');
-      if(currentMode==='rows' && currentFilterKey==='pending'){
-        renderRowsTable();
-      }
-    }catch(e){
-      console.error(e);
-      setStatus('warn','تعذّر حفظ الموافقات، حاول مرة أخرى');
+    if(stockIdx !== -1){
+      const row = stock[stockIdx];
+      const curr = row[apprKey];
+      approvalStatus.value = (curr===true) ? 'true' : (curr===false ? 'false' : '');
+      approvalNotes.value  = row[noteKey] || '';
+    }else{
+      approvalStatus.value = 'true'; // افتراضي موافق
+      approvalNotes.value  = '';
     }
+
+    // خزّن السياق بحيث زر "حفظ" يعرف أنه خاص بطلب نقل
+    approvalContext = { vin, kind, ctx: 'transfer', transferIdx: idx };
+  }
+
+
+  async function saveApproval(){
+    if(!approvalContext){
+      showToast('اختر نوع الموافقة أولاً');
+      return;
+    }
+
+    const vin  = approvalContext.vin;
+    const kind = approvalContext.kind;
+    const ctx  = approvalContext.ctx || 'stock';
+
+    const statusVal = (approvalStatus.value || '').toString();
+    let newVal = null;
+    if(statusVal === 'true') newVal = true;
+    if(statusVal === 'false') newVal = false;
+
+    const noteVal = (approvalNotes.value || '').trim();
+
+    const isAdmin = (kind==='admin');
+    const apprKey = isAdmin ? 'adminApproved' : 'financeApproved';
+    const noteKey = isAdmin ? 'adminNotes' : 'financeNotes';
+
+    // 1) حدّث المخزون لو السيارة موجودة
+    let stockUpdated = false;
+    const sidx = stock.findIndex(r => String(r.vin)===String(vin));
+    if(sidx !== -1){
+      const row = stock[sidx];
+      if(newVal === null) { try{ delete row[apprKey]; }catch(_e){} }
+      else { row[apprKey] = newVal; }
+
+      if(noteVal) row[noteKey] = noteVal;
+      else { try{ delete row[noteKey]; }catch(_e){} }
+
+      stock[sidx] = row;
+      stockUpdated = true;
+    }
+
+    // 2) لو السياق "transfer" حدّث طلب النقل نفسه (moves)
+    let movesUpdated = false;
+    if(ctx === 'transfer'){
+      const tIdx = Number(approvalContext.transferIdx);
+      if(!isNaN(tIdx) && moves && moves[tIdx]){
+        const m = moves[tIdx];
+
+        if(isAdmin){
+          if(newVal !== null) m.adminApproved = newVal;
+          if(noteVal) m.adminNote = noteVal;
+        }else{
+          if(newVal !== null) m.financeApproved = newVal;
+          if(noteVal) m.financeNote = noteVal;
+        }
+
+        m.updatedAt = new Date().toISOString();
+        moves[tIdx] = m;
+        movesUpdated = true;
+      }
+    }
+
+    // لا يوجد شيء للحفظ
+    if(!stockUpdated && !movesUpdated){
+      showToast('لا يوجد بيانات للحفظ');
+      return;
+    }
+
+    const payload = {};
+    if(stockUpdated) payload.stock = stock;
+    if(movesUpdated) payload.moves = moves;
+
+    setDoc(STATE_REF, payload, { merge:true })
+      .then(()=>{
+        showToast('تم حفظ الموافقة' + (noteVal ? ' والملاحظة' : ''));
+        approvalBox.style.display='none';
+        approvalContext = null;
+
+        // تحديث الجدول المعروض
+        if(currentMode==='transfers'){
+          computeTransferRequests();
+          filteredTransfers = sortTransfers(transferRequests);
+          renderTransfersTable();
+        }
+        if(currentMode==='rows' && currentFilterKey==='pending'){
+          renderRowsTable();
+        }
+      })
+      .catch((e)=>{
+        console.error(e);
+        setStatus('warn','تعذّر حفظ الموافقة، حاول مرة أخرى');
+      });
   }
 
   function cancelApproval(){
@@ -1850,7 +1941,7 @@ function renderShootCard(gridEl){
   function openModalForGroupRows(group, filterKey=null){
     const rows = rowsForMembers(group.members);
     const list = rowsForFilter(rows, filterKey);
-    currentRows = list.slice().sort((a,b)=> (a.id||0)-(b.id||0));
+    currentRows = list.slice();
     filteredRows= currentRows.slice();
     currentFilterKey = filterKey;
     approvalContext = null;
@@ -2269,7 +2360,7 @@ try{
     const idx = btn.getAttribute('data-transfer-idx');
     if(idx==null || idx==='') return;
     const kind = btn.getAttribute('data-transfer-kind') || 'admin';
-    approveTransfer(idx, kind);
+    openApprovalBoxForTransfer(idx, kind);
   });
 
   // بحث موحّد في المودال
@@ -2339,7 +2430,7 @@ try{
     if(currentMode==='rows'){
       const header = ["م","سيارة","البيان","الوكيل","اللون الخارجي","اللون الداخلي","موديل","اللوحة","المكان","اسم الدفعة","رقم الهيكل","الملاحظات"];
       const data=[header];
-      filteredRows.forEach(r=>{
+      filteredRows.forEach((r, idx)=>{
         const row = [r.id,r.car,r.variant,r.dealer,r.extColor,r.intColor,r.modelYear,r.plate,r.location,r.batchName||'',r.vin,r.notes];
         data.push(row);
       });

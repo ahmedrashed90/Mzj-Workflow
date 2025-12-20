@@ -236,7 +236,8 @@
     getDocs,
     where,
     doc,
-    getDoc
+    getDoc,
+    addDoc
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -340,6 +341,7 @@
         $('#authGate').style.display='none';
         $('#app').style.display='block';
         $('#btnSignOut').style.display='inline-flex';
+        startMirroring();
         subscribeLogs();
       }else{
         $('#app').style.display='none';
@@ -525,6 +527,145 @@
     XLSX.utils.book_append_sheet(wb, ws, "Activity Log");
     XLSX.writeFile(wb, `mzj-activity-log-${Date.now()}.xlsx`);
   });
+
+
+  // ===== Mirror system actions into mzj_activity_log (NO CLOUD / NO PAGE EDITS) =====
+  // This page watches primary collections (requests, cars) and writes a log entry on NEW changes.
+  // Note: because there is no Cloud, mirroring works while this page is open (admin screen).
+
+  let mirrorStarted = false;
+
+  function fmtRiyadh(dt){
+    try{
+      const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone:'Asia/Riyadh',
+        year:'numeric', month:'2-digit', day:'2-digit',
+        hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false
+      }).formatToParts(dt);
+      const map = Object.fromEntries(parts.map(p=>[p.type,p.value]));
+      return `${map.year}-${map.month}-${map.day} ${map.hour}:${map.minute}:${map.second}`;
+    }catch(_){
+      return new Date().toISOString().replace('T',' ').slice(0,19);
+    }
+  }
+
+  function startMirroring(){
+    if(mirrorStarted) return;
+    mirrorStarted = true;
+
+    const logCol = collection(db,'mzj_activity_log');
+
+    // ---- requests mirror (move/shoot) ----
+    let reqInit = false;
+    const handledReq = new Set();
+
+    // To reduce payload, we read the most recently updated requests.
+    // Works best if requests docs have updatedAt (Timestamp). If not, it still streams but orderBy may fail.
+    let reqQuery;
+    try{
+      reqQuery = query(collection(db,'requests'), orderBy('updatedAt','desc'), limit(500));
+    }catch(_){
+      reqQuery = collection(db,'requests');
+    }
+
+    onSnapshot(reqQuery, async (snap)=>{
+      if(!reqInit){ reqInit = true; return; } // ignore first load to avoid flooding old data
+
+      for(const ch of snap.docChanges()){
+        if(ch.type !== 'added' && ch.type !== 'modified') continue;
+
+        const id = ch.doc.id;
+        const d = ch.doc.data() || {};
+        const kind = (d.kind || '').toString().toLowerCase();
+        const entityType = kind === 'move' ? 'move_request' : (kind === 'shoot' ? 'photoshoot_request' : 'request');
+
+        const stamp = (d.updatedAt?.seconds || d.createdAt?.seconds || Date.now());
+        const sig = `requests:${id}:${stamp}:${ch.type}`;
+        if(handledReq.has(sig)) continue;
+        handledReq.add(sig);
+
+        const userEmail = (d.updatedByEmail || d.createdByEmail || d.userEmail || '').toString();
+        const userName  = (d.updatedByName  || d.createdByName  || d.userName  || '').toString();
+        const role      = (d.role || '').toString();
+
+        const action = (ch.type === 'added') ? 'إنشاء طلب' : 'تعديل طلب';
+        const details = [
+          kind ? `نوع: ${kind}` : '',
+          d.status ? `الحالة: ${d.status}` : '',
+          (typeof d.total === 'number' || typeof d.total === 'string') ? `العدد: ${d.total}` : ''
+        ].filter(Boolean).join(' — ') || 'تحديث على الطلب';
+
+        try{
+          await addDoc(logCol, {
+            action,
+            details,
+            entityType,
+            entityId: id,
+            userEmail,
+            userName,
+            role,
+            createdAt: fmtRiyadh(new Date()),
+            createdAtTs: Date.now(),
+          });
+        }catch(e){
+          console.warn('mirror requests log failed', e);
+        }
+      }
+    });
+
+    // ---- cars mirror (any modifications) ----
+    let carsInit = false;
+    const handledCars = new Set();
+
+    let carsQuery;
+    try{
+      carsQuery = query(collection(db,'cars'), orderBy('updatedAt','desc'), limit(500));
+    }catch(_){
+      carsQuery = collection(db,'cars');
+    }
+
+    onSnapshot(carsQuery, async (snap)=>{
+      if(!carsInit){ carsInit = true; return; } // ignore first load
+
+      for(const ch of snap.docChanges()){
+        if(ch.type !== 'modified' && ch.type !== 'added' && ch.type !== 'removed') continue;
+
+        const id = ch.doc.id;
+        const d = ch.doc.data() || {};
+        const stamp = (d.updatedAt?.seconds || d.createdAt?.seconds || Date.now());
+        const sig = `cars:${id}:${stamp}:${ch.type}`;
+        if(handledCars.has(sig)) continue;
+        handledCars.add(sig);
+
+        const userEmail = (d.updatedByEmail || d.createdByEmail || d.userEmail || '').toString();
+        const userName  = (d.updatedByName  || d.createdByName  || d.userName  || '').toString();
+        const role      = (d.role || '').toString();
+
+        let action = 'تعديل سيارة';
+        if(ch.type === 'added') action = 'إضافة سيارة';
+        if(ch.type === 'removed') action = 'حذف سيارة';
+
+        const details = 'تم تحديث بيانات السيارة';
+
+        try{
+          await addDoc(logCol, {
+            action,
+            details,
+            entityType: 'car',
+            entityId: id,
+            userEmail,
+            userName,
+            role,
+            createdAt: fmtRiyadh(new Date()),
+            createdAtTs: Date.now(),
+          });
+        }catch(e){
+          console.warn('mirror cars log failed', e);
+        }
+      }
+    });
+  }
+
 
   // Subscribe logs
   function subscribeLogs(){

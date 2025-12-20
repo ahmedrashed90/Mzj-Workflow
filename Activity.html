@@ -208,9 +208,7 @@
   html{background:#fff8ef;}
   body{opacity:0;}
 </style>
-  <link rel="stylesheet" href="/mzj-ui.css" />
-
-<style>
+  <style>
   .legacy-admin .dashboard-topbar,
   .legacy-admin .topbar,
   .legacy-admin .tabs,
@@ -219,6 +217,44 @@
   .legacy-admin header:not(.mzj-topbar){
     display:none !important;
   }
+</style>
+
+
+<style>
+/* ===== Self-contained Shell + Sidebar (works without mzj-ui.css) ===== */
+:root{
+  --brown:#3e2420; --beige:#bc8f74; --cream:#fff8ef; --line:#e7e5e4;
+  --text:#1f2937; --muted:#6b7280; --card:#fff; --radius:12px;
+}
+body{margin:0;font-family:"Tajawal",system-ui;background:#faf7f3;color:var(--text)}
+.mzj-topbar{display:none !important}
+.mzj-shell{display:flex;min-height:100vh;align-items:stretch}
+.mzj-sidebar{
+  width:300px;flex:0 0 300px;background:#fff;border-left:1px solid var(--line);
+  position:sticky;top:0;height:100vh;overflow:auto; padding:14px 14px 18px;
+}
+.mzj-sidebar .side-title{font-weight:800;color:var(--brown);margin:6px 6px 14px}
+.mzj-sidebar a{
+  display:flex;gap:10px;align-items:center;
+  padding:10px 12px;border-radius:12px;text-decoration:none;color:var(--text);
+}
+.mzj-sidebar a:hover{background:#fff8ef}
+.mzj-sidebar a.active{background:#f3ede6;border:1px solid #e7d9cf}
+.mzj-content{flex:1;min-width:0;padding:18px}
+.mzj-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:120}
+.mzj-sidebar-fab{
+  position:fixed;top:16px;right:16px;z-index:200;
+  width:44px;height:44px;border-radius:14px;border:1px solid var(--line);
+  background:#fff;box-shadow:0 10px 24px rgba(0,0,0,.12);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+.mzj-sidebar-fab i{color:var(--brown)}
+@media (min-width: 980px){ .mzj-sidebar-fab{display:none;} }
+@media (max-width: 980px){
+  .mzj-sidebar{position:fixed;right:0;top:0;bottom:0;z-index:130;transform:translateX(110%);transition:.2s ease;box-shadow:0 18px 40px rgba(0,0,0,.2)}
+  html.sidebar-open .mzj-sidebar{transform:translateX(0)}
+  html.sidebar-open .mzj-backdrop{display:block}
+}
 </style>
 
 </head>
@@ -1262,6 +1298,18 @@ $('#btnLogin').addEventListener('click', async ()=>{
 <script>
   // Fallback: never keep auth-pending stuck
   window.addEventListener('DOMContentLoaded', ()=>{ document.documentElement.classList.remove('auth-pending'); });
+</script>
+
+
+<script>
+(function(){
+  const btn=document.getElementById('mzjSidebarBtn');
+  const backdrop=document.querySelector('.mzj-backdrop');
+  const open=()=>document.documentElement.classList.add('sidebar-open');
+  const close=()=>document.documentElement.classList.remove('sidebar-open');
+  if(btn){ btn.addEventListener('click', ()=>document.documentElement.classList.contains('sidebar-open')?close():open()); }
+  if(backdrop){ backdrop.addEventListener('click', close); }
+})();
 </script>
 
 </body>

@@ -554,6 +554,7 @@
         <select id="vinPicker"></select>
         <div class="hint">أي تحديث في مراحل تتبع الطلب سيكون لهذا رقم الهيكل فقط.</div>
         <button id="trackLinkBtn" class="btn" type="button" style="margin-top:8px;width:100%;">رابط التتبع</button>
+        <button id="trackQrBtn" class="btn-outline" type="button" style="margin-top:8px;width:100%;">QR التتبع (اضغط لفتح)</button>
       </div>
 
       <div id="erpTotals" class="totals-box" style="display:none;"></div>
@@ -830,8 +831,205 @@
       return digits;
     }
 
+    
+    // ===== Message Templates (shared for SMS + WhatsApp) =====
+    function getDefaultStageMessage(stageNum, stageLabel){
+      const orderNo = currentOrderId || "";
+      const vin = currentVin || "";
+      const trackingLink = vin ? `https://mzj-tracking.vercel.app/Test-Track.html?vin=${vin}` : "";
+
+      switch(stageNum){
+        case 1:
+          return (
+            `عميلنا العزيز،\n` +
+            `نرحب بكم ونهنئكم باختيار معرض محمد بن ذعار العجمي للسيارات.\n` +
+            `رقم الهيكل: ${vin}\n` +
+            `يمكنك متابعة حالة طلبك عبر الرابط التالي:\n${trackingLink}\n\n` +
+            `سنعمل على متابعة طلبكم بعناية وإبلاغكم بأي تحديث أولاً بأول.\n` +
+            `مع محمد بن ذعار العجمي للسيارات… أنت نجم الطريق.`
+          );
+        case 9:
+          return (
+            `عميلنا العزيز يسعدنا ابلاغك بجاهزية سيارتك الأن يمكنك الحضور للاستلام او طلب خدمة الشحن\n` +
+            `نشكرك على ثقتك مع محمد بن ذعار العجمي للسيارات انت نجم الطريق\n\n` +
+            `مواعيد العمل:\n` +
+            `الفترة الصباحية من الساعة 9 صباحاً الى 11 مساء\n` +
+            `الفترة المسائية من الساعة 4 مساء الى 9 مساء\n` +
+            `يوم الجمعة المساء فقط`
+          );
+        case 10:
+          return (
+            `نبارك لكم إتمام عملية التسليم بنجاح.\n` +
+            `يشرفنا في محمد بن زعار العجمي للسيارات خدمتكم، ونتمنى لكم قيادة آمنة وتجربة ممتعة.\n` +
+            `#نجم_الطريق`
+          );
+        default:
+          return `عميلنا العزيز، بخصوص طلبكم رقم ${orderNo}.\nمعرض محمد بن ذعار العجمي للسيارات.`;
+      }
+    }
+
+    // ===== Modal: Edit before send =====
+    const msgModal        = document.getElementById("msgModal");
+    const msgModalBackdrop= document.getElementById("msgModalBackdrop");
+    const msgModalClose   = document.getElementById("msgModalClose");
+    const msgModalTitle   = document.getElementById("msgModalTitle");
+    const msgModalSub     = document.getElementById("msgModalSub");
+    const msgModalText    = document.getElementById("msgModalText");
+    const msgModalSend    = document.getElementById("msgModalSend");
+    const msgModalReset   = document.getElementById("msgModalReset");
+    const msgModalCopy    = document.getElementById("msgModalCopy");
+    const msgModalMsg     = document.getElementById("msgModalMsg");
+    const msgModalChannel = document.getElementById("msgModalChannel");
+    const msgModalPhone   = document.getElementById("msgModalPhone");
+    const msgModalVin     = document.getElementById("msgModalVin");
+
+    let modalCtx = { channel:"sms", stageNum:0, stageLabel:"", defaultText:"" };
+
+    function closeMessageModal(){
+      if(!msgModal) return;
+      msgModal.style.display = "none";
+      msgModalMsg.textContent = "";
+      msgModalSend.disabled = false;
+    }
+    function openMessageModal(channel, stageNum, stageLabel){
+      stageMsg.textContent = "";
+      if (!currentCustomerPhone) {
+        stageMsg.innerHTML = "<span class='err'>لا يوجد رقم جوال محفوظ لهذا الطلب.</span>";
+        return;
+      }
+      const phone = normalizeSaudiPhone(currentCustomerPhone);
+      if (!phone) {
+        stageMsg.innerHTML = "<span class='err'>رقم الجوال غير صالح.</span>";
+        return;
+      }
+
+      const defText = getDefaultStageMessage(stageNum, stageLabel);
+
+      modalCtx = { channel, stageNum, stageLabel, defaultText: defText };
+
+      msgModalTitle.textContent = (channel === "whatsapp") ? "إرسال واتساب للعميل" : "إرسال SMS للعميل";
+      msgModalSub.textContent = `المرحلة ${stageNum}: ${stageLabel || ""}`;
+      msgModalText.value = defText;
+
+      msgModalChannel.textContent = (channel === "whatsapp") ? "WhatsApp" : "SMS";
+      msgModalPhone.textContent = phone ? ("966…" + phone.slice(-3)) : "—";
+      msgModalVin.textContent = (currentVin ? ("VIN: " + currentVin) : "VIN: —");
+
+      msgModal.style.display = "block";
+      setTimeout(() => msgModalText.focus(), 50);
+    }
+
+    if (msgModalBackdrop) msgModalBackdrop.addEventListener("click", closeMessageModal);
+    if (msgModalClose) msgModalClose.addEventListener("click", closeMessageModal);
+
+    if (msgModalReset) msgModalReset.addEventListener("click", () => {
+      msgModalText.value = modalCtx.defaultText || "";
+      msgModalMsg.innerHTML = "<span class='muted'>تم الرجوع للنص الأصلي.</span>";
+      setTimeout(()=> msgModalMsg.textContent="", 1200);
+    });
+
+    if (msgModalCopy) msgModalCopy.addEventListener("click", async () => {
+      try{
+        await navigator.clipboard.writeText(msgModalText.value || "");
+        msgModalMsg.innerHTML = "<span class='ok'>تم نسخ النص.</span>";
+      }catch(e){
+        msgModalMsg.innerHTML = "<span class='err'>تعذر نسخ النص.</span>";
+      }
+      setTimeout(()=> msgModalMsg.textContent="", 1200);
+    });
+
+    async function sendWhatsAppMessage(phone, text){
+      // WhatsApp deep link (web + mobile)
+      const url = `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text || "")}`;
+      window.open(url, "_blank");
+      return true;
+    }
+
+    if (msgModalSend) msgModalSend.addEventListener("click", async () => {
+      msgModalMsg.textContent = "";
+      msgModalSend.disabled = true;
+
+      const phone = normalizeSaudiPhone(currentCustomerPhone);
+      const msg = (msgModalText.value || "").trim();
+
+      try{
+        if (modalCtx.channel === "whatsapp") {
+          await sendWhatsAppMessage(phone, msg);
+          msgModalMsg.innerHTML = "<span class='ok'>تم فتح واتساب بالنص الجاهز.</span>";
+        } else {
+          await sendStcSmsForStage(modalCtx.stageNum, modalCtx.stageLabel, msg);
+          // sendStcSmsForStage writes to stageMsg; mirror here too:
+          msgModalMsg.innerHTML = "<span class='ok'>تم إرسال SMS (أو تم تنفيذ محاولة الإرسال).</span>";
+        }
+      }catch(e){
+        console.error(e);
+        msgModalMsg.innerHTML = "<span class='err'>حصل خطأ أثناء الإرسال.</span>";
+      }finally{
+        msgModalSend.disabled = false;
+      }
+    });
+
+    // ===== Dynamic QR (click to open tracking) =====
+    const trackQrBtn = document.getElementById("trackQrBtn");
+    const trackQrModal = document.getElementById("trackQrModal");
+    const trackQrBackdrop = document.getElementById("trackQrBackdrop");
+    const trackQrClose = document.getElementById("trackQrClose");
+    const trackQrImg = document.getElementById("trackQrImg");
+    const trackQrLink = document.getElementById("trackQrLink");
+    const trackQrCopy = document.getElementById("trackQrCopy");
+
+    function getTrackingUrl(){
+      return currentVin ? `https://mzj-tracking.vercel.app/Test-Track.html?vin=${encodeURIComponent(currentVin)}` : "";
+    }
+
+    function refreshTrackingQr(){
+      const url = getTrackingUrl();
+      if(!trackQrImg || !trackQrLink) return;
+
+      if(!url){
+        trackQrImg.src = "";
+        trackQrLink.href = "#";
+        trackQrImg.style.opacity = .4;
+        return;
+      }
+
+      // Use a reliable QR image endpoint (no library needed)
+      const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=" + encodeURIComponent(url);
+      trackQrImg.src = qrUrl;
+      trackQrLink.href = url;
+      trackQrImg.style.opacity = 1;
+    }
+
+    function openTrackQr(){
+      if(!currentVin){
+        alert("اختر رقم الهيكل أولاً.");
+        return;
+      }
+      refreshTrackingQr();
+      if(trackQrModal) trackQrModal.style.display = "block";
+    }
+    function closeTrackQr(){
+      if(trackQrModal) trackQrModal.style.display = "none";
+    }
+
+    if (trackQrBtn) trackQrBtn.addEventListener("click", openTrackQr);
+    if (trackQrBackdrop) trackQrBackdrop.addEventListener("click", closeTrackQr);
+    if (trackQrClose) trackQrClose.addEventListener("click", closeTrackQr);
+
+    if (trackQrCopy) trackQrCopy.addEventListener("click", async () => {
+      const url = getTrackingUrl();
+      if(!url) return;
+      try{
+        await navigator.clipboard.writeText(url);
+        alert("تم نسخ رابط التتبع");
+      }catch(e){
+        alert("تعذر نسخ الرابط");
+      }
+    });
+
+
     // إرسال SMS عبر endpoint /api/stc-sms
-   async function sendStcSmsForStage(stageNum, stageLabel) {
+   async function sendStcSmsForStage(stageNum, stageLabel, messageOverride=null) {
   stageMsg.textContent = "";
 
   if (!currentCustomerPhone) {
@@ -898,6 +1096,10 @@
         `معرض محمد بن ذعار العجمي للسيارات.`;
   }
 
+  if (messageOverride && String(messageOverride).trim()) {
+    text = String(messageOverride);
+  }
+
   try {
     const res = await fetch("/api/stc-sms", {
       method: "POST",
@@ -917,74 +1119,6 @@
     stageMsg.innerHTML =
       "<span class='err'>تعذر إرسال رسالة SMS، تأكد من إعدادات STC أو تواصل مع المسؤول التقني.</span>";
   }
-}
-
-
-// إرسال WhatsApp (يفتح واتساب برسالة جاهزة) — نفس الخطوات 1 و 9 و 10
-function sendWhatsappForStage(stageNum, stageLabel){
-  stageMsg.textContent = "";
-
-  if (!currentCustomerPhone) {
-    stageMsg.innerHTML = "<span class='err'>لا يوجد رقم جوال محفوظ لهذا الطلب.</span>";
-    return;
-  }
-
-  // واتساب يحتاج رقم بدون +
-  const phone = normalizeSaudiPhone(currentCustomerPhone);
-  if (!phone) {
-    stageMsg.innerHTML = "<span class='err'>رقم الجوال غير صالح.</span>";
-    return;
-  }
-
-  const orderNo = currentOrderId || "";
-  const vin = currentVin || "";
-  const trackingLink = vin ? `https://mzj-tracking.vercel.app/Test-Track.html?vin=${vin}` : "";
-
-  let text = "";
-
-  switch (stageNum) {
-
-    // 1️⃣ الخطوة رقم 1 — تهنئة + رابط التتبع
-    case 1:
-      text =
-        `عميلنا العزيز،\n` +
-        `نرحب بكم ونهنئكم باختيار معرض محمد بن ذعار العجمي للسيارات.\n` +
-        `رقم الهيكل: ${vin}\n` +
-        `يمكنك متابعة حالة طلبك عبر الرابط التالي:\n${trackingLink}\n\n` +
-        `سنعمل على متابعة طلبكم بعناية وإبلاغكم بأي تحديث أولاً بأول.\n` +
-        `مع محمد بن ذعار العجمي للسيارات… أنت نجم الطريق.`;
-      break;
-
-    // 9️⃣ الخطوة رقم 9 — جاهزية السيارة
-    case 9:
-      text =
-        `عميلنا العزيز يسعدنا ابلاغك بجاهزية سيارتك الأن يمكنك الحضور للاستلام او طلب خدمة الشحن.\n\n` +
-        `نشكرك على ثقتك مع محمد بن ذعار العجمي للسيارات… أنت نجم الطريق.\n\n` +
-        `مواعيد العمل:\n` +
-        `الفترة الصباحية من الساعة 9 صباحاً الى 11 مساء\n` +
-        `الفترة المسائية من الساعة 4 مساء الى 9 مساء\n` +
-        `يوم الجمعة المساء فقط`;
-      break;
-
-    // 🔟 الخطوة رقم 10 — إتمام التسليم
-    case 10:
-      text =
-        `نبارك لكم إتمام عملية التسليم بنجاح.\n` +
-        `يشرفنا في محمد بن زعار العجمي للسيارات خدمتكم، ونتمنى لكم قيادة آمنة وتجربة ممتعة.\n` +
-        `#نجم_الطريق`;
-      break;
-
-    default:
-      text =
-        `عميلنا العزيز، بخصوص طلبكم رقم ${orderNo}.\n` +
-        `معرض محمد بن ذعار العجمي للسيارات.`;
-  }
-
-  // wa.me يفتح محادثة واتساب
-  const waUrl = `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text)}`;
-  window.open(waUrl, "_blank");
-
-  stageMsg.innerHTML = "<span class='ok'>تم فتح واتساب برسالة جاهزة.</span>";
 }
 
 
@@ -1105,6 +1239,7 @@ function clearErpTable() {
       }
 
       currentVin    = selectedVin || (vins[0] || preferredVin || "");
+      try{ refreshTrackingQr(); }catch(e){}
       currentItemNo = resolveItemNoForVin(currentVin, records);
 
       // حساب إجمالي الطلب
@@ -1176,6 +1311,7 @@ function clearErpTable() {
 
       // تحميل مراحل التتبع للحالة الحالية
       loadTrackingForCurrentSelection();
+      try{ refreshTrackingQr(); }catch(e){}
     }
 
     // STAGES UI
@@ -1229,6 +1365,7 @@ function clearErpTable() {
         btnDone.onclick = () => completeStage(num);
         actions.appendChild(btnDone);
 
+        
         // زر رسالة SMS للعميل في الخطوات 1 و 9 و 10 فقط
         if (num === 1 || num === 9 || num === 10) {
           const btnSms = document.createElement("button");
@@ -1237,19 +1374,19 @@ function clearErpTable() {
           btnSms.style.marginRight = "6px";
           btnSms.textContent = "رسالة SMS للعميل";
           btnSms.disabled = !currentCustomerPhone;
-          btnSms.onclick = () => sendStcSmsForStage(num, label);
+          btnSms.onclick = () => openMessageModal("sms", num, label);
           actions.appendChild(btnSms);
 
-          // زر واتساب للعميل (يفتح محادثة برقم العميل + رسالة جاهزة)
           const btnWa = document.createElement("button");
           btnWa.className = "btn-outline";
           btnWa.style.fontSize = "12px";
           btnWa.style.marginRight = "6px";
-          btnWa.textContent = "واتساب للعميل";
+          btnWa.innerHTML = '<i class="fa-brands fa-whatsapp"></i> واتساب للعميل';
           btnWa.disabled = !currentCustomerPhone;
-          btnWa.onclick = () => sendWhatsappForStage(num, label);
+          btnWa.onclick = () => openMessageModal("whatsapp", num, label);
           actions.appendChild(btnWa);
         }
+    
 
         // زر التراجع
         const btnUndo = document.createElement("button");
@@ -1825,6 +1962,69 @@ function clearErpTable() {
 
       </div>
     </main>
+  </div>
+
+
+  <!-- Message Modal (Edit before send) -->
+  <div id="msgModal" style="display:none;position:fixed;inset:0;z-index:9999;">
+    <div id="msgModalBackdrop" style="position:absolute;inset:0;background:rgba(0,0,0,.45);"></div>
+    <div style="position:relative;max-width:680px;margin:7vh auto;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid #e5e7eb;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:rgba(188,143,116,.16);color:var(--brown);font-weight:900;">
+            <i class="fa-solid fa-paper-plane"></i>
+          </div>
+          <div>
+            <div id="msgModalTitle" style="font-weight:900;color:var(--brown);">إرسال رسالة</div>
+            <div id="msgModalSub" style="font-size:12px;color:var(--muted);margin-top:2px;">—</div>
+          </div>
+        </div>
+        <button id="msgModalClose" class="btn-outline" type="button" style="font-size:12px;">إغلاق</button>
+      </div>
+
+      <div style="padding:12px 14px;">
+        <label style="margin:0 0 6px 0;">نص الرسالة (تقدر تعدّل قبل الإرسال)</label>
+        <textarea id="msgModalText" rows="9" style="width:100%;padding:10px 12px;border-radius:12px;border:1px solid #e5e7eb;background:#f9fafb;font-family:inherit;font-size:14px;outline:none;resize:vertical;"></textarea>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-top:10px;">
+          <div class="muted" style="font-size:12px;">
+            <span class="badge" id="msgModalChannel">—</span>
+            <span class="badge" id="msgModalPhone">—</span>
+            <span class="badge" id="msgModalVin">—</span>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button id="msgModalCopy" class="btn-outline" type="button" style="font-size:12px;"><i class="fa-regular fa-copy"></i> نسخ النص</button>
+            <button id="msgModalReset" class="btn-outline" type="button" style="font-size:12px;"><i class="fa-solid fa-rotate-left"></i> رجوع للنص الأصلي</button>
+            <button id="msgModalSend" class="btn" type="button" style="font-size:12px;"><i class="fa-solid fa-paper-plane"></i> إرسال</button>
+          </div>
+        </div>
+        <div id="msgModalMsg" class="muted" style="margin-top:8px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dynamic QR (Clickable) -->
+  <div id="trackQrModal" style="display:none;position:fixed;inset:0;z-index:9998;">
+    <div id="trackQrBackdrop" style="position:absolute;inset:0;background:rgba(0,0,0,.45);"></div>
+    <div style="position:relative;max-width:420px;margin:10vh auto;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid #e5e7eb;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:rgba(188,143,116,.16);color:var(--brown);font-weight:900;">
+            <i class="fa-solid fa-qrcode"></i>
+          </div>
+          <div>
+            <div style="font-weight:900;color:var(--brown);">QR تتبع العميل</div>
+            <div id="trackQrSub" style="font-size:12px;color:var(--muted);margin-top:2px;">اضغط على الـ QR لفتح التتبع مباشرة</div>
+          </div>
+        </div>
+        <button id="trackQrClose" class="btn-outline" type="button" style="font-size:12px;">إغلاق</button>
+      </div>
+      <div style="padding:14px;text-align:center;">
+        <a id="trackQrLink" href="#" target="_blank" style="display:inline-block;text-decoration:none;">
+          <img id="trackQrImg" alt="QR Tracking" style="width:240px;height:240px;border-radius:14px;border:1px solid #e5e7eb;background:#fff;"/>
+        </a>
+        <div class="hint" style="margin-top:10px;">رابط التتبع: <button id="trackQrCopy" class="link-btn" type="button">نسخ الرابط</button></div>
+      </div>
+    </div>
   </div>
 
 </body>

@@ -11,15 +11,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
 
+  <!-- قالب الواجهة المعتمد -->
   <link rel="stylesheet" href="./mzj-ui.css"/>
 
   <style>
     html.auth-pending body{opacity:0; pointer-events:none;}
     .mzj-table td{vertical-align:top;}
     .subtle{font-size:12px; color:var(--muted);}
-    .inline-actions{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
-    .warnbox{border:1px solid rgba(245,158,11,.25); background: rgba(245,158,11,.08); padding:12px; border-radius:14px; margin-top:10px;}
-    .hide{display:none!important;}
     .file-warn{max-width:820px;margin:40px auto;padding:18px;border-radius:16px;border:1px solid rgba(239,68,68,.25);background:rgba(239,68,68,.06);font-family:Tajawal;text-align:center}
     .file-warn code{direction:ltr;unicode-bidi:bidi-override;background:rgba(0,0,0,.06);padding:2px 6px;border-radius:8px}
     .file-warn .btn{display:inline-flex;gap:8px;align-items:center;justify-content:center;margin-top:12px;padding:10px 14px;border-radius:12px;border:1px solid rgba(0,0,0,.12);background:#fff;cursor:pointer}
@@ -27,7 +25,7 @@
 </head>
 
 <body class="mzj auth-pending">
-  <!-- Topbar -->
+  <!-- ===== Topbar ===== -->
   <div class="mzj-topbar">
     <div class="topbar-left">
       <button id="mzjSidebarBtn" class="icon-btn" title="القائمة"><i class="fa-solid fa-bars"></i></button>
@@ -56,7 +54,7 @@
     </div>
   </div>
 
-  <!-- Shell -->
+  <!-- ===== Shell ===== -->
   <div id="mzjShell" class="mzj-shell">
     <aside id="mzjSidebar" class="mzj-sidebar">
       <div class="side-section">
@@ -76,15 +74,7 @@
       <div class="mzj-pagehead">
         <div>
           <h1 class="page-title">سجل النشاط</h1>
-          <p class="page-desc">عرض مباشر من <b>mzj_activity_log</b> + تسجيل تلقائي لأي تغييرات جديدة في <b>requests</b> (نقل/تصوير) و <b>cars</b> أثناء فتح الصفحة.</p>
-        </div>
-        <div class="pagehead-right inline-actions">
-          <button id="btnBackfill" class="mzj-btn mzj-btn-soft" type="button">
-            <i class="fa-solid fa-rotate"></i> بناء سجل الطلبات الحالية
-          </button>
-          <button id="btnClearLocal" class="mzj-btn mzj-btn-ghost" type="button">
-            <i class="fa-solid fa-broom"></i> مسح كاش الجلسة
-          </button>
+          <p class="page-desc">قراءة فقط من <b>mzj_activity_log</b>.</p>
         </div>
       </div>
 
@@ -94,18 +84,8 @@
           <div class="card-sub">التسلسل 1, 2, 3 … حسب الأحدث</div>
         </div>
         <div class="card-body">
-          <div id="permWarn" class="warnbox hide">
-            <div style="display:flex;gap:10px;align-items:center">
-              <i class="fa-solid fa-triangle-exclamation"></i>
-              <b>ملاحظة صلاحيات:</b>
-            </div>
-            <div class="subtle" style="margin-top:6px">
-              لا يوجد إذن للكتابة داخل <b>mzj_activity_log</b>. السجل سيعرض الموجود فقط ولن يسجل Mirroring.
-            </div>
-          </div>
-
-          <div class="mzj-table-wrap" style="margin-top:12px">
-            <table class="mzj-table" id="tblActivity">
+          <div class="mzj-table-wrap">
+            <table class="mzj-table">
               <thead>
                 <tr>
                   <th style="width:64px">#</th>
@@ -135,21 +115,18 @@
   <script src="./mzj-ui.js"></script>
 
   <script type="module">
-    // ⚠️ Firebase Auth غالبًا لا يعمل من file://
+    // تنبيه: Auth لا يعمل بشكل موثوق من file://
     if (location.protocol === "file:") {
       document.documentElement.classList.remove("auth-pending");
       document.body.innerHTML = `
         <div class="file-warn">
-          <div style="font-size:18px;font-weight:800;margin-bottom:6px">لا تشغّل الصفحة من Downloads (file://)</div>
+          <div style="font-size:18px;font-weight:800;margin-bottom:6px">افتح الصفحة عبر HTTP مش Downloads</div>
           <div class="subtle">
-            لازم تفتحها من <b>HTTP</b> (localhost أو على نفس دومين النظام) عشان Firebase Auth يشتغل.
+            شغّل سيرفر محلي ثم افتح: <code>http://localhost:5500/Activity.html</code>
           </div>
           <div class="subtle" style="margin-top:10px;line-height:1.9">
-            شغّل سيرفر محلي:
-            <div style="margin-top:6px"><code>python -m http.server 5500</code></div>
-            وبعدها افتح:
-            <div style="margin-top:6px"><code>http://localhost:5500/Activity.html</code></div>
-            ولازم تضيف <b>localhost</b> في Authorized domains داخل Firebase Auth.
+            <div><code>python -m http.server 5500</code></div>
+            <div style="margin-top:8px">ولا تنسى تضيف <b>localhost</b> في Authorized domains داخل Firebase Auth.</div>
           </div>
           <button class="btn" onclick="navigator.clipboard.writeText('python -m http.server 5500')">
             <i class="fa-regular fa-copy"></i> نسخ أمر السيرفر
@@ -163,18 +140,17 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
     import {
       getFirestore, collection, query, orderBy, limit, onSnapshot,
-      addDoc, serverTimestamp, getDocs, doc, getDoc, setDoc, where
+      doc, getDoc, where, getDocs
     } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
     const firebaseConfig = {
-    apiKey: "AIzaSyC614bGqnYf4Q-weTNemzWENTpa8DjGeHw",
-    authDomain: "mzj-agenda.firebaseapp.com",
-    projectId: "mzj-agenda",
-    storageBucket: "mzj-agenda.firebasestorage.app",
-    messagingSenderId: "834700407721",
-    appId: "1:834700407721:web:75c17665d4f032fd65cab8"
-  };
-
+  "apiKey": "AIzaSyC614bGqnYf4Q-weTNemzWENTpa8DjGeHw",
+  "authDomain": "mzj-agenda.firebaseapp.com",
+  "projectId": "mzj-agenda",
+  "storageBucket": "mzj-agenda.firebasestorage.app",
+  "messagingSenderId": "834700407721",
+  "appId": "1:834700407721:web:75c17665d4f032fd65cab8"
+};
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
@@ -184,7 +160,7 @@
 
     function normalizeRole(r){
       r = (r||"").toString().trim().toLowerCase();
-      if (["admin","administrator","مدير","المدير","أدمن","ادمن","الإدارة","الادارة","إدارة","اداره"].includes(r)) return "الإدارة";
+      if (["admin","administrator","مدير","المدير","أدمن","ادمن","الإدارة","الادارة","إدارة","اداره","management","manager"].includes(r)) return "الإدارة";
       if (["sales","مبيعات","مندوب"].includes(r)) return "المبيعات";
       return r || "";
     }
@@ -216,37 +192,34 @@
       document.body.innerHTML = `<div style="padding:24px;font-family:Tajawal;text-align:center">${msg||"لا تملك صلاحية الوصول لهذه الصفحة"}</div>`;
     }
 
-    let myRole = "";
+    // Read-only + نفس صلاحياتك: الإدارة/أدمن
     onAuthStateChanged(auth, async (user)=>{
       try{
         if (!user) return deny("غير مسجّل دخول.");
-        myRole = await fetchUserRole(user);
-        setUserUI(user, myRole);
+        const role = await fetchUserRole(user);
+        setUserUI(user, role);
 
         const email = (user.email||"").toLowerCase();
-        const ok = (myRole === "الإدارة") || email.includes("admin");
+        const ok = (role === "الإدارة") || email.includes("admin");
         if (!ok) return deny("لا تملك صلاحية الوصول لهذه الصفحة");
 
         document.documentElement.classList.remove("auth-pending");
-
         startActivityStream();
-        startMirroring();
-
       }catch(e){
         console.error(e);
         deny("حدث خطأ في التحقق من الصلاحيات.");
       }
     });
 
-    // ===== عرض mzj_activity_log =====
     function startActivityStream(){
       const rowsEl = $("activityRows");
       const countEl = $("rowsCount");
-      const q = query(collection(db,"mzj_activity_log"), orderBy("ts","desc"), limit(250));
 
+      const q = query(collection(db,"mzj_activity_log"), orderBy("ts","desc"), limit(300));
       onSnapshot(q, (snap)=>{
         rowsEl.innerHTML = "";
         let i = 0;
+
         snap.forEach((docSnap)=>{
           const d = docSnap.data() || {};
           const member = (safe(d.userName) || "—") + (d.userEmail ? `<div class="subtle">${safe(d.userEmail)}</div>` : "");
@@ -261,6 +234,7 @@
             </tr>
           `);
         });
+
         if (!i) rowsEl.innerHTML = `<tr><td colspan="6" class="subtle">لا يوجد سجلات بعد.</td></tr>`;
         countEl.textContent = String(i);
       }, (err)=>{
@@ -268,146 +242,6 @@
         rowsEl.innerHTML = `<tr><td colspan="6" class="subtle">تعذّر تحميل سجل النشاط.</td></tr>`;
       });
     }
-
-    // ===== Mirroring (requests + cars) =====
-    const handled = new Set(JSON.parse(sessionStorage.getItem("mzj_activity_handled")||"[]"));
-    function persistHandled(){
-      try{ sessionStorage.setItem("mzj_activity_handled", JSON.stringify([...handled].slice(-4000))); }catch(_){}
-    }
-
-    $("btnClearLocal").addEventListener("click", ()=>{
-      handled.clear();
-      sessionStorage.removeItem("mzj_activity_handled");
-      alert("تم مسح كاش الجلسة.");
-    });
-
-    async function canWriteLog(){
-      try{
-        const testRef = doc(collection(db,"mzj_activity_log"));
-        await setDoc(testRef, { action:"_perm_test", ts: Date.now(), createdAt: new Date().toISOString().slice(0,19).replace("T"," ") });
-        return true;
-      }catch(e){
-        console.warn("No write access to mzj_activity_log", e);
-        $("permWarn").classList.remove("hide");
-        return false;
-      }
-    }
-
-    function sigOf(kind, id, ts){ return `${kind}:${id}:${ts||0}`; }
-
-    async function writeLogFromRequest(changeType, id, d){
-      const ts = (d.updatedAt?.seconds || d.createdAt?.seconds || d.updatedAtTs || d.createdAtTs || Date.now());
-      const sig = sigOf("req", id, ts);
-      if (handled.has(sig)) return;
-      handled.add(sig); persistHandled();
-
-      const kind = (d.kind || "").toLowerCase();
-      const entityType = (kind === "move") ? "move_request" : (kind === "shoot" ? "photoshoot_request" : "request");
-      const action = (changeType === "added") ? "إنشاء طلب" : "تعديل طلب";
-      const details = [
-        d.status ? `الحالة: ${d.status}` : "",
-        (d.total!=null) ? `عدد: ${d.total}` : ""
-      ].filter(Boolean).join(" | ") || "—";
-
-      await addDoc(collection(db,"mzj_activity_log"), {
-        action,
-        entityType,
-        entityId: id,
-        details,
-        userEmail: d.createdByEmail || d.updatedByEmail || "",
-        userName: d.createdByName || d.updatedByName || "",
-        role: normalizeRole(d.createdByRole || d.updatedByRole || myRole || ""),
-        uid: d.createdByUid || d.updatedByUid || "",
-        page: "requests",
-        createdAt: new Date().toISOString().replace("T"," ").slice(0,19),
-        ts: Date.now(),
-        serverTs: serverTimestamp()
-      });
-    }
-
-    async function writeLogFromCar(changeType, id, d){
-      const ts = (d.updatedAt?.seconds || d.updatedAtTs || Date.now());
-      const sig = sigOf("car", id, ts);
-      if (handled.has(sig)) return;
-      handled.add(sig); persistHandled();
-
-      const action = (changeType === "added") ? "إضافة سيارة" : (changeType === "removed" ? "حذف سيارة" : "تعديل سيارة");
-
-      await addDoc(collection(db,"mzj_activity_log"), {
-        action,
-        entityType: "car",
-        entityId: id,
-        details: "تم تعديل بيانات السيارة",
-        userEmail: d.updatedByEmail || d.createdByEmail || "",
-        userName: d.updatedByName || d.createdByName || "",
-        role: normalizeRole(d.updatedByRole || d.createdByRole || myRole || ""),
-        uid: d.updatedByUid || d.createdByUid || "",
-        page: "cars",
-        createdAt: new Date().toISOString().replace("T"," ").slice(0,19),
-        ts: Date.now(),
-        serverTs: serverTimestamp()
-      });
-    }
-
-    let mirroringStarted = false;
-    async function startMirroring(){
-      if (mirroringStarted) return;
-      mirroringStarted = true;
-
-      const okWrite = await canWriteLog();
-      if (!okWrite) return;
-
-      // يسجل الجديد فقط بعد أول snapshot
-      let skipInitialRequests = true;
-      onSnapshot(collection(db,"requests"), async (snap)=>{
-        if (skipInitialRequests){ skipInitialRequests=false; return; }
-        for (const ch of snap.docChanges()) {
-          if (ch.type !== "added" && ch.type !== "modified") continue;
-          await writeLogFromRequest(ch.type, ch.doc.id, ch.doc.data()||{});
-        }
-      });
-
-      let skipInitialCars = true;
-      onSnapshot(collection(db,"cars"), async (snap)=>{
-        if (skipInitialCars){ skipInitialCars=false; return; }
-        for (const ch of snap.docChanges()) {
-          if (!["added","modified","removed"].includes(ch.type)) continue;
-          await writeLogFromCar(ch.type, ch.doc.id, ch.doc.data()||{});
-        }
-      });
-    }
-
-    // Backfill: يبني log من الطلبات الحالية (move/shoot)
-    $("btnBackfill").addEventListener("click", async ()=>{
-      const okWrite = await canWriteLog();
-      if (!okWrite) return;
-
-      const sure = confirm("هيتم إنشاء سجلات في mzj_activity_log لكل طلبات النقل/التصوير الحالية داخل requests (بدون تكرار). نكمل؟");
-      if (!sure) return;
-
-      $("btnBackfill").disabled = true;
-      $("btnBackfill").innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> جاري البناء…";
-
-      try{
-        const snap = await getDocs(collection(db,"requests"));
-        let n = 0;
-        for (const docSnap of snap.docs){
-          const d = docSnap.data() || {};
-          const kind = (d.kind||"").toLowerCase();
-          if (kind !== "move" && kind !== "shoot") continue;
-          await writeLogFromRequest("added", docSnap.id, d);
-          n++;
-        }
-        alert(`تم بناء السجل لعدد ${n} طلب.`);
-      }catch(e){
-        console.error(e);
-        alert("حصل خطأ أثناء البناء. راجع Console.");
-      }finally{
-        $("btnBackfill").disabled = false;
-        $("btnBackfill").innerHTML = "<i class='fa-solid fa-rotate'></i> بناء سجل الطلبات الحالية";
-      }
-    });
-
   </script>
 </body>
 </html>

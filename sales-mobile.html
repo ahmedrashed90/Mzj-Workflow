@@ -1709,9 +1709,9 @@ function clearErpTable() {
       }
     }
 
-    loadBtn.onclick = loadOrder;
+    if(loadBtn) loadBtn.onclick = loadOrder;
 
-    clearBtn.onclick = () => {
+    if(clearBtn) clearBtn.onclick = () => {
       orderIdInput.value = "";
       vinInput.value = "";
       orderMsg.textContent = "";

@@ -219,7 +219,7 @@
     .stage strong{color:var(--brown);font-size:13px;}
     .stage small{font-size:11px;color:var(--muted);}
 
-    .tabs{display:flex !important;
+    .tabs{
       display:none;
       margin:-8px 0 10px;
       gap:8px;
@@ -300,7 +300,7 @@
       .col-3,.col-4,.col-6,.col-12{grid-column:span 1;}
       .grid-2{grid-template-columns:1fr;}
       .topbar{flex-direction:column;align-items:flex-start;gap:6px;}
-      .tabs{display:flex !important;flex-wrap:wrap;}
+      .tabs{flex-wrap:wrap;}
     }
   
 /* ===== Admin-like Topbar overrides for Sales ===== */
@@ -333,7 +333,7 @@
 .brand-text .hint{color:var(--muted);font-size:12px}
 
 /* Tabs (keep original sales .tabs for page content untouched, target only in topbar) */
-.topbar .tabs{display:flex !important;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-start}
+.topbar .tabs{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-start}
 .topbar .tab{
   padding:8px 12px;
   border:1px solid var(--line, #e5e7eb);
@@ -376,32 +376,13 @@
 }
 
 
-/* ===== Mobile Tabs (Search / All Orders) ===== */
-.tabs{display:flex !important;
-  display:flex;
-  gap:10px;
-  margin:12px 0 14px;
-}
-.tab-btn{
-  flex:1;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  padding:11px 14px;
-  border-radius:999px;
-  border:1px solid rgba(0,0,0,.10);
-  background:#fff;
-  font-family:inherit;
-  font-weight:900;
-  cursor:pointer;
-  color:var(--brown,#3e2420);
-}
-.tab-btn i{ color:var(--beige,#bc8f74); }
-.tab-btn.tab-active{
-  background:rgba(188,143,116,.18);
-  border-color:rgba(188,143,116,.45);
-}
+/* ===== Tabs (Search / All Orders) ===== */
+.tabs{display:flex;gap:10px;margin:12px 0 14px;}
+.tab-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:11px 14px;border-radius:999px;border:1px solid rgba(0,0,0,.10);background:#fff;
+  font-family:inherit;font-weight:900;color:var(--brown,#3e2420);cursor:pointer;}
+.tab-btn i{color:var(--beige,#bc8f74);}
+.tab-btn.tab-active{background:rgba(62,36,32,.10);border-color:rgba(62,36,32,.20);}
 
 </style>
   <link rel="stylesheet" href="./mzj-ui.css" />
@@ -540,7 +521,7 @@
     <!-- Tabs Bar (Mobile) -->
     <div class="tabs" id="tabsBar" style="display:none;">
       <button class="tab-btn tab-active" id="tabSearchBtn"><i class="fa-solid fa-magnifying-glass"></i> بحث عن طلب</button>
-      <button class="tab-btn" id="tabListBtn"><i class="fa-solid fa-list-check"></i> كل الطلبات</button>
+      <button class="tab-btn" id="tabListBtn"><i class="fa-solid fa-list"></i> كل الطلبات</button>
     </div>
 
 <div class="col-4">
@@ -677,10 +658,7 @@
       onAuthStateChanged,
       signInWithEmailAndPassword,
       createUserWithEmailAndPassword,
-      signOut,
-      setPersistence,
-      browserLocalPersistence,
-      indexedDBLocalPersistence
+      signOut
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
     import {
       getFirestore,
@@ -718,13 +696,7 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    
-
-    // ✅ تثبيت جلسة تسجيل الدخول (حل Chrome Mobile / iPhone)
-    try { await setPersistence(auth, indexedDBLocalPersistence); }
-    catch(e) { await setPersistence(auth, browserLocalPersistence); }
-
-const db = getFirestore(app);
+    const db = getFirestore(app);
 
     // UI refs
     const authCard   = document.getElementById("authCard");
@@ -1900,30 +1872,18 @@ function clearErpTable() {
 
 
     // إدارة حالة تسجيل الدخول وتوزيع الواجهات
-    onAuthStateChanged(auth, (user) => {
-      try { window.__setConn(!!user); } catch(e) {}
-      // ✅ Mobile: show tabs + default to list after login
-      try {
-        const tabsBar = document.getElementById("tabsBar");
-        if (tabsBar) tabsBar.style.display = "flex";
-        if (window.__setSalesTab) window.__setSalesTab("list");
-      } catch(e) {}
+    onAuthStateChanged(auth,(user)=>{ try{ window.__setConn(!!user);}catch(e){}
       if (user) {
-        
 
-        // ✅ Mobile UI: show tabs + default list
-        try {
-          const tabsBar = document.getElementById("tabsBar");
-          if (tabsBar) tabsBar.style.display = "flex";
-          const orderCard = document.getElementById("orderCard");
-          if (orderCard) orderCard.style.display = "none";
-          const ordersListCard = document.getElementById("ordersListCard");
-          if (ordersListCard) ordersListCard.style.display = "block";
-          if (window.__setSalesTab) window.__setSalesTab("list");
-          if (window.loadOrdersList) window.loadOrdersList();
-        } catch(e) {}
+        // ✅ Mobile: show tabs + default list
+        try{
+          const tabsBar = document.getElementById('tabsBar');
+          if(tabsBar) tabsBar.style.display = 'flex';
+          if(window.__salesSetTab) window.__salesSetTab('list');
+          if(typeof window.loadOrdersList === 'function') window.loadOrdersList();
+        }catch(e){}
 
-// مستخدم مسجل دخول
+        // مستخدم مسجل دخول
         whoami.textContent = user.email || "";
         logoutBtn.style.display = "inline-flex";
 
@@ -2015,30 +1975,28 @@ function clearErpTable() {
   
 
 
-// ===== Mobile Tabs Wiring (Safety) =====
+// ===== Tabs Wiring (Mobile) =====
 (function(){
-  const tabsBar = document.getElementById("tabsBar");
-  const tabSearchBtn = document.getElementById("tabSearchBtn");
-  const tabListBtn = document.getElementById("tabListBtn");
-  const searchCard = document.getElementById("orderCard");
-  const ordersListCard = document.getElementById("ordersListCard");
-  if(!tabSearchBtn || !tabListBtn || !tabsBar) return;
+  const tabsBar = document.getElementById('tabsBar');
+  const tabSearchBtn = document.getElementById('tabSearchBtn');
+  const tabListBtn = document.getElementById('tabListBtn');
+  const orderCard = document.getElementById('orderCard');       // search card
+  const ordersListCard = document.getElementById('ordersListCard'); // list card
+  if(!tabsBar || !tabSearchBtn || !tabListBtn) return;
 
-  function setActive(which){
-    tabSearchBtn.classList.toggle("tab-active", which==="search");
-    tabListBtn.classList.toggle("tab-active", which==="list");
-    if(searchCard) searchCard.style.display = (which==="search") ? "block" : "none";
-    if(ordersListCard) ordersListCard.style.display = (which==="list") ? "block" : "none";
+  function setTab(which){
+    tabSearchBtn.classList.toggle('tab-active', which==='search');
+    tabListBtn.classList.toggle('tab-active', which==='list');
+    if(orderCard) orderCard.style.display = (which==='search') ? 'block' : 'none';
+    if(ordersListCard) ordersListCard.style.display = (which==='list') ? 'block' : 'none';
   }
-
-  tabSearchBtn.addEventListener("click", ()=>setActive("search"));
-  tabListBtn.addEventListener("click", ()=>{
-    setActive("list");
-    if (typeof window.loadOrdersList === "function") window.loadOrdersList();
+  tabSearchBtn.addEventListener('click', ()=>setTab('search'));
+  tabListBtn.addEventListener('click', ()=>{
+    setTab('list');
+    try{ if(typeof window.loadOrdersList === 'function') window.loadOrdersList(); }catch(e){}
   });
 
-  // expose
-  window.__setSalesTab = setActive;
+  window.__salesSetTab = setTab;
 })();
 
 </script>
@@ -2152,6 +2110,9 @@ function clearErpTable() {
   }
   window.__setConn = setConn;
 })();
+<script>
+try{ if(typeof loadOrdersList==="function") window.loadOrdersList=loadOrdersList; }catch(e){}
+</script>
 </script>
 
 </body>

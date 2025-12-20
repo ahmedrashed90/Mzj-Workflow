@@ -1,1318 +1,697 @@
 
-
-
-
 <!DOCTYPE html>
-
-<html dir="rtl" lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width,initial-scale=1" name="viewport"/>
-<title>سجل نشاط الأعضاء — MZJ Cars</title>
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
-<style>
-  :root{
-    --brown:#3e2420; --beige:#bc8f74; --cream:#fff8ef; --text:#1f2937; --muted:#6b7280;
-    --line:#e5e7eb; --line-strong:#d1d5db; --table-head:#fafafa;
-    --card:#fff; --radius:14px; --ok:#16a34a; --danger:#ef4444; --info:#0ea5e9;
-    --shadow:0 10px 24px rgba(0,0,0,.06);
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{margin:0;background:var(--cream);color:var(--text);font-family:"Tajawal",system-ui,Arial}
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>سجل نشاط الأعضاء — MZJ Cars</title>
 
-  /* Topbar + tabs + auth badge */
-  .topbar{position:sticky;top:0;z-index:1000;background:#fff;border-bottom:1px solid var(--line)}
-  .topbar-inner{max-width:1240px;margin:auto;display:flex;align-items:center;justify-content:space-between;padding:10px 16px}
-  .brand{display:flex;align-items:center;gap:10px}
-  .brand .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--brown),#2a1613);
-    display:grid;place-items:center;color:#fff;font-weight:800}
-  .brand h1{margin:0;font-size:18px;color:var(--brown)}
-  .tabs{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-start}
-  .tab{padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:#fff;text-decoration:none;color:inherit;font-weight:800;font-size:13px}
-  .tab.active{background:var(--brown);border-color:var(--brown);color:#fff}
-  .status-badge{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--line);background:#fff;border-radius:12px;padding:6px 10px;font-size:12px}
-  .dot{width:10px;height:10px;border-radius:999px;background:#f59e0b}
-  .dot.ok{background:var(--ok)} .dot.err{background:var(--danger)} .dot.warn{background:#f59e0b}
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
 
-  /* Buttons */
-  .btn{position:relative;border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 14px;cursor:pointer;font-weight:700;display:inline-flex;gap:8px;align-items:center;transition:.15s;font-size:13px}
-  .btn:hover{transform:translateY(-1px)} .btn:active{transform:translateY(0)}
-  .btn-primary{background:var(--brown);border-color:var(--brown);color:#fff}
-  .btn-beige{background:var(--beige);border-color:var(--beige);color:#fff}
-  .btn-ghost{background:#fff}
-  .btn-danger{background:var(--danger);border-color:var(--danger);color:#fff}
-  .btn-outline{background:#fff;border:1px solid var(--brown);color:var(--brown)}
+  <!-- ✅ MZJ Base UI Template -->
+  <link rel="stylesheet" href="./mzj-ui.css"/>
 
-  /* Layout */
-  .container{max-width:1240px;margin:18px auto;padding:0 16px 48px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:16px}
-  .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px;flex-wrap:wrap}
-  .section-title{display:flex;align-items:center;gap:8px;margin:0}
-  .section-title svg{width:20px;height:20px;color:var(--brown)}
-  .hint{color:var(--muted);font-size:12px}
-
-  /* Inputs */
-  label{font-weight:800;margin-bottom:6px;display:block;color:var(--brown);font-size:13px}
-  .input-wrap{position:relative}
-  .input-wrap .i{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#9ca3af}
-  .input-wrap input{padding-right:36px}
-  input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;outline:none;transition:.15s;font-family:"Tajawal",system-ui,Arial;font-size:13px}
-  input:focus,select:focus,textarea:focus{border-color:var(--beige);box-shadow:0 0 0 3px rgba(188,143,116,.15)}
-  #vin{height:44px} #notes{height:44px;resize:none}
-  textarea{min-height:44px;resize:vertical}
-
-  /* Grid */
-  .grid{display:grid;gap:12px}
-  .grid-4{grid-template-columns:repeat(4,1fr)}
-  .grid-3{grid-template-columns:repeat(3,1fr)}
-  .grid-2{grid-template-columns:repeat(2,1fr)}
-  @media (max-width:1080px){ .grid-4{grid-template-columns:repeat(3,1fr)} }
-  @media (max-width:860px){ .grid-4,.grid-3{grid-template-columns:repeat(2,1fr)} }
-  @media (max-width:620px){ .grid-4,.grid-3,.grid-2{grid-template-columns:1fr} }
-  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-
-  /* Tables */
-  .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px;background:#fff}
-  table{width:100%;border-collapse:separate;border-spacing:0}
-  thead th{position:sticky;top:0;background:var(--table-head);z-index:2;border-bottom:1px solid var(--line-strong);
-    text-align:right;color:#111827;font-size:13.5px;padding:12px 10px}
-  tbody td{border-top:1px solid var(--line);padding:10px;vertical-align:top;font-size:13px}
-  tbody tr:nth-child(odd){background:#fff}
-  tbody tr:nth-child(even){background:#fcfcfc}
-  tbody tr:hover{background:#f8fafc}
-  td,th{border-left:1px solid var(--line)}
-  td:last-child,th:last-child{border-left:0}
-  .cell-actions{display:flex;gap:6px;flex-wrap:wrap}
-  .nowrap{white-space:nowrap}
-  .w-120{min-width:120px}
-  .w-160{min-width:160px}
-
-  /* Import dropdown */
-  .import-menu{position:relative;display:inline-block}
-  .import-dropdown{position:absolute;top:110%;left:0;background:#fff;border:1px solid var(--line);border-radius:12px;
-    box-shadow:0 14px 28px rgba(0,0,0,.12);min-width:260px;z-index:20;display:none;overflow:hidden}
-  .import-dropdown button{display:flex;gap:8px;align-items:center;width:100%;text-align:right;background:#fff;border:0;padding:12px 14px;cursor:pointer;font-weight:700;font-size:13px}
-  .import-dropdown button:hover{background:#f9fafb}
-
-  /* Modal */
-  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.38);display:none;align-items:center;justify-content:center;z-index:50}
-  .modal{background:#fff;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.35);width:min(520px,92vw);padding:16px;border:1px solid var(--line)}
-  .modal header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-  .modal h3{margin:0;font-size:18px;color:var(--brown)}
-  .modal .actions{display:flex;gap:8px;justify-content:flex-start;margin-top:12px}
-
-  /* Toast */
-  .toast{position:fixed;bottom:16px;right:16px;background:#111827;color:#fff;padding:10px 14px;border-radius:12px;box-shadow:0 10px 24px rgba(0,0,0,.25);display:none;z-index:60;font-size:13px}
-  .toast.ok{background:var(--ok)} .toast.info{background:var(--info)} .toast.err{background:var(--danger)}
-
-  /* Auth */
-  .auth-wrap{min-height:60vh;display:grid;place-items:center;padding:24px}
-  .auth-card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:18px;max-width:420px;width:96%}
-  .auth-card h2{margin:0 0 10px;color:var(--brown)}
-  .auth-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-
-  /* Checklist box */
-  .checklist{border:1px dashed var(--beige);border-radius:12px;padding:12px;background:#fff8ef}
-  .checklist h4{margin:0 0 8px 0;color:var(--brown);font-size:14px}
-  .check-row{display:grid;grid-template-columns:18px 1fr;gap:8px;align-items:start}
-  .check-row label{margin:0;display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px}
-
-  /* حركة النقل: صفوف متعددة */
-  .move-row{border:1px dashed #e5e7eb;border-radius:10px;padding:8px 10px;background:#fffbf7}
-  .move-row-title{font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:600}
-
-  /* إشعار حركة النقل */
-  .move-alert{
-    margin-top:10px;
-    padding:10px 12px;
-    border-radius:12px;
-    display:none;
-    align-items:flex-start;
-    gap:10px;
-    font-size:13px;
-  }
-  .move-alert .icon{
-    margin-top:3px;
-    font-size:16px;
-  }
-  .move-alert .title{
-    font-weight:800;
-    margin-bottom:4px;
-    font-size:13.5px;
-  }
-  .move-alert ul{
-    margin:0;
-    padding-right:18px;
-    list-style:disc;
-  }
-  .move-alert.success{
-    background:#ecfdf3;
-    border:1px solid #bbf7d0;
-    color:#14532d;
-  }
-  .move-alert.error{
-    background:#fef2f2;
-    border:1px solid #fecaca;
-    color:#991b1b;
-  }
-  .move-alert.info{
-    background:#eff6ff;
-    border:1px solid #bfdbfe;
-    color:#1d4ed8;
-  }
-
-  .copyable{cursor:pointer;text-decoration:underline;text-decoration-style:dotted}
-
-  .inner-tabs{
-    display:flex;
-    flex-wrap:wrap;
-    gap:8px;
-    margin-bottom:16px;
-  }
-  .inner-tab{
-    border:1px solid var(--line);
-    background:#fff;
-    padding:6px 14px;
-    border-radius:999px;
-    font-size:14px;
-    cursor:pointer;
-    color:var(--text);
-  }
-  .inner-tab.active{
-    background:var(--brown);
-    color:#fff;
-    border-color:var(--brown);
-  }
-  .inner-tab-panel{display:none;}
-  .inner-tab-panel.active{display:block;}
-
-  .move-row-title{
-    font-weight:600;
-    margin-bottom:4px;
-    color:var(--brown);
-  }
-  .move-notes{
-    width:100%;
-    min-height:48px;
-    resize:vertical;
-  }
-
-
-  .notes-col{
-    display:none;
-  }
-</style>
-<style id="noFlash">
-  html{background:#fff8ef;}
-  body{opacity:0;}
-</style>
   <style>
-  .legacy-admin .dashboard-topbar,
-  .legacy-admin .topbar,
-  .legacy-admin .tabs,
-  .legacy-admin .nav-tabs,
-  .legacy-admin .nav-pills,
-  .legacy-admin header:not(.mzj-topbar){
-    display:none !important;
-  }
-</style>
+    /* Page-specific styles (kept minimal; UI shell comes from mzj-ui.css) */
+    .status-badge{
+      display:inline-flex;gap:8px;align-items:center;
+      border:1px solid var(--line);background:var(--card);
+      border-radius:14px;padding:8px 12px;font-size:12px;color:var(--muted);
+      height:44px;
+    }
+    .dot{width:10px;height:10px;border-radius:999px;background:var(--warn)}
+    .dot.ok{background:var(--ok)} .dot.err{background:var(--danger)} .dot.warn{background:var(--warn)}
+    .hint{color:var(--muted);font-size:12px;margin:6px 0 0}
+    .filters{
+      display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;
+    }
+    .field{display:flex;flex-direction:column;gap:6px;min-width:160px}
+    .field label{color:var(--muted);font-weight:700;font-size:12px}
+    .input,.select{
+      height:44px;padding:0 12px;border-radius:14px;border:1px solid var(--line);
+      background:var(--card);font-family:var(--font);font-size:13px;outline:none;
+    }
+    .input:focus,.select:focus{border-color:rgba(188,143,116,.6);box-shadow:0 0 0 3px rgba(188,143,116,.14)}
+    .select{cursor:pointer}
+    .btn{height:44px;border-radius:14px;border:1px solid var(--line);background:var(--card);
+      padding:0 14px;cursor:pointer;font-weight:800;display:inline-flex;gap:10px;align-items:center}
+    .btn:hover{transform:translateY(-1px)}
+    .btn:active{transform:translateY(0)}
+    .btn-primary{background:var(--beige);border-color:var(--beige);color:#fff}
+    .btn-ghost{background:transparent}
 
+    .table-wrap{
+      border-radius:14px;border:1px solid var(--line);overflow:auto;
+      max-height: calc(100vh - 360px);
+    }
+    table{width:100%;border-collapse:collapse;min-width:980px}
+    thead th{
+      position:sticky;top:0;z-index:2;
+      background:rgba(62,36,32,.06);
+      color:var(--brown);font-weight:900;font-size:13px;
+      padding:12px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;
+    }
+    tbody td{
+      padding:10px 12px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:top;
+    }
+    tbody tr:hover td{background:rgba(188,143,116,.08)}
+    .action-pill{
+      display:inline-flex;align-items:center;gap:8px;
+      border-radius:999px;padding:6px 10px;font-size:12px;font-weight:900;
+      border:1px solid transparent;
+      white-space:nowrap;
+    }
+    .action-pill.info{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}
+    .action-pill.ok{background:#ecfdf3;color:#166534;border-color:#bbf7d0}
+    .action-pill.danger{background:#fef2f2;color:#b91c1c;border-color:#fecaca}
+    .action-pill.warn{background:#fffbeb;color:#92400e;border-color:#fed7aa}
 
-<style>
-/* ===== Self-contained Shell + Sidebar (works without mzj-ui.css) ===== */
-:root{
-  --brown:#3e2420; --beige:#bc8f74; --cream:#fff8ef; --line:#e7e5e4;
-  --text:#1f2937; --muted:#6b7280; --card:#fff; --radius:12px;
-}
-body{margin:0;font-family:"Tajawal",system-ui;background:#faf7f3;color:var(--text)}
-.mzj-topbar{display:none !important}
-.mzj-shell{display:flex;min-height:100vh;align-items:stretch}
-.mzj-sidebar{
-  width:300px;flex:0 0 300px;background:#fff;border-left:1px solid var(--line);
-  position:sticky;top:0;height:100vh;overflow:auto; padding:14px 14px 18px;
-}
-.mzj-sidebar .side-title{font-weight:800;color:var(--brown);margin:6px 6px 14px}
-.mzj-sidebar a{
-  display:flex;gap:10px;align-items:center;
-  padding:10px 12px;border-radius:12px;text-decoration:none;color:var(--text);
-}
-.mzj-sidebar a:hover{background:#fff8ef}
-.mzj-sidebar a.active{background:#f3ede6;border:1px solid #e7d9cf}
-.mzj-content{flex:1;min-width:0;padding:18px}
-.mzj-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:120}
-.mzj-sidebar-fab{
-  position:fixed;top:16px;right:16px;z-index:200;
-  width:44px;height:44px;border-radius:14px;border:1px solid var(--line);
-  background:#fff;box-shadow:0 10px 24px rgba(0,0,0,.12);
-  display:flex;align-items:center;justify-content:center;cursor:pointer;
-}
-.mzj-sidebar-fab i{color:var(--brown)}
-@media (min-width: 980px){ .mzj-sidebar-fab{display:none;} }
-@media (max-width: 980px){
-  .mzj-sidebar{position:fixed;right:0;top:0;bottom:0;z-index:130;transform:translateX(110%);transition:.2s ease;box-shadow:0 18px 40px rgba(0,0,0,.2)}
-  html.sidebar-open .mzj-sidebar{transform:translateX(0)}
-  html.sidebar-open .mzj-backdrop{display:block}
-}
-</style>
+    .toast{
+      position:fixed;bottom:18px;right:18px;background:#111827;color:#fff;
+      padding:10px 14px;border-radius:14px;box-shadow:0 10px 24px rgba(0,0,0,.25);
+      display:none;z-index:120;font-size:13px;
+    }
+    .toast.show{display:block;animation:fade .2s ease-out}
+    @keyframes fade{from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)}}
 
+    /* Auth screen */
+    #authGate{min-height:60vh;display:grid;place-items:center;padding:24px}
+    .auth-card{
+      width:min(460px,96vw);
+      border-radius:var(--radius);
+      border:1px solid var(--line);
+      background:var(--card);
+      box-shadow:var(--shadow);
+      padding:16px;
+    }
+    .auth-card h2{margin:0 0 10px;color:var(--brown)}
+    .auth-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+
+    @media (max-width: 980px){
+      table{min-width: 920px}
+      .field{min-width: 140px}
+    }
+  </style>
 </head>
+
 <body class="mzj">
+  <!-- ===== Topbar (Template) ===== -->
+  <header class="mzj-topbar">
+    <div class="topbar-left">
+      <button class="icon-btn" id="mzjSidebarBtn" aria-label="القائمة"><i class="fa-solid fa-bars"></i></button>
 
-<header class="mzj-topbar">
-  <div class="topbar-left">
-    <button class="icon-btn" id="mzjSidebarBtn" aria-label="القائمة"><i class="fa-solid fa-bars"></i></button>
-    <div class="brand">
-      <div class="brand-mark">MZJ</div>
-      <div class="brand-text">
-        <div class="brand-title">محمد بن ذعار العجمي للسيارات</div>
-        <div class="brand-sub">Workspace</div>
+      <div class="brand">
+        <div class="brand-mark">MZJ</div>
+        <div class="brand-text">
+          <div class="brand-title">محمد بن ذعار العجمي للسيارات</div>
+          <div class="brand-sub">Workspace</div>
+        </div>
       </div>
     </div>
+
+    <div class="topbar-center">
+      <div class="mzj-breadcrumb">
+        <span class="crumb">الرئيسية</span>
+        <i class="fa-solid fa-chevron-left"></i>
+        <span class="crumb current">سجل النشاط</span>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <div class="mzj-chip"><i class="fa-regular fa-clock"></i><span id="mzjNow">—</span></div>
+      <button class="icon-btn" id="mzjThemeBtn" aria-label="الوضع الليلي"><i class="fa-solid fa-moon"></i></button>
+      <button id="btnSignOut" class="mzj-btn mzj-btn-ghost" style="display:none">
+        <i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== Shell (Template) ===== -->
+  <div class="mzj-shell" id="mzjShell">
+    <aside class="mzj-sidebar" id="mzjSidebar">
+      <div class="side-section">
+        <div class="side-title">القائمة</div>
+        <nav class="side-nav">
+          <a class="side-link" href="./sales.html"><i class="fa-solid fa-handshake"></i><span>تتبع المبيعات</span></a>
+          <a class="side-link" href="./dashboard.html"><i class="fa-solid fa-gauge"></i><span>الداش بورد</span></a>
+          <a class="side-link" href="./inventory.html"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
+          <a class="side-link" href="./vt.html"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
+          <a class="side-link" href="./photoshoot-user.html"><i class="fa-solid fa-camera"></i><span>إدارة الطلبات</span></a>
+          <a class="side-link" href="./cars.html"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
+          <a class="side-link" href="./admin.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
+          <a class="side-link active" href="./Activity.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل النشاط</span></a>
+        </nav>
+      </div>
+
+      <div class="side-footer">
+        <div class="mzj-note">
+          <div class="note-title">معلومة</div>
+          <div class="note-row"><i class="fa-regular fa-circle-check"></i><span>تحميل آخر 1000 حركة</span></div>
+          <div class="note-row"><i class="fa-regular fa-circle-check"></i><span>فلترة + تصدير Excel</span></div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="mzj-backdrop" id="mzjBackdrop"></div>
+
+    <main class="mzj-content">
+      <!-- Page head -->
+      <div class="mzj-pagehead">
+        <div>
+          <h1 class="page-title">سجل نشاط الأعضاء</h1>
+          <p class="page-desc">تتبع كل حركة يقوم بها الأعضاء داخل النظام + فلترة وتصدير.</p>
+        </div>
+        <div class="pagehead-right">
+          <div class="status-badge">
+            <span id="connDot" class="dot warn"></span>
+            <span id="connText">جارِ الاتصال…</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Auth Gate -->
+      <div id="authGate">
+        <div class="auth-card">
+          <h2>تسجيل الدخول</h2>
+
+          <div class="mzj-grid" style="grid-template-columns:repeat(12,1fr);gap:10px">
+            <div style="grid-column: span 12;">
+              <label style="display:block;margin-bottom:6px;color:var(--muted);font-weight:800;font-size:12px">البريد الإلكتروني</label>
+              <input id="email" class="input" type="email" placeholder="you@example.com"/>
+            </div>
+            <div style="grid-column: span 12;">
+              <label style="display:block;margin-bottom:6px;color:var(--muted);font-weight:800;font-size:12px">كلمة المرور</label>
+              <input id="password" class="input" type="password" placeholder="••••••••"/>
+            </div>
+          </div>
+
+          <div class="auth-actions">
+            <button class="btn btn-primary" id="btnLogin"><i class="fa-solid fa-right-to-bracket"></i> تسجيل الدخول</button>
+            <button class="btn btn-ghost" id="btnSignup"><i class="fa-solid fa-user-plus"></i> إنشاء حساب</button>
+          </div>
+
+          <p class="hint" id="authHint"></p>
+        </div>
+      </div>
+
+      <!-- App -->
+      <div id="app" style="display:none">
+        <div class="mzj-grid">
+          <!-- KPIs -->
+          <section class="mzj-card" style="grid-column: span 12;">
+            <div class="card-head">
+              <div class="card-title">ملخص سريع</div>
+              <div class="card-sub">نظرة عامة على السجل الحالي</div>
+            </div>
+            <div class="card-body">
+              <div class="mzj-kpis">
+                <div class="kpi">
+                  <div class="kpi-label">إجمالي الحركات</div>
+                  <div class="kpi-value" id="sumTotal">0</div>
+                </div>
+                <div class="kpi">
+                  <div class="kpi-label">عدد الأعضاء النشطين</div>
+                  <div class="kpi-value" id="sumMembers">0</div>
+                </div>
+                <div class="kpi">
+                  <div class="kpi-label">حركات اليوم</div>
+                  <div class="kpi-value" id="sumToday">0</div>
+                </div>
+              </div>
+              <p class="hint">كل العمليات المسجلة في كولكشن <b>mzj_activity_log</b> (الأحدث → الأقدم).</p>
+            </div>
+          </section>
+
+          <!-- Filters -->
+          <section class="mzj-card" style="grid-column: span 12;">
+            <div class="card-head">
+              <div class="card-title">فلاتر وبحث</div>
+              <div class="card-sub">صفّي النتائج حسب التاريخ / العضو / نوع الحركة أو بحث عام</div>
+            </div>
+            <div class="card-body">
+              <div class="filters">
+                <div class="field">
+                  <label for="dateFrom">من تاريخ</label>
+                  <input id="dateFrom" class="input" type="date">
+                </div>
+                <div class="field">
+                  <label for="dateTo">إلى تاريخ</label>
+                  <input id="dateTo" class="input" type="date">
+                </div>
+                <div class="field">
+                  <label for="memberFilter">العضو</label>
+                  <select id="memberFilter" class="select">
+                    <option value="ALL">الكل</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="actionFilter">نوع الحركة</label>
+                  <select id="actionFilter" class="select">
+                    <option value="ALL">الكل</option>
+                  </select>
+                </div>
+                <div class="field" style="flex:1;min-width:220px">
+                  <label for="searchInput">بحث عام</label>
+                  <input id="searchInput" class="input" placeholder="ابحث بالعضو، الحركة، السيارة، رقم الهيكل، ملاحظات…">
+                </div>
+                <div class="field" style="min-width:auto">
+                  <label>&nbsp;</label>
+                  <button id="btnClearFilters" class="btn btn-ghost"><i class="fa-solid fa-eraser"></i> مسح</button>
+                </div>
+                <div class="field" style="min-width:auto">
+                  <label>&nbsp;</label>
+                  <button id="btnExport" class="btn btn-primary"><i class="fa-regular fa-file-excel"></i> Excel</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Table -->
+          <section class="mzj-card" style="grid-column: span 12;">
+            <div class="card-head">
+              <div class="card-title">سجل الحركات</div>
+              <div class="card-sub">آخر 1000 حركة (قابلة للتصفية)</div>
+            </div>
+            <div class="card-body">
+              <div class="table-wrap">
+                <table id="logsTable">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>التاريخ والوقت</th>
+                      <th>العضو</th>
+                      <th>الدور</th>
+                      <th>نوع الحركة</th>
+                      <th>الكيان</th>
+                      <th>التفاصيل</th>
+                      <th>المرجع</th>
+                      <th>IP</th>
+                      <th>المتصفح</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <p class="hint" id="logsCount">لا توجد بيانات بعد.</p>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div id="toast" class="toast"></div>
+    </main>
   </div>
-  <div class="topbar-center">
-    <div class="mzj-breadcrumb">
-      <span class="crumb">الرئيسية</span>
-      <i class="fa-solid fa-chevron-left"></i>
-      <span class="crumb current">الإدارة</span>
-    </div>
-  </div>
-  <div class="topbar-right">
-    <div class="mzj-chip"><i class="fa-regular fa-clock"></i><span id="mzjNow">—</span></div>
-    <button id="btnSignOut" class="btn btn-ghost" style="display:none"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</button>
-  </div>
-</header>
 
-<div class="mzj-shell" id="mzjShell">
-  <aside class="mzj-sidebar" id="mzjSidebar">
-    <div class="side-section">
-      <div class="side-title">القائمة</div>
-      <nav class="side-nav">
-        <a class="side-link tab" href="./sales.html"><i class="fa-solid fa-handshake"></i><span>تتبع المبيعات</span></a>
-          <a class="side-link tab" href="./dashboard.html"><i class="fa-solid fa-gauge"></i><span>الداش بورد</span></a>
-          <a class="side-link tab" href="./inventory.html"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
-          <a class="side-link tab" href="./vt.html"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
-          <a class="side-link tab" href="./photoshoot-user.html"><i class="fa-solid fa-camera"></i><span>إدارة الطلبات</span></a>
-          <a class="side-link tab" href="./cars.html"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
-          <a class="side-link tab active" href="./admin.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
-          <a class="side-link tab" href="./Activity.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل النشاط</span></a>
+  <!-- Dependencies -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
-      </nav>
-    </div>
-  </aside>
+  <!-- ✅ MZJ UI helpers -->
+  <script src="./mzj-ui.js"></script>
 
-  <div class="mzj-backdrop" id="mzjBackdrop"></div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+    import { 
+      getAuth, onAuthStateChanged, signInWithEmailAndPassword, 
+      createUserWithEmailAndPassword, signOut 
+    } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+    import {
+      getFirestore, collection, query, orderBy, limit, onSnapshot, doc, getDoc
+    } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-  <main class="mzj-content">
+    /* ===== Firebase ===== */
+    const firebaseConfig = {
+      apiKey: "AIzaSyC614bGqnYf4Q-weTNemzWENTpa8DjGeHw",
+      authDomain: "mzj-agenda.firebaseapp.com",
+      projectId: "mzj-agenda",
+      storageBucket: "mzj-agenda.firebasestorage.app",
+      messagingSenderId: "834700407721",
+      appId: "1:834700407721:web:75c17665d4f032fd65cab8"
+    };
+    const appFB = initializeApp(firebaseConfig);
+    const auth = getAuth(appFB);
+    const db   = getFirestore(appFB);
 
-<!-- ===== Activity Content (old logic, new shell) ===== -->
-<style>
-  :root{
-    --brown:#3e2420; --beige:#bc8f74; --cream:#fff8ef;
-    --text:#1f2937; --muted:#6b7280; --line:#e8e5e2;
-    --card:#ffffff; --bg:#faf7f3; --radius:14px;
-    --shadow:0 12px 28px rgba(0,0,0,.06);
-    --ok:#16a34a; --danger:#ef4444; --info:#0ea5e9; --warn:#f59e0b;
-    --black:#0b0b0b;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:"Tajawal",system-ui,Arial}
+    /* ===== Roles & Permissions ===== */
+    const ROLE_ADMIN   = 'الادارة';
+    const ROLE_IDARI   = 'اداري';
+    const ROLE_BRANCH  = 'مدراء فروع';
 
-  /* Topbar + Tabs */
-  .topbar{position:sticky;top:0;z-index:60;background:#fff;border-bottom:1px solid var(--line)}
-  .topbar-inner{max-width:1280px;margin:auto;display:flex;align-items:center;justify-content:space-between;padding:12px 18px}
-  .brand{display:flex;align-items:center;gap:10px}
-  .brand .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--brown),#2a1613);display:grid;place-items:center;color:#fff;font-weight:900}
-  .brand h1{margin:0;font-size:18px;color:var(--brown);font-weight:800}
-  .brand small{color:var(--muted)}
-  .tabs{display:flex;gap:8px;flex-wrap:wrap}
-  .tab{padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:#fff;text-decoration:none;color:inherit;font-weight:800;font-size:13px;white-space:nowrap}
-  .tab.active{background:var(--brown);border-color:var(--brown);color:#fff}
-  .status-badge{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--line);background:#fff;border-radius:12px;padding:6px 10px;font-size:12px}
-  .dot{width:10px;height:10px;border-radius:999px;background:var(--warn)}
-  .dot.ok{background:var(--ok)} .dot.err{background:var(--danger)} .dot.warn{background:var(--warn)}
+    // الصفحات المسموح بها لكل تصنيف (للروابط)
+    const ROLE_PAGES = {
+      [ROLE_ADMIN] : 'ALL',
+      [ROLE_IDARI] : ['photoshoot.html','photoshoot-user.html','cars.html'],
+      [ROLE_BRANCH]: ['dashboard.html']
+    };
 
-  .container{max-width:1280px;margin:18px auto;padding:0 16px;display:grid;gap:16px}
+    // صفحة سجل النشاط متاحة للإدارة فقط
+    const PAGE_ALLOWED_ROLES = [ROLE_ADMIN];
 
-  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px}
-  .hint{color:var(--muted);font-size:12px}
-
-  /* Summary cards */
-  .summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-  @media (max-width:900px){.summary-grid{grid-template-columns:repeat(2,1fr)}}
-  @media (max-width:640px){.summary-grid{grid-template-columns:1fr}}
-  .summary-card{padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:#fffdf7;display:flex;flex-direction:column;gap:4px}
-  .summary-top{display:flex;justify-content:space-between;align-items:center}
-  .summary-label{font-size:13px;color:var(--muted);font-weight:600}
-  .summary-value{font-size:22px;font-weight:900;color:var(--brown)}
-  .summary-icon{width:28px;height:28px;border-radius:999px;display:grid;place-items:center;background:var(--brown);color:#fff;font-size:13px}
-
-  /* Filters */
-  .filters{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
-  .field{display:flex;flex-direction:column;gap:4px;font-size:13px}
-  .field label{color:var(--muted);font-weight:600}
-  .input,.select{padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:#fff;font-family:inherit;font-size:13px;min-width:140px}
-  .select{cursor:pointer}
-  .btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;cursor:pointer;font-weight:700;display:inline-flex;gap:8px;align-items:center;transition:.15s;font-size:13px}
-  .btn-primary{background:var(--beige);border-color:var(--beige);color:#fff}
-  .btn-ghost{background:#fff}
-  .btn:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(0,0,0,.06)}
-
-  /* Table */
-  .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px;max-height:70vh}
-  table{width:100%;border-collapse:separate;border-spacing:0}
-  thead th{position:sticky;top:0;background:#fafafa;z-index:2;border-bottom:2px solid var(--line);text-align:right;color:#111827;font-size:13px;padding:8px 10px;white-space:nowrap}
-  tbody td{border-top:1px solid var(--line);padding:8px 10px;vertical-align:top;font-size:13px}
-  tbody tr:nth-child(odd){background:#fff}
-  tbody tr:nth-child(even){background:#fffdfb}
-  td,th{border-left:1px solid var(--line)}
-  td:last-child,th:last-child{border-left:0}
-  .tag{display:inline-block;background:#f6f6f6;border:1px solid var(--line);padding:2px 8px;border-radius:999px;font-size:11px;color:#444}
-  .action-pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 8px;font-size:11px;font-weight:700}
-  .action-pill.info{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
-  .action-pill.ok{background:#ecfdf3;color:#166534;border:1px solid #bbf7d0}
-  .action-pill.danger{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
-  .action-pill.warn{background:#fffbeb;color:#92400e;border:1px solid #fed7aa}
-
-  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-
-  /* Toast */
-  .toast{position:fixed;bottom:18px;right:18px;background:#111827;color:#fff;padding:10px 14px;border-radius:12px;box-shadow:0 10px 24px rgba(0,0,0,.25);display:none;z-index:100;font-size:13px}
-  .toast.show{display:block;animation:fade .2s ease-out}
-  @keyframes fade{from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)}}
-</style>
-<style>
-  .legacy-activity{display:block !important;}
-  #btnSignOutInner{display:none !important;}
-</style>
-
-<div class="legacy legacy-activity">
-
-<div style="display:none">
-  <span id="connDot" class="dot warn"></span>
-  <span id="connText"></span>
-</div>
-
-<!-- Auth Gate -->
-<div id="authGate" style="min-height:60vh;display:grid;place-items:center;padding:24px">
-  <div class="card" style="max-width:440px;width:96%">
-    <h2 style="margin:0 0 10px;color:var(--brown)">تسجيل الدخول</h2>
-    <label>البريد الإلكتروني</label>
-    <input id="email" class="input" type="email" placeholder="you@example.com"/>
-    <label style="margin-top:8px">كلمة المرور</label>
-    <input id="password" class="input" type="password" placeholder="••••••••"/>
-    <div class="row" style="margin-top:10px">
-      <button class="btn btn-primary" id="btnLogin">تسجيل الدخول</button>
-      <button class="btn btn-ghost" id="btnSignup">إنشاء حساب</button>
-    </div>
-    <p class="hint" id="authHint" style="margin-top:10px"></p>
-  </div>
-</div>
-
-<!-- App -->
-<div id="app" style="display:none">
-  <div class="container">
-
-    <!-- Summary -->
-    <div class="summary-grid">
-      <div class="summary-card">
-        <div class="summary-top">
-          <span class="summary-label">إجمالي الحركات</span>
-          <div class="summary-icon"><i class="fa-solid fa-arrows-rotate"></i></div>
-        </div>
-        <div class="summary-value" id="sumTotal">0</div>
-        <span class="hint">كل العمليات المسجلة لجميع الأعضاء</span>
-      </div>
-
-      <div class="summary-card">
-        <div class="summary-top">
-          <span class="summary-label">عدد الأعضاء النشطين</span>
-          <div class="summary-icon"><i class="fa-solid fa-user-group"></i></div>
-        </div>
-        <div class="summary-value" id="sumMembers">0</div>
-        <span class="hint">عدد الحسابات التي ظهرت في سجل النشاط</span>
-      </div>
-
-      <div class="summary-card">
-        <div class="summary-top">
-          <span class="summary-label">حركات اليوم</span>
-          <div class="summary-icon"><i class="fa-solid fa-calendar-day"></i></div>
-        </div>
-        <div class="summary-value" id="sumToday">0</div>
-        <span class="hint">الحركات التي تمت بتاريخ اليوم</span>
-      </div>
-    </div>
-
-    <!-- Filters -->
-    <div class="card">
-      <div class="filters">
-        <div class="field">
-          <label for="dateFrom">من تاريخ</label>
-          <input id="dateFrom" class="input" type="date">
-        </div>
-        <div class="field">
-          <label for="dateTo">إلى تاريخ</label>
-          <input id="dateTo" class="input" type="date">
-        </div>
-        <div class="field">
-          <label for="memberFilter">العضو</label>
-          <select id="memberFilter" class="select">
-            <option value="ALL">الكل</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="actionFilter">نوع الحركة</label>
-          <select id="actionFilter" class="select">
-            <option value="ALL">الكل</option>
-          </select>
-        </div>
-        <div class="field" style="flex:1;min-width:180px">
-          <label for="searchInput">بحث عام</label>
-          <input id="searchInput" class="input" placeholder="ابحث بالعضو، الحركة، السيارة، رقم الهيكل، ملاحظات…">
-        </div>
-        <div class="field">
-          <label>&nbsp;</label>
-          <button id="btnClearFilters" class="btn btn-ghost"><i class="fa-solid fa-eraser"></i> مسح الفلاتر</button>
-        </div>
-        <div class="field">
-          <label>&nbsp;</label>
-          <button id="btnExport" class="btn btn-primary"><i class="fa-regular fa-file-excel"></i> تصدير Excel</button>
-        </div>
-      </div>
-      <p class="hint" style="margin-top:8px">
-        يتم تحميل آخر 1000 حركة من كولكشن <b>mzj_activity_log</b> وترتيبها من الأحدث إلى الأقدم.  
-        يمكنك التصفية حسب التاريخ، العضو، نوع الحركة، أو استخدام البحث الحر.
-      </p>
-    </div>
-
-    <!-- Table -->
-    <div class="card">
-      <div class="table-wrap">
-        <table id="logsTable">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>التاريخ والوقت</th>
-              <th>العضو</th>
-              <th>الدور</th>
-              <th>نوع الحركة</th>
-              <th>الكيان</th>
-              <th>التفاصيل</th>
-              <th>المرجع</th>
-              <th>IP</th>
-              <th>المتصفح</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <p class="hint" id="logsCount" style="margin-top:8px">لا توجد بيانات بعد.</p>
-    </div>
-
-  </div>
-</div>
-
-<div id="toast" class="toast"></div>
-
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-  import { 
-    getAuth, onAuthStateChanged, signInWithEmailAndPassword, 
-    createUserWithEmailAndPassword, signOut 
-  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-  import {
-    getFirestore, collection, query, orderBy, limit, onSnapshot, doc, getDoc
-  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-
-  /* ===== Firebase ===== */
-  const firebaseConfig = {
-    apiKey: "AIzaSyC614bGqnYf4Q-weTNemzWENTpa8DjGeHw",
-    authDomain: "mzj-agenda.firebaseapp.com",
-    projectId: "mzj-agenda",
-    storageBucket: "mzj-agenda.firebasestorage.app",
-    messagingSenderId: "834700407721",
-    appId: "1:834700407721:web:75c17665d4f032fd65cab8"
-  };
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db   = getFirestore(app);
-
-  /* ===== Roles & Permissions ===== */
-  const ROLE_ADMIN   = 'الادارة';
-  const ROLE_IDARI   = 'اداري';
-  const ROLE_BRANCH  = 'مدراء فروع';
-
-  // الصفحات المسموح بها لكل تصنيف (للتابات)
-  const ROLE_PAGES = {
-    [ROLE_ADMIN] : 'ALL',
-    [ROLE_IDARI] : ['photoshoot.html','photoshoot-user.html','cars.html'],
-    [ROLE_BRANCH]: ['dashboard.html']
-  };
-
-  // صفحة سجل النشاط متاحة للإدارة فقط
-  const PAGE_ALLOWED_ROLES = [ROLE_ADMIN];
-
-  async function fetchUserRole(user){
-    try{
-      const snap = await getDoc(doc(db, 'user', user.uid));
-      if(snap.exists()){
-        const data = snap.data() || {};
-        return data.role || null;
+    async function fetchUserRole(user){
+      try{
+        const snap = await getDoc(doc(db, 'user', user.uid));
+        if(snap.exists()){
+          const data = snap.data() || {};
+          return data.role || null;
+        }
+      }catch(e){
+        console.error('Error fetching user role', e);
       }
-    }catch(e){
-      console.error('Error fetching user role', e);
+      return null;
     }
-    return null;
-  }
 
-  function applyTabsVisibility(role){
-    const tabs = document.querySelectorAll('.tab');
-    tabs.forEach(tab=>{
-      const href = tab.getAttribute('href') || '';
-      const page = (href.split('/').pop() || '').split('?')[0];
-      if(!page) return;
-      const perm = ROLE_PAGES[role];
-      if(!perm){
-        tab.style.display='none';
-        return;
-      }
-      if(perm === 'ALL') return;
-      if(!perm.includes(page)){
-        tab.style.display='none';
+    function applyTabsVisibility(role){
+      // نخفي روابط السايدبار غير المسموح بها حسب الدور (نفس منطق النسخة القديمة)
+      const links = document.querySelectorAll('.side-link');
+      links.forEach(a=>{
+        const href = a.getAttribute('href') || '';
+        const page = (href.split('/').pop() || '').split('?')[0];
+        if(!page) return;
+
+        const perm = ROLE_PAGES[role];
+        if(!perm){
+          a.style.display='none';
+          return;
+        }
+        if(perm === 'ALL') return;
+
+        // ملاحظة: روابطنا في السايدبار أسماءها (sales.html...)، نطابقها على نفس الطريقة
+        if(!perm.includes(page)){
+          // استثناء: الإدارة تشوف كله — غير كده نخفي اللي مش موجود
+          // (لو عندك صفحات إضافية وتحبها تبان لدور معين، نضيفها في ROLE_PAGES)
+          a.style.display='none';
+        }
+      });
+    }
+
+    /* ===== Helpers ===== */
+    const $ = (s)=>document.querySelector(s);
+    const toastEl = $('#toast');
+    const pad = (n)=> n<10 ? '0'+n : ''+n;
+
+    const setStatus = (mode,txt)=>{
+      const dot = $('#connDot');
+      const label = $('#connText');
+      if(dot) dot.className = 'dot ' + (mode==='ok'?'ok':mode==='err'?'err':'warn');
+      if(label) label.textContent = txt;
+    };
+
+    const showToast = (msg)=>{
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      setTimeout(()=>toastEl.classList.remove('show'), 1400);
+    };
+
+    const startOfDayStr = (d)=>{
+      const year=d.getFullYear(),m=d.getMonth(),day=d.getDate();
+      return `${year}-${pad(m+1)}-${pad(day)}`;
+    };
+
+    /* ===== State ===== */
+    let allLogs = [];
+    let filteredLogs = [];
+    let membersMap = new Map();
+    let actionsSet = new Set();
+
+    /* ===== Auth Gate ===== */
+    onAuthStateChanged(auth, async (user)=>{
+      if(user){
+        const role = await fetchUserRole(user);
+
+        if(!role || !PAGE_ALLOWED_ROLES.includes(role)){
+          window.location.href = 'unauthorized.html';
+          return;
+        }
+
+        $('#authGate').style.display='none';
+        $('#app').style.display='block';
+        $('#btnSignOut').style.display='inline-flex';
+
+        setStatus('ok', `متصل: ${user.email} — الدور: ${role}`);
+        applyTabsVisibility(role);
+        subscribeLogs();
+      }else{
+        $('#app').style.display='none';
+        $('#authGate').style.display='grid';
+        $('#btnSignOut').style.display='none';
+        setStatus('warn','لم يتم تسجيل الدخول');
       }
     });
-  }
 
-
-  /* ===== Helpers ===== */
-  const $ = s => document.querySelector(s);
-  const toastEl = $('#toast');
-  const pad = n => n<10?'0'+n:n;
-  const setStatus = (mode,txt)=>{
-    $('#connDot').className='dot '+(mode==='ok'?'ok':mode==='err'?'err':'warn');
-    $('#connText').textContent=txt;
-  };
-  const showToast = msg=>{
-    toastEl.textContent=msg;
-    toastEl.classList.add('show');
-    setTimeout(()=>toastEl.classList.remove('show'),1400);
-  };
-
-  const startOfDayStr = d=>{
-    const year=d.getFullYear(),m=d.getMonth(),day=d.getDate();
-    return `${year}-${pad(m+1)}-${pad(day)}`;
-  };
-
-  /* ===== State ===== */
-  let allLogs = [];
-  let filteredLogs = [];
-  let membersMap = new Map(); // memberKey -> memberLabel
-  let actionsSet = new Set();
-
-  /* ===== Auth Gate ===== */
-  onAuthStateChanged(auth, async (user)=>{
-    if(user){
-      const role = await fetchUserRole(user);
-
-      // لو ملوش دور أو مش من المسموح لهم يشوفوا سجل النشاط
-      if(!role || !PAGE_ALLOWED_ROLES.includes(role)){
-        window.location.href = 'unauthorized.html';
-        return;
+    $('#btnLogin').addEventListener('click', async ()=>{
+      $('#authHint').textContent='';
+      try{
+        await signInWithEmailAndPassword(auth, $('#email').value.trim(), $('#password').value);
+      }catch(e){
+        $('#authHint').textContent='فشل تسجيل الدخول: '+(e?.message||e);
       }
+    });
 
-      $('#authGate').style.display='none';
-      $('#app').style.display='block';
-      $('#btnSignOut').style.display='inline-flex';
-      setStatus('ok', `متصل: ${user.email} — الدور: ${role}`);
-      applyTabsVisibility(role);
-      subscribeLogs();
-    }else{
-      $('#app').style.display='none';
-      $('#authGate').style.display='grid';
-      $('#btnSignOut').style.display='none';
-      setStatus('warn','لم يتم تسجيل الدخول');
-    }
-  });
-$('#btnLogin').addEventListener('click', async ()=>{
-    $('#authHint').textContent='';
-    try{
-      await signInWithEmailAndPassword(auth, $('#email').value.trim(), $('#password').value);
-    }catch(e){
-      $('#authHint').textContent='فشل تسجيل الدخول: '+(e?.message||e);
-    }
-  });
+    $('#btnSignup').addEventListener('click', async ()=>{
+      $('#authHint').textContent='';
+      try{
+        await createUserWithEmailAndPassword(auth, $('#email').value.trim(), $('#password').value);
+      }catch(e){
+        $('#authHint').textContent='تعذّر إنشاء الحساب: '+(e?.message||e);
+      }
+    });
 
-  $('#btnSignup').addEventListener('click', async ()=>{
-    $('#authHint').textContent='';
-    try{
-      await createUserWithEmailAndPassword(auth, $('#email').value.trim(), $('#password').value);
-    }catch(e){
-      $('#authHint').textContent='تعذّر إنشاء الحساب: '+(e?.message||e);
-    }
-  });
+    $('#btnSignOut').addEventListener('click', ()=> signOut(auth));
 
-  $('#btnSignOut').addEventListener('click', ()=> signOut(auth));
+    /* ===== Subscribe Logs ===== */
+    function subscribeLogs(){
+      try{
+        const colRef = collection(db,'mzj_activity_log');
+        const qLogs = query(colRef, orderBy('createdAtTs','desc'), limit(1000));
+        onSnapshot(qLogs,(snap)=>{
+          allLogs = [];
+          snap.forEach(docSnap=>{
+            const d = docSnap.data() || {};
+            const email = (d.userEmail || '').trim();
+            const name  = (d.userName  || '').trim();
+            const memberKey   = (email || name).toLowerCase();
+            const memberLabel = name 
+              ? (email ? `${name} (${email})` : name)
+              : (email || '-');
 
-  /* ===== Subscribe Logs ===== */
-  function subscribeLogs(){
-    try{
-      const col = collection(db,'mzj_activity_log');
-      const qLogs = query(col, orderBy('createdAtTs','desc'), limit(1000));
-      onSnapshot(qLogs,(snap)=>{
-        allLogs = [];
-        snap.forEach(docSnap=>{
-          const d = docSnap.data() || {};
-          const email = (d.userEmail || '').trim();
-          const name  = (d.userName  || '').trim();
-          const memberKey   = (email || name).toLowerCase();
-          const memberLabel = name 
-            ? (email ? `${name} (${email})` : name)
-            : (email || '-');
-
-          allLogs.push({
-            _id: docSnap.id,
-            userEmail: email,
-            userName : name,
-            role     : d.role      || '',
-            action   : d.action    || '',
-            entityType: d.entityType || '',
-            entityId : d.entityId  || '',
-            details  : d.details   || '',
-            createdAt: d.createdAt || '',
-            createdAtTs: d.createdAtTs || null,
-            ip       : d.ip        || '',
-            userAgent: d.userAgent || '',
-            memberKey,
-            memberLabel
+            allLogs.push({
+              _id: docSnap.id,
+              userEmail: email,
+              userName : name,
+              role     : d.role      || '',
+              action   : d.action    || '',
+              entityType: d.entityType || '',
+              entityId : d.entityId  || '',
+              details  : d.details   || '',
+              createdAt: d.createdAt || '',
+              createdAtTs: d.createdAtTs || null,
+              ip       : d.ip        || '',
+              userAgent: d.userAgent || '',
+              memberKey,
+              memberLabel
+            });
           });
+          buildFiltersLists();
+          applyFilters();
+          setStatus('ok','مزامنة حيّة لسجل النشاط');
+        },(err)=>{
+          console.error(err);
+          setStatus('warn','تعذّر تحميل سجل النشاط مؤقتًا');
         });
-        buildFiltersLists();
-        applyFilters();
-        setStatus('ok','مزامنة حيّة لسجل النشاط');
-      },(err)=>{
-        console.error(err);
-        setStatus('warn','تعذّر تحميل سجل النشاط مؤقتًا');
-      });
-    }catch(e){
-      console.error(e);
-      setStatus('warn','خطأ في الاشتراك في سجل النشاط');
-    }
-  }
-
-  /* ===== Filters ===== */
-  const memberFilterEl = $('#memberFilter');
-  const actionFilterEl = $('#actionFilter');
-  const dateFromEl = $('#dateFrom');
-  const dateToEl = $('#dateTo');
-  const searchInputEl = $('#searchInput');
-
-  function buildFiltersLists(){
-    membersMap = new Map();
-    actionsSet = new Set();
-
-    allLogs.forEach(l=>{
-      if(l.memberKey){
-        membersMap.set(l.memberKey, l.memberLabel || l.userEmail || l.userName || l.memberKey);
+      }catch(e){
+        console.error(e);
+        setStatus('warn','خطأ في الاشتراك في سجل النشاط');
       }
-      if(l.action) actionsSet.add(l.action);
-    });
+    }
 
-    const prevMember = memberFilterEl.value || 'ALL';
-    const prevAction = actionFilterEl.value || 'ALL';
+    /* ===== Filters ===== */
+    const memberFilterEl = $('#memberFilter');
+    const actionFilterEl = $('#actionFilter');
+    const dateFromEl = $('#dateFrom');
+    const dateToEl = $('#dateTo');
+    const searchInputEl = $('#searchInput');
 
-    // أعضاء
-    memberFilterEl.innerHTML = '<option value="ALL">الكل</option>';
-    Array.from(membersMap.entries())
-      .sort((a,b)=> a[1].localeCompare(b[1],'ar'))
-      .forEach(([key,label])=>{
+    function buildFiltersLists(){
+      membersMap = new Map();
+      actionsSet = new Set();
+
+      allLogs.forEach(l=>{
+        if(l.memberKey){
+          membersMap.set(l.memberKey, l.memberLabel || l.userEmail || l.userName || l.memberKey);
+        }
+        if(l.action) actionsSet.add(l.action);
+      });
+
+      const prevMember = memberFilterEl.value || 'ALL';
+      const prevAction = actionFilterEl.value || 'ALL';
+
+      memberFilterEl.innerHTML = '<option value="ALL">الكل</option>';
+      Array.from(membersMap.entries())
+        .sort((a,b)=> (a[1]||'').localeCompare((b[1]||''),'ar'))
+        .forEach(([key,label])=>{
+          const opt = document.createElement('option');
+          opt.value = key;
+          opt.textContent = label;
+          memberFilterEl.appendChild(opt);
+        });
+
+      actionFilterEl.innerHTML = '<option value="ALL">الكل</option>';
+      Array.from(actionsSet).sort((a,b)=>a.localeCompare(b,'ar')).forEach(a=>{
         const opt = document.createElement('option');
-        opt.value = key;
-        opt.textContent = label;
-        memberFilterEl.appendChild(opt);
+        opt.value = a;
+        opt.textContent = a;
+        actionFilterEl.appendChild(opt);
       });
 
-    // الأكشن
-    actionFilterEl.innerHTML = '<option value="ALL">الكل</option>';
-    Array.from(actionsSet).sort((a,b)=>a.localeCompare(b,'ar')).forEach(a=>{
-      const opt = document.createElement('option');
-      opt.value = a;
-      opt.textContent = a;
-      actionFilterEl.appendChild(opt);
-    });
-
-    if([...memberFilterEl.options].some(o=>o.value===prevMember)) memberFilterEl.value = prevMember;
-    if([...actionFilterEl.options].some(o=>o.value===prevAction)) actionFilterEl.value = prevAction;
-  }
-
-  function applyFilters(){
-    const memberVal = memberFilterEl.value || 'ALL';
-    const actionVal = actionFilterEl.value || 'ALL';
-    const q = (searchInputEl.value||'').toLowerCase().trim();
-    const fromVal = dateFromEl.value || '';
-    const toVal = dateToEl.value || '';
-
-    filteredLogs = allLogs.filter((l)=>{
-      // عضو
-      if(memberVal !== 'ALL' && l.memberKey !== memberVal) return false;
-
-      // أكشن
-      if(actionVal !== 'ALL' && l.action !== actionVal) return false;
-
-      // التاريخ (نعتمد على createdAt كـ "YYYY-MM-DD HH:MM")
-      if(fromVal){
-        if(!l.createdAt || l.createdAt.slice(0,10) < fromVal) return false;
-      }
-      if(toVal){
-        if(!l.createdAt || l.createdAt.slice(0,10) > toVal) return false;
-      }
-
-      // بحث حر
-      if(q){
-        const hay = [
-          l.userEmail,l.userName,l.role,l.action,l.entityType,l.entityId,
-          l.details,l.createdAt,l.ip,l.userAgent
-        ].join(' ').toLowerCase();
-        if(!hay.includes(q)) return false;
-      }
-
-      return true;
-    });
-
-    renderTable();
-    updateSummary();
-  }
-
-  function clearFilters(){
-    dateFromEl.value = '';
-    dateToEl.value = '';
-    memberFilterEl.value = 'ALL';
-    actionFilterEl.value = 'ALL';
-    searchInputEl.value = '';
-    applyFilters();
-    showToast('تم مسح الفلاتر');
-  }
-
-  $('#btnClearFilters').addEventListener('click', clearFilters);
-  memberFilterEl.addEventListener('change', applyFilters);
-  actionFilterEl.addEventListener('change', applyFilters);
-  dateFromEl.addEventListener('change', applyFilters);
-  dateToEl.addEventListener('change', applyFilters);
-  searchInputEl.addEventListener('input', ()=>{ applyFilters(); });
-
-  /* ===== Table Render ===== */
-  const logsTableBody = document.querySelector('#logsTable tbody');
-  const logsCountEl   = $('#logsCount');
-
-  function actionClass(action){
-    const a = (action||'').toLowerCase();
-    if(!a) return 'info';
-    if(a.includes('حذف') || a.includes('delete')) return 'danger';
-    if(a.includes('تعديل') || a.includes('update') || a.includes('edit')) return 'warn';
-    if(a.includes('إضافة') || a.includes('add') || a.includes('create') || a.includes('insert')) return 'ok';
-    return 'info';
-  }
-
-  function renderTable(){
-    logsTableBody.innerHTML = '';
-    filteredLogs.forEach((l,idx)=>{
-      const tr = document.createElement('tr');
-      const memberLabel = l.memberLabel || l.userEmail || l.userName || '-';
-      const entityLabel = l.entityType ? `${l.entityType}${l.entityId ? ' #' + l.entityId : ''}` : (l.entityId || '-');
-      const shortUA = l.userAgent ? (l.userAgent.length>35 ? l.userAgent.slice(0,35)+'…' : l.userAgent) : '';
-      tr.innerHTML = `
-        <td>${idx+1}</td>
-        <td>${l.createdAt || '-'}</td>
-        <td>${memberLabel}</td>
-        <td>${l.role || '-'}</td>
-        <td>
-          <span class="action-pill ${actionClass(l.action)}">
-            <i class="fa-solid fa-bolt"></i> ${l.action || '-'}
-          </span>
-        </td>
-        <td>${entityLabel}</td>
-        <td>${l.details || ''}</td>
-        <td>${l._id}</td>
-        <td>${l.ip || ''}</td>
-        <td title="${l.userAgent||''}">${shortUA}</td>
-      `;
-      logsTableBody.appendChild(tr);
-    });
-
-    logsCountEl.textContent = `عدد الحركات الظاهرة: ${filteredLogs.length.toLocaleString('ar-SA')} من ${allLogs.length.toLocaleString('ar-SA')}`;
-  }
-
-  /* ===== Summary ===== */
-  function updateSummary(){
-    $('#sumTotal').textContent = allLogs.length.toLocaleString('ar-SA');
-
-    const uniqMembers = new Set();
-    allLogs.forEach(l=>{
-      if(l.memberKey){
-        uniqMembers.add(l.memberKey);
-      }
-    });
-    $('#sumMembers').textContent = uniqMembers.size.toLocaleString('ar-SA');
-
-    const todayStr = startOfDayStr(new Date());
-    const todayCount = allLogs.filter(l => (l.createdAt||'').slice(0,10) === todayStr).length;
-    $('#sumToday').textContent = todayCount.toLocaleString('ar-SA');
-  }
-
-  /* ===== Export Excel ===== */
-  $('#btnExport').addEventListener('click', ()=>{
-    if(!filteredLogs.length){
-      showToast('لا توجد بيانات لتصديرها');
-      return;
+      if([...memberFilterEl.options].some(o=>o.value===prevMember)) memberFilterEl.value = prevMember;
+      if([...actionFilterEl.options].some(o=>o.value===prevAction)) actionFilterEl.value = prevAction;
     }
-    const header = [
-      "رقم تسلسلي","التاريخ والوقت","العضو","البريد","الدور","نوع الحركة",
-      "نوع الكيان","معرّف الكيان","التفاصيل","معرّف السجل","IP","المتصفح الكامل"
-    ];
-    const data = [header];
-    filteredLogs.forEach((l,idx)=>{
-      data.push([
-        idx+1,
-        l.createdAt || '',
-        l.userName || '',
-        l.userEmail || '',
-        l.role || '',
-        l.action || '',
-        l.entityType || '',
-        l.entityId || '',
-        l.details || '',
-        l._id || '',
-        l.ip || '',
-        l.userAgent || ''
-      ]);
-    });
 
-    const ws = XLSX.utils.aoa_to_sheet(data);
-    ws['!cols'] = [
-      {wch:6},{wch:18},{wch:18},{wch:22},{wch:12},{wch:18},
-      {wch:14},{wch:14},{wch:40},{wch:24},{wch:14},{wch:40}
-    ];
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb,ws,"Activity Log");
-    XLSX.writeFile(wb, `mzj-activity-log-${Date.now()}.xlsx`);
-  });
+    function applyFilters(){
+      const memberVal = memberFilterEl.value || 'ALL';
+      const actionVal = actionFilterEl.value || 'ALL';
+      const q = (searchInputEl.value||'').toLowerCase().trim();
+      const fromVal = dateFromEl.value || '';
+      const toVal = dateToEl.value || '';
 
-  /* ===== Init ===== */
-  setStatus('warn','جارِ الاتصال…');
-</script>
-</div>
+      filteredLogs = allLogs.filter((l)=>{
+        if(memberVal !== 'ALL' && l.memberKey !== memberVal) return false;
+        if(actionVal !== 'ALL' && l.action !== actionVal) return false;
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-  import { 
-    getAuth, onAuthStateChanged, signInWithEmailAndPassword, 
-    createUserWithEmailAndPassword, signOut 
-  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-  import {
-    getFirestore, collection, query, orderBy, limit, onSnapshot, doc, getDoc
-  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+        if(fromVal){
+          if(!l.createdAt || l.createdAt.slice(0,10) < fromVal) return false;
+        }
+        if(toVal){
+          if(!l.createdAt || l.createdAt.slice(0,10) > toVal) return false;
+        }
 
-  /* ===== Firebase ===== */
-  const firebaseConfig = {
-    apiKey: "AIzaSyC614bGqnYf4Q-weTNemzWENTpa8DjGeHw",
-    authDomain: "mzj-agenda.firebaseapp.com",
-    projectId: "mzj-agenda",
-    storageBucket: "mzj-agenda.firebasestorage.app",
-    messagingSenderId: "834700407721",
-    appId: "1:834700407721:web:75c17665d4f032fd65cab8"
-  };
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db   = getFirestore(app);
+        if(q){
+          const hay = [
+            l.userEmail,l.userName,l.role,l.action,l.entityType,l.entityId,
+            l.details,l.createdAt,l.ip,l.userAgent
+          ].join(' ').toLowerCase();
+          if(!hay.includes(q)) return false;
+        }
 
-  /* ===== Roles & Permissions ===== */
-  const ROLE_ADMIN   = 'الادارة';
-  const ROLE_IDARI   = 'اداري';
-  const ROLE_BRANCH  = 'مدراء فروع';
+        return true;
+      });
 
-  // الصفحات المسموح بها لكل تصنيف (للتابات)
-  const ROLE_PAGES = {
-    [ROLE_ADMIN] : 'ALL',
-    [ROLE_IDARI] : ['photoshoot.html','photoshoot-user.html','cars.html'],
-    [ROLE_BRANCH]: ['dashboard.html']
-  };
-
-  // صفحة سجل النشاط متاحة للإدارة فقط
-  const PAGE_ALLOWED_ROLES = [ROLE_ADMIN];
-
-  async function fetchUserRole(user){
-    try{
-      const snap = await getDoc(doc(db, 'user', user.uid));
-      if(snap.exists()){
-        const data = snap.data() || {};
-        return data.role || null;
-      }
-    }catch(e){
-      console.error('Error fetching user role', e);
+      renderTable();
+      updateSummary();
     }
-    return null;
-  }
 
-  function applyTabsVisibility(role){
-    const tabs = document.querySelectorAll('.tab');
-    tabs.forEach(tab=>{
-      const href = tab.getAttribute('href') || '';
-      const page = (href.split('/').pop() || '').split('?')[0];
-      if(!page) return;
-      const perm = ROLE_PAGES[role];
-      if(!perm){
-        tab.style.display='none';
+    function clearFilters(){
+      dateFromEl.value = '';
+      dateToEl.value = '';
+      memberFilterEl.value = 'ALL';
+      actionFilterEl.value = 'ALL';
+      searchInputEl.value = '';
+      applyFilters();
+      showToast('تم مسح الفلاتر');
+    }
+
+    $('#btnClearFilters').addEventListener('click', clearFilters);
+    memberFilterEl.addEventListener('change', applyFilters);
+    actionFilterEl.addEventListener('change', applyFilters);
+    dateFromEl.addEventListener('change', applyFilters);
+    dateToEl.addEventListener('change', applyFilters);
+    searchInputEl.addEventListener('input', applyFilters);
+
+    /* ===== Table Render ===== */
+    const logsTableBody = document.querySelector('#logsTable tbody');
+    const logsCountEl   = $('#logsCount');
+
+    function actionClass(action){
+      const a = (action||'').toLowerCase();
+      if(!a) return 'info';
+      if(a.includes('حذف') || a.includes('delete')) return 'danger';
+      if(a.includes('تعديل') || a.includes('update') || a.includes('edit')) return 'warn';
+      if(a.includes('إضافة') || a.includes('add') || a.includes('create') || a.includes('insert')) return 'ok';
+      return 'info';
+    }
+
+    function renderTable(){
+      logsTableBody.innerHTML = '';
+      filteredLogs.forEach((l,idx)=>{
+        const tr = document.createElement('tr');
+        const memberLabel = l.memberLabel || l.userEmail || l.userName || '-';
+        const entityLabel = l.entityType ? `${l.entityType}${l.entityId ? ' #' + l.entityId : ''}` : (l.entityId || '-');
+        const shortUA = l.userAgent ? (l.userAgent.length>38 ? l.userAgent.slice(0,38)+'…' : l.userAgent) : '';
+        tr.innerHTML = `
+          <td>${idx+1}</td>
+          <td>${l.createdAt || '-'}</td>
+          <td>${memberLabel}</td>
+          <td>${l.role || '-'}</td>
+          <td>
+            <span class="action-pill ${actionClass(l.action)}">
+              <i class="fa-solid fa-bolt"></i> ${l.action || '-'}
+            </span>
+          </td>
+          <td>${entityLabel}</td>
+          <td>${l.details || ''}</td>
+          <td>${l._id}</td>
+          <td>${l.ip || ''}</td>
+          <td title="${(l.userAgent||'').replaceAll('"','&quot;')}">${shortUA}</td>
+        `;
+        logsTableBody.appendChild(tr);
+      });
+
+      logsCountEl.textContent = `عدد الحركات الظاهرة: ${filteredLogs.length.toLocaleString('ar-SA')} من ${allLogs.length.toLocaleString('ar-SA')}`;
+    }
+
+    /* ===== Summary ===== */
+    function updateSummary(){
+      $('#sumTotal').textContent = allLogs.length.toLocaleString('ar-SA');
+
+      const uniqMembers = new Set();
+      allLogs.forEach(l=>{ if(l.memberKey) uniqMembers.add(l.memberKey); });
+      $('#sumMembers').textContent = uniqMembers.size.toLocaleString('ar-SA');
+
+      const todayStr = startOfDayStr(new Date());
+      const todayCount = allLogs.filter(l => (l.createdAt||'').slice(0,10) === todayStr).length;
+      $('#sumToday').textContent = todayCount.toLocaleString('ar-SA');
+    }
+
+    /* ===== Export Excel ===== */
+    $('#btnExport').addEventListener('click', ()=>{
+      if(!filteredLogs.length){
+        showToast('لا توجد بيانات لتصديرها');
         return;
       }
-      if(perm === 'ALL') return;
-      if(!perm.includes(page)){
-        tab.style.display='none';
-      }
-    });
-  }
-
-
-  /* ===== Helpers ===== */
-  const $ = s => document.querySelector(s);
-  const toastEl = $('#toast');
-  const pad = n => n<10?'0'+n:n;
-  const setStatus = (mode,txt)=>{
-    $('#connDot').className='dot '+(mode==='ok'?'ok':mode==='err'?'err':'warn');
-    $('#connText').textContent=txt;
-  };
-  const showToast = msg=>{
-    toastEl.textContent=msg;
-    toastEl.classList.add('show');
-    setTimeout(()=>toastEl.classList.remove('show'),1400);
-  };
-
-  const startOfDayStr = d=>{
-    const year=d.getFullYear(),m=d.getMonth(),day=d.getDate();
-    return `${year}-${pad(m+1)}-${pad(day)}`;
-  };
-
-  /* ===== State ===== */
-  let allLogs = [];
-  let filteredLogs = [];
-  let membersMap = new Map(); // memberKey -> memberLabel
-  let actionsSet = new Set();
-
-  /* ===== Auth Gate ===== */
-  onAuthStateChanged(auth, async (user)=>{
-    if(user){
-      const role = await fetchUserRole(user);
-
-      // لو ملوش دور أو مش من المسموح لهم يشوفوا سجل النشاط
-      if(!role || !PAGE_ALLOWED_ROLES.includes(role)){
-        window.location.href = 'unauthorized.html';
-        return;
-      }
-
-      $('#authGate').style.display='none';
-      $('#app').style.display='block';
-      $('#btnSignOut').style.display='inline-flex';
-      setStatus('ok', `متصل: ${user.email} — الدور: ${role}`);
-      applyTabsVisibility(role);
-      subscribeLogs();
-    }else{
-      $('#app').style.display='none';
-      $('#authGate').style.display='grid';
-      $('#btnSignOut').style.display='none';
-      setStatus('warn','لم يتم تسجيل الدخول');
-    }
-  });
-$('#btnLogin').addEventListener('click', async ()=>{
-    $('#authHint').textContent='';
-    try{
-      await signInWithEmailAndPassword(auth, $('#email').value.trim(), $('#password').value);
-    }catch(e){
-      $('#authHint').textContent='فشل تسجيل الدخول: '+(e?.message||e);
-    }
-  });
-
-  $('#btnSignup').addEventListener('click', async ()=>{
-    $('#authHint').textContent='';
-    try{
-      await createUserWithEmailAndPassword(auth, $('#email').value.trim(), $('#password').value);
-    }catch(e){
-      $('#authHint').textContent='تعذّر إنشاء الحساب: '+(e?.message||e);
-    }
-  });
-
-  $('#btnSignOut').addEventListener('click', ()=> signOut(auth));
-
-  /* ===== Subscribe Logs ===== */
-  function subscribeLogs(){
-    try{
-      const col = collection(db,'mzj_activity_log');
-      const qLogs = query(col, orderBy('createdAtTs','desc'), limit(1000));
-      onSnapshot(qLogs,(snap)=>{
-        allLogs = [];
-        snap.forEach(docSnap=>{
-          const d = docSnap.data() || {};
-          const email = (d.userEmail || '').trim();
-          const name  = (d.userName  || '').trim();
-          const memberKey   = (email || name).toLowerCase();
-          const memberLabel = name 
-            ? (email ? `${name} (${email})` : name)
-            : (email || '-');
-
-          allLogs.push({
-            _id: docSnap.id,
-            userEmail: email,
-            userName : name,
-            role     : d.role      || '',
-            action   : d.action    || '',
-            entityType: d.entityType || '',
-            entityId : d.entityId  || '',
-            details  : d.details   || '',
-            createdAt: d.createdAt || '',
-            createdAtTs: d.createdAtTs || null,
-            ip       : d.ip        || '',
-            userAgent: d.userAgent || '',
-            memberKey,
-            memberLabel
-          });
-        });
-        buildFiltersLists();
-        applyFilters();
-        setStatus('ok','مزامنة حيّة لسجل النشاط');
-      },(err)=>{
-        console.error(err);
-        setStatus('warn','تعذّر تحميل سجل النشاط مؤقتًا');
-      });
-    }catch(e){
-      console.error(e);
-      setStatus('warn','خطأ في الاشتراك في سجل النشاط');
-    }
-  }
-
-  /* ===== Filters ===== */
-  const memberFilterEl = $('#memberFilter');
-  const actionFilterEl = $('#actionFilter');
-  const dateFromEl = $('#dateFrom');
-  const dateToEl = $('#dateTo');
-  const searchInputEl = $('#searchInput');
-
-  function buildFiltersLists(){
-    membersMap = new Map();
-    actionsSet = new Set();
-
-    allLogs.forEach(l=>{
-      if(l.memberKey){
-        membersMap.set(l.memberKey, l.memberLabel || l.userEmail || l.userName || l.memberKey);
-      }
-      if(l.action) actionsSet.add(l.action);
-    });
-
-    const prevMember = memberFilterEl.value || 'ALL';
-    const prevAction = actionFilterEl.value || 'ALL';
-
-    // أعضاء
-    memberFilterEl.innerHTML = '<option value="ALL">الكل</option>';
-    Array.from(membersMap.entries())
-      .sort((a,b)=> a[1].localeCompare(b[1],'ar'))
-      .forEach(([key,label])=>{
-        const opt = document.createElement('option');
-        opt.value = key;
-        opt.textContent = label;
-        memberFilterEl.appendChild(opt);
+      const header = [
+        "رقم تسلسلي","التاريخ والوقت","العضو","البريد","الدور","نوع الحركة",
+        "نوع الكيان","معرّف الكيان","التفاصيل","معرّف السجل","IP","المتصفح الكامل"
+      ];
+      const data = [header];
+      filteredLogs.forEach((l,idx)=>{
+        data.push([
+          idx+1,
+          l.createdAt || '',
+          l.userName || '',
+          l.userEmail || '',
+          l.role || '',
+          l.action || '',
+          l.entityType || '',
+          l.entityId || '',
+          l.details || '',
+          l._id || '',
+          l.ip || '',
+          l.userAgent || ''
+        ]);
       });
 
-    // الأكشن
-    actionFilterEl.innerHTML = '<option value="ALL">الكل</option>';
-    Array.from(actionsSet).sort((a,b)=>a.localeCompare(b,'ar')).forEach(a=>{
-      const opt = document.createElement('option');
-      opt.value = a;
-      opt.textContent = a;
-      actionFilterEl.appendChild(opt);
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      ws['!cols'] = [
+        {wch:6},{wch:18},{wch:18},{wch:22},{wch:12},{wch:18},
+        {wch:14},{wch:14},{wch:40},{wch:24},{wch:14},{wch:40}
+      ];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb,ws,"Activity Log");
+      XLSX.writeFile(wb, `mzj-activity-log-${Date.now()}.xlsx`);
     });
 
-    if([...memberFilterEl.options].some(o=>o.value===prevMember)) memberFilterEl.value = prevMember;
-    if([...actionFilterEl.options].some(o=>o.value===prevAction)) actionFilterEl.value = prevAction;
-  }
-
-  function applyFilters(){
-    const memberVal = memberFilterEl.value || 'ALL';
-    const actionVal = actionFilterEl.value || 'ALL';
-    const q = (searchInputEl.value||'').toLowerCase().trim();
-    const fromVal = dateFromEl.value || '';
-    const toVal = dateToEl.value || '';
-
-    filteredLogs = allLogs.filter((l)=>{
-      // عضو
-      if(memberVal !== 'ALL' && l.memberKey !== memberVal) return false;
-
-      // أكشن
-      if(actionVal !== 'ALL' && l.action !== actionVal) return false;
-
-      // التاريخ (نعتمد على createdAt كـ "YYYY-MM-DD HH:MM")
-      if(fromVal){
-        if(!l.createdAt || l.createdAt.slice(0,10) < fromVal) return false;
-      }
-      if(toVal){
-        if(!l.createdAt || l.createdAt.slice(0,10) > toVal) return false;
-      }
-
-      // بحث حر
-      if(q){
-        const hay = [
-          l.userEmail,l.userName,l.role,l.action,l.entityType,l.entityId,
-          l.details,l.createdAt,l.ip,l.userAgent
-        ].join(' ').toLowerCase();
-        if(!hay.includes(q)) return false;
-      }
-
-      return true;
-    });
-
-    renderTable();
-    updateSummary();
-  }
-
-  function clearFilters(){
-    dateFromEl.value = '';
-    dateToEl.value = '';
-    memberFilterEl.value = 'ALL';
-    actionFilterEl.value = 'ALL';
-    searchInputEl.value = '';
-    applyFilters();
-    showToast('تم مسح الفلاتر');
-  }
-
-  $('#btnClearFilters').addEventListener('click', clearFilters);
-  memberFilterEl.addEventListener('change', applyFilters);
-  actionFilterEl.addEventListener('change', applyFilters);
-  dateFromEl.addEventListener('change', applyFilters);
-  dateToEl.addEventListener('change', applyFilters);
-  searchInputEl.addEventListener('input', ()=>{ applyFilters(); });
-
-  /* ===== Table Render ===== */
-  const logsTableBody = document.querySelector('#logsTable tbody');
-  const logsCountEl   = $('#logsCount');
-
-  function actionClass(action){
-    const a = (action||'').toLowerCase();
-    if(!a) return 'info';
-    if(a.includes('حذف') || a.includes('delete')) return 'danger';
-    if(a.includes('تعديل') || a.includes('update') || a.includes('edit')) return 'warn';
-    if(a.includes('إضافة') || a.includes('add') || a.includes('create') || a.includes('insert')) return 'ok';
-    return 'info';
-  }
-
-  function renderTable(){
-    logsTableBody.innerHTML = '';
-    filteredLogs.forEach((l,idx)=>{
-      const tr = document.createElement('tr');
-      const memberLabel = l.memberLabel || l.userEmail || l.userName || '-';
-      const entityLabel = l.entityType ? `${l.entityType}${l.entityId ? ' #' + l.entityId : ''}` : (l.entityId || '-');
-      const shortUA = l.userAgent ? (l.userAgent.length>35 ? l.userAgent.slice(0,35)+'…' : l.userAgent) : '';
-      tr.innerHTML = `
-        <td>${idx+1}</td>
-        <td>${l.createdAt || '-'}</td>
-        <td>${memberLabel}</td>
-        <td>${l.role || '-'}</td>
-        <td>
-          <span class="action-pill ${actionClass(l.action)}">
-            <i class="fa-solid fa-bolt"></i> ${l.action || '-'}
-          </span>
-        </td>
-        <td>${entityLabel}</td>
-        <td>${l.details || ''}</td>
-        <td>${l._id}</td>
-        <td>${l.ip || ''}</td>
-        <td title="${l.userAgent||''}">${shortUA}</td>
-      `;
-      logsTableBody.appendChild(tr);
-    });
-
-    logsCountEl.textContent = `عدد الحركات الظاهرة: ${filteredLogs.length.toLocaleString('ar-SA')} من ${allLogs.length.toLocaleString('ar-SA')}`;
-  }
-
-  /* ===== Summary ===== */
-  function updateSummary(){
-    $('#sumTotal').textContent = allLogs.length.toLocaleString('ar-SA');
-
-    const uniqMembers = new Set();
-    allLogs.forEach(l=>{
-      if(l.memberKey){
-        uniqMembers.add(l.memberKey);
-      }
-    });
-    $('#sumMembers').textContent = uniqMembers.size.toLocaleString('ar-SA');
-
-    const todayStr = startOfDayStr(new Date());
-    const todayCount = allLogs.filter(l => (l.createdAt||'').slice(0,10) === todayStr).length;
-    $('#sumToday').textContent = todayCount.toLocaleString('ar-SA');
-  }
-
-  /* ===== Export Excel ===== */
-  $('#btnExport').addEventListener('click', ()=>{
-    if(!filteredLogs.length){
-      showToast('لا توجد بيانات لتصديرها');
-      return;
-    }
-    const header = [
-      "رقم تسلسلي","التاريخ والوقت","العضو","البريد","الدور","نوع الحركة",
-      "نوع الكيان","معرّف الكيان","التفاصيل","معرّف السجل","IP","المتصفح الكامل"
-    ];
-    const data = [header];
-    filteredLogs.forEach((l,idx)=>{
-      data.push([
-        idx+1,
-        l.createdAt || '',
-        l.userName || '',
-        l.userEmail || '',
-        l.role || '',
-        l.action || '',
-        l.entityType || '',
-        l.entityId || '',
-        l.details || '',
-        l._id || '',
-        l.ip || '',
-        l.userAgent || ''
-      ]);
-    });
-
-    const ws = XLSX.utils.aoa_to_sheet(data);
-    ws['!cols'] = [
-      {wch:6},{wch:18},{wch:18},{wch:22},{wch:12},{wch:18},
-      {wch:14},{wch:14},{wch:40},{wch:24},{wch:14},{wch:40}
-    ];
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb,ws,"Activity Log");
-    XLSX.writeFile(wb, `mzj-activity-log-${Date.now()}.xlsx`);
-  });
-
-  /* ===== Init ===== */
-  setStatus('warn','جارِ الاتصال…');
-</script>
-
-</main>
-</div>
-
-
-<script>
-  // Fallback: never keep auth-pending stuck
-  window.addEventListener('DOMContentLoaded', ()=>{ document.documentElement.classList.remove('auth-pending'); });
-</script>
-
-
-<script>
-(function(){
-  const btn=document.getElementById('mzjSidebarBtn');
-  const backdrop=document.querySelector('.mzj-backdrop');
-  const open=()=>document.documentElement.classList.add('sidebar-open');
-  const close=()=>document.documentElement.classList.remove('sidebar-open');
-  if(btn){ btn.addEventListener('click', ()=>document.documentElement.classList.contains('sidebar-open')?close():open()); }
-  if(backdrop){ backdrop.addEventListener('click', close); }
-})();
-</script>
-
+    /* ===== Init ===== */
+    setStatus('warn','جارِ الاتصال…');
+  </script>
 </body>
 </html>
-
-

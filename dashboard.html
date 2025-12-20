@@ -986,7 +986,7 @@ $('#btnLogin').addEventListener('click', async ()=>{
     glob.forEach((countGlobal,k)=>{
       const countBranch = byComboBranch.get(k) || 0;
       // نقص = مفيش ولا عربية من التركيبة دي في الفرع، لكن موجودة في الإجمالي
-      if(countBranch===0){
+      if(countBranch===<5){
         const [car,variant,extColor,intColor,modelYear] = k.split('⇢');
         res.push({ car, variant, extColor, intColor, modelYear, countBranch, countGlobal });
       }

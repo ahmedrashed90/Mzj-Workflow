@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -919,6 +920,74 @@
 }
 
 
+// إرسال WhatsApp (يفتح واتساب برسالة جاهزة) — نفس الخطوات 1 و 9 و 10
+function sendWhatsappForStage(stageNum, stageLabel){
+  stageMsg.textContent = "";
+
+  if (!currentCustomerPhone) {
+    stageMsg.innerHTML = "<span class='err'>لا يوجد رقم جوال محفوظ لهذا الطلب.</span>";
+    return;
+  }
+
+  // واتساب يحتاج رقم بدون +
+  const phone = normalizeSaudiPhone(currentCustomerPhone);
+  if (!phone) {
+    stageMsg.innerHTML = "<span class='err'>رقم الجوال غير صالح.</span>";
+    return;
+  }
+
+  const orderNo = currentOrderId || "";
+  const vin = currentVin || "";
+  const trackingLink = vin ? `https://mzj-tracking.vercel.app/Test-Track.html?vin=${vin}` : "";
+
+  let text = "";
+
+  switch (stageNum) {
+
+    // 1️⃣ الخطوة رقم 1 — تهنئة + رابط التتبع
+    case 1:
+      text =
+        `عميلنا العزيز،\n` +
+        `نرحب بكم ونهنئكم باختيار معرض محمد بن ذعار العجمي للسيارات.\n` +
+        `رقم الهيكل: ${vin}\n` +
+        `يمكنك متابعة حالة طلبك عبر الرابط التالي:\n${trackingLink}\n\n` +
+        `سنعمل على متابعة طلبكم بعناية وإبلاغكم بأي تحديث أولاً بأول.\n` +
+        `مع محمد بن ذعار العجمي للسيارات… أنت نجم الطريق.`;
+      break;
+
+    // 9️⃣ الخطوة رقم 9 — جاهزية السيارة
+    case 9:
+      text =
+        `عميلنا العزيز يسعدنا ابلاغك بجاهزية سيارتك الأن يمكنك الحضور للاستلام او طلب خدمة الشحن.\n\n` +
+        `نشكرك على ثقتك مع محمد بن ذعار العجمي للسيارات… أنت نجم الطريق.\n\n` +
+        `مواعيد العمل:\n` +
+        `الفترة الصباحية من الساعة 9 صباحاً الى 11 مساء\n` +
+        `الفترة المسائية من الساعة 4 مساء الى 9 مساء\n` +
+        `يوم الجمعة المساء فقط`;
+      break;
+
+    // 🔟 الخطوة رقم 10 — إتمام التسليم
+    case 10:
+      text =
+        `نبارك لكم إتمام عملية التسليم بنجاح.\n` +
+        `يشرفنا في محمد بن زعار العجمي للسيارات خدمتكم، ونتمنى لكم قيادة آمنة وتجربة ممتعة.\n` +
+        `#نجم_الطريق`;
+      break;
+
+    default:
+      text =
+        `عميلنا العزيز، بخصوص طلبكم رقم ${orderNo}.\n` +
+        `معرض محمد بن ذعار العجمي للسيارات.`;
+  }
+
+  // wa.me يفتح محادثة واتساب
+  const waUrl = `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text)}`;
+  window.open(waUrl, "_blank");
+
+  stageMsg.innerHTML = "<span class='ok'>تم فتح واتساب برسالة جاهزة.</span>";
+}
+
+
 function clearErpTable() {
       erpMetaEl.textContent = "";
       erpBody.innerHTML = "";
@@ -1170,6 +1239,16 @@ function clearErpTable() {
           btnSms.disabled = !currentCustomerPhone;
           btnSms.onclick = () => sendStcSmsForStage(num, label);
           actions.appendChild(btnSms);
+
+          // زر واتساب للعميل (يفتح محادثة برقم العميل + رسالة جاهزة)
+          const btnWa = document.createElement("button");
+          btnWa.className = "btn-outline";
+          btnWa.style.fontSize = "12px";
+          btnWa.style.marginRight = "6px";
+          btnWa.textContent = "واتساب للعميل";
+          btnWa.disabled = !currentCustomerPhone;
+          btnWa.onclick = () => sendWhatsappForStage(num, label);
+          actions.appendChild(btnWa);
         }
 
         // زر التراجع

@@ -824,6 +824,33 @@
       if (digits.startsWith("00")) {
         digits = digits.slice(2);
       }
+
+    // ===== Helpers for showing server/provider errors =====
+    function mzjExtractErrText(err){
+      try{
+        if(!err) return "";
+        if(typeof err === "string") return err;
+        if(err.message) return err.message;
+        return JSON.stringify(err);
+      }catch(e){ return String(err); }
+    }
+    async function mzjReadErrorResponse(res){
+      try{
+        const ct = (res.headers.get("content-type") || "").toLowerCase();
+        if(ct.includes("application/json")){
+          const j = await res.json().catch(()=>null);
+          if(j){
+            if(j.provider) return (typeof j.provider === "string" ? j.provider : JSON.stringify(j.provider));
+            if(j.error) return (typeof j.error === "string" ? j.error : JSON.stringify(j.error));
+            return JSON.stringify(j);
+          }
+        }
+        const t = await res.text().catch(()=> "");
+        return t || ("HTTP " + res.status);
+      }catch(e){
+        return "HTTP " + res.status;
+      }
+    }
       if (digits.startsWith("0")) {
         digits = "966" + digits.slice(1);
       }
@@ -1012,6 +1039,93 @@
   }
   return data;
 }
+
+    // ===== Send from modal =====
+    async function sendFromModal(){
+      try{
+        msgModalMsg.textContent = "";
+        msgModalSend.disabled = true;
+
+        const phone = normalizeSaudiPhone(currentCustomerPhone);
+        if (!phone){
+          msgModalMsg.innerHTML = "<span class='err'>رقم الجوال غير صالح.</span>";
+          return;
+        }
+
+        if(modalCtx.channel === "whatsapp"){
+          const tpl = (document.getElementById("waTplSelect")?.value) || "mzj_order_confirmation_long";
+
+          const first = (currentOrderRecords && currentOrderRecords.length) ? currentOrderRecords[0] : {};
+          const customerName = (getFieldFlex("CustomerName", first) || "").toString().trim() || "عميلنا العزيز";
+          const carName = (getFieldFlex("ItemType", first) || "").toString().trim() || "—";
+          const carType = (getFieldFlex("ItemCategory", first) || "").toString().trim() || "—";
+          const vin = (currentVin || "").toString().trim() || "—";
+
+          const amountRaw = getFieldFlex("TotalInclVAT", first);
+          const amountNum = parseAmountFront(amountRaw);
+          const amountStr = (amountNum !== null)
+            ? amountNum.toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ر.س"
+            : (amountRaw && amountRaw !== "-" ? String(amountRaw) : "—");
+
+          const trackingLink = (vin && vin !== "—")
+            ? `https://mzj-tracking.vercel.app/Test-Track.html?vin=${encodeURIComponent(vin)}`
+            : "";
+
+          let note = "";
+          if(modalCtx.stageNum === 9){
+            const textNow = (msgModalText.value || "").trim();
+            const lines = textNow.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+            const filtered = lines.filter(l => !l.startsWith("#") && !l.includes("مواعيد العمل") && !l.includes("الفترة"));
+            note = filtered.slice(-1)[0] || "";
+          }
+
+          let variables = [];
+          if (tpl === "mzj_delivery_completed"){
+            variables = [customerName];
+          } else if (tpl === "mzj_car_ready_delivery"){
+            variables = [customerName, note || ""];
+          } else {
+            variables = [customerName, carName, carType, vin, amountStr, trackingLink];
+          }
+
+          await sendWhatsAppMessage(phone, tpl, variables);
+          msgModalMsg.innerHTML = "<span class='ok'>تم إرسال واتساب بنجاح.</span>";
+          setTimeout(closeMessageModal, 800);
+          return;
+        }
+
+        if(modalCtx.channel === "sms"){
+          const body = encodeURIComponent(msgModalText.value || "");
+          window.open(`sms:${phone}?&body=${body}`, "_blank");
+          msgModalMsg.innerHTML = "<span class='ok'>تم فتح SMS. قم بالإرسال من جهازك.</span>";
+          setTimeout(closeMessageModal, 800);
+          return;
+        }
+
+      }catch(e){
+        console.error(e);
+        msgModalMsg.innerHTML = "<span class='err'>خطأ: " + mzjExtractErrText(e) + "</span>";
+      }finally{
+        msgModalSend.disabled = false;
+      }
+    }
+
+    if (msgModalSend) msgModalSend.addEventListener("click", sendFromModal);
+
+    // Keep WhatsApp template aligned with stage when opening modal
+    const waTplSelect = document.getElementById("waTplSelect");
+    function syncTplForStage(){
+      if(!waTplSelect) return;
+      if(modalCtx.channel !== "whatsapp") return;
+      if(modalCtx.stageNum === 10) waTplSelect.value = "mzj_delivery_completed";
+      else if(modalCtx.stageNum === 9) waTplSelect.value = "mzj_car_ready_delivery";
+      else waTplSelect.value = "mzj_order_confirmation_long";
+    }
+    const _openMessageModal = openMessageModal;
+    openMessageModal = function(channel, stageNum, stageLabel){
+      _openMessageModal(channel, stageNum, stageLabel);
+      syncTplForStage();
+    };
 
 
 function clearErpTable() {

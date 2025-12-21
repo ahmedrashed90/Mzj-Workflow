@@ -486,6 +486,7 @@
           <span id="connText">—</span>
         </div>
         <span id="whoami" class="whoami"></span>
+            <span id="connBadge" class="pill warn" style="margin-inline-start:8px;">غير متصل</span>
         <button id="logoutBtn" class="tb-btn" style="display:none;">تسجيل الخروج</button>
       </div>
     </div>
@@ -684,6 +685,27 @@
     const stagesCard = document.getElementById("stagesCard");
     const whoami     = document.getElementById("whoami");
     const logoutBtn  = document.getElementById("logoutBtn");
+
+// اتصال الصفحة (Online/Offline + Auth)
+const connBadge = document.getElementById("connBadge");
+function setConn(text, cls){
+  if(!connBadge) return;
+  connBadge.textContent = text;
+  connBadge.classList.remove("ok","warn","err");
+  if(cls) connBadge.classList.add(cls);
+}
+function refreshOnline(){
+  if(!navigator.onLine){
+    setConn("غير متصل", "err");
+  }else{
+    // هنحدد "متصل" بعد حالة تسجيل الدخول
+    setConn("متصل بالإنترنت", "warn");
+  }
+}
+window.addEventListener("online", refreshOnline);
+window.addEventListener("offline", refreshOnline);
+refreshOnline();
+
 
     const tabsBar      = document.getElementById("tabsBar");
     const tabSearchBtn = document.getElementById("tabSearchBtn");
@@ -988,29 +1010,12 @@
       setTimeout(()=> msgModalMsg.textContent="", 1200);
     });
 
-    async async function sendWhatsAppMessage(phone, text){
-      // Send via unified WhatsApp number (Mersal API) hosted on mzj-tracking
-      const MERSAL_API_ORIGIN = "https://mzj-tracking.vercel.app";
-      const res = await fetch(`${MERSAL_API_ORIGIN}/api/mersal-wa`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          phone: String(phone || "").trim(),
-          message: String(text || "").trim()
-        })
-      });
-
-      const raw = await res.text();
-      let data;
-      try { data = JSON.parse(raw); }
-      catch { throw new Error(raw || "Unexpected response from WhatsApp API"); }
-
-      if (!res.ok || !data.ok) {
-        throw new Error(data.error || "WhatsApp API failed");
-      }
+    async function sendWhatsAppMessage(phone, text){
+      // WhatsApp deep link (web + mobile)
+      const url = `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text || "")}`;
+      window.open(url, "_blank");
       return true;
     }
-
 
     if (msgModalSend) msgModalSend.addEventListener("click", async () => {
       msgModalMsg.textContent = "";
@@ -1022,8 +1027,9 @@
       try{
         if (modalCtx.channel === "whatsapp") {
           await sendWhatsAppMessage(phone, msg);
-          msgModalMsg.innerHTML = "<span class='ok'>تم إرسال رسالة واتساب من الرقم الموحد.</span>";
+          msgModalMsg.innerHTML = "<span class='ok'>تم فتح واتساب بالنص الجاهز.</span>";
         } else {
+        if(navigator.onLine) setConn("متصل بالإنترنت (بدون دخول)", "warn"); else setConn("غير متصل", "err");
           await sendStcSmsForStage(modalCtx.stageNum, modalCtx.stageLabel, msg);
           // sendStcSmsForStage writes to stageMsg; mirror here too:
           msgModalMsg.innerHTML = "<span class='ok'>تم إرسال SMS (أو تم تنفيذ محاولة الإرسال).</span>";
@@ -1293,6 +1299,7 @@ function clearErpTable() {
       } else if (vins.length > 1) {
         vinBadgeLabel = "أكثر من هيكل (" + vins.length + ")";
       } else {
+        if(navigator.onLine) setConn("متصل بالإنترنت (بدون دخول)", "warn"); else setConn("غير متصل", "err");
         vinBadgeLabel = "لا يوجد VIN في البيانات";
       }
 
@@ -1338,6 +1345,7 @@ function clearErpTable() {
         if (selectedVin && vins.includes(selectedVin)) {
           vinPicker.value = selectedVin;
         } else {
+        if(navigator.onLine) setConn("متصل بالإنترنت (بدون دخول)", "warn"); else setConn("غير متصل", "err");
           vinPicker.value = vins[0];
           selectedVin = vins[0];
         }
@@ -1348,6 +1356,7 @@ function clearErpTable() {
         vinCountChip.textContent = "هيكل واحد في هذا الطلب";
         selectedVin = vins[0];
       } else {
+        if(navigator.onLine) setConn("متصل بالإنترنت (بدون دخول)", "warn"); else setConn("غير متصل", "err");
         vinPickerBox.style.display = "none";
       }
 
@@ -1399,6 +1408,7 @@ function clearErpTable() {
         if (totalSum > 0) {
           orderTotal = totalSum;
         } else {
+        if(navigator.onLine) setConn("متصل بالإنترنت (بدون دخول)", "warn"); else setConn("غير متصل", "err");
           orderTotal = Math.round(orderSubtotal * 1.15 * 100) / 100;
         }
       }
@@ -1419,6 +1429,7 @@ function clearErpTable() {
         erpTotals.innerHTML = parts.join("");
         erpTotals.style.display = "flex";
       } else {
+        if(navigator.onLine) setConn("متصل بالإنترنت (بدون دخول)", "warn"); else setConn("غير متصل", "err");
         erpTotals.style.display = "none";
       }
 
@@ -1667,6 +1678,7 @@ function clearErpTable() {
         if (trackSnap.exists()) {
           trackData = trackSnap.data();
         } else {
+        if(navigator.onLine) setConn("متصل بالإنترنت (بدون دخول)", "warn"); else setConn("غير متصل", "err");
           trackData = {
             orderId: baseId,
             vin: currentVin || "",
@@ -1793,9 +1805,11 @@ function clearErpTable() {
               if (!s2.empty) {
                 erpRecords = s2.docs.map(docSnap => docSnap.data());
               } else {
+        if(navigator.onLine) setConn("متصل بالإنترنت (بدون دخول)", "warn"); else setConn("غير متصل", "err");
                 erpRecords = [data];
               }
             } else {
+        if(navigator.onLine) setConn("متصل بالإنترنت (بدون دخول)", "warn"); else setConn("غير متصل", "err");
               erpRecords = [data];
             }
           }
@@ -1891,6 +1905,7 @@ function clearErpTable() {
               } else if (doneCount >= STAGES.length) {
                 statusLabel = "تم إتمام جميع المراحل";
               } else {
+        if(navigator.onLine) setConn("متصل بالإنترنت (بدون دخول)", "warn"); else setConn("غير متصل", "err");
                 statusLabel = "تم تنفيذ " + doneCount + " من " + STAGES.length + " مراحل";
               }
             }
@@ -1962,6 +1977,7 @@ ordersListBody.innerHTML = "";
         tabListBtn.classList.add("tab-active");
         loadOrdersList();
       } else {
+        if(navigator.onLine) setConn("متصل بالإنترنت (بدون دخول)", "warn"); else setConn("غير متصل", "err");
         orderCard.style.display = "";
         erpCard.style.display   = currentOrderId ? "" : "none";
         stagesCard.style.display= "";
@@ -2014,6 +2030,7 @@ ordersListBody.innerHTML = "";
     // إدارة حالة تسجيل الدخول وتوزيع الواجهات
     onAuthStateChanged(auth, (user) => {
       if (user) {
+        if(navigator.onLine) setConn("متصل", "ok"); else setConn("غير متصل", "err");
         // مستخدم مسجل دخول
         whoami.textContent = user.email || "";
         logoutBtn.style.display = "inline-flex";
@@ -2026,11 +2043,13 @@ ordersListBody.innerHTML = "";
           erpCard.style.display    = "";
           stagesCard.style.display = "";
         } else {
+        if(navigator.onLine) setConn("متصل بالإنترنت (بدون دخول)", "warn"); else setConn("غير متصل", "err");
           erpCard.style.display    = "none";
           stagesCard.style.display = "none";
         }
         ordersListCard.style.display = "none";
       } else {
+        if(navigator.onLine) setConn("متصل بالإنترنت (بدون دخول)", "warn"); else setConn("غير متصل", "err");
         // لا يوجد مستخدم
         whoami.textContent = "";
         logoutBtn.style.display = "none";
@@ -2045,7 +2064,11 @@ ordersListBody.innerHTML = "";
     });
 
     // زر تسجيل الدخول
-    loginBtn.addEventListener("click", async () => {
+    
+    if (!loginBtn) {
+      console.error("loginBtn not found");
+    }
+loginBtn.addEventListener("click", async () => {
       authMsg.textContent = "";
       const emailVal = (email.value || "").trim();
       const passVal  = (password.value || "").trim();
@@ -2060,7 +2083,7 @@ ordersListBody.innerHTML = "";
         authMsg.innerHTML = "<span class='ok'>تم تسجيل الدخول بنجاح.</span>";
       } catch (e) {
         console.error(e);
-        authMsg.innerHTML = "<span class='err'>تعذر تسجيل الدخول. تأكد من البيانات أو تواصل مع المسؤول.</span>";
+        authMsg.innerHTML = `<span class='err'>تعذر تسجيل الدخول: <b>${e?.code || 'error'}</b><br><span class='muted' style='font-size:12px'>${(e?.message||'').replaceAll('<','&lt;')}</span></span>`;
       }
     });
 

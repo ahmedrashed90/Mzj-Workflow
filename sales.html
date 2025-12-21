@@ -3,7 +3,6 @@
 
 
 
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -990,33 +989,9 @@
     });
 
     async function sendWhatsAppMessage(phone, text){
-      // ارسال عبر WhatsApp API (Server -> W-Mersal)
-      const payload = {
-        to: String(phone || "").replace(/\D/g, ""),   // 9665xxxxxxx
-        message: String(text || "").trim(),
-        orderNo: currentOrderId || "",
-        vin: currentVin || "",
-        stageNum: (typeof modalCtx !== "undefined" && modalCtx?.stageNum) ? modalCtx.stageNum : 0
-      };
-
-      const res = await fetch("/api/whatsapp-send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      if (!res.ok) {
-        let errText = await res.text();
-        // Try to surface server JSON error nicely
-        try {
-          const j = JSON.parse(errText);
-          if (j && typeof j === "object") {
-            errText = j.error || j.message || JSON.stringify(j);
-          }
-        } catch(_) {}
-        throw new Error(errText || "WhatsApp API failed");
-      }
-
+      // WhatsApp deep link (web + mobile)
+      const url = `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text || "")}`;
+      window.open(url, "_blank");
       return true;
     }
 
@@ -1030,7 +1005,7 @@
       try{
         if (modalCtx.channel === "whatsapp") {
           await sendWhatsAppMessage(phone, msg);
-          msgModalMsg.innerHTML = "<span class='ok'>تم إرسال واتساب للعميل بنجاح.</span>";
+          msgModalMsg.innerHTML = "<span class='ok'>تم فتح واتساب بالنص الجاهز.</span>";
         } else {
           await sendStcSmsForStage(modalCtx.stageNum, modalCtx.stageLabel, msg);
           // sendStcSmsForStage writes to stageMsg; mirror here too:
@@ -1038,11 +1013,7 @@
         }
       }catch(e){
         console.error(e);
-        msgModalMsg.innerHTML = "<span class='err'>حصل خطأ أثناء الإرسال: " + (e?.message ? String(e.message).replace(/</g,'&lt;') : 'غير معروف') + "</span>";
-        // Helpful hint if env missing
-        if ((e?.message || '').includes('Missing ENV')) {
-          msgModalMsg.innerHTML += "<div class='muted' style='margin-top:6px;font-size:12px'>ملاحظة: هذا يعني أن متغيرات البيئة غير موجودة في نفس مشروع Vercel الذي تستضيف عليه صفحة المبيعات.</div>";
-        }
+        msgModalMsg.innerHTML = "<span class='err'>حصل خطأ أثناء الإرسال.</span>";
       }finally{
         msgModalSend.disabled = false;
       }
@@ -2057,7 +2028,7 @@ ordersListBody.innerHTML = "";
     });
 
     // زر تسجيل الدخول
-    if (loginBtn) loginBtn.addEventListener("click", async () => {
+    loginBtn.addEventListener("click", async () => {
       authMsg.textContent = "";
       const emailVal = (email.value || "").trim();
       const passVal  = (password.value || "").trim();
@@ -2077,7 +2048,7 @@ ordersListBody.innerHTML = "";
     });
 
     // زر إنشاء حساب جديد (للمشرف فقط)
-    if (signupBtn) signupBtn.addEventListener("click", async () => {
+    signupBtn.addEventListener("click", async () => {
       authMsg.textContent = "";
       const emailVal = (email.value || "").trim();
       const passVal  = (password.value || "").trim();

@@ -1175,9 +1175,10 @@ const locs = uniq(stock.map(r=> r.location || 'غير محدد')).sort((a,b)=> a
 
   function renderTable(filteredRows){
     tb.innerHTML = '';
+
     const rows = (filteredRows||[]).slice().sort((a,b)=>{
       const ai = Number(a.id), bi = Number(b.id);
-      if(!Number.isNaN(ai) && !Number.isNaN(bi)) return ai-bi;
+      if(!Number.isNaN(ai) && !Number.isNaN(bi)) return ai - bi;
       return clean(a.vin||'').localeCompare(clean(b.vin||''));
     });
 
@@ -1204,33 +1205,8 @@ const locs = uniq(stock.map(r=> r.location || 'غير محدد')).sort((a,b)=> a
     });
 
     visibleCount.textContent = `${rows.length} صف`;
-  });
-
-    filteredRows.slice().sort((a,b)=> (a.id||0)-(b.id||0)).forEach(r=>{
-      const k=colorKey(r);
-      const isColorShort = (colorCount[k]||0) < 2;
-      const tr = document.createElement('tr');
-      if(isColorShort) tr.classList.add('short');
-      const safeNotes = (r.notes && String(r.notes).trim().length>0)
-        ? String(r.notes)
-        : '<span class="muted-text">لا توجد ملاحظات</span>';
-      tr.innerHTML = `
-        <td>${r.id||''}</td>
-        <td>${r.car||''}</td>
-        <td>${r.variant||''}</td>
-        <td><span class="tag">${r.dealer||'-'}</span></td>
-        <td>${r.extColor||''}</td>
-        <td>${r.intColor||''}</td>
-        <td>${r.modelYear||''}</td>
-        <td>${r.plate||''}</td>
-        <td>${r.location||''}</td>
-        <td class="vin" data-vin="${r.vin||''}">${r.vin||''}</td>
-        <td class="cell-notes" data-vin="${r.vin||''}">${safeNotes}</td>
-      `;
-      tb.appendChild(tr);
-    });
-    document.getElementById('visibleCount').textContent = `${filteredRows.length} صف`;
   }
+
 
   function renderAll(){
     const filtered = applyFilters(stock);

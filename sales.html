@@ -3,6 +3,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -1005,7 +1006,14 @@
       });
 
       if (!res.ok) {
-        const errText = await res.text();
+        let errText = await res.text();
+        // Try to surface server JSON error nicely
+        try {
+          const j = JSON.parse(errText);
+          if (j && typeof j === "object") {
+            errText = j.error || j.message || JSON.stringify(j);
+          }
+        } catch(_) {}
         throw new Error(errText || "WhatsApp API failed");
       }
 
@@ -1030,7 +1038,11 @@
         }
       }catch(e){
         console.error(e);
-        msgModalMsg.innerHTML = "<span class='err'>حصل خطأ أثناء الإرسال.</span>";
+        msgModalMsg.innerHTML = "<span class='err'>حصل خطأ أثناء الإرسال: " + (e?.message ? String(e.message).replace(/</g,'&lt;') : 'غير معروف') + "</span>";
+        // Helpful hint if env missing
+        if ((e?.message || '').includes('Missing ENV')) {
+          msgModalMsg.innerHTML += "<div class='muted' style='margin-top:6px;font-size:12px'>ملاحظة: هذا يعني أن متغيرات البيئة غير موجودة في نفس مشروع Vercel الذي تستضيف عليه صفحة المبيعات.</div>";
+        }
       }finally{
         msgModalSend.disabled = false;
       }
@@ -2045,7 +2057,7 @@ ordersListBody.innerHTML = "";
     });
 
     // زر تسجيل الدخول
-    loginBtn.addEventListener("click", async () => {
+    if (loginBtn) loginBtn.addEventListener("click", async () => {
       authMsg.textContent = "";
       const emailVal = (email.value || "").trim();
       const passVal  = (password.value || "").trim();
@@ -2065,7 +2077,7 @@ ordersListBody.innerHTML = "";
     });
 
     // زر إنشاء حساب جديد (للمشرف فقط)
-    signupBtn.addEventListener("click", async () => {
+    if (signupBtn) signupBtn.addEventListener("click", async () => {
       authMsg.textContent = "";
       const emailVal = (email.value || "").trim();
       const passVal  = (password.value || "").trim();

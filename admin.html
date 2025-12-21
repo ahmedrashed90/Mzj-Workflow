@@ -1,6 +1,7 @@
 
 
 
+
 <!DOCTYPE html>
 
 <html dir="rtl" lang="ar">
@@ -667,7 +668,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-  import {getFirestore, doc, getDoc, setDoc, onSnapshot, collection, addDoc, serverTimestamp} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  import {getFirestore, doc, getDoc, setDoc, onSnapshot, collection, addDoc, serverTimestamp, updateDoc} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
   /* ===== Firebase ===== */
   const firebaseConfig = {
@@ -682,7 +683,16 @@
   const auth = getAuth(app);
   const db   = getFirestore(app);
   const STATE_REF = doc(db, "mzj_admin_state", "v1");
-  /* ===== Roles & Permissions (Firestore) ===== */
+  
+  // ===== Firestore helpers (fix missing wrappers) =====
+  const mzjSetDoc = (...args) => setDoc(...args);
+  const mzjUpdateDoc = (...args) => updateDoc(...args);
+  const clean = (v)=> String(v ?? '')
+    .replace(/[\u200E\u200F\u202A-\u202E\u2066-\u2069]/g,'')
+    .replace(/\s+/g,' ')
+    .trim();
+
+/* ===== Roles & Permissions (Firestore) ===== */
   const ROLE_ADMIN   = 'الادارة';
   const ROLE_IDARI   = 'اداري';
   const ROLE_BRANCH  = 'مدراء فروع';

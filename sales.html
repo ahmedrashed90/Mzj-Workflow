@@ -989,28 +989,30 @@
       setTimeout(()=> msgModalMsg.textContent="", 1200);
     });
 
-    
-async function sendWhatsAppMessage(phone, templateName, variables){
-  const res = await fetch("/api/whatsapp-send",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({
-      to: phone,
-      template_name: templateName,
-      variables: variables
-    })
-  });
-  const data = await res.json().catch(()=>null);
-  if(!res.ok || !data?.ok){
-    throw new Error(data?.error || "WhatsApp send failed");
-  }
-  return data;
-}
+    async function sendWhatsAppMessage(phone, templateName, variables){
+      // ارسال عبر WhatsApp API (Server -> W-Mersal) باستخدام Templates
+      const payload = {
+        to: String(phone || "").replace(/\D/g, ""),   // 9665xxxxxxx
+        template_name: String(templateName || "").trim(),
+        template_language: "ar",
+        variables: Array.isArray(variables) ? variables : []
+      };
 
-      return true;
+      const res = await fetch("/api/whatsapp-send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json().catch(async ()=>({ ok:false, error: await res.text().catch(()=> "WhatsApp API failed") }));
+
+      if (!res.ok || !data?.ok) {
+        throw new Error(data?.error || "WhatsApp API failed");
+      }
+
+      return data;
     }
-
-    if (msgModalSend) msgModalSend.addEventListener("click", async () => {
+if (msgModalSend) msgModalSend.addEventListener("click", async () => {
       msgModalMsg.textContent = "";
       msgModalSend.disabled = true;
 
@@ -1019,7 +1021,47 @@ async function sendWhatsAppMessage(phone, templateName, variables){
 
       try{
         if (modalCtx.channel === "whatsapp") {
-          await sendWhatsAppMessage(phone, msg);
+          const tplSel = document.getElementById("waTplSelect");
+          const tpl = tplSel ? tplSel.value : "mzj_order_confirmation_long";
+
+          const rec = (Array.isArray(currentOrderRecords) && currentOrderRecords.length) ? currentOrderRecords[0] : {};
+          const customerName = String(getFieldFlex("CustomerName", rec) || "-").trim();
+          const itemModel = String(getFieldFlex("ItemModel", rec) || getFieldFlex("ItemType", rec) || "-").trim();
+          const itemType  = String(getFieldFlex("ItemType", rec) || itemModel || "-").trim();
+
+          // السعر: نحاول نجيب الإجمالي شامل الضريبة، وإلا قيمة السيارة
+          const totalIncl = getFieldFlex("totalInclVat", rec);
+          const itemValue = getFieldFlex("ItemValue", rec);
+          const unitPrice = getFieldFlex("UnitPrice", rec);
+          const priceText = String(totalIncl !== "-" ? totalIncl : (itemValue !== "-" ? itemValue : unitPrice)).trim();
+
+          const vin = String(currentVin || getFieldFlex("VIN", rec) || "").trim();
+          const trackingUrl = vin ? `https://mzj-tracking.vercel.app/Test-Track.html?vin=${encodeURIComponent(vin)}` : "";
+
+          let vars = [];
+
+          if (tpl === "mzj_order_confirmation_long") {
+            // {{1}} الاسم | {{2}} السيارة | {{3}} النوع | {{4}} VIN | {{5}} السعر | {{6}} رابط التتبع
+            vars = [
+              customerName,
+              itemModel,
+              (itemModel && itemType && itemModel !== itemType) ? (itemModel + " - " + itemType) : itemType,
+              vin || "-",
+              priceText || "-",
+              trackingUrl || "-"
+            ];
+          } else if (tpl === "mzj_car_ready_delivery") {
+            // {{1}} الاسم | {{2}} ملاحظة إضافية
+            vars = [customerName, msg || "للاستفسار يرجى التواصل مع فريق المبيعات."];
+          } else if (tpl === "mzj_delivery_completed") {
+            // {{1}} الاسم
+            vars = [customerName];
+          } else {
+            // fallback
+            vars = [customerName, msg || "-", trackingUrl || "-"];
+          }
+
+          await sendWhatsAppMessage(phone, tpl, vars);
           msgModalMsg.innerHTML = "<span class='ok'>تم إرسال واتساب للعميل بنجاح.</span>";
         } else {
           await sendStcSmsForStage(modalCtx.stageNum, modalCtx.stageLabel, msg);
@@ -2145,7 +2187,19 @@ ordersListBody.innerHTML = "";
 
       <div style="padding:12px 14px;">
         <label style="margin:0 0 6px 0;">نص الرسالة (تقدر تعدّل قبل الإرسال)</label>
-        <textarea id="msgModalText" rows="9" style="width:100%;padding:10px 12px;border-radius:12px;border:1px solid #e5e7eb;background:#f9fafb;font-family:inherit;font-size:14px;outline:none;resize:vertical;"></textarea>
+        
+<div class="form-row" style="margin-bottom:10px">
+  <label for="waTplSelect" style="display:block;font-weight:700;margin:0 0 6px">نوع رسالة واتساب</label>
+  <select id="waTplSelect" style="width:100%;padding:10px 12px;border:1px solid rgba(0,0,0,.12);border-radius:10px">
+    <option value="mzj_order_confirmation_long">تأكيد تسجيل الطلب</option>
+    <option value="mzj_car_ready_delivery">جاهزية السيارة للاستلام</option>
+    <option value="mzj_delivery_completed">إتمام التسليم</option>
+  </select>
+  <div style="margin-top:6px;color:#6b7280;font-size:12px;line-height:1.6">
+    ملاحظة: في "جاهزية السيارة" يمكنك كتابة ملاحظة إضافية في خانة النص (مثال: رابط اللوكيشن أو رقم التواصل).
+  </div>
+</div>
+<textarea id="msgModalText" rows="9" style="width:100%;padding:10px 12px;border-radius:12px;border:1px solid #e5e7eb;background:#f9fafb;font-family:inherit;font-size:14px;outline:none;resize:vertical;"></textarea>
         <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-top:10px;">
           <div class="muted" style="font-size:12px;">
             <span class="badge" id="msgModalChannel">—</span>

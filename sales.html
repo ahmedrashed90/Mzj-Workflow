@@ -987,6 +987,38 @@
       }
       setTimeout(()=> msgModalMsg.textContent="", 1200);
     });
+    if (msgModalSend) msgModalSend.addEventListener("click", async () => {
+      try{
+        msgModalMsg.innerHTML = "<span class='muted'>جاري الإرسال…</span>";
+        msgModalSend.disabled = true;
+
+        const phone = normalizeSaudiPhone(currentCustomerPhone);
+        const msg   = (msgModalText.value || "").trim();
+
+        if (!phone) throw new Error("رقم الجوال غير صالح.");
+        if (!msg)   throw new Error("اكتب نص الرسالة أولاً.");
+
+        if (modalCtx.channel === "whatsapp") {
+          await sendWhatsAppMessage(phone, msg);
+          msgModalMsg.innerHTML = "<span class='ok'>✅ تم إرسال رسالة واتساب من الرقم الموحد.</span>";
+        } else {
+          // SMS (إن وُجدت دالة إرسال SMS في مشروعك)
+          if (typeof sendSmsMessage === "function") {
+            await sendSmsMessage(phone, msg);
+            msgModalMsg.innerHTML = "<span class='ok'>✅ تم إرسال SMS.</span>";
+          } else {
+            throw new Error("إرسال SMS غير مُفعّل في هذه الصفحة.");
+          }
+        }
+
+        setTimeout(closeMessageModal, 900);
+      }catch(e){
+        console.error(e);
+        msgModalMsg.innerHTML = "<span class='err'>❌ " + (e.message || "حصل خطأ أثناء الإرسال") + "</span>";
+        msgModalSend.disabled = false;
+      }
+    });
+
 
     async function sendWhatsAppMessage(phone, text){
       // إرسال مباشر من الرقم الموحد (Mersal WhatsApp API) عبر مشروع mzj-tracking

@@ -1,6 +1,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -907,7 +908,7 @@
 
       modalCtx = { channel, stageNum, stageLabel, defaultText: defText };
 
-      msgModalTitle.textContent = (channel === "whatsapp") ? "إرسال واتساب للعميل" : "إرسال SMS للعميل";
+      msgModalTitle.textContent = (channel === "whatsapp") ? "إرسال واتساب للعميل (API)" : "إرسال SMS للعميل";
       msgModalSub.textContent = `المرحلة ${stageNum}: ${stageLabel || ""}`;
       msgModalText.value = defText;
 
@@ -939,10 +940,39 @@
     });
 
     async function sendWhatsAppMessage(phone, text){
-      // WhatsApp deep link (web + mobile)
-      const url = `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text || "")}`;
-      window.open(url, "_blank");
-      return true;
+      // WhatsApp API (server-side) — keep your API token/instance off the client.
+      // This endpoint should exist in your project (Vercel/Serverless) and forward to your WhatsApp provider.
+      // Expected response JSON: { ok:true } OR { ok:false, error:"..." }
+      const payload = {
+        to: String(phone || ""),
+        message: String(text || ""),
+        orderNo: currentOrderId || "",
+        vin: currentVin || "",
+        stageNum: modalCtx.stageNum || null
+      };
+
+      try{
+        const res = await fetch("/api/whatsapp-send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const t = await res.text();
+          throw new Error(t || "WhatsApp API failed");
+        }
+
+        const data = await res.json().catch(()=>({ok:true}));
+        if (data && data.ok === false) throw new Error(data.error || "WhatsApp API returned ok:false");
+        return true; // sent via API
+      }catch(err){
+        console.warn("WhatsApp API error, fallback to wa.me:", err);
+        // Fallback: open wa.me so the staff can still send manually
+        const url = `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text || "")}`;
+        window.open(url, "_blank");
+        return false; // fallback used
+      }
     }
 
     if (msgModalSend) msgModalSend.addEventListener("click", async () => {
@@ -954,8 +984,12 @@
 
       try{
         if (modalCtx.channel === "whatsapp") {
-          await sendWhatsAppMessage(phone, msg);
-          msgModalMsg.innerHTML = "<span class='ok'>تم فتح واتساب بالنص الجاهز.</span>";
+          const apiOk = await sendWhatsAppMessage(phone, msg);
+          if (apiOk) {
+            msgModalMsg.innerHTML = "<span class='ok'>تم إرسال رسالة واتساب عبر الـ API بنجاح.</span>";
+          } else {
+            msgModalMsg.innerHTML = "<span class='muted'>تعذر الإرسال عبر الـ API — تم فتح واتساب كبديل.</span>";
+          }
         } else {
           await sendStcSmsForStage(modalCtx.stageNum, modalCtx.stageLabel, msg);
           // sendStcSmsForStage writes to stageMsg; mirror here too:

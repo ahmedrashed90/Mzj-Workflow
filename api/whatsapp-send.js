@@ -1,13 +1,25 @@
+// api/whatsapp-send.js
 export default async function handler(req, res) {
+  // CORS (for calling from your static sales.html)
+  if (req.method === "OPTIONS") {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    return res.status(204).end();
+  }
+  res.setHeader("Access-Control-Allow-Origin", "*");
+
   if (req.method !== "POST") {
     return res.status(405).json({ ok: false, error: "Method not allowed" });
   }
 
   try {
-    const { to, message, template_name, template_language, components } = req.body || {};
+    const { to, message, orderNo, vin, stageNum, customerName, trackingUrl } = req.body || {};
 
     const base = (process.env.MERSAL_API_BASE || "").replace(/\/+$/, "");
     const token = process.env.MERSAL_API_TOKEN;
+    const campaignName = process.env.MERSAL_CAMPAIGN_NAME || "Tracking"; // your dashboard campaign name
+    const campaignIdEnv = process.env.MERSAL_CAMPAIGN_ID || ""; // optional fixed id
 
     if (!base || !token) {
       return res.status(500).json({
@@ -16,103 +28,120 @@ export default async function handler(req, res) {
       });
     }
 
-    const phone = String(to || "").replace(/\D/g, "");
+    // Normalize phone to E.164
+    let phone = String(to || "").replace(/\D/g, "");
+    if (phone.startsWith("05") && phone.length === 10) phone = "966" + phone.slice(1);
+    if (phone.startsWith("5") && phone.length === 9) phone = "966" + phone;
     if (!phone || phone.length < 10) {
       return res.status(400).json({ ok: false, error: "Invalid 'to' phone" });
     }
 
-    // ========= Helpers =========
-    const tryRequest = async ({ url, method = "POST", headers = {}, body }) => {
-      const resp = await fetch(url, { method, headers, body });
-      const text = await resp.text();
-      let json = null;
-      try { json = JSON.parse(text); } catch (_) {}
-      return { ok: resp.ok, status: resp.status, text, json };
+    const getJson = async (url) => {
+      const r = await fetch(url, { method: "GET" });
+      const t = await r.text();
+      let j = null;
+      try { j = JSON.parse(t); } catch (_) {}
+      return { ok: r.ok, status: r.status, text: t, json: j };
     };
 
-    // ========= Build message payloads =========
-    // A) JSON payload (common)
-    const jsonPayload = {
-      token, // بعض السيرفرات تتطلبه داخل الـ body أيضًا
-      phone,
-      message: (message || "").trim(),
-      template_name: template_name || "mzj_tracking_update",
-      template_language: template_language || "ar",
-      components: Array.isArray(components) ? components : undefined,
+    const postJson = async (url, bodyObj) => {
+      const r = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bodyObj),
+      });
+      const t = await r.text();
+      let j = null;
+      try { j = JSON.parse(t); } catch (_) {}
+      return { ok: r.ok, status: r.status, text: t, json: j };
     };
 
-    // B) x-www-form-urlencoded payload (بعض APIs لا تقبل JSON)
-    const form = new URLSearchParams();
-    form.set("token", token);
-    form.set("phone", phone);
-    if ((message || "").trim()) form.set("message", String(message).trim());
-    form.set("template_name", jsonPayload.template_name);
-    form.set("template_language", jsonPayload.template_language);
-    if (jsonPayload.components) form.set("components", JSON.stringify(jsonPayload.components));
+    // ===== 1) Resolve campaign_id (ENV or lookup by name) =====
+    let campaign_id = campaignIdEnv || null;
+    let campaignsDebug = null;
 
-    // ========= Endpoint candidates (مرسال أحيانًا lowercase) =========
-    const candidates = [
-      // 1) lowercase endpoint + token in query (الأكثر احتمالًا)
-      {
-        name: "lowercase + query token + JSON",
-        url: `${base}/api/wpbox/sendtemplatemessage?token=${encodeURIComponent(token)}`,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...jsonPayload, token: undefined }), // لأن token موجود في query
-      },
-      // 2) lowercase endpoint + token in query + FORM
-      {
-        name: "lowercase + query token + FORM",
-        url: `${base}/api/wpbox/sendtemplatemessage?token=${encodeURIComponent(token)}`,
-        headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-        body: new URLSearchParams([...form.entries()].filter(([k]) => k !== "token")).toString(),
-      },
+    if (!campaign_id) {
+      const candidates = [
+        `${base}/api/wpbox/getCampaigns?token=${encodeURIComponent(token)}`,
+        `${base}/api/campaigns?token=${encodeURIComponent(token)}`,
+        `${base}/api/wpbox/campaigns?token=${encodeURIComponent(token)}`,
+      ];
 
-      // 3) CamelCase endpoint (لو السيرفر فعلاً كده)
-      {
-        name: "camelcase + query token + JSON",
-        url: `${base}/api/wpbox/sendTemplateMessage?token=${encodeURIComponent(token)}`,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...jsonPayload, token: undefined }),
-      },
+      for (const url of candidates) {
+        const r = await getJson(url);
+        if (r.ok && r.json) {
+          const list =
+            r.json.campaigns ||
+            r.json.data?.campaigns ||
+            r.json.data ||
+            r.json.campaign_list ||
+            [];
 
-      // 4) بعض الأنظمة تقبل token داخل body فقط
-      {
-        name: "lowercase + body token + JSON",
-        url: `${base}/api/wpbox/sendtemplatemessage`,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(jsonPayload),
-      },
-      {
-        name: "lowercase + body token + FORM",
-        url: `${base}/api/wpbox/sendtemplatemessage`,
-        headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-        body: form.toString(),
-      },
-    ];
-
-    const attempts = [];
-    for (const c of candidates) {
-      const r = await tryRequest(c);
-      attempts.push({ name: c.name, status: r.status, ok: r.ok, json: r.json || null, text: r.json ? undefined : r.text?.slice(0, 500) });
-
-      // اعتبر نجاح إذا resp.ok أو الـ json فيه status=success
-      const success =
-        r.ok ||
-        (r.json && (r.json.status === "success" || r.json.ok === true));
-
-      if (success) {
-        return res.json({ ok: true, via: c.name, data: r.json ?? r.text });
+          if (Array.isArray(list) && list.length) {
+            const found = list.find((c) => {
+              const n = String(c.name || c.title || "").trim().toLowerCase();
+              return n === String(campaignName).trim().toLowerCase();
+            });
+            campaign_id = found?.id || found?.campaign_id || null;
+            campaignsDebug = { usedUrl: url, count: list.length, found: !!campaign_id };
+            break;
+          }
+        }
+        campaignsDebug = { usedUrl: url, status: r.status, body: (r.json || r.text || "").toString().slice(0, 300) };
       }
     }
 
-    // لو كله فشل: رجّع تفاصيل المحاولات للواجهة عشان نعرف السبب الحقيقي
+    // ===== 2) Build template variables (matches your template: {{body}}, {{body2}}, {{body3}}) =====
+    const body1 = (customerName || "").toString().trim() || "عميلنا العزيز";
+    const body2 = (vin || orderNo || "").toString().trim() || "—";
+    const body3 =
+      (trackingUrl || "").toString().trim() ||
+      (vin ? `https://mzj-tracking.vercel.app/Test-Track.html?vin=${encodeURIComponent(String(vin))}` : "");
+
+    // ===== 3) Try sending with a few common endpoint/payload variants =====
+    const tries = [
+      {
+        label: "sendTemplateMessage_phone_campaign",
+        url: `${base}/api/wpbox/sendTemplateMessage?token=${encodeURIComponent(token)}`,
+        body: { phone, campaign_id, body: body1, body2, body3 },
+      },
+      {
+        label: "sendTemplateMessage_to_campaign",
+        url: `${base}/api/wpbox/sendTemplateMessage?token=${encodeURIComponent(token)}`,
+        body: { to: phone, campaign_id, body: body1, body2, body3 },
+      },
+      {
+        label: "sendCampaignMessage_phone",
+        url: `${base}/api/wpbox/sendCampaignMessage?token=${encodeURIComponent(token)}`,
+        body: { phone, campaign_id, body: body1, body2, body3 },
+      },
+    ];
+
+    let last = null;
+    for (const t of tries) {
+      const resp = await postJson(t.url, t.body);
+      last = { attempt: t.label, url: t.url, sent: t.body, resp: resp.json || resp.text };
+
+      if (resp.ok) {
+        const statusStr = (resp.json?.status || resp.json?.message || "").toString().toLowerCase();
+        if (!statusStr.includes("fail") && !statusStr.includes("error")) {
+          return res.json({
+            ok: true,
+            used: { phone, campaign_id, campaignName, body: body1, body2, body3 },
+            provider: resp.json || resp.text,
+            debug: { campaigns: campaignsDebug, attempt: t.label },
+          });
+        }
+      }
+    }
+
     return res.status(400).json({
       ok: false,
-      error: "Mersal request failed",
-      attempts,
+      error: "Provider did not confirm send",
+      used: { phone, campaign_id, campaignName, body: body1, body2, body3 },
+      debug: { campaigns: campaignsDebug, lastAttempt: last },
     });
-
   } catch (e) {
-    return res.status(500).json({ ok: false, error: e.message });
+    return res.status(500).json({ ok: false, error: e?.message || String(e) });
   }
 }

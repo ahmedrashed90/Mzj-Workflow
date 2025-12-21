@@ -988,11 +988,22 @@
       setTimeout(()=> msgModalMsg.textContent="", 1200);
     });
 
-    async function sendWhatsAppMessage(phone, text){
-      // WhatsApp deep link (web + mobile)
-      const url = `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text || "")}`;
-      window.open(url, "_blank");
-      return true;
+    async function sendWhatsAppMessage(phone, text, stageNum){
+      // Send via Mersal WhatsApp API (server-side) instead of opening WhatsApp app
+      return fetch("/api/mersal-wa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: String(phone || "").trim(),     // must be like 9665xxxxxxxx
+          message: String(text || ""),
+          stageNum: stageNum ?? null,
+          orderId: window.__mzj_current_order_id || ""
+        })
+      }).then(async (res)=>{
+        const bodyText = await res.text();
+        if(!res.ok) throw new Error(bodyText || ("HTTP " + res.status));
+        try { return JSON.parse(bodyText); } catch { return { ok:true, raw: bodyText }; }
+      });
     }
 
     if (msgModalSend) msgModalSend.addEventListener("click", async () => {
@@ -1004,8 +1015,8 @@
 
       try{
         if (modalCtx.channel === "whatsapp") {
-          await sendWhatsAppMessage(phone, msg);
-          msgModalMsg.innerHTML = "<span class='ok'>تم فتح واتساب بالنص الجاهز.</span>";
+          await sendWhatsAppMessage(phone, msg, modalCtx.stageNum);
+          msgModalMsg.innerHTML = "<span class='ok'>تم إرسال الرسالة من الرقم الموحد عبر واتساب API.</span>";
         } else {
           await sendStcSmsForStage(modalCtx.stageNum, modalCtx.stageLabel, msg);
           // sendStcSmsForStage writes to stageMsg; mirror here too:

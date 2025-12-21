@@ -701,14 +701,14 @@
         <div class="stat">
           <i class="fa-solid fa-car"></i>
           <div>
-            <div class="stat-title">إجمالي السيارات (بعد الفلاتر)</div>
+            <div class="stat-title">إجمالي السيارات (كل المخزون)</div>
             <div class="stat-num" id="totalCount">0</div>
           </div>
         </div>
         <div class="stat">
           <i class="fa-solid fa-location-dot"></i>
           <div>
-            <div class="stat-title">عدد الأماكن (بعد الفلاتر)</div>
+            <div class="stat-title">عدد الأماكن (كل المخزون)</div>
             <div class="stat-num" id="placesCount">0</div>
           </div>
         </div>
@@ -898,13 +898,6 @@
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
   import {getFirestore, doc, getDoc, onSnapshot, updateDoc, collection, addDoc, serverTimestamp} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-  // ===== Firestore helpers (fix missing wrappers) =====
-  // بعض الصفحات كانت تستدعي mzjSetDoc / mzjUpdateDoc بدون تعريف
-  // هنا نربطهم مباشرة بدوال Firestore الرسمية لضمان الحفظ والمزامنة الحية
-  const mzjSetDoc = (...args) => setDoc(...args);
-  const mzjUpdateDoc = (...args) => updateDoc(...args);
-
-
   const firebaseConfig = {
     apiKey: "AIzaSyC614bGqnYf4Q-weTNemzWENTpa8DjGeHw",
     authDomain: "mzj-agenda.firebaseapp.com",
@@ -918,7 +911,15 @@
   const db   = getFirestore(app);
   const STATE_REF = doc(db, "mzj_admin_state", "v1");
 
-  /* ===== Roles & Permissions ===== */
+  
+  // ===== Helpers =====
+  const mzjUpdateDoc = (...args) => updateDoc(...args);
+  const clean = (v)=> String(v ?? '')
+    // إزالة محارف الاتجاه المخفية + توحيد المسافات
+    .replace(/[\u200E\u200F\u202A\u202B\u202C\u202D\u202E\u2066\u2067\u2068\u2069]/g,'')
+    .replace(/\s+/g,' ')
+    .trim();
+/* ===== Roles & Permissions ===== */
   const ROLE_ADMIN   = 'الادارة';
   const ROLE_IDARI   = 'اداري';
   const ROLE_BRANCH  = 'مدراء فروع';
@@ -1142,19 +1143,41 @@
   const filters = { q:'', model:'', year:'', dealer:'', location:'' };
 
   function initFilters(){
-    const modelsList = uniq(stock.map(r=> r.car).filter(Boolean)).sort((a,b)=> a.localeCompare(b,'ar'));
-    modelFilter.innerHTML = '<option value="">كل السيارات</option>' + modelsList.map(m=> `<option value="${m}">${m}</option>`).join('');
-    const locs = uniq(stock.map(r=> r.location || 'غير محدد')).sort((a,b)=> a.localeCompare(b,'ar'));
-    locationFilter.innerHTML = '<option value="">كل الأماكن</option><option value="__NO_AGENCY__">كل الأماكن (بدون الوكالة)</option>' +
-      locs.map(l=> `<option value="${l==='غير محدد'?'':l}">${l}</option>`).join('');
+        const modelsList = uniq(stock.map(r=> clean(r.car)).filter(Boolean))
+      .sort((a,b)=> a.localeCompare(b,'ar'));
+        modelFilter.innerHTML = '<option value="">كل السيارات</option>' +
+      modelsList.map(m=> `<option value="${clean(m)}">${m}</option>`).join('');
+        const locs = uniq(stock.map(r=> clean(r.location || 'غير محدد')))
+      .sort((a,b)=> a.localeCompare(b,'ar'));
+        locationFilter.innerHTML = '<option value="">كل الأماكن</option>'+
+      '<option value="__NO_AGENCY__">كل الأماكن (بدون الوكالة)</option>' +
+      locs.map(l=> `<option value="${clean(l)}">${l}</option>`).join('');
   }
 
   function applyFilters(rows){
-    return rows.filter(r=>{
+    return (rows||[]).filter(r=>{
+      // search
       if (filters.q){
-        const hay = [r.car,r.variant,r.dealer,r.extColor,r.intColor,r.modelYear,r.plate,r.location,r.vin,r.notes].join(' ').toLowerCase();
-        if (!hay.includes(filters.q.toLowerCase())) return false;
+        const q = clean(filters.q).toLowerCase();
+        const hay = clean([
+          r.car,r.variant,r.dealer,r.extColor,r.intColor,r.modelYear,
+          r.plate,r.location,r.vin,r.notes,r.id
+        ].filter(Boolean).join(' ')).toLowerCase();
+        if (!hay.includes(q)) return false;
       }
+
+      if (filters.model && clean(r.car) !== clean(filters.model)) return false;
+      if (filters.year  && clean(r.modelYear) !== clean(filters.year)) return false;
+      if (filters.dealer && !clean(r.dealer).toLowerCase().includes(clean(filters.dealer).toLowerCase())) return false;
+
+      if (filters.location){
+        if (filters.location === '__NO_AGENCY__'){
+          if (clean(r.location||'').startsWith('الوكالة :')) return false;
+        } else if (clean(r.location || 'غير محدد') !== clean(filters.location)) return false;
+      }
+      return true;
+    });
+  }
       if (filters.model && r.car !== filters.model) return false;
       if (filters.year && String(r.modelYear) !== String(filters.year)) return false;
       if (filters.dealer && (!r.dealer || !r.dealer.toLowerCase().includes(filters.dealer.toLowerCase()))) return false;
@@ -1168,19 +1191,45 @@
   }
 
   function renderSummary(filteredRows){
-    document.getElementById('totalCount').textContent   = filteredRows.length.toLocaleString('ar-SA');
-    const locsFiltered = new Set(filteredRows.map(r=> r.location || 'غير محدد')).size;
-    document.getElementById('placesCount').textContent  = locsFiltered.toLocaleString('ar-SA');
+    // Total like admin: all stock
+    document.getElementById('totalCount').textContent = (stock.length||0).toLocaleString('ar-SA');
+    const locsAll = new Set((stock||[]).map(r=> clean(r.location || 'غير محدد'))).size;
+    document.getElementById('placesCount').textContent = locsAll.toLocaleString('ar-SA');
   }
 
   function renderTable(filteredRows){
     tb.innerHTML = '';
-    const colorKey = r => `${r.car||''}⇢${r.variant||''}⇢${r.extColor||''}/${r.intColor||''}⇢${r.location||'غير محدد'}`;
-    const colorCount = {};
-    stock.forEach(r=>{
-      const k=colorKey(r);
-      colorCount[k]=(colorCount[k]||0)+1;
+
+    const rows = (filteredRows||[]).slice().sort((a,b)=> {
+      const ai = Number(a.id), bi = Number(b.id);
+      if(!Number.isNaN(ai) && !Number.isNaN(bi)) return ai - bi;
+      return clean(a.vin||'').localeCompare(clean(b.vin||''));
     });
+
+    rows.forEach((r,idx)=>{
+      const tr = document.createElement('tr');
+      const safeNotes = (r.notes && String(r.notes).trim().length>0)
+        ? String(r.notes)
+        : '<span class="muted-text">لا توجد ملاحظات</span>';
+
+      tr.innerHTML = `
+        <td>${idx+1}</td>
+        <td>${r.car||''}</td>
+        <td>${r.variant||''}</td>
+        <td><span class="tag">${r.dealer||'-'}</span></td>
+        <td>${r.extColor||''}</td>
+        <td>${r.intColor||''}</td>
+        <td>${r.modelYear||''}</td>
+        <td>${r.plate||''}</td>
+        <td>${r.location||''}</td>
+        <td class="vin" data-vin="${r.vin||''}">${r.vin||''}</td>
+        <td class="cell-notes" data-vin="${r.vin||''}">${safeNotes}</td>
+      `;
+      tb.appendChild(tr);
+    });
+
+    document.getElementById('visibleCount').textContent = `${rows.length} صف`;
+  });
 
     filteredRows.slice().sort((a,b)=> (a.id||0)-(b.id||0)).forEach(r=>{
       const k=colorKey(r);
@@ -1216,10 +1265,10 @@
 
   /* Filter events */
   searchEl.addEventListener('input', e=>{ filters.q=e.target.value.trim(); renderAll(); });
-  modelFilter.addEventListener('change', e=>{ filters.model=e.target.value; renderAll(); });
+  modelFilter.addEventListener('change', e=>{ filters.model=clean(e.target.value); renderAll(); });
   yearFilter.addEventListener('input', e=>{ filters.year=e.target.value.trim(); renderAll(); });
   dealerFilter.addEventListener('input', e=>{ filters.dealer=e.target.value.trim(); renderAll(); });
-  locationFilter.addEventListener('change', e=>{ filters.location=e.target.value; renderAll(); });
+  locationFilter.addEventListener('change', e=>{ filters.location=(e.target.value==='__NO_AGENCY__')?'__NO_AGENCY__':clean(e.target.value); renderAll(); });
 
   /* VIN copy */
   document.addEventListener('click', (e)=>{

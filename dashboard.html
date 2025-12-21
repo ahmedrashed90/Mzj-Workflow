@@ -4,6 +4,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -465,9 +466,9 @@ tr:hover{ filter: brightness(0.98); }
               <th>البيان</th>
               <th>من مكان</th>
               <th>إلى مكان</th>
-              <th>ملاحظات</th>
               <th>الموافقة الإدارية</th>
               <th>الموافقة المالية</th>
+              <th>ملاحظات</th>
               <th>الحالة</th>
               <th>الإجراء</th>
             </tr>
@@ -2275,7 +2276,9 @@ function openShootModal(filter='ALL'){
       const adminDisabledAttr   = (!canAdminApproveBtn || adminOk || idxInMoves===-1) ? 'disabled' : '';
       const financeDisabledAttr = (!canFinanceApproveBtn || financeOk || idxInMoves===-1) ? 'disabled' : '';
 
-      const tr = document.createElement('tr');
+            const notesText = [stockRow?.financeNotes, stockRow?.adminNotes, t.financeNote, t.adminNote].filter(v => (v||'').toString().trim()!=='').join(' | ') || '—';
+
+const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${idx+1}</td>
         <td>${date}</td>
@@ -2284,9 +2287,9 @@ function openShootModal(filter='ALL'){
         <td>${variant}</td>
         <td>${fromLoc}</td>
         <td>${toLoc}</td>
-        <td>${note}</td>
         <td style="text-align:center">${adminOk ? '✅' : '—'}</td>
         <td style="text-align:center">${financeOk ? '✅' : '—'}</td>
+        <td>${notesText}</td>
         <td>${statusTxt}</td>
         <td>
           <button class="btn btn-outline btn-xs" data-transfer-idx="${idxInMoves}" data-transfer-kind="finance" ${financeDisabledAttr}>
@@ -2509,14 +2512,15 @@ try{
       const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Sales Orders");
       XLSX.writeFile(wb,"mzj-sales-orders.xlsx");
     }else if(currentMode==='transfers'){
-      const header=["رقم الطلب","التاريخ","رقم الهيكل","من مكان","إلى مكان","ملاحظات","الموافقة الإدارية","الموافقة المالية","الحالة","تمت الموافقة في"];
+      const header=["رقم الطلب","التاريخ","رقم الهيكل","من مكان","إلى مكان","الموافقة الإدارية","الموافقة المالية","ملاحظات","الحالة","تمت الموافقة في"];
       const data=[header];
       filteredTransfers.forEach(t=>{
         const date = t.requestedAt||t.createdAt||t.date||'';
         const vin = t.vin||t.chassis||'';
         const fromLoc= t.from||t.fromLocation||t.source||'';
         const toLoc= t.to||t.toLocation||t.target||'';
-        const note= t.note||t.message||'';
+        const stockRow = (Array.isArray(stock) ? stock : []).find(r => String(r.vin||'') === String(vin||''));
+        const note= [stockRow?.financeNotes, stockRow?.adminNotes, t.financeNote, t.adminNote, t.note, t.message].filter(v => (v||'').toString().trim()!=='').join(' | ');
         const adminOk   = (t.adminApproved === true || t.adminApproved === 'true' || t.adminApproval === true);
         const financeOk = (t.financeApproved === true || t.financeApproved === 'true' || t.financeApproval === true);
         const statusTxt = (adminOk && financeOk)? 'تمت الموافقة المالية والإدارية'
@@ -2524,7 +2528,7 @@ try{
                           : (!adminOk && financeOk)? 'بانتظار موافقة الإدارة'
                           : 'بانتظار الموافقة المالية';
         const approvedAt = t.adminApprovedAt||'';
-        data.push([t.id||'',date,vin,fromLoc,toLoc,note,adminOk?'✔':'',financeOk?'✔':'',statusTxt,approvedAt]);
+        data.push([t.id||'',date,vin,fromLoc,toLoc,adminOk?'✔':'',financeOk?'✔':'',note,statusTxt,approvedAt]);
       });
       const ws=XLSX.utils.aoa_to_sheet(data);
       ws['!cols']=[{wch:8},{wch:18},{wch:22},{wch:20},{wch:20},{wch:30},{wch:16},{wch:16},{wch:22},{wch:18}];

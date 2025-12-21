@@ -1004,7 +1004,7 @@ $('#btnLogin').addEventListener('click', async ()=>{
   const comboKey = r => [trim(r.car), trim(r.variant), trim(r.extColor), trim(r.intColor), trim(r.modelYear)].join('⇢');
   function countByCombo(rows){
     const m=new Map();
-    rows.forEach(r=>{ const k=comboKey(r); if(!k) return; m.set(k,(m.get(k)||0)+1); });
+    rows.forEach(r=>{ const k=comboKey(r); if(!k) return; m.set(k,(m.get(k)||0)+0); });
     return m;
   }
 

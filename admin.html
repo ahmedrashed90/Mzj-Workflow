@@ -1310,10 +1310,19 @@ btnLogin.addEventListener('click', async ()=>{
           modelYear:colIndex("موديل"), plate:colIndex("اللوحة"), location:colIndex("المكان"),
           batchName:colIndex("اسم الدفعة"), notes:colIndex("الملاحظات")
         };
+        // Detect VIN column index
+        let idxVin=-1;
+        for(const h of VIN_HEADERS){
+          const i=header.indexOf(h);
+          if(i!==-1){ idxVin=i; break; }
+        }
+
+
         
         // ===== Update mode: update existing cars only (by VIN) =====
         if(importMode==='update'){
           if(idxVin===-1) throw new Error('ملف التحديث لازم يحتوي عمود رقم الهيكل (VIN).');
+if(idxVin===-1) throw new Error('ملف التحديث لازم يحتوي عمود رقم الهيكل (VIN).');
           const selectedKeys = await chooseUpdateFieldsFromHeader(header);
           // Map keys to column indexes in sheet
           const keyToCol = {

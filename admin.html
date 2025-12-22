@@ -688,7 +688,41 @@
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js">
+  function showUpdateReportButton(){
+    let btn = document.getElementById('btnUpdateReport');
+    if(!btn){
+      btn = document.createElement('button');
+      btn.id = 'btnUpdateReport';
+      btn.className = 'btn btn-soft';
+      btn.style.marginTop = '8px';
+      btn.innerHTML = '<i class="fa-solid fa-file-lines"></i> عرض تقرير التحديث';
+      btn.onclick = openUpdateReport;
+      document.querySelector('.toast-wrap')?.appendChild(btn);
+    }
+  }
+
+  function openUpdateReport(){
+    if(!__lastUpdateReport){ showToast('لا يوجد تقرير متاح','info'); return; }
+    const rows = [];
+    __lastUpdateReport.updated.forEach(v=> rows.push({VIN:v, Status:'Updated'}));
+    __lastUpdateReport.notFound.forEach(v=> rows.push({VIN:v, Status:'Not Found'}));
+    __lastUpdateReport.skipped.forEach(v=> rows.push({VIN:v, Status:'Skipped'}));
+
+    // build CSV
+    let csv = 'VIN,Status\n';
+    rows.forEach(r=>{ csv += `"${r.VIN}","${r.Status}"\n`; });
+
+    const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'update_report.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+</script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
@@ -1174,6 +1208,10 @@ btnLogin.addEventListener('click', async ()=>{
   let importMode=null; const VIN_HEADERS=["رقم الهيكل","VIN","الشاص","رقم الشاص","Chassis","Chassis No","Chassis Number","الهيكل","نوع الهيكل"];
 
   // ===== Update-from-sheet helpers =====
+
+  // ===== Update report state =====
+  let __lastUpdateReport = null;
+
   function openModal(el){
     if(!el) return;
     el.classList.add('show');
@@ -1348,7 +1386,9 @@ if(idxVin===-1) throw new Error('ملف التحديث لازم يحتوي عم�
           const res = applyUpdateFromSheet(json, keyToCol, idxVin, selectedKeys);
           await persistAll();
           renderTable(); fillMoveLists(); updateRequirementBoxes();
+          __lastUpdateReport = res;
           showToast(`✅ تم التحديث بنجاح — عدد الهياكل المُحدَّثة: ${res.updated.length}`,'ok');
+          showUpdateReportButton();
 
           return;
         }
@@ -2005,8 +2045,76 @@ if(!movedCount){
     toggleNotesVisibility();
   }
 
-  </script>
-</div>  <script src="./mzj-ui.js"></script>
+  
+  function showUpdateReportButton(){
+    let btn = document.getElementById('btnUpdateReport');
+    if(!btn){
+      btn = document.createElement('button');
+      btn.id = 'btnUpdateReport';
+      btn.className = 'btn btn-soft';
+      btn.style.marginTop = '8px';
+      btn.innerHTML = '<i class="fa-solid fa-file-lines"></i> عرض تقرير التحديث';
+      btn.onclick = openUpdateReport;
+      document.querySelector('.toast-wrap')?.appendChild(btn);
+    }
+  }
+
+  function openUpdateReport(){
+    if(!__lastUpdateReport){ showToast('لا يوجد تقرير متاح','info'); return; }
+    const rows = [];
+    __lastUpdateReport.updated.forEach(v=> rows.push({VIN:v, Status:'Updated'}));
+    __lastUpdateReport.notFound.forEach(v=> rows.push({VIN:v, Status:'Not Found'}));
+    __lastUpdateReport.skipped.forEach(v=> rows.push({VIN:v, Status:'Skipped'}));
+
+    // build CSV
+    let csv = 'VIN,Status\n';
+    rows.forEach(r=>{ csv += `"${r.VIN}","${r.Status}"\n`; });
+
+    const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'update_report.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+</script>
+</div>  <script src="./mzj-ui.js">
+  function showUpdateReportButton(){
+    let btn = document.getElementById('btnUpdateReport');
+    if(!btn){
+      btn = document.createElement('button');
+      btn.id = 'btnUpdateReport';
+      btn.className = 'btn btn-soft';
+      btn.style.marginTop = '8px';
+      btn.innerHTML = '<i class="fa-solid fa-file-lines"></i> عرض تقرير التحديث';
+      btn.onclick = openUpdateReport;
+      document.querySelector('.toast-wrap')?.appendChild(btn);
+    }
+  }
+
+  function openUpdateReport(){
+    if(!__lastUpdateReport){ showToast('لا يوجد تقرير متاح','info'); return; }
+    const rows = [];
+    __lastUpdateReport.updated.forEach(v=> rows.push({VIN:v, Status:'Updated'}));
+    __lastUpdateReport.notFound.forEach(v=> rows.push({VIN:v, Status:'Not Found'}));
+    __lastUpdateReport.skipped.forEach(v=> rows.push({VIN:v, Status:'Skipped'}));
+
+    // build CSV
+    let csv = 'VIN,Status\n';
+    rows.forEach(r=>{ csv += `"${r.VIN}","${r.Status}"\n`; });
+
+    const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'update_report.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+</script>
 
     </div>
   </main>

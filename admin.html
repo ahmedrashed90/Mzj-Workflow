@@ -1340,7 +1340,13 @@ if(idxVin===-1) throw new Error('ملف التحديث لازم يحتوي عم�
           const res = applyUpdateFromSheet(json, keyToCol, idxVin, selectedKeys);
           await persistAll();
           renderTable(); fillMoveLists(); updateRequirementBoxes();
-          showToast(`تم تحديث ${res.updated.length} | غير موجود ${res.notFound.length} | متجاهل ${res.skipped.length}`,'ok');
+          showToast(`✅ تم تحديث ${res.updated.length} رقم هيكل | ⛔ غير موجود ${res.notFound.length} | ⚠️ متجاهل ${res.skipped.length}`,'ok');
+
+          if(res.updated.length>0){
+            const sample = res.updated.slice(0,3).join(' , ');
+            showToast(`تم تحديث: ${sample}${res.updated.length>3?' ...':''}`,'info');
+          }
+
           return;
         }
 

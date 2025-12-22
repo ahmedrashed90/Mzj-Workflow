@@ -98,27 +98,9 @@
   .import-dropdown button:hover{background:#f9fafb}
 
   /* Modal */
-  .modal-backdrop{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.38);
-    display:none;
-    align-items:center;
-    justify-content:center;
-    z-index:9999;
-    padding:12px;
-  }
-  .modal-backdrop.show{display:flex;}
-  .modal{
-    background:#fff;
-    border-radius:16px;
-    box-shadow:0 24px 60px rgba(0,0,0,.18);
-    width:min(520px,92vw);
-    padding:16px;
-    border:1px solid var(--line);
-  }
-  .modal header{
-display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.38);display:none;align-items:center;justify-content:center;z-index:99999;padding:12px}
+  .modal{background:#fff;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.35);width:min(520px,92vw);padding:16px;border:1px solid var(--line)}
+  .modal header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
   .modal h3{margin:0;font-size:18px;color:var(--brown)}
   .modal .actions{display:flex;gap:8px;justify-content:flex-start;margin-top:12px}
 
@@ -222,30 +204,6 @@ display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
   .notes-col{
     display:none;
   }
-
-  /* ===== Force-center Update Modal ===== */
-  #updateModal{
-    position:fixed !important;
-    inset:0 !important;
-    padding:12px !important;
-    background:rgba(0,0,0,.38) !important;
-    display:none;
-    align-items:center !important;
-    justify-content:center !important;
-    z-index:99999 !important;
-  }
-  #updateModal.show,
-  #updateModal.open,
-  #updateModal.is-open,
-  #updateModal[aria-hidden="false"]{
-    display:flex !important;
-  }
-  #updateModal > .modal{
-    width:min(560px,92vw) !important;
-    max-height:82vh !important;
-    overflow:auto !important;
-  }
-
 </style>
 <style id="noFlash">
   html{background:#fff8ef;}
@@ -385,7 +343,7 @@ display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 <div class="import-dropdown" id="importDropdown">
 <button data-mode="replace"><i class="fa-solid fa-arrow-rotate-left"></i> استبدال كامل (مسح القديم + إضافة الجديد)</button>
 <button data-mode="append"><i class="fa-solid fa-plus"></i> إضافة فوق الحالي (بدون مسح)</button>
-<button data-mode="update"><i class="fa-solid fa-pen-to-square"></i> تحديث من الشيت (تعديل الموجود فقط)</button>
+<button data-mode="update"><i class="fa-solid fa-wrench"></i> تحديث من الشيت (تعديل الموجود فقط)</button>
 </div>
 </div>
 <input accept=".xlsx,.xls,.csv" id="fileImport" style="display:none" type="file"/>
@@ -705,10 +663,10 @@ display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 <button class="btn" data-close="variantModal">إلغاء</button>
 </div>
 </div>
-
+</div>
 
 <!-- تحديث من الشيت (اختيار أعمدة التحديث) -->
-<div class="modal-backdrop" id="updateModal">
+<div class="modal-backdrop" id="updateModal" aria-hidden="true">
   <div class="modal" role="dialog" aria-modal="true">
     <header>
       <h3>تحديث من الشيت</h3>
@@ -716,172 +674,22 @@ display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
     </header>
 
     <div style="margin-bottom:10px;color:#555;font-size:13px;line-height:1.7">
-      اختر الأعمدة اللي تحب تحدّثها. (الخلايا الفاضية ما تمسحش القديم)
+      اختر الأعمدة اللي تحب تحدّثها. (الخلايا الفاضية في الشيت ما تمسحش القيم القديمة)
     </div>
 
     <div id="updateFieldsBox" class="grid grid-2" style="gap:10px;margin:10px 0 14px 0"></div>
 
-    <div class="actions">
-      <button class="btn btn-primary" id="confirmUpdateFields"><i class="fa-solid fa-check"></i> تنفيذ التحديث</button>
-      <button class="btn" data-close="updateModal">إلغاء</button>
+    <div class="actions" style="justify-content:flex-end;flex-wrap:wrap">
+      <button class="btn btn-ghost" id="btnUpdateSelectAll" type="button"><i class="fa-solid fa-check-double"></i> تحديد الكل</button>
+      <button class="btn btn-primary" id="confirmUpdateFields" type="button"><i class="fa-solid fa-check"></i> تنفيذ</button>
     </div>
   </div>
 </div>
 
-
-</div>
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script type="module">
-  // ===== Modal helpers (fallback) =====
-  // mzj-ui.js usually provides these, but we add a safe fallback in case styles/handlers change.
-  window.____mzjModalLock = 0;
-  window.openModal = window.openModal || function(el){
-    if(!el) return;
-    el.classList.add('show');
-    el.style.display = 'flex';
-    window.____mzjModalLock++;
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
-  };
-  window.closeModalById = window.closeModalById || function(id){
-    const el = document.getElementById(id);
-    if(!el) return;
-    el.classList.remove('show');
-    el.classList.remove('open');
-    el.classList.remove('is-open');
-    el.setAttribute('aria-hidden','true');
-    el.style.display='none';
-    window.____mzjModalLock = Math.max(0, window.____mzjModalLock-1);
-    if(window.____mzjModalLock===0){
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-    }
-  };
-
-  // ===== Update modal (body-appended, fixed) =====
-  function ensureUpdateModal(){
-    let back = document.getElementById('mzjUpdateModalBackdrop');
-    if(back) return back;
-
-    back = document.createElement('div');
-    back.id = 'mzjUpdateModalBackdrop';
-    back.style.position = 'fixed';
-    back.style.inset = '0';
-    back.style.background = 'rgba(0,0,0,.38)';
-    back.style.display = 'none';
-    back.style.alignItems = 'center';
-    back.style.justifyContent = 'center';
-    back.style.zIndex = '99999';
-    back.style.padding = '12px';
-
-    const modal = document.createElement('div');
-    modal.className = 'mzj-update-modal';
-    modal.style.background = '#fff';
-    modal.style.borderRadius = '16px';
-    modal.style.boxShadow = '0 24px 60px rgba(0,0,0,.18)';
-    modal.style.width = 'min(560px,92vw)';
-    modal.style.maxHeight = '82vh';
-    modal.style.overflow = 'auto';
-    modal.style.padding = '16px';
-    modal.style.border = '1px solid var(--line)';
-
-    modal.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px">
-        <div style="font-weight:900;color:var(--brown);font-size:15px">تحديث من الشيت</div>
-        <button id="mzjUpdateModalClose" class="mzj-btn mzj-btn-ghost" style="height:40px;border-radius:12px;padding:0 12px">
-          <i class="fa-solid fa-xmark"></i> إغلاق
-        </button>
-      </div>
-      <div style="color:var(--muted);font-size:13px;margin-bottom:12px;line-height:1.6">
-        اختر الأعمدة اللي تحب تتحدّث. (الخلايا الفاضية في الشيت ما تمسحش القيم القديمة)
-      </div>
-      <div id="mzjUpdateColsWrap" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px"></div>
-      <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px">
-        <button id="mzjUpdateSelectAll" class="mzj-btn mzj-btn-soft" style="height:40px;border-radius:12px;padding:0 12px">
-          <i class="fa-solid fa-check-double"></i> تحديد الكل
-        </button>
-        <button id="mzjUpdateRun" class="mzj-btn" style="height:40px;border-radius:12px;padding:0 14px">
-          <i class="fa-solid fa-rotate"></i> تنفيذ التحديث
-        </button>
-      </div>
-    `;
-
-    back.appendChild(modal);
-    document.body.appendChild(back);
-
-    // close handlers
-    back.addEventListener('click', (e)=>{ if(e.target === back) hideUpdateModal(); });
-    modal.querySelector('#mzjUpdateModalClose').addEventListener('click', hideUpdateModal);
-    document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && back.style.display === 'flex') hideUpdateModal(); });
-
-    return back;
-  }
-
-  function showUpdateModal(columns, onRun){
-    const back = ensureUpdateModal();
-    const wrap = back.querySelector('#mzjUpdateColsWrap');
-    wrap.innerHTML = '';
-
-    // responsive 1-col on small screens
-    if(window.innerWidth < 460) wrap.style.gridTemplateColumns = '1fr';
-
-    // build checkboxes
-    const safeCols = (columns||[]).filter(Boolean);
-    safeCols.forEach((col, i)=>{
-      const id = `mzjUpdCol_${i}`;
-      const item = document.createElement('label');
-      item.setAttribute('for', id);
-      item.style.display = 'flex';
-      item.style.alignItems = 'center';
-      item.style.gap = '10px';
-      item.style.border = '1px solid var(--line)';
-      item.style.borderRadius = '14px';
-      item.style.padding = '10px 12px';
-      item.style.background = 'rgba(255,255,255,.65)';
-      item.style.cursor = 'pointer';
-
-      item.innerHTML = `
-        <input id="${id}" type="checkbox" data-col="${String(col).replace(/"/g,'&quot;')}" checked style="width:18px;height:18px;accent-color: rgb(62,36,32);" />
-        <div style="display:flex;flex-direction:column;gap:2px">
-          <div style="font-weight:900;color:var(--brown);font-size:13px">${col}</div>
-          <div style="color:var(--muted);font-size:12px">تحديث هذا الحقل</div>
-        </div>
-      `;
-      wrap.appendChild(item);
-    });
-
-    back.querySelector('#mzjUpdateSelectAll').onclick = ()=>{
-      back.querySelectorAll('input[type="checkbox"][data-col]').forEach(cb=> cb.checked = true);
-    };
-
-    back.querySelector('#mzjUpdateRun').onclick = ()=>{
-      const selected = [...back.querySelectorAll('input[type="checkbox"][data-col]')]
-        .filter(cb=>cb.checked)
-        .map(cb=>cb.getAttribute('data-col'));
-      if(!selected.length){
-        showToast('اختار عمود واحد على الأقل','warn');
-        return;
-      }
-      hideUpdateModal();
-      try{ onRun && onRun(selected); }catch(err){ console.error(err); showToast('خطأ في تنفيذ التحديث','danger'); }
-    };
-
-    back.style.display = 'flex';
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
-  }
-
-  function hideUpdateModal(){
-    const back = document.getElementById('mzjUpdateModalBackdrop');
-    if(back){
-      back.style.display = 'none';
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-    }
-  }
-
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
   import {getFirestore, doc, getDoc, setDoc, onSnapshot, collection, addDoc, serverTimestamp, updateDoc} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
@@ -1363,21 +1171,50 @@ btnLogin.addEventListener('click', async ()=>{
   });
 
   /* استيراد Excel */
+  let importMode=null; const VIN_HEADERS=["رقم الهيكل","VIN","الشاص","رقم الشاص","Chassis","Chassis No","Chassis Number","الهيكل","نوع الهيكل"];
+
+  // ===== Update-from-sheet helpers =====
+  function openModal(el){
+    if(!el) return;
+    el.classList.add('show');
+    el.setAttribute('aria-hidden','false');
+    el.style.display='flex';
+    // force center
+    el.style.alignItems='center';
+    el.style.justifyContent='center';
+    setTimeout(()=>{ const first = el.querySelector('input,select,textarea,button'); first?.focus(); }, 50);
+  }
+  function closeModalById(id){
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.classList.remove('show');
+    el.setAttribute('aria-hidden','true');
+    el.style.display='none';
+  }
+
+  function normalizeHeader(h){ return clean(h).toLowerCase(); }
+
   async function chooseUpdateFieldsFromHeader(header){
+    const modal = document.getElementById('updateModal');
+    const box   = document.getElementById('updateFieldsBox');
+    const btn   = document.getElementById('confirmUpdateFields');
+    const btnAll= document.getElementById('btnUpdateSelectAll');
+
+    // Map Arabic column labels to record keys (match your export)
     const FIELDS = [
-      {key:'car', label:'سيارة'},
-      {key:'variant', label:'البيان'},
-      {key:'dealer', label:'الوكيل'},
-      {key:'extColor', label:'اللون الخارجي'},
-      {key:'intColor', label:'اللون الداخلي'},
+      {key:'car',       label:'سيارة'},
+      {key:'variant',   label:'البيان'},
+      {key:'dealer',    label:'الوكيل'},
+      {key:'extColor',  label:'اللون الخارجي'},
+      {key:'intColor',  label:'اللون الداخلي'},
       {key:'modelYear', label:'موديل'},
-      {key:'plate', label:'اللوحة'},
-      {key:'location', label:'المكان'},
+      {key:'plate',     label:'اللوحة'},
+      {key:'location',  label:'المكان'},
       {key:'batchName', label:'اسم الدفعة'},
-      {key:'notes', label:'الملاحظات'}
+      {key:'notes',     label:'الملاحظات'}
     ];
+
     const present = FIELDS.filter(f => header.includes(f.label));
-    const box = document.getElementById('updateFieldsBox');
     box.innerHTML = present.map(f => `
       <label style="display:flex;gap:10px;align-items:center;border:1px solid var(--line);padding:10px 12px;border-radius:12px;background:#fff8ef">
         <input type="checkbox" checked data-key="${f.key}" style="width:18px;height:18px;accent-color: rgb(62,36,32);" />
@@ -1385,54 +1222,80 @@ btnLogin.addEventListener('click', async ()=>{
       </label>
     `).join('');
 
+    btnAll.onclick = ()=> box.querySelectorAll('input[type="checkbox"]').forEach(c=> c.checked=true);
+
     return await new Promise((resolve, reject)=>{
-      const modal = document.getElementById('updateModal');
-      const btn = document.getElementById('confirmUpdateFields');
-
       let done=false;
-      const cleanup=()=>{
-        btn.onclick=null;
-        modal.removeEventListener('click', onModalClick, true);
-      };
 
-      const onModalClick=(e)=>{
+      const onClick=(e)=>{
         const isBackdrop = e.target === modal;
         const isCloseBtn = e.target.closest('[data-close="updateModal"]');
         if(isBackdrop || isCloseBtn){
-          // لو المستخدم قفل المودال بدون تنفيذ
-          setTimeout(()=>{
-            if(!done){
-              done=true; cleanup();
-              reject(new Error('تم إلغاء التحديث'));
-            }
-          },0);
+          if(!done){ done=true; closeModalById('updateModal'); reject(new Error('تم إلغاء التحديث')); }
         }
       };
 
-      modal.addEventListener('click', onModalClick, true);
-      btn.onclick=()=>{
+      modal.addEventListener('click', onClick, true);
+
+      btn.onclick = ()=>{
         const selected=[...box.querySelectorAll('input[type="checkbox"]:checked')].map(x=>x.dataset.key);
         if(!selected.length){ showToast('اختر عمود واحد على الأقل للتحديث','info'); return; }
-        done=true; cleanup(); closeModalById('updateModal');
+        done=true;
+        modal.removeEventListener('click', onClick, true);
+        closeModalById('updateModal');
         resolve(selected);
       };
 
       showToast('اختر أعمدة التحديث','info');
-      // Open the built-in update modal
       openModal(modal);
-      // fallback force visible
-      modal.classList.add('show');
-      modal.style.display='flex';
     });
   }
 
+  function applyUpdateFromSheet(rows, idxMap, idxVin, selectedKeys){
+    const updated = [];
+    const notFound = [];
+    const skipped = [];
 
-  let importMode=null; const VIN_HEADERS=["رقم الهيكل","VIN","الشاص","رقم الشاص","Chassis","Chassis No","Chassis Number","الهيكل","نوع الهيكل"];
+    // Build quick vin -> index map
+    const map = new Map();
+    stock.forEach((r, i)=>{
+      const v = normalizeVin(r.vin||'');
+      if(v) map.set(v, i);
+    });
+
+    for(let i=1;i<rows.length;i++){
+      const row = rows[i];
+      if(!row || row.length===0) continue;
+
+      const rawVin = (idxVin!==-1 ? row[idxVin] : '') || '';
+      const vin = normalizeVin(rawVin);
+      if(!vin){ skipped.push(`#${i+1} VIN فارغ`); continue; }
+
+      const recIdx = map.get(vin);
+      if(recIdx === undefined){ notFound.push(vin); continue; }
+
+      const rec = stock[recIdx];
+      // update selected fields only if sheet cell not empty
+      selectedKeys.forEach(k=>{
+        const col = idxMap[k];
+        if(col === undefined || col === -1) return;
+        const val = (row[col] ?? '').toString().trim();
+        if(val === '') return; // don't overwrite with empty
+        if(k === 'vin') rec.vin = normalizeVin(val);
+        else rec[k] = val;
+      });
+
+      stock[recIdx] = rec;
+      updated.push(vin);
+    }
+
+    return {updated, notFound, skipped};
+  }
   btnImportMenu.addEventListener('click',()=>{importDropdown.style.display=importDropdown.style.display==='block'?'none':'block';});
   importDropdown.addEventListener('click',(e)=>{const btn=e.target.closest('button'); if(!btn) return; importMode=btn.getAttribute('data-mode'); importDropdown.style.display='none'; fileImport.click();});
   document.addEventListener('click',(e)=>{if(!e.target.closest('.import-menu')) importDropdown.style.display='none';});
   fileImport.addEventListener('change',(e)=>{
-    const file=e.target.files[0]; if(!file) return; showToast('جاري قراءة الملف...','info'); importDropdown.style.display='none'; if(!importMode){showToast('اختر وضع الاستيراد أولًا','info'); fileImport.value=''; return;}
+    const file=e.target.files[0]; if(!file) return; if(!importMode){showToast('اختر وضع الاستيراد أولًا','info'); fileImport.value=''; return;}
     const reader=new FileReader();
     reader.onload=async (evt)=>{
       try{
@@ -1447,19 +1310,34 @@ btnLogin.addEventListener('click', async ()=>{
           modelYear:colIndex("موديل"), plate:colIndex("اللوحة"), location:colIndex("المكان"),
           batchName:colIndex("اسم الدفعة"), notes:colIndex("الملاحظات")
         };
-        let idxVin=-1; for(const h of VIN_HEADERS){const i=header.indexOf(h); if(i!==-1){idxVin=i; break;}}
+        
+        // ===== Update mode: update existing cars only (by VIN) =====
+        if(importMode==='update'){
+          if(idxVin===-1) throw new Error('ملف التحديث لازم يحتوي عمود رقم الهيكل (VIN).');
+          const selectedKeys = await chooseUpdateFieldsFromHeader(header);
+          // Map keys to column indexes in sheet
+          const keyToCol = {
+            car: idxMap.car,
+            variant: idxMap.variant,
+            dealer: idxMap.dealer,
+            extColor: idxMap.extColor,
+            intColor: idxMap.intColor,
+            modelYear: idxMap.modelYear,
+            plate: idxMap.plate,
+            location: idxMap.location,
+            batchName: idxMap.batchName,
+            notes: idxMap.notes
+          };
+          const res = applyUpdateFromSheet(json, keyToCol, idxVin, selectedKeys);
+          await persistAll();
+          renderTable(); fillMoveLists(); updateRequirementBoxes();
+          showToast(`تم تحديث ${res.updated.length} | غير موجود ${res.notFound.length} | متجاهل ${res.skipped.length}`,'ok');
+          return;
+        }
 
         const mustHave=["سيارة","البيان","الوكيل","اللون الخارجي","اللون الداخلي","موديل","اللوحة","المكان","اسم الدفعة","الملاحظات"];
         const missing = mustHave.filter(n=> colIndex(n)===-1);
-
-        // وضع UPDATE: لا نحتاج كل الأعمدة — نحتاج VIN + عمود واحد على الأقل للتحديث
-        if(importMode==='update'){
-          if(idxVin===-1){ throw new Error('فشل التحديث — لازم عمود رقم الهيكل (VIN) موجود في الملف'); }
-          const present = mustHave.filter(n=> colIndex(n)!==-1);
-          if(!present.length){ throw new Error('فشل التحديث — لازم يكون في عمود واحد على الأقل للتحديث بجانب VIN'); }
-        } else {
-          if(missing.length){ throw new Error('فشل الاستيراد — أعمدة ناقصة: '+missing.join(', ')); }
-        }
+        if(missing.length){ throw new Error('فشل الاستيراد — أعمدة ناقصة: '+missing.join(', ')); }
 
         const imported=[];
         for(let i=1;i<json.length;i++){
@@ -1482,58 +1360,12 @@ btnLogin.addEventListener('click', async ()=>{
           const name=row[idxMap.car];
           if(name && !models.includes(name)){models.push(name); if(!variantsMap[name]) variantsMap[name]=[];}
         }
-        if(importMode==='replace'){
-          stock=[]; imported.forEach(r=>{r.id=nextId(); stock.push(r);});
-          showToast('تم الاستبدال الكامل بالبيانات الجديدة','ok');
-        }
-        else if(importMode==='append'){
-          imported.forEach(r=>{r.id=nextId(); stock.push(r);});
-          showToast('تمت الإضافة إلى البيانات الحالية','ok');
-        }
-        else if(importMode==='update'){
-          // اختر الأعمدة المراد تحديثها
-          const selectedFields = await chooseUpdateFieldsFromHeader(header);
-
-          // Map سريع حسب VIN
-          const mapByVin = new Map();
-          stock.forEach(s=>{ const k=normalizeVin(s.vin); if(k) mapByVin.set(k, s); });
-
-          let updated=0, notFound=0, skipped=0;
-          imported.forEach(r=>{
-            const k=normalizeVin(r.vin);
-            if(!k){ skipped++; return; }
-            const target = mapByVin.get(k);
-            if(!target){ notFound++; return; }
-
-            selectedFields.forEach(f=>{
-              const val = r[f];
-              if(val!=='' && val!==null && val!==undefined){
-                target[f]=val;
-              }
-            });
-            updated++;
-          });
-
-          // إعادة بناء models + variantsMap من stock
-          models=[]; variantsMap={};
-          stock.forEach(s=>{
-            const name=s.car;
-            if(name && !models.includes(name)) models.push(name);
-            if(name && !variantsMap[name]) variantsMap[name]=[];
-            const v=s.variant;
-            if(name && v){
-              const arr=variantsMap[name]||[];
-              if(!arr.includes(v)) arr.push(v);
-              variantsMap[name]=arr;
-            }
-          });
-
-          showToast(`تم تحديث ${updated} سيارة | غير موجود: ${notFound} | متجاهل: ${skipped}`,'ok');
-        }
-
+        if(importMode==='replace'){stock=[]; imported.forEach(r=>{r.id=nextId(); stock.push(r);});}
+        else {imported.forEach(r=>{r.id=nextId(); stock.push(r);});}
         await persistAll(); loadModelsIntoSelects(); if(carSelect.value) populateVariants(carSelect.value);
         renderTable(); fillMoveLists(); updateRequirementBoxes();
-}catch(err){ showToast((err?.message)||'فشل الاستيراد — راجع تنسيق الملف','err'); }
+        showToast(importMode==='replace'?'تم الاستبدال الكامل بالبيانات الجديدة':'تمت الإضافة إلى البيانات الحالية','ok');
+      }catch(err){ showToast((err?.message)||'فشل الاستيراد — راجع تنسيق الملف','err'); }
       finally{ fileImport.value=''; importMode=null; }
     };
     reader.readAsArrayBuffer(file);
@@ -2100,8 +1932,8 @@ if(!movedCount){
   btnClearTrack.addEventListener('click', ()=>{ trackVin.value=''; renderTrack(); });
 
   /* Modals helpers */
-  function openModal(el){ el.style.display='flex'; setTimeout(()=>{ const first = el.querySelector('input,select,textarea,button'); first?.focus(); }, 50); }
-  function closeModalById(id){ const el = document.getElementById(id); if(el) el.style.display='none'; }
+  function openModalLegacy(el){ el.style.display='flex'; setTimeout(()=>{ const first = el.querySelector('input,select,textarea,button'); first?.focus(); }, 50); }
+  function closeModalByIdLegacy(id){ const el = document.getElementById(id); if(el) el.style.display='none'; }
   document.addEventListener('click',(e)=>{
     const closeBtn = e.target.closest('[data-close]');
     if(closeBtn){ closeModalById(closeBtn.getAttribute('data-close')); }
@@ -2156,17 +1988,7 @@ if(!movedCount){
   }
 
   </script>
-</div>  <script src="./mzj-ui.js">
-  // ===== Update runner shim =====
-  function runUpdate(selectedCols){
-    // This function should be filled by the existing update logic below.
-    // If there is a global `applyUpdate` use it, otherwise call `window.__applyUpdateFromSheet`.
-    if(typeof applyUpdate === 'function') return applyUpdate(selectedCols);
-    if(typeof window.__applyUpdateFromSheet === 'function') return window.__applyUpdateFromSheet(selectedCols);
-    console.error('No update implementation found. Ensure update logic defines applyUpdate(...)');
-    showToast('منطق التحديث غير موجود داخل الصفحة','danger');
-  }
-</script>
+</div>  <script src="./mzj-ui.js"></script>
 
     </div>
   </main>

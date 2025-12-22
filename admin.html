@@ -222,6 +222,30 @@ display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
   .notes-col{
     display:none;
   }
+
+  /* ===== Force-center Update Modal ===== */
+  #updateModal{
+    position:fixed !important;
+    inset:0 !important;
+    padding:12px !important;
+    background:rgba(0,0,0,.38) !important;
+    display:none;
+    align-items:center !important;
+    justify-content:center !important;
+    z-index:99999 !important;
+  }
+  #updateModal.show,
+  #updateModal.open,
+  #updateModal.is-open,
+  #updateModal[aria-hidden="false"]{
+    display:flex !important;
+  }
+  #updateModal > .modal{
+    width:min(560px,92vw) !important;
+    max-height:82vh !important;
+    overflow:auto !important;
+  }
+
 </style>
 <style id="noFlash">
   html{background:#fff8ef;}
@@ -725,7 +749,10 @@ display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
     const el = document.getElementById(id);
     if(!el) return;
     el.classList.remove('show');
-    el.style.display = 'none';
+    el.classList.remove('open');
+    el.classList.remove('is-open');
+    el.setAttribute('aria-hidden','true');
+    el.style.display='none';
     window.____mzjModalLock = Math.max(0, window.____mzjModalLock-1);
     if(window.____mzjModalLock===0){
       document.documentElement.style.overflow = '';
@@ -1393,6 +1420,9 @@ btnLogin.addEventListener('click', async ()=>{
       showToast('اختر أعمدة التحديث','info');
       // Open the built-in update modal
       openModal(modal);
+      // fallback force visible
+      modal.classList.add('show');
+      modal.style.display='flex';
     });
   }
 

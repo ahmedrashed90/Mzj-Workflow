@@ -98,9 +98,27 @@
   .import-dropdown button:hover{background:#f9fafb}
 
   /* Modal */
-  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.38);display:none;align-items:center;justify-content:center;z-index:2000}
-  .modal{background:#fff;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.35);width:min(520px,92vw);padding:16px;border:1px solid var(--line)}
-  .modal header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .modal-backdrop{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.38);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:9999;
+    padding:12px;
+  }
+  .modal-backdrop.show{display:flex;}
+  .modal{
+    background:#fff;
+    border-radius:16px;
+    box-shadow:0 24px 60px rgba(0,0,0,.18);
+    width:min(520px,92vw);
+    padding:16px;
+    border:1px solid var(--line);
+  }
+  .modal header{
+display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
   .modal h3{margin:0;font-size:18px;color:var(--brown)}
   .modal .actions{display:flex;gap:8px;justify-content:flex-start;margin-top:12px}
 
@@ -692,6 +710,29 @@
 <div class="toast" id="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script type="module">
+  // ===== Modal helpers (fallback) =====
+  // mzj-ui.js usually provides these, but we add a safe fallback in case styles/handlers change.
+  window.____mzjModalLock = 0;
+  window.openModal = window.openModal || function(el){
+    if(!el) return;
+    el.classList.add('show');
+    el.style.display = 'flex';
+    window.____mzjModalLock++;
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+  };
+  window.closeModalById = window.closeModalById || function(id){
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.classList.remove('show');
+    el.style.display = 'none';
+    window.____mzjModalLock = Math.max(0, window.____mzjModalLock-1);
+    if(window.____mzjModalLock===0){
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    }
+  };
+
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
   import {getFirestore, doc, getDoc, setDoc, onSnapshot, collection, addDoc, serverTimestamp, updateDoc} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
@@ -1227,6 +1268,7 @@ btnLogin.addEventListener('click', async ()=>{
         resolve(selected);
       };
 
+      showToast('اختر أعمدة التحديث','info');
       openModal(modal);
     });
   }

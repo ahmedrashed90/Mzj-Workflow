@@ -23,12 +23,12 @@ import {
  *    أو وفّرها عالميًا قبل تحميل sales.js باسم window.firebaseConfig (لو عندك ملف config منفصل).
  */
 const firebaseConfig = window.firebaseConfig || {
-  apiKey: "PUT_YOUR_API_KEY",
-  authDomain: "PUT_YOUR_AUTH_DOMAIN",
-  projectId: "PUT_YOUR_PROJECT_ID",
-  storageBucket: "PUT_YOUR_STORAGE_BUCKET",
-  messagingSenderId: "PUT_YOUR_SENDER_ID",
-  appId: "PUT_YOUR_APP_ID"
+  apiKey: "AIzaSyCorGtT5_Z68jCtLODvqnv0Fb7QW5eR6MQ",
+      authDomain: "mzj-tracking.firebaseapp.com",
+      projectId: "mzj-tracking",
+      storageBucket: "mzj-tracking.firebasestorage.app",
+      messagingSenderId: "655452217491",
+      appId: "1:655452217491:web:9348d172c47bdd411fad66"
 };
 
 /**

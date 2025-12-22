@@ -1251,6 +1251,7 @@ btnLogin.addEventListener('click', async ()=>{
     });
   }
 
+  
   function applyUpdateFromSheet(rows, idxMap, idxVin, selectedKeys){
     const updated = [];
     const notFound = [];
@@ -1275,22 +1276,29 @@ btnLogin.addEventListener('click', async ()=>{
       if(recIdx === undefined){ notFound.push(vin); continue; }
 
       const rec = stock[recIdx];
-      // update selected fields only if sheet cell not empty
+      let changed = false;
+
+      // update selected fields only if sheet cell not empty AND value is different
       selectedKeys.forEach(k=>{
         const col = idxMap[k];
         if(col === undefined || col === -1) return;
         const val = (row[col] ?? '').toString().trim();
         if(val === '') return; // don't overwrite with empty
-        if(k === 'vin') rec.vin = normalizeVin(val);
-        else rec[k] = val;
+        if(rec[k] !== val){
+          rec[k] = val;
+          changed = true;
+        }
       });
 
-      stock[recIdx] = rec;
-      updated.push(vin);
+      if(changed){
+        stock[recIdx] = rec;
+        updated.push(vin);
+      }
     }
 
     return {updated, notFound, skipped};
   }
+
   btnImportMenu.addEventListener('click',()=>{importDropdown.style.display=importDropdown.style.display==='block'?'none':'block';});
   importDropdown.addEventListener('click',(e)=>{const btn=e.target.closest('button'); if(!btn) return; importMode=btn.getAttribute('data-mode'); importDropdown.style.display='none'; fileImport.click();});
   document.addEventListener('click',(e)=>{if(!e.target.closest('.import-menu')) importDropdown.style.display='none';});

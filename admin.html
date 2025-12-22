@@ -1391,8 +1391,8 @@ btnLogin.addEventListener('click', async ()=>{
       };
 
       showToast('اختر أعمدة التحديث','info');
-      // Force visible modal (body fixed)
-      showUpdateModal(cols, (selectedCols)=> runUpdate(selectedCols));
+      // Open the built-in update modal
+      openModal(modal);
     });
   }
 

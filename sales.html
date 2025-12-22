@@ -674,8 +674,11 @@
     const ERP_FIELDS = [
       "CustomerName","CustomerVAT","CustomerPhone","Branch","OrderDate","DeliveryDate","SalesPerson",
       "ItemNo","ItemType","ItemCategory","ItemModel","VIN","InteriorColor","ExteriorColor","Dealer",
-      "Qty","UnitPrice","ItemValue","TaxCode","TaxName","TaxRate","TaxValue",
-      "SubtotalExclVAT","RegistrationFee","SubtotalBeforeTax","TotalInclVAT","GrandTotal"
+      "Qty","UnitPrice","ItemValue",
+      "TaxCode","TaxName","TaxRate",
+      "CarTaxValue","CarSubtotalExclVAT",
+      "RegistrationFee","SubtotalBeforeTax",
+      "CarTotalInclVAT","GrandTotal"
     ];
 
     const app = initializeApp(firebaseConfig);
@@ -1322,7 +1325,14 @@ function clearErpTable() {
             let pc = num !== null ? (num <= 1 ? num * 100 : num) : 15;
             const pcStr = pc.toString().replace(/\.0+$/, "");
             val = pcStr + " %";
-          } else if (field === "TotalInclVAT" || field === "TaxValue" || field === "SubtotalExclVAT" || field === "RegistrationFee" || field === "SubtotalBeforeTax" || field === "GrandTotal") {
+          } else if (
+            field === "CarTotalInclVAT" ||
+            field === "CarTaxValue" ||
+            field === "CarSubtotalExclVAT" ||
+            field === "RegistrationFee" ||
+            field === "SubtotalBeforeTax" ||
+            field === "GrandTotal"
+          ) {
             const num = parseAmountFront(val);
             if (num !== null) {
               val = num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ر.س";

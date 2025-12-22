@@ -586,8 +586,11 @@
             <th>نوع الضريبة</th>
             <th>نسبة الضريبة</th>
             <th>قيمة الضريبة</th>
+            <th>إجمالي السيارة قبل الضريبة</th>
+            <th>رسوم التسجيل</th>
             <th>الإجمالي قبل الضريبة</th>
-            <th>الإجمالي شامل الضريبة</th>
+            <th>إجمالي السيارة شامل الضريبة</th>
+            <th>الإجمالي النهائي (شامل الضريبة + الرسوم)</th>
           </tr>
           </thead>
           <tbody id="erpBody">
@@ -670,7 +673,7 @@
     const ERP_FIELDS = [
       "CustomerName","CustomerVAT","CustomerPhone","Branch","OrderDate","DeliveryDate","SalesPerson",
       "ItemNo","ItemType","ItemCategory","ItemModel","VIN","InteriorColor","ExteriorColor","Dealer",
-      "Qty","UnitPrice","ItemValue","TaxCode","TaxName","TaxRate","TaxValue","SubtotalExclVAT","TotalInclVAT"
+      "Qty","UnitPrice","ItemValue","TaxCode","TaxName","TaxRate","TaxValue","SubtotalExclVAT","TotalInclVAT","RegistrationFee","SubtotalBeforeTax","GrandTotal"
     ];
 
     const app = initializeApp(firebaseConfig);

@@ -3,6 +3,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -673,7 +674,8 @@
     const ERP_FIELDS = [
       "CustomerName","CustomerVAT","CustomerPhone","Branch","OrderDate","DeliveryDate","SalesPerson",
       "ItemNo","ItemType","ItemCategory","ItemModel","VIN","InteriorColor","ExteriorColor","Dealer",
-      "Qty","UnitPrice","ItemValue","TaxCode","TaxName","TaxRate","TaxValue","SubtotalExclVAT","TotalInclVAT","RegistrationFee","SubtotalBeforeTax","GrandTotal"
+      "Qty","UnitPrice","ItemValue","TaxCode","TaxName","TaxRate","TaxValue",
+      "SubtotalExclVAT","RegistrationFee","SubtotalBeforeTax","TotalInclVAT","GrandTotal"
     ];
 
     const app = initializeApp(firebaseConfig);
@@ -765,8 +767,19 @@
       TaxName:         ["taxName","TaxName"],
       TaxRate:         ["taxRate","TaxRate"],
       TaxValue:        ["taxValue","TaxValue"],
-      SubtotalExclVAT: ["subtotalExclVAT","SubtotalExclVAT","subtotalExclVat"],
-      TotalInclVAT:    ["totalInclVAT","TotalInclVAT","totalInclVat"]
+
+      // ✅ Totals (new)
+      RegistrationFee:  ["registrationFee","RegistrationFee"],
+      SubtotalBeforeTax:["subtotalBeforeTax","SubtotalBeforeTax"],
+      GrandTotal:       ["grandTotal","GrandTotal"],
+
+      SubtotalExclVAT:  ["subtotalExclVAT","SubtotalExclVAT","subtotalExclVat"],
+      TotalInclVAT:     ["totalInclVAT","TotalInclVAT","totalInclVat"],
+
+      // ✅ Car totals aliases (some docs store these instead)
+      CarSubtotalExclVAT:["carSubtotalExclVAT","CarSubtotalExclVAT"],
+      CarTaxValue:       ["carTaxValue","CarTaxValue"],
+      CarTotalInclVAT:   ["carTotalInclVAT","CarTotalInclVAT"]
     };
 
     function buildCandidates(name) {
@@ -1309,7 +1322,7 @@ function clearErpTable() {
             let pc = num !== null ? (num <= 1 ? num * 100 : num) : 15;
             const pcStr = pc.toString().replace(/\.0+$/, "");
             val = pcStr + " %";
-          } else if (field === "TotalInclVAT" || field === "TaxValue" || field === "SubtotalExclVAT") {
+          } else if (field === "TotalInclVAT" || field === "TaxValue" || field === "SubtotalExclVAT" || field === "RegistrationFee" || field === "SubtotalBeforeTax" || field === "GrandTotal") {
             const num = parseAmountFront(val);
             if (num !== null) {
               val = num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ر.س";
@@ -1352,67 +1365,84 @@ function clearErpTable() {
       try{ refreshTrackingQr(); }catch(e){}
       currentItemNo = resolveItemNoForVin(currentVin, records);
 
-      // حساب إجمالي الطلب
+      
+      // حساب إجمالي الطلب (يدعم رسوم التسجيل + الإجمالي النهائي)
       const totalCars = records.length;
 
-      let orderSubtotal = parseAmountFront(
-        first.orderSubtotalExclVAT ||
-        first.orderSubtotalExclVat ||
-        first.orderSubtotal
-      );
+      // حاول تجيبها مباشرة من totals (أفضل مصدر)
+      let regFee = parseAmountFront(getFieldFlex("RegistrationFee", first));
+      let subtotalBeforeTax = parseAmountFront(getFieldFlex("SubtotalBeforeTax", first));
+      let grandTotal = parseAmountFront(getFieldFlex("GrandTotal", first));
 
-      let orderTotal = parseAmountFront(
-        first.orderTotalInclVAT ||
-        first.orderTotalInclVat ||
-        first.orderTotal
-      );
+      // Car-level totals (لو موجودة)
+      let carSubtotal = parseAmountFront(getFieldFlex("CarSubtotalExclVAT", first));
+      let carTax = parseAmountFront(getFieldFlex("CarTaxValue", first));
+      let carTotalIncl = parseAmountFront(getFieldFlex("CarTotalInclVAT", first));
 
+      // Fallback: اجمع من الصفوف لو القيم مش موجودة
       let subSum = 0;
-      let totalSum = 0;
+      let taxSum = 0;
+      let carInclSum = 0;
+
       records.forEach(rec => {
-        const subVal = parseAmountFront(
-          rec.subtotalExclVAT ||
-          rec.SubtotalExclVAT ||
-          getFieldFlex("SubtotalExclVAT", rec)
-        );
-        const totVal = parseAmountFront(
-          rec.totalInclVAT ||
-          rec.TotalInclVAT ||
-          getFieldFlex("TotalInclVAT", rec)
-        );
+        const subVal = parseAmountFront(getFieldFlex("SubtotalExclVAT", rec));
+        const taxVal = parseAmountFront(getFieldFlex("TaxValue", rec));
+        const inclVal = parseAmountFront(getFieldFlex("TotalInclVAT", rec));
+
         if (subVal !== null) subSum += subVal;
-        if (totVal !== null) totalSum += totVal;
+        if (taxVal !== null) taxSum += taxVal;
+        if (inclVal !== null) carInclSum += inclVal;
       });
 
-      if (orderSubtotal === null && subSum > 0) {
-        orderSubtotal = subSum;
+      if (carSubtotal === null && subSum > 0) carSubtotal = subSum;
+      if (carTax === null && taxSum > 0) carTax = taxSum;
+      if (carTotalIncl === null && carInclSum > 0) carTotalIncl = carInclSum;
+
+      if (regFee === null) regFee = 0;
+
+      // لو subtotalBeforeTax مش موجود: سيارات + رسوم التسجيل
+      if (subtotalBeforeTax === null && carSubtotal !== null) {
+        subtotalBeforeTax = Number((carSubtotal + regFee).toFixed(2));
       }
 
-      if (orderTotal === null && totalSum > 0) {
-        orderTotal = totalSum;
+      // لو grandTotal مش موجود: subtotalBeforeTax + ضريبة السيارات
+      if (grandTotal === null && subtotalBeforeTax !== null && carTax !== null) {
+        grandTotal = Number((subtotalBeforeTax + carTax).toFixed(2));
       }
 
-      if (orderSubtotal !== null && (orderTotal === null || orderTotal < 1000)) {
-        if (totalSum > 0) {
-          orderTotal = totalSum;
-        } else {
-          orderTotal = Math.round(orderSubtotal * 1.15 * 100) / 100;
-        }
-      }
+      // عرض بوكس الإجماليات
+      const hasAnything =
+        (carSubtotal !== null) ||
+        (regFee !== null && regFee !== 0) ||
+        (subtotalBeforeTax !== null) ||
+        (carTax !== null) ||
+        (grandTotal !== null);
 
-      if (orderSubtotal !== null || orderTotal !== null) {
+      if (hasAnything) {
         const parts = [];
         parts.push(`<span>عدد السيارات في الطلب: <strong>${totalCars}</strong></span>`);
-        if (orderSubtotal !== null) {
-          parts.push(
-            `<span>إجمالي قبل الضريبة: <strong>${orderSubtotal.toLocaleString('ar-SA',{minimumFractionDigits:2})} ر.س</strong></span>`
-          );
+
+        if (carSubtotal !== null) {
+          parts.push(`<span>إجمالي السيارة قبل الضريبة: <strong>${carSubtotal.toLocaleString('ar-SA',{minimumFractionDigits:2, maximumFractionDigits:2})} ر.س</strong></span>`);
         }
-        if (orderTotal !== null) {
-          parts.push(
-            `<span>إجمالي شامل الضريبة: <strong>${orderTotal.toLocaleString('ar-SA',{minimumFractionDigits:2})} ر.س</strong></span>`
-          );
+
+        // رسوم التسجيل (لو صفر نعرضها بردو لما تكون محسوبة)
+        if (regFee !== null) {
+          parts.push(`<span>رسوم التسجيل: <strong>${Number(regFee).toLocaleString('ar-SA',{minimumFractionDigits:2, maximumFractionDigits:2})} ر.س</strong></span>`);
         }
+
+        if (subtotalBeforeTax !== null) {
+          parts.push(`<span>الإجمالي قبل الضريبة: <strong>${subtotalBeforeTax.toLocaleString('ar-SA',{minimumFractionDigits:2, maximumFractionDigits:2})} ر.س</strong></span>`);
+        }
+
+        if (carTax !== null) {
+          parts.push(`<span>قيمة الضريبة: <strong>${carTax.toLocaleString('ar-SA',{minimumFractionDigits:2, maximumFractionDigits:2})} ر.س</strong></span>`);
+        }
+
+        if (grandTotal !== null) {
+          parts.push(`<span>الإجمالي النهائي: <strong>${grandTotal.toLocaleString('ar-SA',{minimumFractionDigits:2, maximumFractionDigits:2})} ر.س</strong></span>`);
+        }
+
         erpTotals.innerHTML = parts.join("");
         erpTotals.style.display = "flex";
       } else {
@@ -1420,6 +1450,7 @@ function clearErpTable() {
       }
 
       // تحميل مراحل التتبع للحالة الحالية
+
       loadTrackingForCurrentSelection();
       try{ refreshTrackingQr(); }catch(e){}
     }

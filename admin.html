@@ -733,6 +733,128 @@ display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
     }
   };
 
+  // ===== Update modal (body-appended, fixed) =====
+  function ensureUpdateModal(){
+    let back = document.getElementById('mzjUpdateModalBackdrop');
+    if(back) return back;
+
+    back = document.createElement('div');
+    back.id = 'mzjUpdateModalBackdrop';
+    back.style.position = 'fixed';
+    back.style.inset = '0';
+    back.style.background = 'rgba(0,0,0,.38)';
+    back.style.display = 'none';
+    back.style.alignItems = 'center';
+    back.style.justifyContent = 'center';
+    back.style.zIndex = '99999';
+    back.style.padding = '12px';
+
+    const modal = document.createElement('div');
+    modal.className = 'mzj-update-modal';
+    modal.style.background = '#fff';
+    modal.style.borderRadius = '16px';
+    modal.style.boxShadow = '0 24px 60px rgba(0,0,0,.18)';
+    modal.style.width = 'min(560px,92vw)';
+    modal.style.maxHeight = '82vh';
+    modal.style.overflow = 'auto';
+    modal.style.padding = '16px';
+    modal.style.border = '1px solid var(--line)';
+
+    modal.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px">
+        <div style="font-weight:900;color:var(--brown);font-size:15px">تحديث من الشيت</div>
+        <button id="mzjUpdateModalClose" class="mzj-btn mzj-btn-ghost" style="height:40px;border-radius:12px;padding:0 12px">
+          <i class="fa-solid fa-xmark"></i> إغلاق
+        </button>
+      </div>
+      <div style="color:var(--muted);font-size:13px;margin-bottom:12px;line-height:1.6">
+        اختر الأعمدة اللي تحب تتحدّث. (الخلايا الفاضية في الشيت ما تمسحش القيم القديمة)
+      </div>
+      <div id="mzjUpdateColsWrap" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px">
+        <button id="mzjUpdateSelectAll" class="mzj-btn mzj-btn-soft" style="height:40px;border-radius:12px;padding:0 12px">
+          <i class="fa-solid fa-check-double"></i> تحديد الكل
+        </button>
+        <button id="mzjUpdateRun" class="mzj-btn" style="height:40px;border-radius:12px;padding:0 14px">
+          <i class="fa-solid fa-rotate"></i> تنفيذ التحديث
+        </button>
+      </div>
+    `;
+
+    back.appendChild(modal);
+    document.body.appendChild(back);
+
+    // close handlers
+    back.addEventListener('click', (e)=>{ if(e.target === back) hideUpdateModal(); });
+    modal.querySelector('#mzjUpdateModalClose').addEventListener('click', hideUpdateModal);
+    document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && back.style.display === 'flex') hideUpdateModal(); });
+
+    return back;
+  }
+
+  function showUpdateModal(columns, onRun){
+    const back = ensureUpdateModal();
+    const wrap = back.querySelector('#mzjUpdateColsWrap');
+    wrap.innerHTML = '';
+
+    // responsive 1-col on small screens
+    if(window.innerWidth < 460) wrap.style.gridTemplateColumns = '1fr';
+
+    // build checkboxes
+    const safeCols = (columns||[]).filter(Boolean);
+    safeCols.forEach((col, i)=>{
+      const id = `mzjUpdCol_${i}`;
+      const item = document.createElement('label');
+      item.setAttribute('for', id);
+      item.style.display = 'flex';
+      item.style.alignItems = 'center';
+      item.style.gap = '10px';
+      item.style.border = '1px solid var(--line)';
+      item.style.borderRadius = '14px';
+      item.style.padding = '10px 12px';
+      item.style.background = 'rgba(255,255,255,.65)';
+      item.style.cursor = 'pointer';
+
+      item.innerHTML = `
+        <input id="${id}" type="checkbox" data-col="${String(col).replace(/"/g,'&quot;')}" checked style="width:18px;height:18px;accent-color: rgb(62,36,32);" />
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <div style="font-weight:900;color:var(--brown);font-size:13px">${col}</div>
+          <div style="color:var(--muted);font-size:12px">تحديث هذا الحقل</div>
+        </div>
+      `;
+      wrap.appendChild(item);
+    });
+
+    back.querySelector('#mzjUpdateSelectAll').onclick = ()=>{
+      back.querySelectorAll('input[type="checkbox"][data-col]').forEach(cb=> cb.checked = true);
+    };
+
+    back.querySelector('#mzjUpdateRun').onclick = ()=>{
+      const selected = [...back.querySelectorAll('input[type="checkbox"][data-col]')]
+        .filter(cb=>cb.checked)
+        .map(cb=>cb.getAttribute('data-col'));
+      if(!selected.length){
+        showToast('اختار عمود واحد على الأقل','warn');
+        return;
+      }
+      hideUpdateModal();
+      try{ onRun && onRun(selected); }catch(err){ console.error(err); showToast('خطأ في تنفيذ التحديث','danger'); }
+    };
+
+    back.style.display = 'flex';
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function hideUpdateModal(){
+    const back = document.getElementById('mzjUpdateModalBackdrop');
+    if(back){
+      back.style.display = 'none';
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    }
+  }
+
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
   import {getFirestore, doc, getDoc, setDoc, onSnapshot, collection, addDoc, serverTimestamp, updateDoc} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
@@ -1269,7 +1391,8 @@ btnLogin.addEventListener('click', async ()=>{
       };
 
       showToast('اختر أعمدة التحديث','info');
-      openModal(modal);
+      // Force visible modal (body fixed)
+      showUpdateModal(cols, (selectedCols)=> runUpdate(selectedCols));
     });
   }
 
@@ -2003,7 +2126,17 @@ if(!movedCount){
   }
 
   </script>
-</div>  <script src="./mzj-ui.js"></script>
+</div>  <script src="./mzj-ui.js">
+  // ===== Update runner shim =====
+  function runUpdate(selectedCols){
+    // This function should be filled by the existing update logic below.
+    // If there is a global `applyUpdate` use it, otherwise call `window.__applyUpdateFromSheet`.
+    if(typeof applyUpdate === 'function') return applyUpdate(selectedCols);
+    if(typeof window.__applyUpdateFromSheet === 'function') return window.__applyUpdateFromSheet(selectedCols);
+    console.error('No update implementation found. Ensure update logic defines applyUpdate(...)');
+    showToast('منطق التحديث غير موجود داخل الصفحة','danger');
+  }
+</script>
 
     </div>
   </main>

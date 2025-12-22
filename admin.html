@@ -2,6 +2,7 @@
 
 
 
+
 <!DOCTYPE html>
 
 <html dir="rtl" lang="ar">
@@ -342,6 +343,7 @@
 <div class="import-dropdown" id="importDropdown">
 <button data-mode="replace"><i class="fa-solid fa-arrow-rotate-left"></i> استبدال كامل (مسح القديم + إضافة الجديد)</button>
 <button data-mode="append"><i class="fa-solid fa-plus"></i> إضافة فوق الحالي (بدون مسح)</button>
+<button data-mode="update"><i class="fa-solid fa-pen-to-square"></i> تحديث من الشيت (تعديل الموجود فقط)</button>
 </div>
 </div>
 <input accept=".xlsx,.xls,.csv" id="fileImport" style="display:none" type="file"/>
@@ -661,6 +663,30 @@
 <button class="btn" data-close="variantModal">إلغاء</button>
 </div>
 </div>
+
+
+<!-- تحديث من الشيت (اختيار أعمدة التحديث) -->
+<div class="modal-backdrop" id="updateModal">
+  <div class="modal" role="dialog" aria-modal="true">
+    <header>
+      <h3>تحديث من الشيت</h3>
+      <button class="btn btn-ghost" data-close="updateModal"><i class="fa-solid fa-xmark"></i></button>
+    </header>
+
+    <div style="margin-bottom:10px;color:#555;font-size:13px;line-height:1.7">
+      اختر الأعمدة اللي تحب تحدّثها. (الخلايا الفاضية ما تمسحش القديم)
+    </div>
+
+    <div id="updateFieldsBox" class="grid grid-2" style="gap:10px;margin:10px 0 14px 0"></div>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="confirmUpdateFields"><i class="fa-solid fa-check"></i> تنفيذ التحديث</button>
+      <button class="btn" data-close="updateModal">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+
 </div>
 <!-- Toast -->
 <div class="toast" id="toast"></div>
@@ -1147,6 +1173,65 @@ btnLogin.addEventListener('click', async ()=>{
   });
 
   /* استيراد Excel */
+  async function chooseUpdateFieldsFromHeader(header){
+    const FIELDS = [
+      {key:'car', label:'سيارة'},
+      {key:'variant', label:'البيان'},
+      {key:'dealer', label:'الوكيل'},
+      {key:'extColor', label:'اللون الخارجي'},
+      {key:'intColor', label:'اللون الداخلي'},
+      {key:'modelYear', label:'موديل'},
+      {key:'plate', label:'اللوحة'},
+      {key:'location', label:'المكان'},
+      {key:'batchName', label:'اسم الدفعة'},
+      {key:'notes', label:'الملاحظات'}
+    ];
+    const present = FIELDS.filter(f => header.includes(f.label));
+    const box = document.getElementById('updateFieldsBox');
+    box.innerHTML = present.map(f => `
+      <label style="display:flex;gap:10px;align-items:center;border:1px solid var(--line);padding:10px 12px;border-radius:12px;background:#fff8ef">
+        <input type="checkbox" checked data-key="${f.key}" style="width:18px;height:18px;accent-color: rgb(62,36,32);" />
+        <span style="font-weight:800">${f.label}</span>
+      </label>
+    `).join('');
+
+    return await new Promise((resolve, reject)=>{
+      const modal = document.getElementById('updateModal');
+      const btn = document.getElementById('confirmUpdateFields');
+
+      let done=false;
+      const cleanup=()=>{
+        btn.onclick=null;
+        modal.removeEventListener('click', onModalClick, true);
+      };
+
+      const onModalClick=(e)=>{
+        const isBackdrop = e.target === modal;
+        const isCloseBtn = e.target.closest('[data-close="updateModal"]');
+        if(isBackdrop || isCloseBtn){
+          // لو المستخدم قفل المودال بدون تنفيذ
+          setTimeout(()=>{
+            if(!done){
+              done=true; cleanup();
+              reject(new Error('تم إلغاء التحديث'));
+            }
+          },0);
+        }
+      };
+
+      modal.addEventListener('click', onModalClick, true);
+      btn.onclick=()=>{
+        const selected=[...box.querySelectorAll('input[type="checkbox"]:checked')].map(x=>x.dataset.key);
+        if(!selected.length){ showToast('اختر عمود واحد على الأقل للتحديث','info'); return; }
+        done=true; cleanup(); closeModalById('updateModal');
+        resolve(selected);
+      };
+
+      openModal(modal);
+    });
+  }
+
+
   let importMode=null; const VIN_HEADERS=["رقم الهيكل","VIN","الشاص","رقم الشاص","Chassis","Chassis No","Chassis Number","الهيكل","نوع الهيكل"];
   btnImportMenu.addEventListener('click',()=>{importDropdown.style.display=importDropdown.style.display==='block'?'none':'block';});
   importDropdown.addEventListener('click',(e)=>{const btn=e.target.closest('button'); if(!btn) return; importMode=btn.getAttribute('data-mode'); importDropdown.style.display='none'; fileImport.click();});
@@ -1171,7 +1256,15 @@ btnLogin.addEventListener('click', async ()=>{
 
         const mustHave=["سيارة","البيان","الوكيل","اللون الخارجي","اللون الداخلي","موديل","اللوحة","المكان","اسم الدفعة","الملاحظات"];
         const missing = mustHave.filter(n=> colIndex(n)===-1);
-        if(missing.length){ throw new Error('فشل الاستيراد — أعمدة ناقصة: '+missing.join(', ')); }
+
+        // وضع UPDATE: لا نحتاج كل الأعمدة — نحتاج VIN + عمود واحد على الأقل للتحديث
+        if(importMode==='update'){
+          if(idxVin===-1){ throw new Error('فشل التحديث — لازم عمود رقم الهيكل (VIN) موجود في الملف'); }
+          const present = mustHave.filter(n=> colIndex(n)!==-1);
+          if(!present.length){ throw new Error('فشل التحديث — لازم يكون في عمود واحد على الأقل للتحديث بجانب VIN'); }
+        } else {
+          if(missing.length){ throw new Error('فشل الاستيراد — أعمدة ناقصة: '+missing.join(', ')); }
+        }
 
         const imported=[];
         for(let i=1;i<json.length;i++){
@@ -1194,12 +1287,58 @@ btnLogin.addEventListener('click', async ()=>{
           const name=row[idxMap.car];
           if(name && !models.includes(name)){models.push(name); if(!variantsMap[name]) variantsMap[name]=[];}
         }
-        if(importMode==='replace'){stock=[]; imported.forEach(r=>{r.id=nextId(); stock.push(r);});}
-        else {imported.forEach(r=>{r.id=nextId(); stock.push(r);});}
+        if(importMode==='replace'){
+          stock=[]; imported.forEach(r=>{r.id=nextId(); stock.push(r);});
+          showToast('تم الاستبدال الكامل بالبيانات الجديدة','ok');
+        }
+        else if(importMode==='append'){
+          imported.forEach(r=>{r.id=nextId(); stock.push(r);});
+          showToast('تمت الإضافة إلى البيانات الحالية','ok');
+        }
+        else if(importMode==='update'){
+          // اختر الأعمدة المراد تحديثها
+          const selectedFields = await chooseUpdateFieldsFromHeader(header);
+
+          // Map سريع حسب VIN
+          const mapByVin = new Map();
+          stock.forEach(s=>{ const k=normalizeVin(s.vin); if(k) mapByVin.set(k, s); });
+
+          let updated=0, notFound=0, skipped=0;
+          imported.forEach(r=>{
+            const k=normalizeVin(r.vin);
+            if(!k){ skipped++; return; }
+            const target = mapByVin.get(k);
+            if(!target){ notFound++; return; }
+
+            selectedFields.forEach(f=>{
+              const val = r[f];
+              if(val!=='' && val!==null && val!==undefined){
+                target[f]=val;
+              }
+            });
+            updated++;
+          });
+
+          // إعادة بناء models + variantsMap من stock
+          models=[]; variantsMap={};
+          stock.forEach(s=>{
+            const name=s.car;
+            if(name && !models.includes(name)) models.push(name);
+            if(name && !variantsMap[name]) variantsMap[name]=[];
+            const v=s.variant;
+            if(name && v){
+              const arr=variantsMap[name]||[];
+              if(!arr.includes(v)) arr.push(v);
+              variantsMap[name]=arr;
+            }
+          });
+
+          showToast(`تم تحديث ${updated} سيارة | غير موجود: ${notFound} | متجاهل: ${skipped}`,'ok');
+        }
+
         await persistAll(); loadModelsIntoSelects(); if(carSelect.value) populateVariants(carSelect.value);
         renderTable(); fillMoveLists(); updateRequirementBoxes();
-        showToast(importMode==='replace'?'تم الاستبدال الكامل بالبيانات الجديدة':'تمت الإضافة إلى البيانات الحالية','ok');
-      }catch(err){ showToast((err?.message)||'فشل الاستيراد — راجع تنسيق الملف','err'); }
+}catch(err){ showToast((err?.message)||'فشل الاستيراد — راجع تنسيق الملف','err'); }
       finally{ fileImport.value=''; importMode=null; }
     };
     reader.readAsArrayBuffer(file);

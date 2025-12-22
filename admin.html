@@ -98,7 +98,7 @@
   .import-dropdown button:hover{background:#f9fafb}
 
   /* Modal */
-  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.38);display:none;align-items:center;justify-content:center;z-index:50}
+  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.38);display:none;align-items:center;justify-content:center;z-index:2000}
   .modal{background:#fff;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.35);width:min(520px,92vw);padding:16px;border:1px solid var(--line)}
   .modal header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
   .modal h3{margin:0;font-size:18px;color:var(--brown)}
@@ -1237,7 +1237,7 @@ btnLogin.addEventListener('click', async ()=>{
   importDropdown.addEventListener('click',(e)=>{const btn=e.target.closest('button'); if(!btn) return; importMode=btn.getAttribute('data-mode'); importDropdown.style.display='none'; fileImport.click();});
   document.addEventListener('click',(e)=>{if(!e.target.closest('.import-menu')) importDropdown.style.display='none';});
   fileImport.addEventListener('change',(e)=>{
-    const file=e.target.files[0]; if(!file) return; if(!importMode){showToast('اختر وضع الاستيراد أولًا','info'); fileImport.value=''; return;}
+    const file=e.target.files[0]; if(!file) return; showToast('جاري قراءة الملف...','info'); importDropdown.style.display='none'; if(!importMode){showToast('اختر وضع الاستيراد أولًا','info'); fileImport.value=''; return;}
     const reader=new FileReader();
     reader.onload=async (evt)=>{
       try{

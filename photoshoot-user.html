@@ -1127,6 +1127,10 @@ async function deleteRequestFromState(requestId, kind){
   const ROLE_IDARI   = 'اداري';
   const ROLE_BRANCH  = 'مدراء فروع';
 
+  // 🔒 التصوير مسموح لهذا الإيميل فقط + الإدارة
+  const SHOOT_ALLOWED_EMAIL = 'an9036663@gmail.com';
+
+
   // الدور الحالي للمستخدم
   let currentUserRole = null;
 
@@ -1271,6 +1275,48 @@ function myRole(){ return userProfile ? (userProfile.role||"") : ""; }
 function myLocations(){ return (userProfile && Array.isArray(userProfile.locations)) ? userProfile.locations : []; }
 function isAdmin(){ return myRole()==="الادارة"; }
 function isIdari(){ return myRole()==="اداري"; }
+
+function canCreateShoot(){
+  // التصوير: الإدارة + الإيميل المحدد فقط
+  return isAdmin() || (myEmail() === SHOOT_ALLOWED_EMAIL);
+}
+
+function enforceReqTypeOptions(){
+  // إخفاء خيارات التصوير من الـ dropdown الرئيسي لو المستخدم غير مصرح
+  if(!reqType) return;
+  const optShoot = reqType.querySelector('option[value="shoot"]');
+  const optAuto  = reqType.querySelector('option[value="auto"]');
+
+  if(!canCreateShoot()){
+    if(optShoot) optShoot.remove();
+    // لو كان مختار تصوير قبل كده لأي سبب
+    if(reqType.value === 'shoot'){
+      reqType.value = optAuto ? 'auto' : 'move';
+    }
+  }
+}
+
+function enforceRowKindOptions(tr){
+  if(!tr) return;
+  const sel = tr.querySelector('.req-kind');
+  if(!sel) return;
+
+  if(!canCreateShoot()){
+    const shootOpt = sel.querySelector('option[value="shoot"]');
+    if(shootOpt) shootOpt.remove();
+    // لو الصف كان تصوير، حوّله نقل
+    if(sel.value === 'shoot') sel.value = 'move';
+  }
+}
+
+function applyShootUIRestrictions(){
+  // تطبيق القيود على كل واجهة الإنشاء
+  enforceReqTypeOptions();
+  Array.from(reqRowsBody.querySelectorAll('tr')).forEach(enforceRowKindOptions);
+  updatePlaceLabelsAll();
+  updatePlaceHeader();
+}
+
 function includesLoc(loc){ return myLocations().includes(loc); }
 function fmtTs(ts){
   if(!ts) return "—";
@@ -1286,86 +1332,6 @@ function isCreator(req){
   return em && em === myEmail();
 }
 
-
-// ===== Create Permissions =====
-function canCreateShoot(){
-  return isAdmin() || (myEmail() === PHOTOSHOOT_ALLOWED_EMAIL);
-}
-function canCreateMove(){
-  return isAdmin() || isIdari();
-}
-function applyCreatePermissionsToRow(tr){
-  if(!tr) return;
-  const kindSel = tr.querySelector('.req-kind');
-  const placeSel = tr.querySelector('.req-place');
-  if(!kindSel || !placeSel) return;
-
-  // Remove/disable options based on permissions
-  const canShoot = canCreateShoot();
-  const canMove  = canCreateMove();
-
-  // Disable the whole select if user can't create either
-  if(!canShoot && !canMove){
-    kindSel.disabled = true;
-    placeSel.disabled = true;
-    return;
-  }
-
-  // If can't shoot: remove/disable shoot option
-  const shootOpt = kindSel.querySelector('option[value="shoot"]');
-  if(shootOpt){
-    shootOpt.disabled = !canShoot;
-  }
-
-  // If can't move: remove/disable move option
-  const moveOpt = kindSel.querySelector('option[value="move"]');
-  if(moveOpt){
-    moveOpt.disabled = !canMove;
-  }
-
-  // If current selection becomes invalid, force to allowed one
-  if(kindSel.value === 'shoot' && !canShoot){
-    kindSel.value = canMove ? 'move' : 'shoot';
-  }
-  if(kindSel.value === 'move' && !canMove){
-    kindSel.value = canShoot ? 'shoot' : 'move';
-  }
-
-  updatePlaceLabelForRow(tr);
-  updatePlaceHeader();
-  applyCreatePermissionsToRow(tr);
-}
-function applyCreatePermissionsToUI(){
-  // Disable submit if no permission for any kind
-  const canShoot = canCreateShoot();
-  const canMove  = canCreateMove();
-
-  // Toggle reqType options
-  const optShoot = reqType.querySelector('option[value="shoot"]');
-  const optMove  = reqType.querySelector('option[value="move"]');
-  if(optShoot) optShoot.disabled = !canShoot;
-  if(optMove)  optMove.disabled  = !canMove;
-
-  if(reqType.value === 'shoot' && !canShoot) reqType.value = canMove ? 'move' : 'auto';
-  if(reqType.value === 'move' && !canMove) reqType.value = canShoot ? 'shoot' : 'auto';
-
-  if(!canShoot && !canMove){
-    btnSubmit.disabled = true;
-    btnSubmit.title = 'غير مصرح لك بإنشاء طلبات';
-    btnAddRow.disabled = true;
-    btnResetRows.disabled = true;
-    reqType.disabled = true;
-    return;
-  }
-
-  btnSubmit.disabled = false;
-  btnSubmit.title = '';
-  btnAddRow.disabled = false;
-  btnResetRows.disabled = false;
-  reqType.disabled = false;
-
-  Array.from(reqRowsBody.querySelectorAll('tr')).forEach(applyCreatePermissionsToRow);
-}
 
 function canDeleteRequest(req){
   if(isAdmin()) return true;
@@ -1399,7 +1365,7 @@ try{
   }
 }
 
-function rowSourcePlace(r){ return r.fromLocation || r.location || ""; }
+function rowSourcePlace(r){ return r.location || r.fromLocation || ""; }
 function rowDestPlace(r){
   if(r.kind==="shoot") return r.shootPlace || "";
   return r.toLocation || "";
@@ -1479,35 +1445,28 @@ function updatePlaceLabelsAll(){
 /* =======================
    Create Request (8 rows)
 ======================= */
-const FIXED_LOCATIONS = [
+const SHOOT_PLACES = [
   "الوكالة : المخزون المتاح",
   "الوكالة : سيارات بها ملاحظات",
   "الوكالة : مباع تحت التسليم",
   "الوكالة : مباع تم التسليم",
-
   "المستودع : المخزون المتاح",
   "المستودع : سيارات بها ملاحظات",
   "المستودع : مباع تحت التسليم",
   "المستودع : مباع تم التسليم",
-
   "فرع 1 الصالة : المخزون المتاح",
   "فرع 1 الصالة : سيارات بها ملاحظات",
   "فرع 1 الصالة : مباع تحت التسليم",
   "فرع 1 الصالة : مباع تم التسليم",
-
   "فرع 2 الملتقى : المخزون المتاح",
   "فرع 2 الملتقى : سيارات بها ملاحظات",
   "فرع 2 الملتقى : مباع تحت التسليم",
   "فرع 2 الملتقى : مباع تم التسليم",
-
   "فرع 3 القادسية : المخزون المتاح",
   "فرع 3 القادسية : سيارات بها ملاحظات",
   "فرع 3 القادسية : مباع تحت التسليم",
   "فرع 3 القادسية : مباع تم التسليم"
 ];
-
-const PHOTOSHOOT_ALLOWED_EMAIL = "an9036663@gmail.com";
-
 
 function renumberRows(){
   Array.from(reqRowsBody.querySelectorAll('tr')).forEach((tr, idx)=>{
@@ -1585,7 +1544,7 @@ function addFormRow(prefill={}){
         <label class="req-place-label">مكان التصوير</label>
         <select class="small-input req-place">
           <option value="">— اختر —</option>
-          ${FIXED_LOCATIONS.map(p=>`<option value="${p}">${p}</option>`).join("")}
+          ${SHOOT_PLACES.map(p=>`<option value="${p}">${p}</option>`).join("")}
         </select>
       </div>
     </td>
@@ -1605,6 +1564,8 @@ function addFormRow(prefill={}){
     </td>
 `;
   reqRowsBody.appendChild(tr);
+  // 🔒 إخفاء خيار التصوير لغير المصرح لهم
+  enforceRowKindOptions(tr);
   // ضبط عنوان المكان داخل الصف حسب نوع الطلب
   updatePlaceLabelForRow(tr);
   updatePlaceHeader();
@@ -1624,18 +1585,12 @@ function buildFormRows(){
   // default: 1 row only
   reqRowsBody.innerHTML='';
   addFormRow();
-  applyCreatePermissionsToUI();
 }
 
 btnAddRow.addEventListener('click', ()=>addFormRow());
-btnResetRows.addEventListener('click', buildFormRows);
+btnResetRows.addEventListener('click', ()=>{ buildFormRows(); applyShootUIRestrictions(); });
 reqRowsBody.addEventListener('change', (e)=>{
-  const tr = e.target.closest('tr');
-  if(e.target.closest('.req-kind')){
-    updatePlaceHeader();
-    updatePlaceLabelForRow(tr);
-    applyCreatePermissionsToRow(tr);
-  }
+  if(e.target.closest('.req-kind')){ updatePlaceHeader(); updatePlaceLabelForRow(e.target.closest('tr')); }
 });
 
 // Remove row (or clear if it's the last row)
@@ -1705,7 +1660,6 @@ function collectRows(){
     rows.push({
       vin, kind, car, variant, extColor, intColor, modelYear,
       location,
-      fromLocation: location,
       shootPlace: kind==='shoot' ? place : "",
       toLocation: kind==='move' ? place : "",
       note,
@@ -1742,17 +1696,16 @@ btnSubmit.addEventListener('click', async ()=>{
     return;
   }
 
-  // Permission enforcement
-  const canShoot = canCreateShoot();
-  const canMove  = canCreateMove();
-  const hasShoot = rows.some(r=>r.kind==='shoot');
-  const hasMove  = rows.some(r=>r.kind==='move');
-  if(hasShoot && !canShoot){
-    alert("غير مصرح لك بإنشاء طلب تصوير.");
+  // 🔒 قيود الصلاحيات (إنشاء الطلب)
+  const hasShoot = rows.some(r => r.kind === 'shoot');
+  if (hasShoot && !canCreateShoot()){
+    alert("غير مصرح لك بإنشاء طلبات تصوير.");
     return;
   }
-  if(hasMove && !canMove){
-    alert("غير مصرح لك بإنشاء طلب نقل.");
+
+  const hasMove = rows.some(r => r.kind === 'move');
+  if (hasMove && !(isAdmin() || isIdari())){
+    alert("طلبات النقل متاحة للإداري فقط.");
     return;
   }
   // Ensure place selected for each row
@@ -1801,6 +1754,7 @@ btnSubmit.addEventListener('click', async ()=>{
 
     alert("تم إنشاء الطلب ✅");
     buildFormRows();
+  applyShootUIRestrictions();
     showInner('manage');
   }catch(e){
     console.error(e);
@@ -1918,7 +1872,7 @@ function renderRowsTable(){
       sel.style.minWidth='200px';
 
       const current = (row.kind==='shoot') ? (row.shootPlace||"") : (row.toLocation||"");
-      const opts = Array.from(new Set([current, ...FIXED_LOCATIONS, ...myLocations()])).filter(Boolean);
+      const opts = Array.from(new Set([current, ...SHOOT_PLACES, ...myLocations()])).filter(Boolean);
 
       opts.forEach(o=>{
         const op=document.createElement('option');
@@ -1975,10 +1929,7 @@ async function applyStep(stepNo){
 // تغيير المكان يتم فقط عند "تم استلام السيارة" (المرحلة 3)
     if(stepNo===3){
       const newLoc = rowDestPlace(row);
-      // نقل فقط: ثبت المكان الجديد في صف الطلب (مع الحفاظ على fromLocation للعرض)
-      if(newLoc && (row.kind||'') === 'move'){
-        batch.set(rowRef, { location: newLoc }, { merge:true });
-      }
+      if(newLoc) batch.set(rowRef, { location: newLoc }, { merge:true });
     }
   });
 

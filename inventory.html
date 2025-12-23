@@ -1174,11 +1174,19 @@ const locs = uniq(stock.map(r=> r.location || 'غير محدد')).sort((a,b)=> a
     });
   }
 
-  function renderSummary(filteredRows){
-  // استبعاد مباع تم التسليم
-  const availableRows = (filteredRows || []).filter(r =>
-    !String(r.location || '').includes('مباع تم التسليم')
-  );
+ function renderSummary(filteredRows){
+  const availableRows = (filteredRows || []).filter(r => {
+    const loc = String(r.location || '');
+    return !loc.includes('مباع تم التسليم') && !loc.includes('مباع تحت التسليم');
+  });
+
+  totalCount.textContent = availableRows.length.toLocaleString('ar-SA');
+
+  placesCount.textContent = new Set(
+    availableRows.map(r => clean(r.location || 'غير محدد'))
+  ).size.toLocaleString('ar-SA');
+}
+
 
   totalCount.textContent = availableRows.length.toLocaleString('ar-SA');
 

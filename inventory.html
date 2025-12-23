@@ -701,7 +701,7 @@
         <div class="stat">
           <i class="fa-solid fa-car"></i>
           <div>
-            <div class="stat-title">إجمالي السيارات (بعد الفلاتر)</div>
+            <div class="stat-title">إجمالي السيارات بدون مباع تحت التسليم او تم التسليم</div>
             <div class="stat-num" id="totalCount">0</div>
           </div>
         </div>
@@ -1179,6 +1179,13 @@ const locs = uniq(stock.map(r=> r.location || 'غير محدد')).sort((a,b)=> a
     const loc = String(r.location || '');
     return !loc.includes('مباع تم التسليم') && !loc.includes('مباع تحت التسليم');
   });
+
+  totalCount.textContent = availableRows.length.toLocaleString('ar-SA');
+
+  placesCount.textContent = new Set(
+    availableRows.map(r => clean(r.location || 'غير محدد'))
+  ).size.toLocaleString('ar-SA');
+}
 
   totalCount.textContent = availableRows.length.toLocaleString('ar-SA');
 

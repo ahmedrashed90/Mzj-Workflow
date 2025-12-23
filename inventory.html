@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl" data-theme="light">
 <head>
@@ -701,7 +702,7 @@
         <div class="stat">
           <i class="fa-solid fa-car"></i>
           <div>
-            <div class="stat-title">إجمالي السيارات بدون مباع تحت التسليم او تم التسليم</div>
+            <div class="stat-title">إجمالي السيارات بدون تحت التسليم - تم التسليم</div>
             <div class="stat-num" id="totalCount">0</div>
           </div>
         </div>
@@ -1174,34 +1175,17 @@ const locs = uniq(stock.map(r=> r.location || 'غير محدد')).sort((a,b)=> a
     });
   }
 
- function renderSummary(filteredRows){
-  const availableRows = (filteredRows || []).filter(r => {
-    const loc = String(r.location || '');
-    return !loc.includes('مباع تم التسليم') && !loc.includes('مباع تحت التسليم');
-  });
+  function renderSummary(filteredRows){
+    // إجمالي السيارات (بعد الفلاتر) — استبعاد: مباع تم التسليم + مباع تحت التسليم
+    const availableRows = (filteredRows || []).filter(r=>{
+      const loc = String(r.location || '');
+      return !loc.includes('مباع تم التسليم') && !loc.includes('مباع تحت التسليم');
+    });
 
-  totalCount.textContent = availableRows.length.toLocaleString('ar-SA');
-
-  placesCount.textContent = new Set(
-    availableRows.map(r => clean(r.location || 'غير محدد'))
-  ).size.toLocaleString('ar-SA');
-}
-
-  totalCount.textContent = availableRows.length.toLocaleString('ar-SA');
-
-  placesCount.textContent = new Set(
-    availableRows.map(r => clean(r.location || 'غير محدد'))
-  ).size.toLocaleString('ar-SA');
-}
-
-
-  totalCount.textContent = availableRows.length.toLocaleString('ar-SA');
-
-  placesCount.textContent = new Set(
-    availableRows.map(r => clean(r.location || 'غير محدد'))
-  ).size.toLocaleString('ar-SA');
-}
-
+    // Like admin: totals from filtered rows (after exclusion)
+    totalCount.textContent  = (availableRows.length||0).toLocaleString('ar-SA');
+    placesCount.textContent = new Set((availableRows||[]).map(r=> clean(r.location||'غير محدد'))).size.toLocaleString('ar-SA');
+  }
 
   function renderTable(filteredRows){
     tb.innerHTML = '';

@@ -1421,7 +1421,13 @@ function clearErpTable() {
       // ✅ نحسب إجماليات السيارات من السطور (أفضل مصدر ثابت)
       let carsSubtotal = 0; // قبل الضريبة
       let carsTax      = 0; // قيمة الضريبة
-      let carsTotal    = 0; // شامل الضريبة
+      let carsTotal    = 0; // شامل الضريبة (سيارات فقط بدون رسوم التسجيل)
+
+      // ملاحظة مهمة:
+      // بعض ملفات الـ ERP تكرر TotalInclVAT (إجمالي الطلب) داخل كل سطر عند وجود أكثر من هيكل.
+      // لذلك لا نجمع TotalInclVAT بشكل أعمى. نستخدم Subtotal+Tax كمصدر أساسي،
+      // ونتعامل مع TotalInclVAT بحذر (تجميعي فقط لو كان مختلفًا لكل سطر).
+      const totVals = [];
 
       records.forEach(rec => {
         const subVal = parseAmountFront(getFieldFlex("SubtotalExclVAT", rec));
@@ -1430,8 +1436,21 @@ function clearErpTable() {
 
         if (subVal !== null) carsSubtotal += subVal;
         if (taxVal !== null) carsTax      += taxVal;
-        if (totVal !== null) carsTotal    += totVal;
+
+        if (totVal !== null && totVal > 0) totVals.push(totVal);
       });
+
+      // لو TotalInclVAT موجود:
+      // - لو قيمة واحدة مكررة مع تعدد السطور => اعتبرها إجمالي الطلب (لا تجمعها)
+      // - لو قيم متعددة مختلفة => اجمعها (يعني TotalInclVAT لكل سطر فعلاً)
+      if (totVals.length) {
+        const uniq = Array.from(new Set(totVals.map(v => Number(v).toFixed(2))));
+        if (uniq.length === 1 && totVals.length > 1) {
+          carsTotal = parseFloat(uniq[0]); // إجمالي الطلب (سيارات فقط) مكرر داخل السطور
+        } else {
+          carsTotal = totVals.reduce((a, b) => a + b, 0); // إجمالي لكل سطر
+        }
+      }
 
       // ✅ لو السطور ما فيها إجماليات (طلبات قديمة/بدون أعمدة Y/Z) خُدها مرة واحدة من الهيدر
       if (carsSubtotal === 0 && carsTax === 0 && carsTotal === 0) {

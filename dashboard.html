@@ -7,6 +7,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -934,11 +935,36 @@ $('#btnLogin').addEventListener('click', async ()=>{
         };
       }));
 
+      // ===== Deduplicate by orderNo (merge multiple VIN/items under same order) =====
+      const uniqueMap = new Map();
       results.forEach(o=>{
-        if(o.doneCount === 0) notStarted++;
-        else if(o.doneCount >= STAGES_COUNT) completed++;
-        else inProgress++;
+        const key = String(o.orderNo||'').trim() || String(o._id||'').trim();
+        if(!uniqueMap.has(key)){
+          uniqueMap.set(key, { ...o });
+        }else{
+          const prev = uniqueMap.get(key);
+
+          // Fill missing basics
+          if(!prev.vin && o.vin) prev.vin = o.vin;
+          if(!prev.phone && o.phone) prev.phone = o.phone;
+          if(!prev.branch && o.branch) prev.branch = o.branch;
+          if(!prev.customerName && o.customerName) prev.customerName = o.customerName;
+
+          // Keep the best progress
+          prev.doneCount = Math.max(Number(prev.doneCount||0), Number(o.doneCount||0));
+          prev.lastStage = Math.max(Number(prev.lastStage||0), Number(o.lastStage||0));
+          prev.lastStageLabel = prev.lastStage ? (prev.lastStage + ' — ' + stageLabel(prev.lastStage)) : '—';
+
+          // Update status
+          let status = 'تحت المتابعة';
+          if(prev.doneCount === 0) status = 'لم تبدأ';
+          else if(prev.doneCount >= STAGES_COUNT) status = 'مكتملة';
+          prev.status = status;
+
+          uniqueMap.set(key, prev);
+        }
       });
+      const dedupedResults = Array.from(uniqueMap.values());
 
       const parseDate = (v)=>{
         if(!v) return 0;
@@ -949,11 +975,20 @@ $('#btnLogin').addEventListener('click', async ()=>{
         return 0;
       };
 
-      salesOrders = results.slice().sort((a,b)=>{
+      salesOrders = dedupedResults.slice().sort((a,b)=>{
         const ta = parseDate(a.deliveryDate);
         const tb = parseDate(b.deliveryDate);
         if(tb !== ta) return tb - ta;
         return (b.orderNo||'').localeCompare(a.orderNo||'');
+      });
+
+      // Recompute summary from unique orders only
+      total = salesOrders.length;
+      notStarted = 0; inProgress = 0; completed = 0;
+      salesOrders.forEach(o=>{
+        if(o.doneCount === 0) notStarted++;
+        else if(o.doneCount >= STAGES_COUNT) completed++;
+        else inProgress++;
       });
 
       salesSummary = { total, notStarted, inProgress, completed };

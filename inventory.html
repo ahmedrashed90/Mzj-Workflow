@@ -1175,10 +1175,18 @@ const locs = uniq(stock.map(r=> r.location || 'غير محدد')).sort((a,b)=> a
   }
 
   function renderSummary(filteredRows){
-    // Like admin: totals from all stock
-    totalCount.textContent  = (stock.length||0).toLocaleString('ar-SA');
-    placesCount.textContent = new Set((stock||[]).map(r=> clean(r.location||'غير محدد'))).size.toLocaleString('ar-SA');
-  }
+  // استبعاد مباع تم التسليم
+  const availableRows = (filteredRows || []).filter(r =>
+    !String(r.location || '').includes('مباع تم التسليم')
+  );
+
+  totalCount.textContent = availableRows.length.toLocaleString('ar-SA');
+
+  placesCount.textContent = new Set(
+    availableRows.map(r => clean(r.location || 'غير محدد'))
+  ).size.toLocaleString('ar-SA');
+}
+
 
   function renderTable(filteredRows){
     tb.innerHTML = '';

@@ -6,6 +6,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -1125,15 +1126,26 @@ $('#btnLogin').addEventListener('click', async ()=>{
   }
 
 
-/* ===== Helper: حالة تم التصوير ===== */
+/* ===== Helper: حالة تم التصوير / مكتمل ===== */
   function isShootDone(r){
-    const st = trim(r.status || '');
-    const notes = trim(r.admin?.notes || '');
-    const statusNote = trim(r.statusNote || '');
-    const doneFlag = !!(r.admin && (r.admin.done || r.admin.completed));
+    const st = trim(r?.status || '');
+    const notes = trim(r?.admin?.notes || '');
+    const statusNote = trim(r?.statusNote || '');
+    const doneFlag = !!(r?.admin && (r.admin.done || r.admin.completed || r.admin.finished));
     const text = (st + ' ' + notes + ' ' + statusNote);
-    const hasDoneText = /تم التصوير|تصوير مكتمل|منشور/i.test(text);
-    return st === 'تم التصوير' || doneFlag || hasDoneText;
+
+    // كلمات تعتبر "مكتمل"
+    const doneByStatus =
+      st === 'تم' ||
+      st === 'منفّذ' || st === 'منفذ' ||
+      st === 'تم التنفيذ' ||
+      st === 'مكتملة' || st === 'مكتمل' ||
+      st === 'منتهي' || st === 'منتهية' ||
+      st === 'تم الانتهاء' || st === 'تم الإنتهاء';
+
+    const hasDoneText = /تم التصوير|تصوير مكتمل|منشور|مكتمل|مكتملة|تم التنفيذ|تم الانتهاء/i.test(text);
+
+    return doneByStatus || doneFlag || hasDoneText;
   }
 
   // تحويل وقت الطلب إلى رقم علشان نرتّب من الأحدث للأقدم
@@ -1212,25 +1224,32 @@ $('#btnLogin').addEventListener('click', async ()=>{
   /* ===== تصوير + نقل: إحصائيات + بطاقة ===== */
  
   
-  // تحديد المرحلة الحالية للطلب (بايبلاين حصري لكل طلب)
+    // تحديد المرحلة الحالية للطلب (بايبلاين حصري لكل طلب)
+  // تم الإنشاء: طلب جديد
+  // تم الاستلام: تم استلام السيارة/الطلب
+  // تم الإرسال: تم إرسال السيارة (بعد التجهيز)
+  // تم التنفيذ: تم الانتهاء
   function getOrderStage(r){
-    const status   = (r.status || '').toString().trim();
-    const received = !!(r.admin && r.admin.received);
-    const prepared = !!(r.admin && r.admin.prepared);
+    const status   = (r?.status || '').toString().trim();
+    const received = !!(r?.admin && r.admin.received);
+    const prepared = !!(r?.admin && r.admin.prepared);
 
-    // المرحلة النهائية
-    if (status === 'تم' || status === 'منفّذ' || isShootDone(r)) {
+    // 1) تم التنفيذ (أي "مكتملة" لازم تعتبر تم التنفيذ حتى لو مفيش received/prepared)
+    if (isShootDone(r) || /^(مكتملة|مكتمل|تم التنفيذ|تم|منفّذ|منفذ|منتهي|منتهية|تم الانتهاء|تم الإنتهاء)$/i.test(status)) {
       return 'تم التنفيذ';
     }
-    // تم الإرسال بعد تجهيز السيارة
-    if (prepared) {
+
+    // 2) تم الإرسال
+    if (prepared || /^(تم الإرسال|تم ارسال|تم التجهيز|تم الشحن)$/i.test(status)) {
       return 'تم الإرسال';
     }
-    // تم الاستلام بعد استلام الطلب
-    if (received) {
+
+    // 3) تم الاستلام
+    if (received || /^(تم الاستلام|تم استلام)$/i.test(status)) {
       return 'تم الاستلام';
     }
-    // أي حالة أخرى تعتبر تم الإنشاء
+
+    // 4) تم الإنشاء (افتراضي)
     return 'تم الإنشاء';
   }
 

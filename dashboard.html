@@ -1412,11 +1412,27 @@ function renderShootCard(gridEl){
               <i class="fa-solid fa-coins"></i> موافقة مالية: <b>${financePendingCount.toLocaleString('ar-SA')}</b>
             </span>
           </div>
+          <div class="chips" style="margin-top:10px">
+            <button class="chip" data-tfilter="admin"><i class="fa-solid fa-user-check"></i> موافقة إدارية فقط</button>
+            <button class="chip" data-tfilter="finance"><i class="fa-solid fa-coins"></i> موافقة مالية فقط</button>
+            <button class="chip" data-tfilter="all"><i class="fa-solid fa-layer-group"></i> كل الطلبات</button>
+          </div>
+          <div class="hint">اضغط على الزرار لعرض المطلوب فقط — أو اضغط على الكارت لعرض الكل.</div>
         </div>
         <div class="group-total" title="طلبات النقل بانتظار الموافقات">${total.toLocaleString('ar-SA')}</div>
       </div>
     `;
-    card.addEventListener('click', ()=> openTransfersModal());
+    // فتح الكل عند الضغط على الكارت
+    card.addEventListener('click', ()=> openTransfersModal('all'));
+
+    // أزرار الفلترة داخل الكارت
+    card.querySelectorAll('button[data-tfilter]').forEach(btn=>{
+      btn.addEventListener('click', (ev)=>{
+        ev.stopPropagation();
+        const f = btn.getAttribute('data-tfilter') || 'all';
+        openTransfersModal(f);
+      });
+    });
     gridEl.appendChild(card);
   }
 
@@ -1645,6 +1661,7 @@ function renderShootCard(gridEl){
   let shortDataByKey = new Map(); let shortActiveKey = 'ALL'; let shortFiltered = [];
   let currentShoot = []; let filteredShoot = []; let currentShootFilter = 'ALL';
   let currentSales = []; let filteredSales = []; let currentSalesMode = 'total';
+  let currentTransfersBase = []; // القائمة الحالية حسب فلتر الموافقات
 
   function openModal(mode, title){
     currentMode = mode;
@@ -1682,6 +1699,11 @@ function renderShootCard(gridEl){
 
     // Reset
     modalSearch.value='';
+    modalSearch.placeholder = (mode==='transfers')
+      ? 'بحث برقم الهيكل (VIN) أو أي بيانات...'
+      : (mode==='sales')
+        ? 'بحث (رقم الطلب / اسم العميل / VIN / الجوال...)'
+        : 'بحث...';
     if(mode!=='shoot' && shootDetailsBox){
       shootDetailsBox.style.display='none';
     }
@@ -2254,9 +2276,22 @@ function openShootModal(filter='ALL'){
     });
   }
 
-  function openTransfersModal(){
-    filteredTransfers = sortTransfers(transferRequests);
-    openModal('transfers','طلبات نقل السيارات');
+  function openTransfersModal(filterKey='all'){
+    const list = Array.isArray(transferRequests) ? transferRequests.slice() : [];
+    const needsAdmin = (t)=> !(t.adminApproved===true || t.adminApproved==='true' || t.adminApproval===true);
+    const needsFinance = (t)=> !(t.financeApproved===true || t.financeApproved==='true' || t.financeApproval===true);
+
+    let picked = list;
+    if(filterKey==='admin') picked = list.filter(needsAdmin);
+    else if(filterKey==='finance') picked = list.filter(needsFinance);
+
+    currentTransfersBase = picked.slice();
+    filteredTransfers = sortTransfers(picked);
+    const title =
+      filterKey==='admin' ? 'طلبات نقل السيارات — محتاجة موافقة إدارية' :
+      filterKey==='finance' ? 'طلبات نقل السيارات — محتاجة موافقة مالية' :
+      'طلبات نقل السيارات — كل الطلبات';
+    openModal('transfers', title);
   }
   function renderTransfersTable(){
     modalTableTransfersBody.innerHTML = '';
@@ -2451,22 +2486,13 @@ try{
         const hay=[o.orderNo,o.customerName,o.phone,o.branch,o.vin,o.deliveryDate,o.lastStageLabel,o.status].join(' ').toLowerCase();
         return hay.includes(q);
       });
-    }else if(currentMode==='sales'){
-      const header=["#","رقم الطلب","اسم العميل","رقم الجوال","الفرع","VIN","تاريخ التسليم","آخر مرحلة","الحالة"];
-      const data=[header];
-      (filteredSales||[]).forEach((o,idx)=>{
-        data.push([idx+1,o.orderNo,o.customerName,o.phone,o.branch,o.vin,o.deliveryDate,o.lastStageLabel,o.status]);
-      });
-      const ws=XLSX.utils.aoa_to_sheet(data);
-      ws['!cols']=[{wch:6},{wch:18},{wch:22},{wch:14},{wch:18},{wch:18},{wch:18},{wch:18},{wch:12}];
-      const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Sales Orders");
-      XLSX.writeFile(wb,"mzj-sales-orders.xlsx");
     }else if(currentMode==='transfers'){
       if(!q){
-        filteredTransfers = transferRequests.slice();
+        filteredTransfers = sortTransfers(currentTransfersBase.length ? currentTransfersBase : (transferRequests||[]));
         return renderModal();
       }
-      filteredTransfers = transferRequests.filter(t=>{
+      const base = currentTransfersBase.length ? currentTransfersBase : (transferRequests||[]);
+      filteredTransfers = base.filter(t=>{
         const hay=[
           t.id, t.vin, t.chassis, t.from, t.fromLocation, t.to, t.toLocation,
           t.requestedAt, t.createdAt, t.date, t.note, t.message, t.status
@@ -2479,76 +2505,97 @@ try{
 
   // تصدير Excel حسب الوضع
   document.getElementById('btnExportGroup').addEventListener('click', ()=>{
+    if(!window.XLSX){ showToast('مكتبة التصدير غير متاحة (XLSX)'); return; }
+
+    // اسم ملف لطيف
+    const safeTitle = (modalTitle.textContent||'mzj').trim().replace(/\s+/g,'-');
+
     if(currentMode==='rows'){
-      const header = ["م","سيارة","البيان","الوكيل","اللون الخارجي","اللون الداخلي","موديل","اللوحة","المكان","اسم الدفعة","رقم الهيكل","الملاحظات"];
+      const header=["م","السيارة","البيان","الوكيل","اللون الخارجي","اللون الداخلي","الموديل","اللوحة","المكان","اسم الدفعة","رقم الهيكل","الملاحظات"];
       const data=[header];
-      filteredRows.forEach((r, idx)=>{
-        const row = [r.id,r.car,r.variant,r.dealer,r.extColor,r.intColor,r.modelYear,r.plate,r.location,r.batchName||'',r.vin,r.notes];
-        data.push(row);
+      (filteredRows||[]).forEach((r,idx)=>{
+        data.push([
+          idx+1,
+          r.car||'', r.variant||'', r.dealer||'', r.extColor||'', r.intColor||'', r.modelYear||'',
+          r.plate||'', r.location||'', r.batchName||'', r.vin||'', r.notes||''
+        ]);
       });
       const ws=XLSX.utils.aoa_to_sheet(data);
-      ws['!cols']=[{wch:5},{wch:24},{wch:30},{wch:18},{wch:16},{wch:16},{wch:10},{wch:10},{wch:20},{wch:16},{wch:22},{wch:26}];
-      const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Rows");
-      XLSX.writeFile(wb, `mzj-dashboard-${modalTitle.textContent.replace(/\s+/g,'-')}.xlsx`);
-    }else if(currentMode==='shortagesBranches'){
+      const wb=XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Cars");
+      XLSX.writeFile(wb, `mzj-${safeTitle}.xlsx`);
+      return;
+    }
+
+    if(currentMode==='shortagesBranches'){
       const header=["السيارة","البيان","اللون الداخلي","اللون الخارجي","الموديل","عدد الفرع","الإجمالي العام"];
       const data=[header];
-      shortFiltered.forEach(s=> data.push([s.car,s.variant,s.intColor,s.extColor,s.modelYear,s.countBranch,s.countGlobal]));
+      (shortFiltered||[]).forEach(s=> data.push([
+        s.car||'', s.variant||'', s.intColor||'', s.extColor||'', s.modelYear||'', s.countBranch||0, s.countGlobal||0
+      ]));
       const ws=XLSX.utils.aoa_to_sheet(data);
-      ws['!cols']=[{wch:24},{wch:20},{wch:16},{wch:16},{wch:10},{wch:12},{wch:14}];
-      const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws, tabTitle(shortActiveKey));
-      XLSX.writeFile(wb, `mzj-shortages-branches-${tabTitle(shortActiveKey).replace(/\s+/g,'-')}.xlsx`);
-    }else if(currentMode==='shoot'){
+      const wb=XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Shortages");
+      XLSX.writeFile(wb, `mzj-${safeTitle}.xlsx`);
+      return;
+    }
+
+    if(currentMode==='shoot'){
       const header=["رقم الطلب","التاريخ","نوع الطلب","مقدّم","عدد الهياكل","الحالة","استلام إداري","تجهيز","ملاحظات الإدارة"];
       const data=[header];
-      filteredShoot.forEach(r=>{
-        const typeLabel = r._type === 'move' ? 'طلب نقل' : 'طلب تصوير';
-        data.push([r.id, r.createdAt || r.requestedAt || r.date || '', typeLabel, r.createdBy || '', (r.rows||[]).length, r.status||'',
-          r?.admin?.received||'', r?.admin?.prepared||'', r?.admin?.notes||'']);
+      (filteredShoot||[]).forEach(r=>{
+        const typeLabel = (r._type === 'move') ? 'طلب نقل' : 'طلب تصوير';
+        data.push([
+          r.id||'', r.createdAt||r.requestedAt||r.date||'', typeLabel, r.createdBy||'', (r.rows||[]).length,
+          r.status||'', r?.admin?.received||'', r?.admin?.prepared||'', r?.admin?.notes||''
+        ]);
       });
       const ws=XLSX.utils.aoa_to_sheet(data);
-      ws['!cols']=[{wch:8},{wch:18},{wch:14},{wch:10},{wch:12},{wch:18},{wch:14},{wch:22}];
-      const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Shoot Requests");
-      XLSX.writeFile(wb, `mzj-photoshoot-requests-${(currentShootFilter||'ALL')}.xlsx`);
-    }else if(currentMode==='sales'){
-      if(!q){ filteredSales = currentSales.slice(); return renderModal(); }
-      filteredSales = currentSales.filter(o=>{
-        const hay=[o.orderNo,o.customerName,o.phone,o.branch,o.vin,o.deliveryDate,o.lastStageLabel,o.status].join(' ').toLowerCase();
-        return hay.includes(q);
-      });
-    }else if(currentMode==='sales'){
+      const wb=XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Requests");
+      XLSX.writeFile(wb, `mzj-${safeTitle}.xlsx`);
+      return;
+    }
+
+    if(currentMode==='sales'){
       const header=["#","رقم الطلب","اسم العميل","رقم الجوال","الفرع","VIN","تاريخ التسليم","آخر مرحلة","الحالة"];
       const data=[header];
-      (filteredSales||[]).forEach((o,idx)=>{
-        data.push([idx+1,o.orderNo,o.customerName,o.phone,o.branch,o.vin,o.deliveryDate,o.lastStageLabel,o.status]);
-      });
+      (filteredSales||[]).forEach((o,idx)=> data.push([
+        idx+1, o.orderNo||'', o.customerName||'', o.phone||'', o.branch||'', o.vin||'', o.deliveryDate||'', o.lastStageLabel||'', o.status||''
+      ]));
       const ws=XLSX.utils.aoa_to_sheet(data);
-      ws['!cols']=[{wch:6},{wch:18},{wch:22},{wch:14},{wch:18},{wch:18},{wch:18},{wch:18},{wch:12}];
-      const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Sales Orders");
-      XLSX.writeFile(wb,"mzj-sales-orders.xlsx");
-    }else if(currentMode==='transfers'){
-      const header=["رقم الطلب","التاريخ","رقم الهيكل","من مكان","إلى مكان","الموافقة الإدارية","الموافقة المالية","ملاحظات","الحالة","تمت الموافقة في"];
+      const wb=XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Sales");
+      XLSX.writeFile(wb, `mzj-${safeTitle}.xlsx`);
+      return;
+    }
+
+    if(currentMode==='transfers'){
+      const header=["#","التاريخ","رقم الهيكل","السيارة","البيان","من مكان","إلى مكان","موافقة إدارية","موافقة مالية","ملاحظات","الحالة"];
       const data=[header];
-      filteredTransfers.forEach(t=>{
+      (filteredTransfers||[]).forEach((t,idx)=>{
         const date = t.requestedAt||t.createdAt||t.date||'';
         const vin = t.vin||t.chassis||'';
-        const fromLoc= t.from||t.fromLocation||t.source||'';
-        const toLoc= t.to||t.toLocation||t.target||'';
-        const stockRow = (Array.isArray(stock) ? stock : []).find(r => String(r.vin||'') === String(vin||''));
-        const note= [stockRow?.financeNotes, stockRow?.adminNotes, t.financeNote, t.adminNote, t.note, t.message].filter(v => (v||'').toString().trim()!=='').join(' | ');
-        const adminOk   = (t.adminApproved === true || t.adminApproved === 'true' || t.adminApproval === true);
-        const financeOk = (t.financeApproved === true || t.financeApproved === 'true' || t.financeApproval === true);
+        const fromLoc = t.from||t.fromLocation||t.source||'';
+        const toLoc = t.to||t.toLocation||t.target||'';
+        const stockRow = (Array.isArray(stock)?stock:[]).find(r=> String(r.vin||'')===String(vin||''));
+        const carName  = stockRow?.car || '';
+        const variant  = stockRow?.variant || '';
+        const note= [stockRow?.financeNotes, stockRow?.adminNotes, t.financeNote, t.adminNote, t.note, t.message]
+          .filter(v => (v||'').toString().trim()!=='').join(' | ');
+        const adminOk   = (t.adminApproved===true || t.adminApproved==='true' || t.adminApproval===true);
+        const financeOk = (t.financeApproved===true || t.financeApproved==='true' || t.financeApproval===true);
         const statusTxt = (adminOk && financeOk)? 'تمت الموافقة المالية والإدارية'
-                          : (!adminOk && !financeOk)? 'بانتظار الموافقة المالية والإدارية'
-                          : (!adminOk && financeOk)? 'بانتظار موافقة الإدارة'
-                          : 'بانتظار الموافقة المالية';
-        const approvedAt = t.adminApprovedAt||'';
-        data.push([t.id||'',date,vin,fromLoc,toLoc,adminOk?'✔':'',financeOk?'✔':'',note,statusTxt,approvedAt]);
+          : (!adminOk && !financeOk)? 'بانتظار الموافقة المالية والإدارية'
+          : (!adminOk && financeOk)? 'بانتظار موافقة الإدارة'
+          : 'بانتظار الموافقة المالية';
+        data.push([idx+1, date, vin, carName, variant, fromLoc, toLoc, adminOk?'✔':'', financeOk?'✔':'', note, statusTxt]);
       });
       const ws=XLSX.utils.aoa_to_sheet(data);
-      ws['!cols']=[{wch:8},{wch:18},{wch:22},{wch:20},{wch:20},{wch:30},{wch:16},{wch:16},{wch:22},{wch:18}];
-      const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Transfer Requests");
-      XLSX.writeFile(wb,"mzj-transfer-requests.xlsx");
+      const wb=XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Transfers");
+      XLSX.writeFile(wb, `mzj-${safeTitle}.xlsx`);
+      return;
     }
   });
 

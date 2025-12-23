@@ -849,37 +849,378 @@
 
     
     // ===== Message Templates (shared for SMS + WhatsApp) =====
+// ===== Message Helpers =====
+function formatSAR(num){
+  return (Number(num||0)).toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ر.س";
+}
+
+function computeOrderTotalsForMessage(records){
+  const recs = Array.isArray(records) ? records : [];
+  const first = recs[0] || {};
+  const totalCars = recs.length;
+
+  const regFeeNum = (() => {
+    const v = getFieldFlex("RegistrationFee", first);
+    const n = parseAmountFront(v);
+    return (n !== null && n > 0) ? n : 0;
+  })();
+
+  let subtotal = 0;
+  let tax = 0;
+
+  recs.forEach(r => {
+    const s = parseAmountFront(getFieldFlex("SubtotalExclVAT", r));
+    const t = parseAmountFront(getFieldFlex("TaxValue", r));
+    if (s !== null) subtotal += s;
+    if (t !== null) tax      += t;
+  });
+
+  // fallback من الهيدر لو السطور ما فيها إجماليات
+  if (subtotal === 0 && tax === 0) {
+    const headerSubBT = parseAmountFront(getFieldFlex("SubtotalBeforeTax", first));
+    const headerSub   = parseAmountFront(getFieldFlex("SubtotalExclVAT", first));
+    const headerTax   = parseAmountFront(getFieldFlex("TaxValue", first));
+    const headerGrand = parseAmountFront(getFieldFlex("GrandTotal", first));
+
+    if (headerSubBT !== null) {
+      subtotal = Math.max(0, (headerSubBT || 0) - regFeeNum);
+    } else if (headerSub !== null) {
+      subtotal = headerSub || 0;
+    }
+
+    if (headerTax !== null) {
+      tax = headerTax || 0;
+    } else if (headerGrand !== null && subtotal > 0) {
+      const carsGrand = Math.max(0, (headerGrand || 0) - regFeeNum);
+      const inferred = carsGrand - subtotal;
+      tax = inferred > 0 ? inferred : 0;
+    }
+  }
+
+  const grand = (subtotal || 0) + (tax || 0) + (regFeeNum || 0);
+  return { totalCars, subtotal, tax, regFeeNum, grand };
+}
+
+
     function getDefaultStageMessage(stageNum, stageLabel){
       const orderNo = currentOrderId || "";
       const vin = currentVin || "";
       const trackingLink = vin ? `https://mzj-tracking.vercel.app/Test-Track.html?vin=${vin}` : "";
 
       switch(stageNum){
-        case 1: {
-      const rec0 = (currentOrderRecords && currentOrderRecords.length) ? currentOrderRecords[0] : {};
-      const customerName = getFieldFlex("CustomerName", rec0) || "";
-      const totalCars = (currentOrderRecords && currentOrderRecords.length) ? currentOrderRecords.length : 0;
+                case 1: {
+          const rec = (currentOrderRecords && currentOrderRecords.length)
+            ? (currentOrderRecords.find(r => String(getFieldFlex("VIN", r) || "").trim() === String(vin || "").trim()) || currentOrderRecords[0])
+            : {};
 
-      const regFeeNum = (() => {
-        const v = getFieldFlex("RegistrationFee", rec0);
-        const n = parseAmountFront(v);
-        return (n !== null && n > 0) ? n : 0;
-      })();
+          const customerName = getFieldFlex("CustomerName", rec) || "";
+          const totals = computeOrderTotalsForMessage(currentOrderRecords || []);
+          const hasReg = (totals.regFeeNum || 0) > 0;
 
-      let subtotalSum = 0;
-      let taxSum = 0;
-      (currentOrderRecords || []).forEach(r => {
-        const sub = parseAmountFront(getFieldFlex("SubtotalExclVAT", r));
-        const tax = parseAmountFront(getFieldFlex("TaxValue", r));
-        if (sub !== null) subtotalSum += sub;
-        if (tax !== null) taxSum += tax;
+          return (
+            `عميلنا العزيز / ${customerName}
+` +
+            `مرحباً بكم في معرض محمد بن ذعار العجمي للسيارات
+
+` +
+            `تم تسجيل طلب شرائكم بنجاح ✅
+
+` +
+            `عدد السيارات في الطلب: ${totals.totalCars}
+` +
+            `قيمة الضريبة: ${formatSAR(totals.tax)}
+` +
+            `الإجمالي قبل الضريبة: ${formatSAR(totals.subtotal)}
+` +
+            (hasReg ? (`رسوم التسجيل: ${formatSAR(totals.regFeeNum)}
+`) : ``) +
+            `الإجمالي شامل الضريبة: ${formatSAR(totals.grand)}
+
+` +
+            `يمكنكم متابعة حالة الطلب عبر الرابط التالي:
+` +
+            `${trackingLink}
+
+` +
+            `#مع_#معرض #محمد #بن #ذعار #العجمي #للسيارات … #أنت #نجم الطريق`
+          );
+        }
+;
+
+          const customerName = getFieldFlex("CustomerName", rec) || "";
+          const carName = getFieldFlex("ItemType", rec) || "";
+          const carType = getFieldFlex("ItemCategory", rec) || "";
+
+          const sub = parseAmountFront(getFieldFlex("SubtotalExclVAT", rec));
+          const itemVal = parseAmountFront(getFieldFlex("ItemValue", rec));
+          const tax = parseAmountFront(getFieldFlex("TaxValue", rec));
+
+          const base = (sub !== null ? sub : (itemVal !== null ? itemVal : null));
+          const lineTotalNum = (base !== null ? (base + (tax || 0)) : null);
+
+          const amountStr = (lineTotalNum !== null)
+            ? lineTotalNum.toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ر.س"
+            : "";
+
+          return (
+            `عميلنا العزيز / ${customerName}\n` +
+            `مرحباً بكم في معرض محمد بن ذعار العجمي للسيارات\n\n` +
+            `تم تسجيل طلب شرائك بنجاح \n\n` +
+            `*للسيارة* ${carName}\n` +
+            `نوع السيارة : ${carType}\n` +
+            `رقم الهيكل : ${vin}\n` +
+            `قيمة السيارة : ${amountStr}\n\n` +
+            `يمكنك متابعة حالة طلبك عبر الرابط التالي: \n` +
+            `${trackingLink}\n\n` +
+            `#مع_#معرض #محمد #بن #ذعار #العجمي #للسيارات … #أنت #نجم الطريق`
+          );
+        }
+        case 9:
+          return (
+            `عميلنا العزيز يسعدنا ابلاغك بجاهزية سيارتك الأن يمكنك الحضور للاستلام او طلب خدمة الشحن. 
+
+` +
+            `مواعيد العمل: 
+` +
+            `*الفترة الصباحية*
+` +
+            `من الساعة 9 صباحاً الى 11 مساء 
+` +
+            `عدا يوم الجمعة
+
+` +
+            `*الفترة المسائية* 
+` +
+            `من الساعة 4 مساء الى 9 مساء 
+` +
+            `جميع أيام الأسبوع 
+
+` +
+            `#مع_#معرض #محمد #بن #ذعار #العجمي #للسيارات … #أنت #نجم الطريق`
+          );
+        case 10:
+          return (
+            `عميلنا العزيز 
+` +
+            `نبارك لكم إتمام عملية التسليم بنجاح 
+
+` +
+            `*شكراً لثقتكم و نتمنى لكم قيادة آمنة وتجربة ممتعة*
+
+` +
+            `#مع_#معرض #محمد #بن #ذعار #العجمي #للسيارات … #أنت #نجم الطريق`
+          );
+
+        default:
+          return `عميلنا العزيز، بخصوص طلبكم رقم ${orderNo}.\nمعرض محمد بن ذعار العجمي للسيارات.`;
+      }
+    }
+
+    // ===== Modal: Edit before send =====
+    const msgModal        = document.getElementById("msgModal");
+    const msgModalBackdrop= document.getElementById("msgModalBackdrop");
+    const msgModalClose   = document.getElementById("msgModalClose");
+    const msgModalTitle   = document.getElementById("msgModalTitle");
+    const msgModalSub     = document.getElementById("msgModalSub");
+    const msgModalText    = document.getElementById("msgModalText");
+    const msgModalSend    = document.getElementById("msgModalSend");
+    const msgModalReset   = document.getElementById("msgModalReset");
+    const msgModalCopy    = document.getElementById("msgModalCopy");
+    const msgModalMsg     = document.getElementById("msgModalMsg");
+    const msgModalChannel = document.getElementById("msgModalChannel");
+    const msgModalPhone   = document.getElementById("msgModalPhone");
+    const msgModalVin     = document.getElementById("msgModalVin");
+
+    let modalCtx = { channel:"sms", stageNum:0, stageLabel:"", defaultText:"" };
+
+    function closeMessageModal(){
+      if(!msgModal) return;
+      msgModal.style.display = "none";
+      msgModalMsg.textContent = "";
+      msgModalSend.disabled = false;
+    }
+    function openMessageModal(channel, stageNum, stageLabel){
+      stageMsg.textContent = "";
+      if (!currentCustomerPhone) {
+        stageMsg.innerHTML = "<span class='err'>لا يوجد رقم جوال محفوظ لهذا الطلب.</span>";
+        return;
+      }
+      const phone = normalizeSaudiPhone(currentCustomerPhone);
+      if (!phone) {
+        stageMsg.innerHTML = "<span class='err'>رقم الجوال غير صالح.</span>";
+        return;
+      }
+
+      const defText = getDefaultStageMessage(stageNum, stageLabel);
+
+      modalCtx = { channel, stageNum, stageLabel, defaultText: defText };
+
+      msgModalTitle.textContent = (channel === "whatsapp") ? "إرسال واتساب للعميل" : "إرسال SMS للعميل";
+      msgModalSub.textContent = `المرحلة ${stageNum}: ${stageLabel || ""}`;
+      msgModalText.value = defText;
+
+      msgModalChannel.textContent = (channel === "whatsapp") ? "WhatsApp" : "SMS";
+      msgModalPhone.textContent = phone ? ("966…" + phone.slice(-3)) : "—";
+      msgModalVin.textContent = (currentVin ? ("VIN: " + currentVin) : "VIN: —");
+
+      msgModal.style.display = "block";
+      setTimeout(() => msgModalText.focus(), 50);
+    }
+
+    if (msgModalBackdrop) msgModalBackdrop.addEventListener("click", closeMessageModal);
+    if (msgModalClose) msgModalClose.addEventListener("click", closeMessageModal);
+
+    if (msgModalReset) msgModalReset.addEventListener("click", () => {
+      msgModalText.value = modalCtx.defaultText || "";
+      msgModalMsg.innerHTML = "<span class='muted'>تم الرجوع للنص الأصلي.</span>";
+      setTimeout(()=> msgModalMsg.textContent="", 1200);
+    });
+
+    if (msgModalCopy) msgModalCopy.addEventListener("click", async () => {
+      try{
+        await navigator.clipboard.writeText(msgModalText.value || "");
+        msgModalMsg.innerHTML = "<span class='ok'>تم نسخ النص.</span>";
+      }catch(e){
+        msgModalMsg.innerHTML = "<span class='err'>تعذر نسخ النص.</span>";
+      }
+      setTimeout(()=> msgModalMsg.textContent="", 1200);
+    });
+
+    async function sendWhatsAppMessage(phone, text, stageNum){
+      // Send via Mersal WhatsApp API (server-side) instead of opening WhatsApp app
+      return fetch("/api/mersal-wa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: String(phone || "").trim(),     // must be like 9665xxxxxxxx
+          message: String(text || ""),
+          stageNum: stageNum ?? null,
+          orderId: window.__mzj_current_order_id || ""
+        })
+      }).then(async (res)=>{
+        const bodyText = await res.text();
+        if(!res.ok) throw new Error(bodyText || ("HTTP " + res.status));
+        try { return JSON.parse(bodyText); } catch { return { ok:true, raw: bodyText }; }
       });
+    }
 
-      const vatRateRaw = parseAmountFront(getFieldFlex("TaxRate", rec0));
-      const vatRate = (vatRateRaw !== null) ? (vatRateRaw <= 1 ? vatRateRaw * 100 : vatRateRaw) : 15;
+    if (msgModalSend) msgModalSend.addEventListener("click", async () => {
+      msgModalMsg.textContent = "";
+      msgModalSend.disabled = true;
 
-      const grandTotal = (subtotalSum || 0) + (taxSum || 0) + (regFeeNum || 0);
-      const fmt = (n) => (n || 0).toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const phone = normalizeSaudiPhone(currentCustomerPhone);
+      const msg = (msgModalText.value || "").trim();
+
+      try{
+        if (modalCtx.channel === "whatsapp") {
+          await sendWhatsAppMessage(phone, msg, modalCtx.stageNum);
+          msgModalMsg.innerHTML = "<span class='ok'>تم إرسال الرسالة من الرقم الموحد عبر واتساب API.</span>";
+        } else {
+          await sendStcSmsForStage(modalCtx.stageNum, modalCtx.stageLabel, msg);
+          // sendStcSmsForStage writes to stageMsg; mirror here too:
+          msgModalMsg.innerHTML = "<span class='ok'>تم إرسال SMS (أو تم تنفيذ محاولة الإرسال).</span>";
+        }
+      }catch(e){
+        console.error(e);
+        msgModalMsg.innerHTML = "<span class='err'>حصل خطأ أثناء الإرسال.</span>";
+      }finally{
+        msgModalSend.disabled = false;
+      }
+    });
+
+    // ===== Dynamic QR (click to open tracking) =====
+    const trackQrBtn = document.getElementById("trackQrBtn");
+    const trackQrModal = document.getElementById("trackQrModal");
+    const trackQrBackdrop = document.getElementById("trackQrBackdrop");
+    const trackQrClose = document.getElementById("trackQrClose");
+    const trackQrImg = document.getElementById("trackQrImg");
+    const trackQrLink = document.getElementById("trackQrLink");
+    const trackQrCopy = document.getElementById("trackQrCopy");
+
+    function getTrackingUrl(){
+      return currentVin ? `https://mzj-tracking.vercel.app/Test-Track.html?vin=${encodeURIComponent(currentVin)}` : "";
+    }
+
+    function refreshTrackingQr(){
+      const url = getTrackingUrl();
+      if(!trackQrImg || !trackQrLink) return;
+
+      if(!url){
+        trackQrImg.src = "";
+        trackQrLink.href = "#";
+        trackQrImg.style.opacity = .4;
+        return;
+      }
+
+      // Use a reliable QR image endpoint (no library needed)
+      const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=" + encodeURIComponent(url);
+      trackQrImg.src = qrUrl;
+      trackQrLink.href = url;
+      trackQrImg.style.opacity = 1;
+    }
+
+    function openTrackQr(){
+      if(!currentVin){
+        alert("اختر رقم الهيكل أولاً.");
+        return;
+      }
+      refreshTrackingQr();
+      if(trackQrModal) trackQrModal.style.display = "block";
+    }
+    function closeTrackQr(){
+      if(trackQrModal) trackQrModal.style.display = "none";
+    }
+
+    if (trackQrBtn) trackQrBtn.addEventListener("click", openTrackQr);
+    if (trackQrBackdrop) trackQrBackdrop.addEventListener("click", closeTrackQr);
+    if (trackQrClose) trackQrClose.addEventListener("click", closeTrackQr);
+
+    if (trackQrCopy) trackQrCopy.addEventListener("click", async () => {
+      const url = getTrackingUrl();
+      if(!url) return;
+      try{
+        await navigator.clipboard.writeText(url);
+        alert("تم نسخ رابط التتبع");
+      }catch(e){
+        alert("تعذر نسخ الرابط");
+      }
+    });
+
+
+    // إرسال SMS عبر endpoint /api/stc-sms
+   async function sendStcSmsForStage(stageNum, stageLabel, messageOverride=null) {
+  stageMsg.textContent = "";
+
+  if (!currentCustomerPhone) {
+    stageMsg.innerHTML = "<span class='err'>لا يوجد رقم جوال محفوظ لهذا الطلب.</span>";
+    return;
+  }
+
+  const phone = normalizeSaudiPhone(currentCustomerPhone);
+  if (!phone) {
+    stageMsg.innerHTML = "<span class='err'>رقم الجوال غير صالح.</span>";
+    return;
+  }
+
+  const orderNo = currentOrderId || "";
+  const vin = currentVin || "";
+  const trackingLink = vin ? `https://mzj-tracking.vercel.app/Test-Track.html?vin=${vin}` : "";
+
+  let text = "";
+
+  switch (stageNum) {
+
+    // -------------------------
+    // 1️⃣ الخطوة رقم 1 — تهنئة + رابط التتبع
+    // -------------------------
+        case 1: {
+      const rec = (currentOrderRecords && currentOrderRecords.length)
+        ? (currentOrderRecords.find(r => String(getFieldFlex("VIN", r) || "").trim() === String(vin || "").trim()) || currentOrderRecords[0])
+        : {};
+
+      const customerName = getFieldFlex("CustomerName", rec) || "";
+      const totals = computeOrderTotalsForMessage(currentOrderRecords || []);
+      const hasReg = (totals.regFeeNum || 0) > 0;
 
       text =
         `عميلنا العزيز / ${customerName}
@@ -890,25 +1231,25 @@
         `تم تسجيل طلب شرائكم بنجاح ✅
 
 ` +
-        `عدد السيارات في الطلب: ${totalCars}
+        `عدد السيارات في الطلب: ${totals.totalCars}
 ` +
-        `قيمة الضريبة (${vatRate}%): ${fmt(taxSum)} ر.س
+        `قيمة الضريبة: ${formatSAR(totals.tax)}
 ` +
-        `الإجمالي قبل الضريبة: ${fmt(subtotalSum)} ر.س
+        `الإجمالي قبل الضريبة: ${formatSAR(totals.subtotal)}
 ` +
-        `رسوم التسجيل: ${fmt(regFeeNum)} ر.س
-` +
-        `الإجمالي شامل الضريبة: ${fmt(grandTotal)} ر.س
+        (hasReg ? (`رسوم التسجيل: ${formatSAR(totals.regFeeNum)}
+`) : ``) +
+        `الإجمالي شامل الضريبة: ${formatSAR(totals.grand)}
 
 ` +
-        `يمكنك متابعة حالة طلبك عبر الرابط التالي: 
+        `يمكنكم متابعة حالة الطلب عبر الرابط التالي:
 ${trackingLink}
 
 ` +
         `#مع_#معرض #محمد #بن #ذعار #العجمي #للسيارات … #أنت #نجم الطريق`;
       break;
     }
-    case 9:
+case 9:
       text =
         `عميلنا العزيز يسعدنا ابلاغك بجاهزية سيارتك الأن يمكنك الحضور للاستلام او طلب خدمة الشحن. 
 
@@ -1059,11 +1400,12 @@ function clearErpTable() {
         return (n !== null && n > 0) ? n : 0;
       })();
 
+      // ✅ توزيع رسوم التسجيل على عدد الهياكل (لكل سطر في الجدول)
+      const totalCars = records.length;
+      const regFeeShare = (regFeeNum > 0 && totalCars > 0) ? (regFeeNum / totalCars) : 0;
+
       // ✅ نعرض في الجدول سيارات فقط (رسوم التسجيل تظهر أعلى في صندوق الإجماليات)
       const displayRecords = records.slice();
-
-      const totalCars = records.length;
-      const regFeePerCar = (regFeeNum > 0 && totalCars > 0) ? (regFeeNum / totalCars) : 0;
 
       // تعبئة جدول ERP
       displayRecords.forEach(rec => {
@@ -1078,17 +1420,23 @@ function clearErpTable() {
             const numRaw = parseAmountFront(val);
             const _sub = parseAmountFront(getFieldFlex("SubtotalExclVAT", rec));
             const _tax = parseAmountFront(getFieldFlex("TaxValue", rec));
+            const computed = (_sub || 0) + (_tax || 0);
 
-            // ✅ الإجمالي شامل الضريبة لكل هيكل = (قبل الضريبة + الضريبة) + (رسوم التسجيل ÷ عدد الهياكل)
-            const computedLine = (_sub || 0) + (_tax || 0) + (regFeePerCar || 0);
-
-            const missingOrZero = (val === null || val === undefined || val === "" || numRaw === 0);
-            const looksLikeOrderTotal = (numRaw !== null && computedLine > 0 && numRaw > computedLine * 1.2);
-
-            // ✅ لو القيمة ناقصة/صفر أو ظاهر أنها إجمالي الطلب (تتكرر في كل سطر) نستخدم الحسبة الصحيحة لكل هيكل
-            if ((missingOrZero || looksLikeOrderTotal || regFeePerCar > 0) && computedLine > 0) {
-              val = computedLine;
+            // ✅ بعض بيانات ERP ترجع "إجمالي الطلب بالكامل" داخل كل سطر.
+            // هنا نُجبر السطر أنه يكون (قبل الضريبة + الضريبة) لكل هيكل،
+            // إلا إذا كان الـ raw قريب جدًا من computed (يعني فعلاً إجمالي السطر).
+            let lineTotal = 0;
+            if (computed > 0) {
+              const rawLooksLikeLine = (numRaw !== null && numRaw > 0 && numRaw <= (computed * 1.2));
+              lineTotal = rawLooksLikeLine ? numRaw : computed;
+            } else {
+              lineTotal = (numRaw !== null ? numRaw : 0);
             }
+
+            // ✅ إضافة نصيب رسوم التسجيل على كل هيكل (regFee / عدد الهياكل)
+            if (regFeeShare > 0) lineTotal = (lineTotal || 0) + regFeeShare;
+
+            val = lineTotal;
           }
 
           if (field === "TaxRate") {
@@ -1141,48 +1489,44 @@ function clearErpTable() {
 
       // حساب إجمالي الطلب (السيارات فقط) + رسوم التسجيل (بدون ضريبة)
 
-      // ✅ نحسب إجماليات السيارات من السطور (أفضل مصدر ثابت)
-      // ✅ نحسب إجماليات السيارات من السطور (أفضل مصدر ثابت)
-      let carsSubtotal = 0; // قبل الضريبة (سيارات فقط)
-      let carsTax      = 0; // قيمة الضريبة (سيارات فقط)
+      // ✅ نحسب إجمالي الطلب (قبل الضريبة + الضريبة) من السطور — ونتجاهل TotalInclVAT لأنه قد يكون إجمالي الطلب مكررًا بكل سطر
+let carsSubtotal = 0; // قبل الضريبة
+let carsTax      = 0; // قيمة الضريبة
 
-      records.forEach(rec => {
-        const subVal = parseAmountFront(getFieldFlex("SubtotalExclVAT", rec));
-        const taxVal = parseAmountFront(getFieldFlex("TaxValue", rec));
-        if (subVal !== null) carsSubtotal += subVal;
-        if (taxVal !== null) carsTax      += taxVal;
-      });
+records.forEach(rec => {
+  const subVal = parseAmountFront(getFieldFlex("SubtotalExclVAT", rec));
+  const taxVal = parseAmountFront(getFieldFlex("TaxValue", rec));
+  if (subVal !== null) carsSubtotal += subVal;
+  if (taxVal !== null) carsTax      += taxVal;
+});
 
-      // ✅ لو السطور ما فيها قيم (طلبات قديمة) خُدها مرة واحدة من الهيدر
-      if (carsSubtotal === 0 && carsTax === 0) {
-        const headerSubBT = parseAmountFront(getFieldFlex("SubtotalBeforeTax", first));
-        const headerSub   = parseAmountFront(getFieldFlex("SubtotalExclVAT", first));
-        const headerTax   = parseAmountFront(getFieldFlex("TaxValue", first));
-        const headerGrand = parseAmountFront(getFieldFlex("GrandTotal", first));
+// ✅ لو السطور ما فيها إجماليات (طلبات قديمة/بدون أعمدة) خُدها مرة واحدة من الهيدر
+if (carsSubtotal === 0 && carsTax === 0) {
+  const headerSubBT = parseAmountFront(getFieldFlex("SubtotalBeforeTax", first));
+  const headerSub   = parseAmountFront(getFieldFlex("SubtotalExclVAT", first));
+  const headerTax   = parseAmountFront(getFieldFlex("TaxValue", first));
+  const headerGrand = parseAmountFront(getFieldFlex("GrandTotal", first));
 
-        // قبل الضريبة (نستبعد رسوم التسجيل لو كانت داخلة في SubtotalBeforeTax)
-        if (headerSubBT !== null) {
-          carsSubtotal = Math.max(0, (headerSubBT || 0) - (regFeeNum || 0));
-        } else if (headerSub !== null) {
-          carsSubtotal = headerSub || 0;
-        }
+  if (headerSubBT !== null) {
+    carsSubtotal = Math.max(0, (headerSubBT || 0) - (regFeeNum || 0));
+  } else if (headerSub !== null) {
+    carsSubtotal = headerSub || 0;
+  }
 
-        // الضريبة
-        if (headerTax !== null) {
-          carsTax = headerTax || 0;
-        } else if (headerGrand !== null && carsSubtotal > 0) {
-          const inferred = (headerGrand || 0) - (carsSubtotal || 0) - (regFeeNum || 0);
-          carsTax = inferred > 0 ? inferred : 0;
-        }
-      }
+  if (headerTax !== null) {
+    carsTax = headerTax || 0;
+  } else if (headerGrand !== null && carsSubtotal > 0) {
+    // لو عندنا GrandTotal: استنتج الضريبة بعد خصم رسوم التسجيل
+    const carsGrand = Math.max(0, (headerGrand || 0) - (regFeeNum || 0));
+    const inferred = carsGrand - carsSubtotal;
+    carsTax = inferred > 0 ? inferred : 0;
+  }
+}
 
-      // ✅ إجمالي السيارات شامل الضريبة = (قبل الضريبة + الضريبة) بدون رسوم التسجيل
-      const carsTotal = (carsSubtotal || 0) + (carsTax || 0);
-
-      // ✅ رسوم التسجيل (بدون ضريبة) — تُضاف فقط على الإجمالي شامل الضريبة
-      const grandTotalIncl = (carsTotal || 0) + (regFeeNum || 0);
-
-      // عرض صندوق الإجماليات (بالمسميات المطلوبة)
+const carsTotal = (carsSubtotal || 0) + (carsTax || 0);
+// ✅ رسوم التسجيل (بدون ضريبة) — تُضاف على إجمالي الطلب
+const grandTotalIncl = carsTotal + (regFeeNum || 0);
+// عرض صندوق الإجماليات (بالمسميات المطلوبة)
       const hasTotals = (carsSubtotal > 0 || carsTax > 0 || carsTotal > 0 || regFeeNum > 0);
       if (hasTotals) {
         const parts = [];

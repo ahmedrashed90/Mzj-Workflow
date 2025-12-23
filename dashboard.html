@@ -5,6 +5,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -347,7 +348,7 @@ tr:hover{ filter: brightness(0.98); }
   <div class="container">
 
     <!-- Shortages Summary Card (Branches only) -->
-    <div class="card short-card" id="shortagesCard" title="عرض النواقص لأفرع المعارض (حسب السيارة + البيان + الألوان + الموديل | العدد داخل الفرع = 0)">
+    <div class="card short-card" id="shortagesCard" title="عرض النواقص لأفرع المعارض (المصدر: مجموع الإجمالي الفعلي للمستودع + الفروع | التركيبة: سيارة + بيان + لون داخلي + لون خارجي + موديل | لو كمية الفرع = 0 تعتبر نقص)">
       <div class="group-head">
         <div class="group-left">
           <h3 class="group-title"><i class="fa-solid fa-list-check"></i> النواقص — الفروع فقط</h3>
@@ -422,8 +423,8 @@ tr:hover{ filter: brightness(0.98); }
             <tr>
               <th>السيارة</th>
               <th>البيان</th>
-              <th>اللون الخارجي</th>
               <th>اللون الداخلي</th>
+              <th>اللون الخارجي</th>
               <th>الموديل</th>
               <th>عدد الفرع</th>
               <th>الإجمالي العام</th>
@@ -1001,7 +1002,7 @@ $('#btnLogin').addEventListener('click', async ()=>{
   }
 
   /* ===== Shortages logic (branches) ===== */
-  const comboKey = r => [trim(r.car), trim(r.variant), trim(r.extColor), trim(r.intColor), trim(r.modelYear)].join('⇢');
+  const comboKey = r => [trim(r.car), trim(r.variant), trim(r.intColor), trim(r.extColor), trim(r.modelYear)].join('⇢');
   function countByCombo(rows){
     const m=new Map();
     rows.forEach(r=>{ const k=comboKey(r); if(!k) return; m.set(k,(m.get(k)||0)+1); });
@@ -1014,12 +1015,26 @@ $('#btnLogin').addEventListener('click', async ()=>{
     return loc.includes('مباع تحت التسليم') || loc.includes('مباع تم التسليم');
   }
 
+// ✅ صفوف "الإجمالي الفعلي" فقط (متاح + سيارات بها ملاحظات)
+  function isActualRow(r){
+    const loc = (r && r.location) ? String(r.location) : '';
+    return loc.endsWith('المخزون المتاح') || loc.includes('سيارات بها ملاحظات');
+  }
+
+
   function globalTotalsByCombo(){
-    const rows = (Array.isArray(stock) ? stock : []).filter(r => !isSoldRow(r));
+    // ✅ المصدر الأساسي للنواقص: مجموع "الإجمالي الفعلي" (المستودع + كل الفروع)
+    // الإجمالي الفعلي = (المخزون المتاح + سيارات بها ملاحظات)
+    const keys = ['WAREHOUSE', ...branchGroups().map(g=>g.key)];
+    const rows = keys
+      .map(k => groupsDef.find(g=> g.key===k))
+      .filter(Boolean)
+      .flatMap(g => rowsForMembers(g.members))
+      .filter(r => isActualRow(r));
     return countByCombo(rows);
   }
   function computeBranchShortages(group){
-    const rowsBranch = rowsForMembers(group.members).filter(r => !isSoldRow(r));
+    const rowsBranch = rowsForMembers(group.members).filter(r => isActualRow(r));
     const byComboBranch = countByCombo(rowsBranch);
     const glob = globalTotalsByCombo();
     const res=[];
@@ -1027,7 +1042,7 @@ $('#btnLogin').addEventListener('click', async ()=>{
       const countBranch = byComboBranch.get(k) || 0;
       // نقص = مفيش ولا عربية من التركيبة دي في الفرع، لكن موجودة في الإجمالي
       if(countBranch===0){
-        const [car,variant,extColor,intColor,modelYear] = k.split('⇢');
+        const [car,variant,intColor,extColor,modelYear] = k.split('⇢');
         res.push({ car, variant, extColor, intColor, modelYear, countBranch, countGlobal });
       }
     });
@@ -1035,8 +1050,8 @@ $('#btnLogin').addEventListener('click', async ()=>{
       (a.car||'').localeCompare(b.car||'','ar') ||
       (a.variant||'').localeCompare(b.variant||'','ar') ||
       (a.modelYear||'').localeCompare(b.modelYear||'','ar') ||
-      (a.extColor||'').localeCompare(b.extColor||'','ar') ||
-      (a.intColor||'').localeCompare(b.intColor||'','ar')
+      (a.intColor||'').localeCompare(b.intColor||'','ar') ||
+      (a.extColor||'').localeCompare(b.extColor||'','ar')
     );
     return res;
   }
@@ -1939,8 +1954,8 @@ function renderShootCard(gridEl){
       tr.innerHTML=`
         <td>${s.car||''}</td>
         <td>${s.variant||''}</td>
-        <td>${s.extColor||''}</td>
         <td>${s.intColor||''}</td>
+        <td>${s.extColor||''}</td>
         <td>${s.modelYear||''}</td>
         <td style="text-align:center"><span class="tag">${s.countBranch}</span></td>
         <td style="text-align:center"><span class="tag">${s.countGlobal}</span></td>
@@ -1989,7 +2004,7 @@ function renderShootCard(gridEl){
     const uniq = new Map();
     branchGroups().forEach(g=>{
       (shortDataByKey.get(g.key)||[]).forEach(item=>{
-        const k = [item.car,item.variant,item.extColor,item.intColor,item.modelYear].join('⇢');
+        const k = [item.car,item.variant,item.intColor,item.extColor,item.modelYear].join('⇢');
         if(!uniq.has(k)) uniq.set(k, item);
       });
     });
@@ -1997,8 +2012,8 @@ function renderShootCard(gridEl){
       (a.car||'').localeCompare(b.car||'','ar') ||
       (a.variant||'').localeCompare(b.variant||'','ar') ||
       (a.modelYear||'').localeCompare(b.modelYear||'','ar') ||
-      (a.extColor||'').localeCompare(b.extColor||'','ar') ||
-      (a.intColor||'').localeCompare(b.intColor||'','ar')
+      (a.intColor||'').localeCompare(b.intColor||'','ar') ||
+      (a.extColor||'').localeCompare(b.extColor||'','ar')
     );
     shortDataByKey.set('ALL', allList);
 
@@ -2476,9 +2491,9 @@ try{
       const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Rows");
       XLSX.writeFile(wb, `mzj-dashboard-${modalTitle.textContent.replace(/\s+/g,'-')}.xlsx`);
     }else if(currentMode==='shortagesBranches'){
-      const header=["السيارة","البيان","اللون الخارجي","اللون الداخلي","الموديل","عدد الفرع","الإجمالي العام"];
+      const header=["السيارة","البيان","اللون الداخلي","اللون الخارجي","الموديل","عدد الفرع","الإجمالي العام"];
       const data=[header];
-      shortFiltered.forEach(s=> data.push([s.car,s.variant,s.extColor,s.intColor,s.modelYear,s.countBranch,s.countGlobal]));
+      shortFiltered.forEach(s=> data.push([s.car,s.variant,s.intColor,s.extColor,s.modelYear,s.countBranch,s.countGlobal]));
       const ws=XLSX.utils.aoa_to_sheet(data);
       ws['!cols']=[{wch:24},{wch:20},{wch:16},{wch:16},{wch:10},{wch:12},{wch:14}];
       const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws, tabTitle(shortActiveKey));

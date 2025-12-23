@@ -849,130 +849,66 @@
 
     
     // ===== Message Templates (shared for SMS + WhatsApp) =====
-// ===== Message Helpers =====
-function formatSAR(num){
-  return (Number(num||0)).toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ر.س";
-}
-
-function computeOrderTotalsForMessage(records){
-  const recs = Array.isArray(records) ? records : [];
-  const first = recs[0] || {};
-  const totalCars = recs.length;
-
-  const regFeeNum = (() => {
-    const v = getFieldFlex("RegistrationFee", first);
-    const n = parseAmountFront(v);
-    return (n !== null && n > 0) ? n : 0;
-  })();
-
-  let subtotal = 0;
-  let tax = 0;
-
-  recs.forEach(r => {
-    const s = parseAmountFront(getFieldFlex("SubtotalExclVAT", r));
-    const t = parseAmountFront(getFieldFlex("TaxValue", r));
-    if (s !== null) subtotal += s;
-    if (t !== null) tax      += t;
-  });
-
-  // fallback من الهيدر لو السطور ما فيها إجماليات
-  if (subtotal === 0 && tax === 0) {
-    const headerSubBT = parseAmountFront(getFieldFlex("SubtotalBeforeTax", first));
-    const headerSub   = parseAmountFront(getFieldFlex("SubtotalExclVAT", first));
-    const headerTax   = parseAmountFront(getFieldFlex("TaxValue", first));
-    const headerGrand = parseAmountFront(getFieldFlex("GrandTotal", first));
-
-    if (headerSubBT !== null) {
-      subtotal = Math.max(0, (headerSubBT || 0) - regFeeNum);
-    } else if (headerSub !== null) {
-      subtotal = headerSub || 0;
-    }
-
-    if (headerTax !== null) {
-      tax = headerTax || 0;
-    } else if (headerGrand !== null && subtotal > 0) {
-      const carsGrand = Math.max(0, (headerGrand || 0) - regFeeNum);
-      const inferred = carsGrand - subtotal;
-      tax = inferred > 0 ? inferred : 0;
-    }
-  }
-
-  const grand = (subtotal || 0) + (tax || 0) + (regFeeNum || 0);
-  return { totalCars, subtotal, tax, regFeeNum, grand };
-}
-
-
     function getDefaultStageMessage(stageNum, stageLabel){
       const orderNo = currentOrderId || "";
       const vin = currentVin || "";
       const trackingLink = vin ? `https://mzj-tracking.vercel.app/Test-Track.html?vin=${vin}` : "";
 
       switch(stageNum){
-                case 1: {
-          const rec = (currentOrderRecords && currentOrderRecords.length)
-            ? (currentOrderRecords.find(r => String(getFieldFlex("VIN", r) || "").trim() === String(vin || "").trim()) || currentOrderRecords[0])
-            : {};
+        case 1: {
+          // ✅ رسالة ملخص الطلب (ديناميكية حسب الطلب) — بدون بيانات سيارة فردية
+          const rec0 = (currentOrderRecords && currentOrderRecords.length) ? currentOrderRecords[0] : {};
+          const customerName = getFieldFlex("CustomerName", rec0) || "";
 
-          const customerName = getFieldFlex("CustomerName", rec) || "";
-          const totals = computeOrderTotalsForMessage(currentOrderRecords || []);
-          const hasReg = (totals.regFeeNum || 0) > 0;
+          // VIN المختار فقط للرابط (نقطة دخول للتتبع)
+          const vinForLink = vin || "";
+          const trackingLink2 = vinForLink ? `https://mzj-tracking.vercel.app/Test-Track.html?vin=${vinForLink}` : "";
 
-          return (
-            `عميلنا العزيز / ${customerName}
-` +
-            `مرحباً بكم في معرض محمد بن ذعار العجمي للسيارات
+          // رسوم التسجيل (إجمالي الطلب)
+          const regFeeNum = (() => {
+            const v = getFieldFlex("RegistrationFee", rec0);
+            const n = parseAmountFront(v);
+            return (n !== null && n > 0) ? n : 0;
+          })();
 
-` +
-            `تم تسجيل طلب شرائكم بنجاح ✅
+          const rows = (currentOrderRecords && currentOrderRecords.length) ? currentOrderRecords : [];
+          const totalCars = rows.length || 0;
 
-` +
-            `عدد السيارات في الطلب: ${totals.totalCars}
-` +
-            `قيمة الضريبة: ${formatSAR(totals.tax)}
-` +
-            `الإجمالي قبل الضريبة: ${formatSAR(totals.subtotal)}
-` +
-            (hasReg ? (`رسوم التسجيل: ${formatSAR(totals.regFeeNum)}
-`) : ``) +
-            `الإجمالي شامل الضريبة: ${formatSAR(totals.grand)}
+          let carsSubtotal = 0;
+          let carsTax = 0;
 
-` +
-            `يمكنكم متابعة حالة الطلب عبر الرابط التالي:
-` +
-            `${trackingLink}
+          rows.forEach(r => {
+            const subVal = parseAmountFront(getFieldFlex("SubtotalExclVAT", r));
+            const taxVal = parseAmountFront(getFieldFlex("TaxValue", r));
+            if (subVal !== null) carsSubtotal += subVal;
+            if (taxVal !== null) carsTax += taxVal;
+          });
 
-` +
-            `#مع_#معرض #محمد #بن #ذعار #العجمي #للسيارات … #أنت #نجم الطريق`
-          );
-        }
-;
+          // fallback لو السطور مش كاملة
+          if (carsSubtotal === 0 && carsTax === 0) {
+            const headerSubBT = parseAmountFront(getFieldFlex("SubtotalBeforeTax", rec0));
+            const headerTax   = parseAmountFront(getFieldFlex("TaxValue", rec0));
+            if (headerSubBT !== null) carsSubtotal = Math.max(0, (headerSubBT || 0) - (regFeeNum || 0));
+            if (headerTax !== null)   carsTax = headerTax || 0;
+          }
 
-          const customerName = getFieldFlex("CustomerName", rec) || "";
-          const carName = getFieldFlex("ItemType", rec) || "";
-          const carType = getFieldFlex("ItemCategory", rec) || "";
+          const grandTotalIncl = (carsSubtotal + carsTax) + (regFeeNum || 0);
 
-          const sub = parseAmountFront(getFieldFlex("SubtotalExclVAT", rec));
-          const itemVal = parseAmountFront(getFieldFlex("ItemValue", rec));
-          const tax = parseAmountFront(getFieldFlex("TaxValue", rec));
-
-          const base = (sub !== null ? sub : (itemVal !== null ? itemVal : null));
-          const lineTotalNum = (base !== null ? (base + (tax || 0)) : null);
-
-          const amountStr = (lineTotalNum !== null)
-            ? lineTotalNum.toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ر.س"
-            : "";
+          const fmt = (n) => (n || 0).toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
           return (
             `عميلنا العزيز / ${customerName}\n` +
             `مرحباً بكم في معرض محمد بن ذعار العجمي للسيارات\n\n` +
-            `تم تسجيل طلب شرائك بنجاح \n\n` +
-            `*للسيارة* ${carName}\n` +
-            `نوع السيارة : ${carType}\n` +
-            `رقم الهيكل : ${vin}\n` +
-            `قيمة السيارة : ${amountStr}\n\n` +
-            `يمكنك متابعة حالة طلبك عبر الرابط التالي: \n` +
-            `${trackingLink}\n\n` +
-            `#مع_#معرض #محمد #بن #ذعار #العجمي #للسيارات … #أنت #نجم الطريق`
+            `تم تسجيل طلب شرائكم بنجاح ✅\n\n` +
+            `عدد السيارات في الطلب: ${totalCars}\n` +
+            `قيمة الضريبة: ${fmt(carsTax)} ر.س\n` +
+            `الإجمالي قبل الضريبة: ${fmt(carsSubtotal)} ر.س\n` +
+            (regFeeNum > 0 ? (`رسوم التسجيل: ${fmt(regFeeNum)} ر.س\n`) : ``) +
+            `الإجمالي شامل الضريبة: ${fmt(grandTotalIncl)} ر.س\n\n` +
+            `يمكنكم متابعة حالة الطلب عبر الرابط التالي:\n` +
+            `${trackingLink2}\n\n` +
+            `#مع_معرض #محمد_بن_ذعار_العجمي_للسيارات\n` +
+            `#أنت_نجم_الطريق`
           );
         }
         case 9:
@@ -1213,43 +1149,40 @@ function computeOrderTotalsForMessage(records){
     // -------------------------
     // 1️⃣ الخطوة رقم 1 — تهنئة + رابط التتبع
     // -------------------------
-        case 1: {
+    case 1: {
+      // ✅ قيمة السيارة = للهيكل المختار فقط (مش إجمالي الطلب)
       const rec = (currentOrderRecords && currentOrderRecords.length)
         ? (currentOrderRecords.find(r => String(getFieldFlex("VIN", r) || "").trim() === String(vin || "").trim()) || currentOrderRecords[0])
         : {};
 
       const customerName = getFieldFlex("CustomerName", rec) || "";
-      const totals = computeOrderTotalsForMessage(currentOrderRecords || []);
-      const hasReg = (totals.regFeeNum || 0) > 0;
+      const carName = getFieldFlex("ItemType", rec) || "";
+      const carType = getFieldFlex("ItemCategory", rec) || "";
+
+      const sub = parseAmountFront(getFieldFlex("SubtotalExclVAT", rec));
+      const itemVal = parseAmountFront(getFieldFlex("ItemValue", rec));
+      const tax = parseAmountFront(getFieldFlex("TaxValue", rec));
+
+      const base = (sub !== null ? sub : (itemVal !== null ? itemVal : null));
+      const lineTotalNum = (base !== null ? (base + (tax || 0)) : null);
+
+      const amountStr = (lineTotalNum !== null)
+        ? lineTotalNum.toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ر.س"
+        : "";
 
       text =
-        `عميلنا العزيز / ${customerName}
-` +
-        `مرحباً بكم في معرض محمد بن ذعار العجمي للسيارات
-
-` +
-        `تم تسجيل طلب شرائكم بنجاح ✅
-
-` +
-        `عدد السيارات في الطلب: ${totals.totalCars}
-` +
-        `قيمة الضريبة: ${formatSAR(totals.tax)}
-` +
-        `الإجمالي قبل الضريبة: ${formatSAR(totals.subtotal)}
-` +
-        (hasReg ? (`رسوم التسجيل: ${formatSAR(totals.regFeeNum)}
-`) : ``) +
-        `الإجمالي شامل الضريبة: ${formatSAR(totals.grand)}
-
-` +
-        `يمكنكم متابعة حالة الطلب عبر الرابط التالي:
-${trackingLink}
-
-` +
+        `عميلنا العزيز / ${customerName}\n` +
+        `مرحباً بكم في معرض محمد بن ذعار العجمي للسيارات\n\n` +
+        `تم تسجيل طلب شرائك بنجاح \n\n` +
+        `*للسيارة* ${carName}\n` +
+        `نوع السيارة : ${carType}\n` +
+        `رقم الهيكل : ${vin}\n` +
+        `قيمة السيارة : ${amountStr}\n\n` +
+        `يمكنك متابعة حالة طلبك عبر الرابط التالي: \n${trackingLink}\n\n` +
         `#مع_#معرض #محمد #بن #ذعار #العجمي #للسيارات … #أنت #نجم الطريق`;
       break;
     }
-case 9:
+    case 9:
       text =
         `عميلنا العزيز يسعدنا ابلاغك بجاهزية سيارتك الأن يمكنك الحضور للاستلام او طلب خدمة الشحن. 
 
@@ -1400,11 +1333,8 @@ function clearErpTable() {
         return (n !== null && n > 0) ? n : 0;
       })();
 
-      // ✅ توزيع رسوم التسجيل على عدد الهياكل (لكل سطر في الجدول)
-      const totalCars = records.length;
-      const regFeeShare = (regFeeNum > 0 && totalCars > 0) ? (regFeeNum / totalCars) : 0;
-
       // ✅ نعرض في الجدول سيارات فقط (رسوم التسجيل تظهر أعلى في صندوق الإجماليات)
+      const totalCars = records.length;
       const displayRecords = records.slice();
 
       // تعبئة جدول ERP
@@ -1414,29 +1344,26 @@ function clearErpTable() {
           const td = document.createElement("td");
           let val = getFieldFlex(field, rec);
 
-          // ✅ فallback: بعض الطلبات (خصوصًا طلبات هيكل واحد) تكون فيها TotalInclVAT = 0 أو غير موجودة على مستوى السطر
-          // بينما تتوفر SubtotalExclVAT و TaxValue. هنا نحسب "الإجمالي شامل الضريبة" يدويًا.
+          // ✅ فallback + تصحيح: بعض الطلبات ترجع TotalInclVAT على مستوى الطلب وتكرره بكل سطر
+          // هنا نُجبره يكون "لكل هيكل" = (قبل الضريبة + الضريبة) + (رسوم التسجيل ÷ عدد الهياكل)
           if (field === "TotalInclVAT") {
-            const numRaw = parseAmountFront(val);
             const _sub = parseAmountFront(getFieldFlex("SubtotalExclVAT", rec));
             const _tax = parseAmountFront(getFieldFlex("TaxValue", rec));
             const computed = (_sub || 0) + (_tax || 0);
 
-            // ✅ بعض بيانات ERP ترجع "إجمالي الطلب بالكامل" داخل كل سطر.
-            // هنا نُجبر السطر أنه يكون (قبل الضريبة + الضريبة) لكل هيكل،
-            // إلا إذا كان الـ raw قريب جدًا من computed (يعني فعلاً إجمالي السطر).
-            let lineTotal = 0;
+            const perReg = (regFeeNum > 0 && totalCars > 0) ? (regFeeNum / totalCars) : 0;
+            const computedPerLine = computed + perReg;
+
+            // لو عندنا subtotal/tax — اعتمد الحسبة دي دائمًا (خصوصًا لو الطلب متعدد الهياكل)
             if (computed > 0) {
-              const rawLooksLikeLine = (numRaw !== null && numRaw > 0 && numRaw <= (computed * 1.2));
-              lineTotal = rawLooksLikeLine ? numRaw : computed;
+              val = computedPerLine;
             } else {
-              lineTotal = (numRaw !== null ? numRaw : 0);
+              // fallback لو مفيش subtotal/tax
+              const numRaw = parseAmountFront(val);
+              if (numRaw === null || numRaw === 0) {
+                val = null;
+              }
             }
-
-            // ✅ إضافة نصيب رسوم التسجيل على كل هيكل (regFee / عدد الهياكل)
-            if (regFeeShare > 0) lineTotal = (lineTotal || 0) + regFeeShare;
-
-            val = lineTotal;
           }
 
           if (field === "TaxRate") {
@@ -1488,45 +1415,61 @@ function clearErpTable() {
       currentItemNo = resolveItemNoForVin(currentVin, records);
 
       // حساب إجمالي الطلب (السيارات فقط) + رسوم التسجيل (بدون ضريبة)
+      // const totalCars = records.length; // مُعرّف بالأعلى
 
-      // ✅ نحسب إجمالي الطلب (قبل الضريبة + الضريبة) من السطور — ونتجاهل TotalInclVAT لأنه قد يكون إجمالي الطلب مكررًا بكل سطر
-let carsSubtotal = 0; // قبل الضريبة
-let carsTax      = 0; // قيمة الضريبة
 
-records.forEach(rec => {
-  const subVal = parseAmountFront(getFieldFlex("SubtotalExclVAT", rec));
-  const taxVal = parseAmountFront(getFieldFlex("TaxValue", rec));
-  if (subVal !== null) carsSubtotal += subVal;
-  if (taxVal !== null) carsTax      += taxVal;
-});
+      // ✅ نحسب إجماليات السيارات من السطور (أفضل مصدر ثابت)
+      let carsSubtotal = 0; // قبل الضريبة
+      let carsTax      = 0; // قيمة الضريبة
+      let carsTotal    = 0; // شامل الضريبة
 
-// ✅ لو السطور ما فيها إجماليات (طلبات قديمة/بدون أعمدة) خُدها مرة واحدة من الهيدر
-if (carsSubtotal === 0 && carsTax === 0) {
-  const headerSubBT = parseAmountFront(getFieldFlex("SubtotalBeforeTax", first));
-  const headerSub   = parseAmountFront(getFieldFlex("SubtotalExclVAT", first));
-  const headerTax   = parseAmountFront(getFieldFlex("TaxValue", first));
-  const headerGrand = parseAmountFront(getFieldFlex("GrandTotal", first));
+      records.forEach(rec => {
+        const subVal = parseAmountFront(getFieldFlex("SubtotalExclVAT", rec));
+        const taxVal = parseAmountFront(getFieldFlex("TaxValue", rec));
+        const totVal = parseAmountFront(getFieldFlex("TotalInclVAT", rec));
 
-  if (headerSubBT !== null) {
-    carsSubtotal = Math.max(0, (headerSubBT || 0) - (regFeeNum || 0));
-  } else if (headerSub !== null) {
-    carsSubtotal = headerSub || 0;
-  }
+        if (subVal !== null) carsSubtotal += subVal;
+        if (taxVal !== null) carsTax      += taxVal;
+        if (totVal !== null) carsTotal    += totVal;
+      });
 
-  if (headerTax !== null) {
-    carsTax = headerTax || 0;
-  } else if (headerGrand !== null && carsSubtotal > 0) {
-    // لو عندنا GrandTotal: استنتج الضريبة بعد خصم رسوم التسجيل
-    const carsGrand = Math.max(0, (headerGrand || 0) - (regFeeNum || 0));
-    const inferred = carsGrand - carsSubtotal;
-    carsTax = inferred > 0 ? inferred : 0;
-  }
-}
+      // ✅ لو السطور ما فيها إجماليات (طلبات قديمة/بدون أعمدة Y/Z) خُدها مرة واحدة من الهيدر
+      if (carsSubtotal === 0 && carsTax === 0 && carsTotal === 0) {
+        const headerGrand = parseAmountFront(getFieldFlex("GrandTotal", first));
+        const headerSubBT = parseAmountFront(getFieldFlex("SubtotalBeforeTax", first));
+        const headerSub   = parseAmountFront(getFieldFlex("SubtotalExclVAT", first));
+        const headerTax   = parseAmountFront(getFieldFlex("TaxValue", first));
 
-const carsTotal = (carsSubtotal || 0) + (carsTax || 0);
-// ✅ رسوم التسجيل (بدون ضريبة) — تُضاف على إجمالي الطلب
-const grandTotalIncl = carsTotal + (regFeeNum || 0);
-// عرض صندوق الإجماليات (بالمسميات المطلوبة)
+        // الأفضل: (SubtotalBeforeTax + Tax) أو GrandTotal مباشرة
+        if (headerSubBT !== null) {
+          carsSubtotal = Math.max(0, (headerSubBT || 0) - (regFeeNum || 0));
+        } else if (headerSub !== null) {
+          carsSubtotal = headerSub || 0;
+        }
+
+        if (headerGrand !== null) {
+          carsTotal = Math.max(0, (headerGrand || 0) - (regFeeNum || 0));
+        } else if (headerSubBT !== null && headerTax !== null) {
+          carsTotal = Math.max(0, ((headerSubBT || 0) + (headerTax || 0)) - (regFeeNum || 0));
+        }
+
+        if (headerTax !== null) {
+          carsTax = headerTax || 0;
+        } else if (carsTotal > 0 || carsSubtotal > 0) {
+          const inferred = (carsTotal || 0) - (carsSubtotal || 0);
+          carsTax = inferred > 0 ? inferred : 0;
+        }
+      }
+
+      // احتياط: لو TotalInclVAT مش متوفر لكن عندنا Subtotal + Tax
+      if (carsTotal === 0 && (carsSubtotal > 0 || carsTax > 0)) {
+        carsTotal = carsSubtotal + carsTax;
+      }
+
+      // ✅ رسوم التسجيل (بدون ضريبة) — تُضاف فقط على الإجمالي شامل الضريبة
+      const grandTotalIncl = (carsTotal || 0) + (regFeeNum || 0);
+
+      // عرض صندوق الإجماليات (بالمسميات المطلوبة)
       const hasTotals = (carsSubtotal > 0 || carsTax > 0 || carsTotal > 0 || regFeeNum > 0);
       if (hasTotals) {
         const parts = [];

@@ -127,7 +127,7 @@ body{opacity:0}
     display:flex;
     flex-direction:column
   }
-  .modal header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .modal header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:10}
   .modal h3{margin:0;color:var(--brown)}
   .modal .body{padding:12px 14px;overflow:auto}
   .modal .tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -641,7 +641,21 @@ function liftNoFlash(){
 }
 
 
-  const $ = s => document.querySelector(s);
+  
+
+  // توحيد قراءة حالة "تمت الموافقة" (ممكن تيجي Boolean أو رقم أو نص)
+  function isApproved(v){
+    if(v === true) return true;
+    if(v === false || v == null) return false;
+    const s = String(v).trim().toLowerCase();
+    return (
+      s === 'true' || s === '1' || s === 'yes' || s === 'y' ||
+      s === 'approved' || s === 'approve' || s === 'ok' ||
+      s === 'موافق' || s === 'تمت الموافقة' || s === 'تمت الموافقه'
+    );
+  }
+
+const $ = s => document.querySelector(s);
   const toast = $('#toast');
   const pad = n => n<10?'0'+n:n;
   const now = ()=>{
@@ -1345,8 +1359,8 @@ function renderShootCard(gridEl){
     if (status === 'cancelled' || status === 'rejected') return false;
 
     // حالة الموافقات (تبقى ظاهرة حتى بعد اكتمالها علشان نعرف الطلب وصل لفين)
-    const adminOk   = (m.adminApproved === true || m.adminApproved === 'true' || m.adminApproval === true);
-    const financeOk = (m.financeApproved === true || m.financeApproved === 'true' || m.financeApproval === true);
+    const adminOk   = (isApproved(m.adminApproved) || isApproved(m.adminApproval));
+    const financeOk = (isApproved(m.financeApproved) || isApproved(m.financeApproval));
 
     // هل في فلاغ إن الطلب محتاج موافقة
     const needsFlag =
@@ -1384,11 +1398,11 @@ function renderShootCard(gridEl){
     const total = transferRequests.length;
 
     const adminApprovedCount = transferRequests.filter(t =>
-      t.adminApproved === true || t.adminApproved === 'true' || t.adminApproval === true
+      isApproved(t.adminApproved) || isApproved(t.adminApproval)
     ).length;
 
     const financeApprovedCount = transferRequests.filter(t =>
-      t.financeApproved === true || t.financeApproved === 'true' || t.financeApproval === true
+      isApproved(t.financeApproved) || isApproved(t.financeApproval)
     ).length;
 
     const adminPendingCount = total - adminApprovedCount;
@@ -1423,9 +1437,11 @@ function renderShootCard(gridEl){
       </div>
     `;
     // فتح الكل عند الضغط على الكارت
-    card.addEventListener('click', ()=> openTransfersModal('all'));
-
-    // أزرار الفلترة داخل الكارت
+    card.addEventListener('click', (ev)=>{
+      if(ev && ev.target && ev.target.closest && ev.target.closest('button[data-tfilter]')) return;
+      openTransfersModal('all');
+    });
+// أزرار الفلترة داخل الكارت
     card.querySelectorAll('button[data-tfilter]').forEach(btn=>{
       btn.addEventListener('click', (ev)=>{
         ev.stopPropagation();
@@ -2278,8 +2294,8 @@ function openShootModal(filter='ALL'){
 
   function openTransfersModal(filterKey='all'){
     const list = Array.isArray(transferRequests) ? transferRequests.slice() : [];
-    const needsAdmin = (t)=> !(t.adminApproved===true || t.adminApproved==='true' || t.adminApproval===true);
-    const needsFinance = (t)=> !(t.financeApproved===true || t.financeApproved==='true' || t.financeApproval===true);
+    const needsAdmin = (t)=> !(isApproved(t.adminApproved) || isApproved(t.adminApproval));
+    const needsFinance = (t)=> !(isApproved(t.financeApproved) || isApproved(t.financeApproval));
 
     let picked = list;
     if(filterKey==='admin') picked = list.filter(needsAdmin);
@@ -2307,8 +2323,8 @@ function openShootModal(filter='ALL'){
       const carName  = stockRow?.car || '—';
       const variant  = stockRow?.variant || '—';
 
-      const adminOk   = (t.adminApproved===true || t.adminApproved==='true' || t.adminApproval===true);
-      const financeOk = (t.financeApproved===true || t.financeApproved==='true' || t.financeApproval===true);
+      const adminOk   = (isApproved(t.adminApproved) || isApproved(t.adminApproval));
+      const financeOk = (isApproved(t.financeApproved) || isApproved(t.financeApproval));
 
       const adminStatusTxt = adminOk
         ? (t.adminApprovedAt ? 'إداري: موافق (' + t.adminApprovedAt + ')' : 'إداري: موافق')
@@ -2382,7 +2398,7 @@ if (isFinance && !FINANCE_APPROVAL_ROLES.includes(currentUserRole)) {
 
 // تحديث بيانات الطلب نفسه
 if (isAdmin) {
-  const adminOk = (m.adminApproved === true || m.adminApproved === 'true' || m.adminApproval === true);
+  const adminOk = (isApproved(m.adminApproved) || isApproved(m.adminApproval));
   if (adminOk) {
     showToast('تمت موافقة الإدارة على هذا الطلب مسبقًا');
     return;
@@ -2391,7 +2407,7 @@ if (isAdmin) {
   m.adminApproval   = true;
   m.adminApprovedAt = now();
 } else if (isFinance) {
-  const financeOk = (m.financeApproved === true || m.financeApproved === 'true' || m.financeApproval === true);
+  const financeOk = (isApproved(m.financeApproved) || isApproved(m.financeApproval));
   if (financeOk) {
     showToast('تمت الموافقة المالية على هذا الطلب مسبقًا');
     return;
@@ -2402,8 +2418,8 @@ if (isAdmin) {
 }
 
 // تحديث حالة الطلب العامة بناءً على الموافقتين
-const adminOkNow   = (m.adminApproved === true || m.adminApproved === 'true' || m.adminApproval === true);
-const financeOkNow = (m.financeApproved === true || m.financeApproved === 'true' || m.financeApproval === true);
+const adminOkNow   = (isApproved(m.adminApproved) || isApproved(m.adminApproval));
+const financeOkNow = (isApproved(m.financeApproved) || isApproved(m.financeApproval));
 
 // تحديث فلاغات الموافقات على المخزون فقط (بدون تحريك السيارة)
 const stockIndex = stock.findIndex(r => String(r.vin) === String(m.vin));
@@ -2583,8 +2599,8 @@ try{
         const variant  = stockRow?.variant || '';
         const note= [stockRow?.financeNotes, stockRow?.adminNotes, t.financeNote, t.adminNote, t.note, t.message]
           .filter(v => (v||'').toString().trim()!=='').join(' | ');
-        const adminOk   = (t.adminApproved===true || t.adminApproved==='true' || t.adminApproval===true);
-        const financeOk = (t.financeApproved===true || t.financeApproved==='true' || t.financeApproval===true);
+        const adminOk   = (isApproved(t.adminApproved) || isApproved(t.adminApproval));
+        const financeOk = (isApproved(t.financeApproved) || isApproved(t.financeApproval));
         const statusTxt = (adminOk && financeOk)? 'تمت الموافقة المالية والإدارية'
           : (!adminOk && !financeOk)? 'بانتظار الموافقة المالية والإدارية'
           : (!adminOk && financeOk)? 'بانتظار موافقة الإدارة'

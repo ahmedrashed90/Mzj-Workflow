@@ -5,6 +5,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -1480,10 +1481,9 @@ function clearErpTable() {
         }
       }
 
-      // احتياط: لو TotalInclVAT مش متوفر لكن عندنا Subtotal + Tax
-      if (carsTotal === 0 && (carsSubtotal > 0 || carsTax > 0)) {
-        carsTotal = carsSubtotal + carsTax;
-      }
+      // ✅ الإجمالي للسيارات = (الإجمالي قبل الضريبة + قيمة الضريبة)
+// نتجاهل TotalInclVAT لتفادي تكرار إجمالي الطلب داخل كل سطر عند تعدد الهياكل
+      carsTotal = (carsSubtotal || 0) + (carsTax || 0);
 
       // ✅ رسوم التسجيل (بدون ضريبة) — تُضاف فقط على الإجمالي شامل الضريبة
       const grandTotalIncl = (carsTotal || 0) + (regFeeNum || 0);

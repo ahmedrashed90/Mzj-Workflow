@@ -1,6 +1,6 @@
 /* Mobile downbar text */
 .mzj-downbar a span{
-  font-size: 8px;
+  font-size: 7px;
   line-height: 1.1;
   white-space: nowrap;
   overflow: hidden;
@@ -11,6 +11,6 @@
 /* شاشات أصغر */
 @media (max-width: 380px){
   .mzj-downbar a span{
-    font-size: 8px;
+    font-size: 6px;
   }
 }

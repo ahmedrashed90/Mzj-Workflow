@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -1460,9 +1471,9 @@ function renderShootCard(gridEl){
             <div class="mini-kpi"><span>موافقة مالية:</span> <b>${awaitingCount.toLocaleString('ar-SA')}</b></div>
           </div>
           <div class="chips">
-            <button class="chip" data-tfilter="awaiting"><i class="fa-solid fa-user-check"></i> موافقة إدارية</button>
-            <button class="chip" data-tfilter="awaiting"><i class="fa-solid fa-coins"></i> موافقة مالية</button>
-            <button class="chip" data-tfilter="all"><i class="fa-solid fa-truck-fast"></i> طلبات النقل إلى مباع تم التسليم</button>
+            <span class="metric shoot-metric" data-tfilter="awaiting"><i class="fa-solid fa-user-check"></i> موافقة إدارية</span>
+            <span class="metric shoot-metric" data-tfilter="awaiting"><i class="fa-solid fa-coins"></i> موافقة مالية</span>
+            <span class="metric shoot-metric" data-tfilter="all"><i class="fa-solid fa-truck-fast"></i> طلبات النقل إلى مباع تم التسليم</span>
           </div>
         </div>
         <div class="group-total" title="إجمالي طلبات النقل">${total.toLocaleString('ar-SA')}</div>
@@ -1471,12 +1482,12 @@ function renderShootCard(gridEl){
 
     // فتح الكل عند الضغط على الكارت (وليس الأزرار)
     card.addEventListener('click', (ev)=>{
-      if(ev && ev.target && ev.target.closest && ev.target.closest('button[data-tfilter]')) return;
+      if(ev && ev.target && ev.target.closest && ev.target.closest('[data-tfilter]')) return;
       openTransfersModal('all');
     });
 
     // أزرار الفلترة داخل الكارت
-    card.querySelectorAll('button[data-tfilter]').forEach(btn=>{
+    card.querySelectorAll('[data-tfilter]').forEach(btn=>{
       btn.addEventListener('click', (ev)=>{
         ev.stopPropagation();
         const f = btn.getAttribute('data-tfilter') || 'all';

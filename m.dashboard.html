@@ -2815,11 +2815,45 @@ body{
   max-width: 100% !important;
 }
 </style>
-<style id="mzjCardNoMargins">
+
+<style id="mzjFullBleedCards">
 @media (max-width: 1023px){
+  /* Remove side gutters so cards are not centered */
+  main.mzj-content, .mzj-content, main, .content, .main, .main-content, .page, .dashboard, .dash{
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Kill any container auto-centering */
+  .container, [class*="container"], .wrap, .content-wrap, .inner, .wrapper, [class*="wrapper"]{
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Make cards full width with minimal vertical spacing */
   .card,.mzj-card,.dash-card,.stat-card,.kpi-card,.tile,.box,.panel,.summary,.summary-card,
   section,.section,.widget,.widget-card,[class*="card"],[class*="panel"]{
-    margin: 6px 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-top: 8px !important;
+    margin-bottom: 8px !important;
+    border-radius: 16px !important;
+  }
+
+  /* Add a tiny internal padding to body area (instead of centering) */
+  body{
+    padding-left: 10px !important;
+    padding-right: 10px !important;
   }
 }
 </style>

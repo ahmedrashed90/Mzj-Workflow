@@ -9,6 +9,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -121,8 +122,9 @@ body{opacity:0}
   .hint{color:var(--muted);font-size:12px}
 
   /* Modal */
-  .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.38);display:none;align-items:center;justify-content:center;z-index:80}
-  .modal{
+  /* Ensure dashboard modal stays فوق أي Topbar/Sidebar (mzj-ui uses high z-index) */
+  #backdrop.dash-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.38);display:none;align-items:center;justify-content:center;z-index:9999}
+  .dash-modal{
     background:#fff;
     border:1px solid var(--line);
     border-radius:16px;
@@ -132,10 +134,10 @@ body{opacity:0}
     display:flex;
     flex-direction:column
   }
-  .modal header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:10}
-  .modal h3{margin:0;color:var(--brown)}
-  .modal .body{padding:12px 14px;overflow:auto}
-  .modal .tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .dash-modal .dash-modal-header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:10}
+  .dash-modal h3{margin:0;color:var(--brown)}
+  .dash-modal .body{padding:12px 14px;overflow:auto}
+  .dash-modal .tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;cursor:pointer;font-weight:700;display:inline-flex;gap:8px;align-items:center;transition:.15s}
   .btn-primary{background:var(--beige);border-color:var(--beige);color:#fff}
   .btn-ghost{background:#fff}
@@ -374,9 +376,9 @@ tr:hover{ filter: brightness(0.98); }
 </div>
 
 <!-- Modal -->
-<div id="backdrop" class="backdrop" aria-hidden="true">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <header>
+<div id="backdrop" class="dash-backdrop" aria-hidden="true">
+  <div class="dash-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <header class="dash-modal-header">
       <h3 id="modalTitle">عرض</h3>
       <div class="tools">
         <input id="modalSearch" class="input" placeholder="بحث..." style="min-width:280px">
@@ -1773,11 +1775,14 @@ function renderShootCard(gridEl){
 
     // Reset
     modalSearch.value='';
-    modalSearch.placeholder = (mode==='transfers')
-      ? 'بحث برقم الهيكل (VIN) أو أي بيانات...'
-      : (mode==='sales')
-        ? 'بحث (رقم الطلب / اسم العميل / VIN / الجوال...)'
-        : 'بحث...';
+    modalSearch.placeholder =
+      (mode==='rows')
+        ? 'بحث شامل: السيارة، البيان، الوكيل، الألوان، الموديل، اللوحة، المكان، اسم الدفعة، رقم الهيكل، الملاحظات...'
+        : (mode==='transfers')
+          ? 'بحث شامل: رقم الهيكل/السيارة/البيان/المكان/الملاحظات...'
+          : (mode==='sales')
+            ? 'بحث (رقم الطلب / اسم العميل / VIN / الجوال / الفرع...)'
+            : 'بحث...';
     if(mode!=='shoot' && shootDetailsBox){
       shootDetailsBox.style.display='none';
     }
@@ -2570,9 +2575,18 @@ try{
       }
       const base = currentTransfersBase.length ? currentTransfersBase : (transferRequests||[]);
       filteredTransfers = base.filter(t=>{
+        // ضمّ بيانات السيارة من المخزون في البحث (حتى لو المستخدم يبحث بالسيارة/البيان/الألوان...)
+        const vin = (t.vin || t.chassis || '').toString();
+        const stockRow = (Array.isArray(stock) ? stock : []).find(r => String(r.vin||'') === String(vin||''));
         const hay=[
+          // بيانات الطلب
           t.id, t.vin, t.chassis, t.from, t.fromLocation, t.to, t.toLocation,
-          t.requestedAt, t.createdAt, t.date, t.note, t.message, t.status
+          t.requestedAt, t.createdAt, t.date, t.note, t.message, t.status,
+          t.financeNote, t.adminNote,
+          // بيانات السيارة (لو موجودة)
+          stockRow?.car, stockRow?.variant, stockRow?.dealer, stockRow?.extColor, stockRow?.intColor,
+          stockRow?.modelYear, stockRow?.plate, stockRow?.location, stockRow?.batchName,
+          stockRow?.notes, stockRow?.adminNotes, stockRow?.financeNotes, (stockRow?.admin && stockRow.admin.notes)
         ].join(' ').toLowerCase();
         return hay.includes(q);
       });
@@ -2594,7 +2608,8 @@ try{
         data.push([
           idx+1,
           r.car||'', r.variant||'', r.dealer||'', r.extColor||'', r.intColor||'', r.modelYear||'',
-          r.plate||'', r.location||'', r.batchName||'', r.vin||'', r.notes||''
+          r.plate||'', r.location||'', r.batchName||'', r.vin||'',
+          [r.notes,r.adminNotes,r.financeNotes,(r.admin&&r.admin.notes)].filter(v => (v||'').toString().trim()!=='').join(' | ')
         ]);
       });
       const ws=XLSX.utils.aoa_to_sheet(data);

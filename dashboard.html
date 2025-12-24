@@ -1470,22 +1470,11 @@ function renderShootCard(gridEl){
             <div class="mini-kpi"><span>موافقة إدارية:</span> <b>${awaitingCount.toLocaleString('ar-SA')}</b></div>
             <div class="mini-kpi"><span>موافقة مالية:</span> <b>${awaitingCount.toLocaleString('ar-SA')}</b></div>
           </div>
-          <div class="card-actions">
-  <button class="card-action-btn" onclick="filterApprovals('awaiting')">
-    <span class="card-action-title">موافقة إدارية</span>
-    <span class="card-action-count" id="adminAwaitingCount">0</span>
-  </button>
-
-  <button class="card-action-btn" onclick="filterApprovals('awaiting')">
-    <span class="card-action-title">موافقة مالية</span>
-    <span class="card-action-count" id="financeAwaitingCount">0</span>
-  </button>
-
-  <button class="card-action-btn primary" onclick="filterApprovals('delivered')">
-    طلبات النقل إلى مباع تم التسليم
-  </button>
-</div>
-
+          <div class="chips">
+            <button class="chip" data-tfilter="awaiting"><i class="fa-solid fa-user-check"></i> موافقة إدارية</button>
+            <button class="chip" data-tfilter="awaiting"><i class="fa-solid fa-coins"></i> موافقة مالية</button>
+            <button class="chip" data-tfilter="all"><i class="fa-solid fa-truck-fast"></i> طلبات النقل إلى مباع تم التسليم</button>
+          </div>
         </div>
         <div class="group-total" title="إجمالي طلبات النقل">${total.toLocaleString('ar-SA')}</div>
       </div>

@@ -206,6 +206,77 @@
   .notes-col{
     display:none;
   }
+
+
+/* === MZJ Mobile Hotfix v2 (Full width + Compact Downbar + No tooltips) === */
+
+/* use more width (remove right/left margins) */
+.mzj-main, .main, main, .container, .page, .content{
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+@media (max-width: 430px){
+  .mzj-main, .main, main, .container, .page, .content{
+    padding-left: 6px !important;
+    padding-right: 6px !important;
+  }
+}
+
+/* cards/sections should stretch full width */
+.card, .section, .panel, .box{
+  max-width: none !important;
+}
+
+/* Inner tabs: keep 3+2 but slightly more compact */
+.inner-tabs{
+  gap:10px !important;
+  margin: 14px 0 14px !important;
+}
+.inner-tabs .inner-tab{
+  min-height:44px !important;
+  border-radius:16px !important;
+  font-size:13px !important;
+  padding:10px 10px !important;
+}
+
+/* Downbar: make it smaller + 2 rows */
+.mzj-main{padding-bottom: calc(96px + var(--safe-bottom)) !important;}
+
+.mzj-downbar{
+  height: calc(84px + var(--safe-bottom)) !important;
+  border-top-left-radius: 20px !important;
+  border-top-right-radius: 20px !important;
+}
+.mzj-downbar .inner{
+  height:84px !important;
+  display:grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  grid-template-rows: repeat(2, 1fr) !important;
+  gap:8px !important;
+  padding: 8px 10px !important;
+  align-items:stretch !important;
+}
+.mzj-downbar a{
+  border-radius:16px !important;
+  padding:8px 8px !important;
+  gap:6px !important;
+}
+.mzj-downbar a i{
+  font-size:15px !important;
+}
+.mzj-downbar a span{
+  font-size:11px !important;
+  font-weight:900 !important;
+  line-height:1 !important;
+}
+
+/* prevent long-press tooltip/selection popups as much as possible */
+.inner-tab, .mzj-downbar a{
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+
 </style>
 <style id="noFlash">
   html{background:#fff8ef;}
@@ -487,7 +558,7 @@ header, .topbar, .navbar, .header, .sidebar, aside.sidebar, nav.sidebar, .side-b
 <div class="topbar">
 <div class="topbar-inner">
 <div class="brand">
-<div class="logo" title="MZJ">MZJ</div>
+<div class="logo">MZJ</div>
 <div>
 <h1>لوحة إدارة السيارات</h1>
 <small class="hint">مجموعة محمد بن ذعار العجمي للسيارات</small>
@@ -540,15 +611,15 @@ header, .topbar, .navbar, .header, .sidebar, aside.sidebar, nav.sidebar, .side-b
 <h2 style="margin:0">إضافة سيارة</h2>
 </div>
 <div class="row">
-<button class="btn btn-ghost" id="btnExport" title="تصدير إلى Excel">
+<button class="btn btn-ghost" id="btnExport">
 <i class="fa-regular fa-file-excel"></i> تصدير
           </button>
 <!-- الجديد: زر تصدير قالب فاضي -->
-<button class="btn btn-ghost" id="btnExportBlank" title="تصدير قالب فاضي">
+<button class="btn btn-ghost" id="btnExportBlank">
 <i class="fa-regular fa-file"></i> تصدير قالب فاضي
           </button>
 <div class="import-menu">
-<button class="btn btn-ghost" id="btnImportMenu" title="استيراد من Excel">
+<button class="btn btn-ghost" id="btnImportMenu">
 <i class="fa-solid fa-file-import"></i> استيراد ▾
             </button>
 <div class="import-dropdown" id="importDropdown">
@@ -564,8 +635,8 @@ header, .topbar, .navbar, .header, .sidebar, aside.sidebar, nav.sidebar, .side-b
 <div>
 <label for="carSelect">سيارة</label>
 <div class="row" style="gap:8px;align-items:stretch">
-<select id="carSelect" title="اختر السيارة"></select>
-<button class="btn btn-outline" id="btnAddModel" title="إضافة موديل جديد">
+<select id="carSelect"></select>
+<button class="btn btn-outline" id="btnAddModel">
 <i class="fa-solid fa-plus"></i> موديل
             </button>
 </div>
@@ -573,8 +644,8 @@ header, .topbar, .navbar, .header, .sidebar, aside.sidebar, nav.sidebar, .side-b
 <div>
 <label for="variantSelect">البيان</label>
 <div class="row" style="gap:8px;align-items:stretch">
-<select id="variantSelect" title="اختر البيان"></select>
-<button class="btn btn-outline" id="btnAddVariant" title="إضافة بيان وربطه بسيارة">
+<select id="variantSelect"></select>
+<button class="btn btn-outline" id="btnAddVariant">
 <i class="fa-solid fa-plus"></i> بيان
             </button>
 </div>
@@ -613,7 +684,7 @@ header, .topbar, .navbar, .header, .sidebar, aside.sidebar, nav.sidebar, .side-b
 <!-- المكان: قائمة منسدلة ثابتة -->
 <div>
 <label for="location">المكان</label>
-<select id="location" title="اختر المكان">
+<select id="location">
 <option value="المستودع : المخزون المتاح">المستودع : المخزون المتاح</option>
 <option value="المستودع : سيارات بها ملاحظات">المستودع : سيارات بها ملاحظات</option>
 <option value="المستودع : مباع تحت التسليم">المستودع : مباع تحت التسليم</option>
@@ -654,10 +725,10 @@ header, .topbar, .navbar, .header, .sidebar, aside.sidebar, nav.sidebar, .side-b
 </div>
 </div>
 <div class="row" style="margin-top:12px">
-<button class="btn btn-primary" id="btnSave" title="حفظ (Ctrl+S)">
+<button class="btn btn-primary" id="btnSave">
 <i class="fa-regular fa-floppy-disk"></i> حفظ
         </button>
-<button class="btn btn-ghost" id="btnReset" title="تفريغ الحقول (Esc)">
+<button class="btn btn-ghost" id="btnReset">
 <i class="fa-solid fa-rotate"></i> تفريغ
         </button>
 <div class="hint"></div>
@@ -672,7 +743,7 @@ header, .topbar, .navbar, .header, .sidebar, aside.sidebar, nav.sidebar, .side-b
 <h2 style="margin:0">حركة نقل السيارات (برقم الهيكل)</h2>
 </div>
 <span class="hint"> <b></b> </span>
-<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><label>إلى</label><select id="moveToGlobal" title="المكان الجديد"></select></div></div>
+<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><label>إلى</label><select id="moveToGlobal"></select></div></div>
 <!-- 8 صفوف نقل -->
 <div class="row" style="margin:8px 0 12px;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn btn-ghost" id="btnAddMoveRow" type="button"><i class="fa-solid fa-plus"></i> إضافة حركة أخرى</button></div><div class="grid" id="moveRowsContainer" style="gap:10px"></div>
 <!-- datalist للاقتراحات -->
@@ -701,10 +772,10 @@ header, .topbar, .navbar, .header, .sidebar, aside.sidebar, nav.sidebar, .side-b
 </div>
 <!-- ملاحظات سيارات بها ملاحظات -->
 <div class="row" style="margin-top:12px">
-<button class="btn btn-ghost" id="btnFindByVin" title="عرض بيانات السيارة (أول سطر غير فارغ)">
+<button class="btn btn-ghost" id="btnFindByVin">
 <i class="fa-solid fa-magnifying-glass"></i> عرض البيانات
         </button>
-<button class="btn btn-primary" id="btnMove" title="تنفيذ النقل">
+<button class="btn btn-primary" id="btnMove">
 <i class="fa-solid fa-right-left"></i> نقل
         </button>
 </div>
@@ -740,8 +811,8 @@ header, .topbar, .navbar, .header, .sidebar, aside.sidebar, nav.sidebar, .side-b
 <span class="hint"></span>
 </div>
 <div class="row" style="gap:8px;margin-bottom:8px">
-<input id="search" placeholder="بحث سريع (سيارة / البيان / الوكيل / الألوان / الموديل / اللوحة / المكان / اسم الدفعة / رقم الهيكل)" style="flex:1; padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff" title="اضغط / للبحث"/>
-<button class="btn btn-ghost" id="btnClearSearch" title="مسح البحث">
+<input id="search" placeholder="بحث سريع (سيارة / البيان / الوكيل / الألوان / الموديل / اللوحة / المكان / اسم الدفعة / رقم الهيكل)" style="flex:1; padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff"/>
+<button class="btn btn-ghost" id="btnClearSearch">
 <i class="fa-solid fa-minus"></i> مسح
         </button>
 </div>
@@ -835,7 +906,7 @@ header, .topbar, .navbar, .header, .sidebar, aside.sidebar, nav.sidebar, .side-b
 </table>
 </div>
 <div class="row" style="margin-top:8px">
-<button class="btn btn-ghost" id="btnClearMoves" title="تفريغ السجل">
+<button class="btn btn-ghost" id="btnClearMoves">
 <i class="fa-regular ف-trash-can"></i> تفريغ
         </button>
 </div>
@@ -1214,15 +1285,15 @@ btnLogin.addEventListener('click', async ()=>{
         <td>${r.extColor||''}</td>
         <td>${r.intColor||''}</td>
         <td class="nowrap">${r.modelYear||''}</td>
-        <td class="nowrap"><span class="copyable" data-copy="${r.plate||''}" title="انسخ اللوحة">${r.plate||''}</span></td>
+        <td class="nowrap"><span class="copyable" data-copy="${r.plate||''}">${r.plate||''}</span></td>
         <td>${r.location||''}</td>
         <td>${r.batchName||''}</td>
-        <td class="nowrap"><span class="copyable" data-copy="${r.vin||''}" title="انسخ رقم الهيكل">${r.vin||''}</span></td>
+        <td class="nowrap"><span class="copyable" data-copy="${r.vin||''}">${r.vin||''}</span></td>
         <td>${r.notes||''}</td>
         <td>
           <div class="cell-actions">
-            <button class="btn btn-ghost" data-edit="${r.id}" title="تعديل">تعديل ✎</button>
-            <button class="btn btn-danger" data-del="${r.id}" title="حذف">حذف 🗑</button>
+            <button class="btn btn-ghost" data-edit="${r.id}">تعديل ✎</button>
+            <button class="btn btn-danger" data-del="${r.id}">حذف 🗑</button>
           </div>
         </td>`;
       tableBody.appendChild(tr);
@@ -1783,7 +1854,7 @@ if(idxVin===-1) throw new Error('ملف التحديث لازم يحتوي عم�
     row.innerHTML = `
       <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:6px">
         <div class="move-row-title">السيارة ${index}</div>
-        <button type="button" class="btn btn-ghost" data-remove-move-row="1" title="مسح هذه الحركة">مسح الحركة</button>
+        <button type="button" class="btn btn-ghost" data-remove-move-row="1">مسح الحركة</button>
       </div>
       <div class="grid grid-3">
         <div>
@@ -1792,7 +1863,7 @@ if(idxVin===-1) throw new Error('ملف التحديث لازم يحتوي عم�
         </div>
         <div>
           <label>من (محدّد تلقائيًا)</label>
-          <select class="move-from" title="المكان الحالي"></select>
+          <select class="move-from"></select>
         </div>
         <div class="notes-col">
           <label>ملاحظات هذه السيارة</label>
@@ -2156,7 +2227,7 @@ if(!movedCount){
       tr.innerHTML=`
         <td>${i+1}</td>
         <td class="nowrap">${m.date || onlyDate(m.when||'')}</td>
-        <td class="nowrap"><span class="copyable" data-copy="${m.vin||''}" title="انسخ رقم الهيكل">${m.vin||''}</span></td>
+        <td class="nowrap"><span class="copyable" data-copy="${m.vin||''}">${m.vin||''}</span></td>
         <td>${m.car||''}</td>
         <td>${m.from||''}</td>
         <td>${m.to||''}</td>

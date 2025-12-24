@@ -1,16 +1,26 @@
-/* Mobile downbar text */
+/* ===== FORCE SMALL DOWNBAR TEXT ===== */
+
 .mzj-downbar a span{
-  font-size: 5px;
-  line-height: 1.1;
+  font-size: 8px !important;
+  line-height: 1 !important;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: block;
 }
 
-/* شاشات أصغر */
-@media (max-width: 380px){
+/* الأيقونة نفسها */
+.mzj-downbar a{
+  font-size: 18px !important;
+}
+
+/* تقليل المسافة بين الأيقونة والكتابة */
+.mzj-downbar a span{
+  margin-top: 2px !important;
+}
+
+/* شاشات صغيرة قوي */
+@media (max-width: 360px){
   .mzj-downbar a span{
-    font-size: 3px;
+    font-size: 7.5px !important;
   }
 }

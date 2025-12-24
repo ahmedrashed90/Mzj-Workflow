@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>MZJ Mobile Sidebar v5 (Admin)</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --mzj-brown: rgb(62,36,32);
+      --mzj-beige: rgb(188,143,116);
+      --mzj-cream: #fff8ef;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --stroke: rgba(62,36,32,.12);
+      --shadow: 0 10px 24px rgba(0,0,0,.08);
+      --radius: 14px;
+      --sidebar-w: 265px;
+      --safe-top: env(safe-area-inset-top);
+      --safe-bottom: env(safe-area-inset-bottom);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:"Tajawal", system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color:var(--text);
+      background: linear-gradient(180deg, var(--mzj-cream) 0%, #fff 40%);
+      overflow-x:hidden;
+    }
+
+    .app{display:flex; min-height:100%}
+
+    aside{
+      width: var(--sidebar-w);
+      padding: calc(14px + var(--safe-top)) 12px 14px;
+      background: var(--mzj-brown);
+      color:#fff;
+      position:sticky; top:0; height:100vh;
+      box-shadow: 12px 0 30px rgba(0,0,0,.14);
+    }
+
+    .user-card{
+      border-radius:18px;
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.14);
+      padding:12px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-bottom:12px;
+    }
+    .avatar{
+      width:46px;height:46px;border-radius:16px;
+      background: rgba(188,143,116,.28);
+      border:1px solid rgba(188,143,116,.45);
+      display:grid; place-items:center;
+      font-weight:900;
+      flex:0 0 auto;
+    }
+    .uname{font-weight:900}
+    .urole{font-size:12px; opacity:.80; margin-top:2px; font-weight:700}
+
+    .section-title{
+      margin:12px 8px 8px;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.2px;
+      opacity:.82;
+    }
+
+    .nav{display:grid; gap:10px}
+    .nav a{
+      text-decoration:none;
+      color:#fff;
+      display:flex; align-items:center; gap:10px;
+      padding:12px 12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      font-weight:900;
+    }
+    .nav a.active{
+      background: rgba(188,143,116,.28);
+      border-color: rgba(188,143,116,.45);
+    }
+    .ico{
+      width:36px;height:36px;border-radius:14px;
+      display:grid;place-items:center;
+      background: rgba(255,255,255,.10);
+      flex:0 0 auto;
+      font-size:16px;
+    }
+
+    main{
+      flex:1;
+      padding: 14px;
+      padding-top: calc(14px + var(--safe-top));
+      padding-bottom: calc(14px + var(--safe-bottom));
+    }
+
+    .page-head{
+      display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+      margin-bottom:14px;
+    }
+    .title{
+      margin:0;
+      font-size:18px;
+      font-weight:900;
+      color:var(--mzj-brown);
+      line-height:1.2;
+    }
+    .meta{
+      margin-top:6px;
+      font-size:12px;
+      color:var(--muted);
+      font-weight:700;
+    }
+    .pill{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      background: rgba(188,143,116,.14);
+      border:1px solid rgba(188,143,116,.35);
+      color: var(--mzj-brown);
+      font-weight:800;
+      white-space:nowrap;
+    }
+    .card{
+      background:#fff;
+      border:1px solid var(--stroke);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:12px;
+      margin-bottom:12px;
+    }
+    .card-title{
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:10px;
+      font-weight:900;
+      color:var(--mzj-brown);
+    }
+
+    /* Mobile fallback: if screen is too narrow, sidebar becomes a top overlay style automatically */
+    @media (max-width: 420px){
+      aside{
+        width: 92px;
+      }
+      .user-card{flex-direction:column; align-items:center; text-align:center}
+      .uname,.urole{display:none}
+      .section-title{display:none}
+      .nav a{justify-content:center}
+      .nav a span.txt{display:none}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <aside>
+      <div class="user-card">
+        <div class="avatar">MZJ</div>
+        <div>
+          <div class="uname">Workspace</div>
+          <div class="urole">Admin Mobile</div>
+        </div>
+      </div>
+
+      <div class="section-title">إدارة</div>
+      <nav class="nav">
+        <a class="active" href="#"><span class="ico">🏠</span><span class="txt">الداشبورد</span></a>
+        <a href="#"><span class="ico">🚗</span><span class="txt">المخزون</span></a>
+        <a href="#"><span class="ico">🧾</span><span class="txt">إدارة الطلبات</span></a>
+      </nav>
+
+      <div class="section-title">عمليات</div>
+      <nav class="nav">
+        <a href="#"><span class="ico">🔁</span><span class="txt">نقل السيارات</span></a>
+        <a href="#"><span class="ico">✅</span><span class="txt">الموافقات</span></a>
+        <a href="#"><span class="ico">🕘</span><span class="txt">سجل النشاط</span></a>
+      </nav>
+
+      <div class="section-title">نظام</div>
+      <nav class="nav">
+        <a href="#"><span class="ico">⚙️</span><span class="txt">الإعدادات</span></a>
+        <a href="#"><span class="ico">🚪</span><span class="txt">تسجيل خروج</span></a>
+      </nav>
+    </aside>
+
+    <main>
+      <section class="page-head">
+        <div>
+          <h1 class="title">عنوان الصفحة</h1>
+          <div class="meta">قالب إداري منظم (Sections)</div>
+        </div>
+        <span class="pill">Admin v5</span>
+      </section>
+
+      <div class="card">
+        <div class="card-title"><span>محتوى</span><span class="pill">Ready</span></div>
+        <div style="color:var(--muted); font-weight:700; line-height:1.8;">
+          مناسب جدًا لشغل الإدارة: أقسام واضحة في السايد بار + صفحة رئيسية كروت.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>مكان للجداول</span><span class="pill">Table</span></div>
+        <div style="color:var(--muted); font-weight:700;">هنا تركّب جدول/قائمة متجاوبة.</div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>MZJ Mobile Sidebar — Dark Panels v2</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --brown: rgb(62,36,32);
+      --beige: rgb(188,143,116);
+      --cream: #fff8ef;
+      --text:#111827;
+      --muted:#6b7280;
+      --stroke: rgba(62,36,32,.14);
+      --shadow: 0 16px 40px rgba(0,0,0,.14);
+      --radius: 18px;
+      --safe-top: env(safe-area-inset-top);
+      --safe-bottom: env(safe-area-inset-bottom);
+      --sb: 112px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:"Tajawal",system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      background: #f7f2ec;
+      color:var(--text);
+      overflow-x:hidden;
+    }
+    .app{display:flex; min-height:100%}
+    aside{
+      width:var(--sb);
+      position:sticky; top:0; height:100vh;
+      padding: calc(12px + var(--safe-top)) 10px 12px;
+      background: linear-gradient(180deg, rgba(62,36,32,1), rgba(43,22,20,1));
+      color:#fff;
+      box-shadow: 12px 0 40px rgba(0,0,0,.22);
+    }
+    .profile{
+      border-radius: 20px;
+      padding:10px;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      text-align:center;
+      margin-bottom:12px;
+    }
+    .avatar{
+      width:52px;height:52px;border-radius:20px;
+      margin:0 auto 8px;
+      background: rgba(188,143,116,.30);
+      border:1px solid rgba(188,143,116,.55);
+      display:grid;place-items:center;
+      font-weight:1000;
+    }
+    .profile .t{font-weight:1000; font-size:12px;}
+    .profile .s{opacity:.80; font-weight:700; font-size:11px; margin-top:3px;}
+
+    .nav{display:grid; gap:10px;}
+    .nav a{
+      text-decoration:none;
+      color:#fff;
+      border-radius: 18px;
+      padding:10px 8px;
+      display:flex; flex-direction:column; align-items:center; gap:6px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.05);
+      font-weight:1000;
+      font-size:11px;
+      position:relative;
+    }
+    .nav a .ico{
+      width:38px;height:38px;border-radius:16px;
+      display:grid;place-items:center;
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.12);
+      font-size:16px;
+    }
+    .nav a.active{
+      background: rgba(188,143,116,.22);
+      border-color: rgba(188,143,116,.45);
+    }
+    .nav a.active::before{
+      content:"";
+      position:absolute;
+      right:8px; top:8px;
+      width:10px; height:10px;
+      border-radius:999px;
+      background: var(--beige);
+      box-shadow: 0 0 0 4px rgba(188,143,116,.18);
+    }
+
+    main{
+      flex:1;
+      padding: 14px;
+      padding-top: calc(14px + var(--safe-top));
+      padding-bottom: calc(14px + var(--safe-bottom));
+    }
+
+    .panel{
+      background: #fff;
+      border-radius: 22px;
+      border:1px solid rgba(188,143,116,.30);
+      box-shadow: var(--shadow);
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .panel-head{
+      display:flex; justify-content:space-between; align-items:flex-start; gap:10px;
+      margin-bottom:10px;
+    }
+    .panel-head h1{
+      margin:0;
+      font-size:18px;
+      font-weight:1000;
+      color:var(--brown);
+      line-height:1.2;
+    }
+    .panel-head .note{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:800;
+      margin-top:4px;
+    }
+    .tag{
+      font-size:12px;
+      font-weight:1000;
+      padding:7px 10px;
+      border-radius: 999px;
+      color: var(--brown);
+      background: rgba(188,143,116,.14);
+      border:1px solid rgba(188,143,116,.40);
+      white-space:nowrap;
+    }
+
+    .kpis{display:grid; gap:10px;}
+    .kpi{
+      background: var(--cream);
+      border:1px dashed rgba(62,36,32,.18);
+      border-radius: 18px;
+      padding: 12px;
+    }
+    .kpi .k{font-size:12px;color:var(--muted);font-weight:900}
+    .kpi .v{margin-top:6px;font-size:20px;color:var(--brown);font-weight:1000}
+    .btn{
+      width:100%;
+      border:0;
+      border-radius: 18px;
+      padding:12px 14px;
+      font-weight:1000;
+      cursor:pointer;
+      background: var(--brown);
+      color:#fff;
+      box-shadow: 0 18px 30px rgba(62,36,32,.22);
+      margin-top:12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside>
+      <div class="profile">
+        <div class="avatar">MZJ</div>
+        <div class="t">Workspace</div>
+        <div class="s">Admin Mobile</div>
+      </div>
+
+      <nav class="nav">
+        <a class="active" href="#"><span class="ico">🏠</span>Dashboard</a>
+        <a href="#"><span class="ico">🚗</span>Inventory</a>
+        <a href="#"><span class="ico">🧾</span>Orders</a>
+        <a href="#"><span class="ico">🔁</span>Transfers</a>
+        <a href="#"><span class="ico">🕘</span>Activity</a>
+      </nav>
+    </aside>
+
+    <main>
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h1>لوحة الإدارة</h1>
+            <div class="note">Dark Sidebar + Panels</div>
+          </div>
+          <span class="tag">v2</span>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi"><div class="k">طلبات اليوم</div><div class="v">34</div></div>
+          <div class="kpi"><div class="k">نقل سيارات</div><div class="v">8</div></div>
+          <div class="kpi"><div class="k">تم التسليم</div><div class="v">5</div></div>
+        </div>
+
+        <button class="btn">إجراء سريع</button>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h1>مساحة المحتوى</h1>
+            <div class="note">ضع هنا جدول/قائمة/فورم</div>
+          </div>
+          <span class="tag">Main</span>
+        </div>
+        <div style="color:var(--muted); font-weight:800; line-height:1.8;">
+          هنا تركّب محتوى أي صفحة PC بعد تحويل عناصرها لعرض موبايل.
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

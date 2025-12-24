@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>MZJ Mobile Sidebar v1</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --mzj-brown: rgb(62,36,32);
+      --mzj-beige: rgb(188,143,116);
+      --mzj-cream: #fff8ef;
+
+      --bg: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+
+      --stroke: rgba(62,36,32,.12);
+      --shadow: 0 10px 24px rgba(0,0,0,.08);
+      --radius: 14px;
+
+      --sidebar-w: 92px; /* Mobile-friendly */
+      --safe-top: env(safe-area-inset-top);
+      --safe-bottom: env(safe-area-inset-bottom);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:"Tajawal", system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color:var(--text);
+      background: linear-gradient(180deg, var(--mzj-cream) 0%, #fff 40%);
+      overflow-x:hidden;
+    }
+
+    .app{
+      display:flex;
+      min-height:100%;
+    }
+
+    /* Sidebar */
+    aside{
+      width:var(--sidebar-w);
+      padding: calc(12px + var(--safe-top)) 10px 12px;
+      background: var(--mzj-brown);
+      color:#fff;
+      position:sticky;
+      top:0;
+      height:100vh;
+      box-shadow: 12px 0 30px rgba(0,0,0,.14);
+    }
+    .brand{
+      display:grid; place-items:center;
+      width:48px; height:48px;
+      border-radius:16px;
+      background: rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.18);
+      margin: 0 auto 12px;
+      font-weight:900;
+      letter-spacing:.5px;
+    }
+    .nav{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-top:6px;
+    }
+    .nav a{
+      text-decoration:none;
+      color:#fff;
+      opacity:.92;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:6px;
+      padding:10px 8px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      font-weight:800;
+      font-size:11px;
+      user-select:none;
+    }
+    .nav a.active{
+      background: rgba(188,143,116,.28);
+      border-color: rgba(188,143,116,.45);
+    }
+    .ico{
+      width:34px;height:34px;border-radius:14px;
+      background: rgba(255,255,255,.10);
+      display:grid;place-items:center;
+      font-size:16px;
+    }
+
+    /* Content */
+    main{
+      flex:1;
+      padding: 14px;
+      padding-bottom: calc(14px + var(--safe-bottom));
+    }
+
+    .page-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:14px;
+    }
+    .title{
+      margin:0;
+      font-size:18px;
+      font-weight:900;
+      color:var(--mzj-brown);
+      line-height:1.2;
+    }
+    .meta{
+      margin-top:6px;
+      font-size:12px;
+      color:var(--muted);
+      font-weight:700;
+    }
+    .pill{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      background: rgba(188,143,116,.14);
+      border:1px solid rgba(188,143,116,.35);
+      color: var(--mzj-brown);
+      font-weight:800;
+      white-space:nowrap;
+    }
+    .card{
+      background:#fff;
+      border:1px solid var(--stroke);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:12px;
+      margin-bottom:12px;
+    }
+    .card-title{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:10px;
+      font-weight:900;
+      color:var(--mzj-brown);
+    }
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .stat{
+      padding:12px;
+      border-radius:14px;
+      background: var(--mzj-cream);
+      border:1px solid rgba(62,36,32,.10);
+    }
+    .stat .k{font-size:12px;color:var(--muted);font-weight:800}
+    .stat .v{font-size:18px;color:var(--mzj-brown);font-weight:900;margin-top:6px}
+
+    .btn{
+      width:100%;
+      border:0;
+      border-radius:14px;
+      padding:12px 14px;
+      font-weight:900;
+      cursor:pointer;
+    }
+    .btn-primary{
+      background: var(--mzj-brown);
+      color:#fff;
+      box-shadow: 0 12px 22px rgba(62,36,32,.22);
+    }
+    .btn-ghost{
+      background:#fff;
+      border:1px solid var(--stroke);
+      color: var(--mzj-brown);
+      margin-top:10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <aside>
+      <div class="brand">MZJ</div>
+      <nav class="nav">
+        <a class="active" href="#"><span class="ico">🏠</span>الرئيسية</a>
+        <a href="#"><span class="ico">🚗</span>المخزون</a>
+        <a href="#"><span class="ico">🧾</span>الطلبات</a>
+        <a href="#"><span class="ico">🔁</span>النقل</a>
+        <a href="#"><span class="ico">⚙️</span>إعدادات</a>
+      </nav>
+    </aside>
+
+    <main>
+      <section class="page-head">
+        <div>
+          <h1 class="title">عنوان الصفحة</h1>
+          <div class="meta">وصف بسيط / تاريخ / حالة</div>
+        </div>
+        <span class="pill">Mobile v1</span>
+      </section>
+
+      <div class="card">
+        <div class="card-title"><span>ملخص</span><span class="pill">Live</span></div>
+        <div class="grid-2">
+          <div class="stat"><div class="k">إجمالي</div><div class="v">128</div></div>
+          <div class="stat"><div class="k">قيد الإجراء</div><div class="v">16</div></div>
+        </div>
+        <button class="btn btn-primary" style="margin-top:12px;">زر أساسي</button>
+        <button class="btn btn-ghost">زر ثانوي</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>محتوى الصفحة</span><span class="pill">Main</span></div>
+        <div style="color:var(--muted); font-weight:700; line-height:1.8;">
+          هنا تحط محتوى أي صفحة PC بعد ما تعمل لها Mobile Layout داخل الـ main.
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

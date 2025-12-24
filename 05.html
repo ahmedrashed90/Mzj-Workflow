@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>MZJ Sidebar Template 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --mzj-brown:rgb(62,36,32);
+      --mzj-beige:rgb(188,143,116);
+      --mzj-cream:#fff8ef;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --stroke: rgba(62,36,32,.12);
+      --shadow: 0 14px 34px rgba(0,0,0,.12);
+      --radius:18px;
+      --safe-top: env(safe-area-inset-top);
+      --safe-bottom: env(safe-area-inset-bottom);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:"Tajawal", system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color:var(--text);
+      background: linear-gradient(180deg, var(--mzj-cream), #fff 52%);
+      overflow-x:hidden;
+    }
+    a{color:inherit}
+    .card{
+      background:#fff;
+      border:1px solid var(--stroke);
+      border-radius:var(--radius);
+      box-shadow: var(--shadow);
+      padding:12px;
+      margin-bottom:12px;
+    }
+    .pill{
+      font-size:12px;
+      font-weight:900;
+      padding:6px 10px;
+      border-radius:999px;
+      background: rgba(188,143,116,.14);
+      border:1px solid rgba(188,143,116,.40);
+      color:var(--mzj-brown);
+      white-space:nowrap;
+    }
+    
+        .wrap{padding:14px; padding-top:calc(14px + var(--safe-top)); padding-bottom:calc(14px + var(--safe-bottom));}
+        .head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;}
+        .btn{height:46px;min-width:46px;border-radius:16px;border:1px solid rgba(255,255,255,.16);background:rgba(62,36,32,.94);color:#fff;font-weight:1000;cursor:pointer;box-shadow:0 18px 36px rgba(62,36,32,.22);}
+        .drawer{position:fixed; inset:0; display:none; z-index:90;}
+        .drawer.open{display:block;}
+        .shade{position:absolute; inset:0; background:rgba(0,0,0,.48);}
+        .panel{position:absolute; top:0; bottom:0; right:0; width:min(88vw, 340px); background:#fff; border-left:1px solid var(--stroke); box-shadow:-18px 0 55px rgba(0,0,0,.28); padding:calc(14px + var(--safe-top)) 12px 14px; display:flex; flex-direction:column;}
+        .search{height:46px;border-radius:16px;border:1px solid rgba(62,36,32,.12);padding:0 12px;font-weight:900;outline:none;}
+        .nav{display:grid;gap:10px;margin-top:12px;flex:1;overflow:auto;padding-bottom:12px;}
+        .nav a{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;border-radius:18px;border:1px solid rgba(62,36,32,.10);background:rgba(255,255,255,.96);text-decoration:none;font-weight:1000;}
+        .nav a small{color:var(--muted);font-weight:800;font-size:12px}
+        
+  </style>
+</head>
+<body>
+
+        <div class="wrap">
+          <div class="head">
+            <button class="btn" id="open">☰</button>
+            <div style="font-weight:1000;color:var(--mzj-brown);font-size:18px;">Sidebar مع بحث داخلي</div>
+            <span class="pill">Sidebar-05</span>
+          </div>
+
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="font-weight:1000;color:var(--mzj-brown);">فكرة مختلفة</div>
+              <span class="pill">Search</span>
+            </div>
+            <div style="margin-top:10px;color:var(--muted);font-weight:800;line-height:1.8;">
+              عند فتح القائمة، تقدر تبحث عن الصفحة بسرعة.
+            </div>
+          </div>
+        </div>
+
+        <div class="drawer" id="drawer">
+          <div class="shade" id="shade"></div>
+          <aside class="panel">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+              <div style="font-weight:1000;color:var(--mzj-brown);">القائمة</div>
+              <button class="btn" id="close">✕</button>
+            </div>
+
+            <input class="search" id="q" placeholder="ابحث عن صفحة... (مثال: المخزون)" />
+
+            <nav class="nav" id="nav">
+              <a href="#"><span>🏠 الرئيسية</span><small>Dashboard</small></a>
+              <a href="#"><span>🚗 المخزون</span><small>Inventory</small></a>
+              <a href="#"><span>🧾 الطلبات</span><small>Orders</small></a>
+              <a href="#"><span>🔁 النقل</span><small>Transfers</small></a>
+              <a href="#"><span>🕘 سجل النشاط</span><small>Activity</small></a>
+              <a href="#"><span>⚙️ الإعدادات</span><small>Settings</small></a>
+            </nav>
+          </aside>
+        </div>
+        
+<script>
+
+        const dr=document.getElementById('drawer');
+        document.getElementById('open').onclick=()=>dr.classList.add('open');
+        document.getElementById('close').onclick=()=>dr.classList.remove('open');
+        document.getElementById('shade').onclick=()=>dr.classList.remove('open');
+
+        const q=document.getElementById('q');
+        const nav=document.getElementById('nav');
+        q.addEventListener('input', ()=>{
+          const term=q.value.trim();
+          [...nav.querySelectorAll('a')].forEach(a=>{
+            a.style.display = a.textContent.includes(term) ? '' : 'none';
+          });
+        });
+        
+</script>
+</body>
+</html>

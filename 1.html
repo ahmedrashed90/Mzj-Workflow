@@ -484,6 +484,14 @@
   font-size:9px !important;
 }
 
+
+/* === Mobile-only: Desktop sidebar removed === */
+.mzj-mobile-only{ padding: 0 10px; }
+@media (min-width: 1024px){
+  /* still allow open in desktop without sidebar clutter */
+  .mzj-downbar{ display:none !important; }
+}
+
 </style>
 <style id="noFlash">
   html{background:#fff8ef;}
@@ -738,27 +746,8 @@ header, .topbar, .navbar, .header, .sidebar, aside.sidebar, nav.sidebar, .side-b
   </div>
 </header>
 
-<div class="mzj-shell" id="mzjShell">
-  <aside class="mzj-sidebar" id="mzjSidebar">
-    <div class="side-section">
-      <div class="side-title">القائمة</div>
-      <nav class="side-nav">
-        <a class="side-link tab" href="./m.sales.html"><i class="fa-solid fa-handshake"></i><span>تتبع المبيعات</span></a>
-          <a class="side-link tab" href="./m.dashboard.html"><i class="fa-solid fa-gauge"></i><span>الداش بورد</span></a>
-          <a class="side-link tab" href="./m.inventory.html"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
-          <a class="side-link tab" href="./m.vt.html"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
-          <a class="side-link tab" href="./m.photoshoot-user.html"><i class="fa-solid fa-camera"></i><span>إدارة الطلبات</span></a>
-          <a class="side-link tab" href="./m.cars.html"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
-          <a class="side-link tab active" href="./m.admin.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
-          <a class="side-link tab" href="./m.Activity.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل النشاط</span></a>
+<main class="mzj-content mzj-mobile-only">
 
-      </nav>
-    </div>
-  </aside>
-
-  <div class="mzj-backdrop" id="mzjBackdrop"></div>
-
-  <main class="mzj-content">
     <div class="legacy legacy-admin">
 
 <!-- Topbar -->
@@ -2621,24 +2610,25 @@ if(!movedCount){
 </script>
 
     </div>
-  </main>
-</div>
+  
+</main>
+
 
 
   </main>
 
   <nav class="mzj-downbar" aria-label="التنقل">
     <div class="inner">
-<a href="m.dashboard.html">📊<span>داشبورد</span></a>
-      <a href="m.sales.html">💼<span>المبيعات</span></a>
-      <a href="m.inventory.html">🚗<span>المخزون</span></a>
-      <a href="m.cars.html">🚙<span>السيارات</span></a>
-      <a class="active" href="m.admin.html">🏠<span>الإدارة</span></a>
+<a href="m.sales.html">💼<span>تتبع المبيعات</span></a>
+<a href="m.dashboard.html">📊<span>الداش بورد</span></a>
+<a href="m.inventory.html">🚗<span>المخزون</span></a>
+<a href="m.vt.html">🧭<span>نقل السيارات</span></a>
+<a href="m.photoshoot-user.html">📷<span>إدارة الطلبات</span></a>
+<a href="m.cars.html">🚙<span>كل السيارات</span></a>
+<a class="active" href="m.admin.html">🏠<span>الإدارة</span></a>
+<a href="m.Activity.html">🕘<span>سجل النشاط</span></a>
+<a href="m.act.html">🧾<span>سجل الحركات</span></a>
 
-      <a href="m.vt.html">🧭<span>تتبّع</span></a>
-      <a href="m.photoshoot-user.html">📷<span>تصوير</span></a>
-      <a href="m.Activity.html">🕘<span>النشاط</span></a>
-      <a href="m.act.html">🧾<span>سجل</span></a>
     </div>
   </nav>
 </div>

@@ -2862,6 +2862,18 @@ button.inner-tab, .inner-tab {
 /* support dynamic viewport */
 html, body{ min-height: 100dvh; }
 
+
+/* === Downbar Lift فوق شوية لتفادي Address Bar (iOS/Android) === */
+:root{ --mzj-downbar-lift: 18px; } /* ارفع/انزل بسهولة */
+
+.mzj-downbar{
+  bottom: calc(env(safe-area-inset-bottom, 0px) + var(--mzj-downbar-lift)) !important;
+}
+
+.mzj-main{
+  padding-bottom: calc(var(--mzj-downbar-h) + env(safe-area-inset-bottom, 0px) + var(--mzj-downbar-lift) + 16px) !important;
+}
+
 </style>
 </body>
 </html>

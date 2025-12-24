@@ -1,0 +1,16 @@
+/* ===== Mobile Downbar text size ===== */
+.mzj-downbar a span{
+  font-size: 10px;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+/* شاشات أصغر */
+@media (max-width: 380px){
+  .mzj-downbar a span{
+    font-size: 9px;
+  }
+}

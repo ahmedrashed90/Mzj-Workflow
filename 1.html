@@ -1,16 +1,19 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-  <title>لوحة الإدارة — Mobile</title>
-  <link rel="icon" type="image/x-icon" href="assets/favicon.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
-  <style>
 
+
+
+
+
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar">
+<head>
+  <link rel="icon" type="image/x-icon" href="assets/favicon.png">
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>لوحة الإدارة — MZJ Cars</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<style>
   :root{
     --brown:#3e2420; --beige:#bc8f74; --cream:#fff8ef; --text:#1f2937; --muted:#6b7280;
     --line:#e5e7eb; --line-strong:#d1d5db; --table-head:#fafafa;
@@ -202,93 +205,248 @@
   .notes-col{
     display:none;
   }
+</style>
+<style id="noFlash">
+  html{background:#fff8ef;}
+  body{opacity:0;}
+</style>
+  <link rel="stylesheet" href="./mzj-ui.css" />
 
-  </style>
-  <style>
-/* ===== MZJ MOBILE OVERRIDES (NO TOPBAR/SIDEBAR FROM PC) ===== */
+<style>
+  .legacy-admin .dashboard-topbar,
+  .legacy-admin .topbar,
+  .legacy-admin .tabs,
+  .legacy-admin .nav-tabs,
+  .legacy-admin .nav-pills,
+  .legacy-admin header:not(.mzj-topbar){
+    display:none !important;
+  }
+</style>
+
+
+<style>
+
+/* === MZJ Mobile Overrides === */
 :root{
   --mzj-brown: rgb(62,36,32);
   --mzj-beige: rgb(188,143,116);
   --mzj-cream: #fff8ef;
+  --mzj-stroke: rgba(62,36,32,.12);
+  --mzj-shadow: 0 10px 24px rgba(0,0,0,.08);
+  --mzj-radius: 16px;
   --safe-top: env(safe-area-inset-top);
   --safe-bottom: env(safe-area-inset-bottom);
 }
-body{background: linear-gradient(180deg, var(--mzj-cream), #fff 52%) !important;}
-.mzj-topbar, .mzj-shell, .mzj-sidebar, .mzj-backdrop, .topbar{display:none !important;}
-.container{max-width: 100% !important; padding: 0 12px 120px !important; margin: 12px auto !important;}
-.card{border-radius:18px !important; padding:12px !important;}
-.card-header{gap:10px !important;}
-.btn{border-radius:16px !important;}
-@media (max-width: 860px){
-  .table-wrap{overflow:visible !important; border:0 !important; background:transparent !important;}
-  table{display:block !important; width:100% !important; border:0 !important;}
-  thead{display:none !important;}
-  tbody{display:block !important;}
-  tbody tr{
+html,body{max-width:100%; overflow-x:hidden;}
+body{
+  font-family: "Tajawal", system-ui, -apple-system, Segoe UI, Roboto, Arial !important;
+  background: linear-gradient(180deg, var(--mzj-cream) 0%, #fff 42%) !important;
+}
+
+/* Hide legacy PC chrome if present */
+header, .topbar, .navbar, .header, .sidebar, aside.sidebar, nav.sidebar, .side-bar, .sidenav, .drawer, .app-sidebar, .layout-sidebar{
+  display:none !important;
+}
+.mzj-mobile-shell{min-height:100vh; width:100%;}
+.mzj-main{
+  padding: 14px;
+  padding-top: calc(14px + var(--safe-top));
+  padding-bottom: calc(92px + var(--safe-bottom));
+}
+
+/* Tabs grid: 3 on first row, 2 on second row */
+.admin-tabs{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 14px 0 18px;
+}
+.admin-tabs .tab-btn{
+  height: 48px;
+  border-radius: 18px;
+  border: 1.5px solid rgba(62,36,32,.25);
+  background: #fff;
+  font-weight: 800;
+  color: var(--mzj-brown);
+  cursor:pointer;
+  box-shadow: 0 6px 14px rgba(0,0,0,.06);
+}
+.admin-tabs .tab-btn.active{
+  background: var(--mzj-brown);
+  color:#fff;
+  border-color: var(--mzj-brown);
+  box-shadow: 0 10px 22px rgba(62,36,32,.22);
+}
+.admin-tabs .tab-btn:active{transform: scale(.98);}
+.admin-tabs .tab-btn:nth-child(4){grid-column: 1 / 3;}
+.admin-tabs .tab-btn:nth-child(5){grid-column: 3 / 4;}
+
+/* Responsive table -> cards */
+.mzj-table-stack table{width:100% !important;}
+@media (max-width: 768px){
+  .mzj-table-stack table thead{display:none !important;}
+  .mzj-table-stack table, .mzj-table-stack tbody, .mzj-table-stack tr, .mzj-table-stack td{
     display:block !important;
-    background:#fff !important;
-    border:1px solid rgba(62,36,32,.10) !important;
-    border-radius:18px !important;
-    box-shadow: 0 12px 26px rgba(0,0,0,.08) !important;
-    padding:10px !important;
-    margin-bottom:12px !important;
+    width:100% !important;
   }
-  tbody td{
-    display:inline-block !important;
-    vertical-align:top !important;
-    width: calc(33.333% - 8px) !important;
-    margin: 6px 4px !important;
-    border:1px solid rgba(62,36,32,.10) !important;
-    border-radius:14px !important;
-    background: #fff8ef !important;
-    padding:10px !important;
-    font-size:12.5px !important;
+  .mzj-table-stack tr{
+    background:#fff;
+    border:1px solid var(--mzj-stroke);
+    border-radius: var(--mzj-radius);
+    box-shadow: var(--mzj-shadow);
+    padding: 10px 10px 6px;
+    margin-bottom: 12px;
   }
-  tbody td::before{
+  .mzj-table-stack td{
+    border:0 !important;
+    padding: 10px 8px !important;
+    background: transparent !important;
+  }
+  .mzj-table-stack td::before{
     content: attr(data-label);
     display:block;
-    color: var(--mzj-brown);
-    font-weight: 900;
     font-size: 12px;
+    color: rgba(62,36,32,.65);
+    font-weight: 800;
     margin-bottom: 6px;
   }
-  .cell-actions{gap:8px !important;}
-  .cell-actions .btn{padding:8px 10px !important; font-size:12px !important;}
+  /* 6 cols => 3 per row inside card when cells are inline blocks */
+  .mzj-table-stack tr{
+    display:grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .mzj-table-stack td{
+    border:1px solid rgba(62,36,32,.08) !important;
+    border-radius: 14px;
+    background: var(--mzj-cream) !important;
+    padding: 10px !important;
+    min-height: 48px;
+  }
 }
-@media (max-width: 520px){ tbody td{width: calc(50% - 8px) !important;} }
-@media (max-width: 380px){ tbody td{width: calc(100% - 8px) !important;} }
-.toast{bottom: calc(90px + var(--safe-bottom)) !important; right: 12px !important; left: 12px !important;}
+@media (max-width: 420px){
+  .mzj-table-stack tr{grid-template-columns: repeat(2, minmax(0,1fr));}
+}
+@media (max-width: 340px){
+  .mzj-table-stack tr{grid-template-columns: 1fr;}
+}
 
 
-.wrap{padding:14px; padding-top:calc(14px + var(--safe-top)); padding-bottom:calc(92px + var(--safe-bottom));}
-.mzj-mobile-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap}
-.mzj-title{font-weight:1000;color:var(--mzj-brown);font-size:18px}
-.mzj-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.bar{position:fixed; left:0; right:0; bottom:0; height:calc(70px + var(--safe-bottom)); padding-bottom:var(--safe-bottom);
-     background: rgba(255,255,255,.92); backdrop-filter: blur(10px);
-     border-top:1px solid rgba(62,36,32,.10); z-index:9999;}
-.inner{height:70px; display:flex; gap:8px; padding:10px 12px; align-items:center;}
-.seg{flex:1; height:50px; border-radius:18px; border:1px solid rgba(62,36,32,.10); background:#fff; display:flex; align-items:center; justify-content:center; gap:8px; font-weight:1000; color:var(--mzj-brown); cursor:pointer; text-decoration:none;}
-.seg.active{background: rgba(188,143,116,.18); border-color: rgba(188,143,116,.40);}
-.seg .dot{width:10px;height:10px;border-radius:999px;background:rgba(62,36,32,.28);}
-.seg.active .dot{background: var(--mzj-beige);}
+/* Downbar small */
+.mzj-main{padding-bottom: calc(86px + var(--safe-bottom));}
+.mzj-downbar{
+  position:fixed; left:0; right:0; bottom:0;
+  height: calc(66px + var(--safe-bottom));
+  padding-bottom: var(--safe-bottom);
+  background:#fff;
+  border-top:1px solid var(--mzj-stroke);
+  box-shadow: 0 -10px 28px rgba(0,0,0,.08);
+  z-index:50;
+}
+.mzj-downbar .inner{
+  height:66px;
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:8px;
+  padding: 10px 12px;
+  align-items:center;
+}
+.mzj-downbar a{
+  text-decoration:none;
+  border-radius:18px;
+  padding:10px 8px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:4px;
+  color: rgba(62,36,32,.70);
+  font-weight:900;
+  font-size:11px;
+  border:1px solid rgba(62,36,32,.10);
+  background: #fff;
+}
+.mzj-downbar a.active{
+  background: rgba(188,143,116,.16);
+  border-color: rgba(188,143,116,.35);
+  color: var(--mzj-brown);
+}
 
-  </style>
-</head>
+</style></head>
 <body>
 
-<div class="wrap">
-  <div class="mzj-mobile-head">
-    <div class="mzj-title">لوحة الإدارة</div>
-    <div class="mzj-actions">
-      <div class="status-badge" style="border-radius:16px;">
-        <span class="dot warn" id="connDot"></span><span id="connText">جارِ الاتصال…</span>
+<div class="mzj-mobile-shell">
+  <main class="mzj-main">
+    
+
+<header class="mzj-topbar">
+  <div class="topbar-left">
+    <button class="icon-btn" id="mzjSidebarBtn" aria-label="القائمة"><i class="fa-solid fa-bars"></i></button>
+    <div class="brand">
+      <div class="brand-mark">MZJ</div>
+      <div class="brand-text">
+        <div class="brand-title">محمد بن ذعار العجمي للسيارات</div>
+        <div class="brand-sub">Workspace</div>
       </div>
-      <button id="btnSignOut" class="btn btn-ghost" style="display:none;border-radius:16px"><i class="fa-solid fa-right-from-bracket"></i> خروج</button>
     </div>
   </div>
+  <div class="topbar-center">
+    <div class="mzj-breadcrumb">
+      <span class="crumb">الرئيسية</span>
+      <i class="fa-solid fa-chevron-left"></i>
+      <span class="crumb current">الإدارة</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="mzj-chip"><i class="fa-regular fa-clock"></i><span id="mzjNow">—</span></div>
+    <button id="btnSignOut" class="btn btn-ghost" style="display:none"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</button>
+  </div>
+</header>
 
-  <div class="card" style="padding:0;border:0;box-shadow:none;background:transparent;">
+<div class="mzj-shell" id="mzjShell">
+  <aside class="mzj-sidebar" id="mzjSidebar">
+    <div class="side-section">
+      <div class="side-title">القائمة</div>
+      <nav class="side-nav">
+        <a class="side-link tab" href="./sales.html"><i class="fa-solid fa-handshake"></i><span>تتبع المبيعات</span></a>
+          <a class="side-link tab" href="./dashboard.html"><i class="fa-solid fa-gauge"></i><span>الداش بورد</span></a>
+          <a class="side-link tab" href="./inventory.html"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
+          <a class="side-link tab" href="./vt.html"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
+          <a class="side-link tab" href="./photoshoot-user.html"><i class="fa-solid fa-camera"></i><span>إدارة الطلبات</span></a>
+          <a class="side-link tab" href="./cars.html"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
+          <a class="side-link tab active" href="./admin.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
+          <a class="side-link tab" href="./Activity.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل النشاط</span></a>
+
+      </nav>
+    </div>
+  </aside>
+
+  <div class="mzj-backdrop" id="mzjBackdrop"></div>
+
+  <main class="mzj-content">
+    <div class="legacy legacy-admin">
+
+<!-- Topbar -->
+<div class="topbar">
+<div class="topbar-inner">
+<div class="brand">
+<div class="logo" title="MZJ">MZJ</div>
+<div>
+<h1>لوحة إدارة السيارات</h1>
+<small class="hint">مجموعة محمد بن ذعار العجمي للسيارات</small>
+</div>
+</div>
+<div class="tabs">
+<a class="tab active" href="admin.html">الإدارة</a>
+<a class="tab" href="inventory.html">المخزون</a>
+<a class="tab" href="dashboard.html">الداش بورد</a>
+<a class="tab" href="vt.html">نقل السيارات</a>
+<a class="tab" href="photoshoot-user.html">إدارة الطلبات</a>
+<a class="tab" href="cars.html">كل السيارات</a>
+<a class="tab" href="Activity.html">سجل النشاط</a>
+</div>
+<div class="row">
+<div class="status-badge"><span class="dot warn" id="connDot"></span><span id="connText">جارِ الاتصال…</span></div>
+<button id="btnSignOut" class="btn btn-ghost" style="display:none"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</button></div>
+</div>
+</div>
 <!-- Auth Gate -->
 <div class="auth-wrap" id="authGate">
 <div class="auth-card">
@@ -2073,49 +2231,151 @@ if(!movedCount){
   }
 
 </script>
-</div>  
+</div>  <script src="./mzj-ui.js">
+  function showUpdateReportButton(){
+    let btn = document.getElementById('btnUpdateReport');
+    if(!btn){
+      btn = document.createElement('button');
+      btn.id = 'btnUpdateReport';
+      btn.className = 'btn btn-soft';
+      btn.style.marginTop = '8px';
+      btn.innerHTML = '<i class="fa-solid fa-file-lines"></i> عرض تقرير التحديث';
+      btn.onclick = openUpdateReport;
+      document.querySelector('.toast-wrap')?.appendChild(btn);
+    }
+  }
+
+  function openUpdateReport(){
+    if(!__lastUpdateReport){ showToast('لا يوجد تقرير متاح','info'); return; }
+    const rows = [];
+    __lastUpdateReport.updated.forEach(v=> rows.push({VIN:v, Status:'Updated'}));
+    __lastUpdateReport.notFound.forEach(v=> rows.push({VIN:v, Status:'Not Found'}));
+    __lastUpdateReport.skipped.forEach(v=> rows.push({VIN:v, Status:'Skipped'}));
+
+    // build CSV
+    let csv = 'VIN,Status\n';
+    rows.forEach(r=>{ csv += `"${r.VIN}","${r.Status}"\n`; });
+
+    const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'update_report.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+</script>
+
+    </div>
+  </main>
 </div>
 
-  </div>
-</div>
 
-<div class="bar">
-  <div class="inner">
-    <a class="seg" href="./dashboard.html"><span class="dot"></span>الرئيسية</a>
-    <a class="seg" href="./inventory.html"><span class="dot"></span>المخزون</a>
-    <a class="seg active" href="./admin.html"><span class="dot"></span>الإدارة</a>
-    <a class="seg active" href="./admin.html"><span class="dot"></span>الإدارة</a>
-    <a class="seg active" href="./admin.html"><span class="dot"></span>الإدارة</a>
-    <a class="seg active" href="./admin.html"><span class="dot"></span>الإدارة</a>
-    <a class="seg active" href="./admin.html"><span class="dot"></span>الإدارة</a>
-    <a class="seg active" href="./admin.html"><span class="dot"></span>الإدارة</a>
-    <a class="seg active" href="./admin.html"><span class="dot"></span>الإدارة</a>
-  
-  </div>
+  </main>
+
+  <nav class="mzj-downbar" aria-label="التنقل">
+    <div class="inner">
+      <a class="active" href="admin.html">🏠<span>الإدارة</span></a>
+      <a href="inventory.html">🚗<span>المخزون</span></a>
+      <a href="transfers.html">🔁<span>النقل</span></a>
+      <a href="orders.html">🧾<span>الطلبات</span></a>
+    </div>
+  </nav>
 </div>
 
 <script>
+
 (function(){
-  function applyLabels(){
-    document.querySelectorAll('table').forEach(table=>{
-      const ths = Array.from(table.querySelectorAll('thead th')).map(th=>th.textContent.trim());
-      if(!ths.length) return;
-      table.querySelectorAll('tbody tr').forEach(tr=>{
-        Array.from(tr.children).forEach((td,i)=>{
-          if(td && td.tagName === 'TD' && !td.getAttribute('data-label')){
-            td.setAttribute('data-label', ths[i] || ('حقل ' + (i+1)));
-          }
-        });
+  function normalizeText(t){ return (t||"").replace(/\s+/g,' ').trim(); }
+
+  // Build the tabs grid from existing buttons/links by label text
+  const wanted = [
+    "إضافة سيارة",
+    "نقل السيارات",
+    "تعديل السيارات",
+    "تتبع حركة رقم هيكل",
+    "سجل الحركات"
+  ];
+
+  function findClickable(label){
+    const els = Array.from(document.querySelectorAll('button, a, div[role="button"], span[role="button"]'));
+    return els.find(el => normalizeText(el.textContent) === label) || null;
+  }
+
+  const found = wanted.map(findClickable).filter(Boolean);
+  if(found.length >= 3){
+    const first = found[0];
+    const wrap = document.createElement('div');
+    wrap.className = 'admin-tabs';
+    first.parentNode.insertBefore(wrap, first);
+
+    found.forEach((el, idx) => {
+      // ensure button
+      let btn = el;
+      if(btn.tagName.toLowerCase() !== 'button'){
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.innerHTML = btn.innerHTML || btn.textContent;
+        // preserve click behavior by triggering original
+        b.addEventListener('click', (e)=>{ e.preventDefault(); btn.click(); });
+        btn = b;
+      }
+      btn.classList.add('tab-btn');
+      // active detection
+      if(el.classList.contains('active') || el.getAttribute('aria-selected')==='true'){ btn.classList.add('active'); }
+      wrap.appendChild(btn);
+
+      btn.addEventListener('click', ()=>{
+        wrap.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));
+        btn.classList.add('active');
       });
     });
-  }
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', applyLabels);
-  } else {
-    applyLabels();
-  }
-})();
-</script>
 
+    // remove originals if they were not buttons we moved
+    found.forEach(el=>{
+      if(el !== null && el.parentNode && el.parentNode !== wrap){
+        // if we created a proxy button, keep original hidden
+        if(el.tagName.toLowerCase() !== 'button'){
+          el.style.display='none';
+        }else{
+          // moved already
+        }
+      }
+    });
+
+    // default active if none
+    if(!wrap.querySelector('.tab-btn.active')) wrap.querySelector('.tab-btn')?.classList.add('active');
+  }
+
+  // Make tables stackable by adding data-label from thead
+  const tables = Array.from(document.querySelectorAll('table'));
+  tables.forEach(tbl=>{
+    try{
+      const ths = Array.from(tbl.querySelectorAll('thead th')).map(th=>normalizeText(th.textContent));
+      if(!ths.length) return;
+      tbl.classList.add('mzj-enhanced-table');
+      const rows = Array.from(tbl.querySelectorAll('tbody tr'));
+      rows.forEach(tr=>{
+        const tds = Array.from(tr.children).filter(x=>x.tagName && x.tagName.toLowerCase()==='td');
+        tds.forEach((td,i)=>{
+          if(!td.getAttribute('data-label')) td.setAttribute('data-label', ths[i] || `عمود ${i+1}`);
+        });
+      });
+      // wrap table once
+      if(!tbl.closest('.mzj-table-stack')){
+        const w = document.createElement('div');
+        w.className = 'mzj-table-stack';
+        tbl.parentNode.insertBefore(w, tbl);
+        w.appendChild(tbl);
+      }
+    }catch(e){}
+  });
+})();
+
+
+</script>
 </body>
 </html>
+
+

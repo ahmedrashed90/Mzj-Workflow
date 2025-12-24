@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -96,6 +107,7 @@ body{opacity:0}
   }
   .metric i{color:#000}
   .shoot-metric{cursor:pointer;}
+  .metric-wide{width:100%;justify-content:center;}
 
   .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
   .chip{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-weight:700;font-size:12px;cursor:pointer}
@@ -1455,14 +1467,25 @@ function renderShootCard(gridEl){
       <div class="group-head">
         <div class="group-left">
           <h3 class="group-title"><i class="fa-solid fa-right-left"></i> الموافقة المالية والإدارية</h3>
-          <div class="mini-kpis">
-            <div class="mini-kpi"><span>موافقة إدارية:</span> <b>${awaitingCount.toLocaleString('ar-SA')}</b></div>
-            <div class="mini-kpi"><span>موافقة مالية:</span> <b>${awaitingCount.toLocaleString('ar-SA')}</b></div>
+          <div class="sub-metrics" style="margin-top:10px">
+            <span class="metric shoot-metric metric-wide" data-tfilter="all">
+              <i class="fa-solid fa-truck-fast"></i>
+              طلبات النقل إلى مباع تم التسليم
+            </span>
           </div>
-          <div class="chips">
-            <span class="metric shoot-metric" data-tfilter="awaiting"><i class="fa-solid fa-user-check"></i> موافقة إدارية</span>
-            <span class="metric shoot-metric" data-tfilter="awaiting"><i class="fa-solid fa-coins"></i> موافقة مالية</span>
-            <span class="metric shoot-metric" data-tfilter="all"><i class="fa-solid fa-truck-fast"></i> طلبات النقل إلى مباع تم التسليم</span>
+
+          <div class="sub-metrics" style="margin-top:10px">
+            <span class="metric shoot-metric" data-tfilter="awaiting">
+              <i class="fa-solid fa-user-check"></i>
+              موافقة إدارية:
+              <b>${awaitingCount.toLocaleString('ar-SA')}</b>
+            </span>
+
+            <span class="metric shoot-metric" data-tfilter="awaiting">
+              <i class="fa-solid fa-coins"></i>
+              موافقة مالية:
+              <b>${awaitingCount.toLocaleString('ar-SA')}</b>
+            </span>
           </div>
         </div>
         <div class="group-total" title="إجمالي طلبات النقل">${total.toLocaleString('ar-SA')}</div>

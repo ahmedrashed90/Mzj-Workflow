@@ -439,6 +439,29 @@
 }
 .mzj-hidden-tabs{ display:none !important; }
 
+
+/* === Arrange (تصدير قالب + استيراد) side-by-side on mobile === */
+.mzj-template-import-row{
+  display:grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap:10px !important;
+  align-items:stretch !important;
+}
+.mzj-template-import-row .btn{
+  width:100% !important;
+  justify-content:center !important;
+}
+.mzj-template-import-row .import-menu{
+  width:100% !important;
+}
+.mzj-template-import-row #btnImportMenu{
+  width:100% !important;
+  justify-content:center !important;
+}
+@media (max-width:360px){
+  .mzj-template-import-row{ grid-template-columns: 1fr !important; }
+}
+
 </style>
 <style id="noFlash">
   html{background:#fff8ef;}
@@ -784,14 +807,18 @@ header, .topbar, .navbar, .header, .sidebar, aside.sidebar, nav.sidebar, .side-b
 <svg fill="none" stroke="currentColor" viewbox="0 0 24 24"><rect height="7" width="7" x="3" y="3"></rect><rect height="7" width="7" x="14" y="3"></rect><rect height="7" width="7" x="14" y="14"></rect><rect height="7" width="7" x="3" y="14"></rect></svg>
 <h2 style="margin:0">إضافة سيارة</h2>
 </div>
-<div class="row">
+<div class="row mzj-export-row">
 <button class="btn btn-ghost" id="btnExport">
 <i class="fa-regular fa-file-excel"></i> تصدير
           </button>
-<!-- الجديد: زر تصدير قالب فاضي -->
+</div>
+
+<div class="row mzj-template-import-row">
+<!-- زر تصدير قالب -->
 <button class="btn btn-ghost" id="btnExportBlank">
-<i class="fa-regular fa-file"></i> تصدير قالب فاضي
+<i class="fa-regular fa-file"></i> تصدير قالب
           </button>
+
 <div class="import-menu">
 <button class="btn btn-ghost" id="btnImportMenu">
 <i class="fa-solid fa-file-import"></i> استيراد ▾
@@ -2582,15 +2609,15 @@ if(!movedCount){
   <nav class="mzj-downbar" aria-label="التنقل">
     <div class="inner">
 <a href="m.dashboard.html">📊<span>داشبورد</span></a>
-      <a href="m.sales.html">💼<span>المبيعات</span></a>
+      <a href="m.sales.html">💼<span>تتبع المبيعات</span></a>
       <a href="m.inventory.html">🚗<span>المخزون</span></a>
-      <a href="m.cars.html">🚙<span>السيارات</span></a>
+      <a href="m.cars.html">🚙<span>كل السيارات</span></a>
       <a class="active" href="m.admin.html">🏠<span>الإدارة</span></a>
 
-      <a href="m.vt.html">🧭<span>تتبّع</span></a>
-      <a href="m.photoshoot-user.html">📷<span>تصوير</span></a>
+      <a href="m.vt.html">🧭<span>نقل السيارات</span></a>
+      <a href="m.photoshoot-user.html">📷<span>إدارة الطلبات</span></a>
       <a href="m.Activity.html">🕘<span>النشاط</span></a>
-      <a href="m.act.html">🧾<span>سجل</span></a>
+      <a href="m.act.html">🧾<span>سجل النشاط</span></a>
     </div>
   </nav>
 </div>

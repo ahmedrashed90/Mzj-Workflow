@@ -8,8 +8,8 @@
 
 <html dir="rtl" lang="ar">
 <head>
+<link rel="stylesheet" href="mzj-mobile.css">
   <link rel="icon" type="image/x-icon" href="assets/favicon.png">
-  <link rel="stylesheet" href="mzj-mobile.css">
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <title>لوحة الإدارة — MZJ Cars</title>
@@ -483,14 +483,6 @@
 /* Downbar labels slightly smaller + ellipsis */
 .mzj-downbar a span{
   font-size:9px !important;
-}
-
-
-/* === Mobile-only: Desktop sidebar removed === */
-.mzj-mobile-only{ padding: 0 10px; }
-@media (min-width: 1024px){
-  /* still allow open in desktop without sidebar clutter */
-  .mzj-downbar{ display:none !important; }
 }
 
 </style>
@@ -2613,24 +2605,19 @@ if(!movedCount){
     </div>
   
 </main>
-
-
-
-  </main>
-
-  <nav class="mzj-downbar" aria-label="التنقل">
+<nav class="mzj-downbar" aria-label="التنقل">
     <div class="inner">
 <a href="m.sales.html">💼<span>تتبع المبيعات</span></a>
 <a href="m.dashboard.html">📊<span>الداش بورد</span></a>
-<a href="m.inventory.html">🚗<span>المخزون</span></a>
-<a href="m.vt.html">🧭<span>نقل السيارات</span></a>
+<a href="m.inventory.html">📦<span>المخزون</span></a>
+<a href="m.vt.html">↔️<span>نقل السيارات</span></a>
 <a href="m.photoshoot-user.html">📷<span>إدارة الطلبات</span></a>
-<a href="m.cars.html">🚙<span>كل السيارات</span></a>
+
+<a href="m.cars.html">🚗<span>كل السيارات</span></a>
 <a class="active" href="m.admin.html">🏠<span>الإدارة</span></a>
 <a href="m.Activity.html">🕘<span>سجل النشاط</span></a>
 <a href="m.act.html">🧾<span>سجل الحركات</span></a>
-
-    </div>
+</div>
   </nav>
 </div>
 
@@ -2913,6 +2900,56 @@ html, body{ min-height: 100dvh; }
   padding-bottom: calc(var(--mzj-downbar-h) + env(safe-area-inset-bottom, 0px) + var(--mzj-downbar-lift) + 16px) !important;
 }
 
+</style>
+<style>
+/* ===== FINAL MOBILE DOWNBAR FIX (Full names) ===== */
+:root{
+  --mzj-downbar-h: 112px;
+  --mzj-downbar-lift: 18px; /* address bar compensation */
+}
+.mzj-main, main.mzj-content, .mzj-content, .container, .wrap{
+  padding-bottom: calc(var(--mzj-downbar-h) + env(safe-area-inset-bottom, 0px) + var(--mzj-downbar-lift) + 16px) !important;
+}
+.mzj-downbar{
+  position: fixed !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + var(--mzj-downbar-lift)) !important;
+  height: var(--mzj-downbar-h) !important;
+  z-index: 9999 !important;
+}
+.mzj-downbar .inner{
+  height: var(--mzj-downbar-h) !important;
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  grid-auto-rows: 1fr !important;
+  gap: 6px !important;
+  padding: 10px 10px !important;
+}
+.mzj-downbar a{
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap: 4px !important;
+  padding: 8px 4px !important;
+  border-radius: 14px !important;
+  text-decoration:none !important;
+  font-size: 18px !important; /* emoji size */
+}
+.mzj-downbar a span{
+  font-size: 9px !important;
+  font-weight: 900 !important;
+  line-height: 1.15 !important;
+  text-align:center !important;
+  white-space: normal !important;
+  overflow: hidden !important;
+  text-overflow: initial !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  max-width: 100% !important;
+}
 </style>
 </body>
 </html>

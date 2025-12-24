@@ -401,6 +401,44 @@
   user-select:none !important;
 }
 
+
+/* === MZJ Action Selector (Mobile) === */
+.mzj-action-bar{
+  display:grid;
+  gap:8px;
+  margin: 10px 0 14px;
+}
+.mzj-action-label{
+  font-weight:900;
+  color: rgb(62,36,32);
+  font-size:12px;
+  padding: 0 2px;
+}
+.mzj-action-select{
+  width:100%;
+  height:44px;
+  border-radius:16px;
+  border:1.5px solid rgba(62,36,32,.22);
+  background:#fff;
+  color: rgb(62,36,32);
+  font-weight:900;
+  font-size:13px;
+  padding: 0 12px;
+  outline: none;
+  box-shadow: 0 10px 20px rgba(0,0,0,.06);
+  -webkit-appearance: none;
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, rgb(62,36,32) 50%),
+    linear-gradient(135deg, rgb(62,36,32) 50%, transparent 50%);
+  background-position:
+    calc(16px) 19px,
+    calc(10px) 19px;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat:no-repeat;
+}
+.mzj-hidden-tabs{ display:none !important; }
+
 </style>
 <style id="noFlash">
   html{background:#fff8ef;}
@@ -720,12 +758,24 @@ header, .topbar, .navbar, .header, .sidebar, aside.sidebar, nav.sidebar, .side-b
 <!-- App -->
 <div id="app" style="display:none">
 <div class="container">
-<div class="inner-tabs">
-<button class="inner-tab active" data-target="tab-add">إضافة سيارة</button>
-<button class="inner-tab" data-target="tab-move">نقل السيارات</button>
-<button class="inner-tab" data-target="tab-edit">تعديل السيارات</button>
-<button class="inner-tab" data-target="tab-track">تتبع حركة رقم هيكل</button>
-<button class="inner-tab" data-target="tab-log">سجل الحركات</button>
+<div class="mzj-action-bar">
+  <label class="mzj-action-label" for="mzjActionSelect">اختر الإجراء</label>
+  <select id="mzjActionSelect" class="mzj-action-select">
+    <option value="tab-add" selected>إضافة سيارة</option>
+    <option value="tab-move">نقل السيارات</option>
+    <option value="tab-edit">تعديل السيارات</option>
+    <option value="tab-track">تتبع حركة رقم هيكل</option>
+    <option value="tab-log">سجل الحركات</option>
+  </select>
+
+  <!-- kept for logic, hidden -->
+  <div class="inner-tabs mzj-hidden-tabs" aria-hidden="true">
+    <button class="inner-tab active" data-target="tab-add" tabindex="-1">إضافة سيارة</button>
+    <button class="inner-tab" data-target="tab-move" tabindex="-1">نقل السيارات</button>
+    <button class="inner-tab" data-target="tab-edit" tabindex="-1">تعديل السيارات</button>
+    <button class="inner-tab" data-target="tab-track" tabindex="-1">تتبع حركة رقم هيكل</button>
+    <button class="inner-tab" data-target="tab-log" tabindex="-1">سجل الحركات</button>
+  </div>
 </div>
 <div class="inner-tab-panel active" id="tab-add">
 <div class="card">
@@ -2709,6 +2759,39 @@ if(!movedCount){
   -webkit-tap-highlight-color: transparent !important;
 }
 </style>
+
+
+<script>
+(function(){
+  const sel = document.getElementById('mzjActionSelect');
+  if(!sel) return;
+
+  function clickTab(target){
+    const btn = document.querySelector('.inner-tab[data-target="'+target+'"]');
+    if(btn) btn.click();
+  }
+
+  // On change
+  sel.addEventListener('change', (e)=>{ clickTab(sel.value); });
+
+  // If page script sets active tab later, keep select synced
+  const obs = new MutationObserver(()=>{
+    const active = document.querySelector('.inner-tab.active');
+    if(active){
+      const t = active.getAttribute('data-target');
+      if(t && sel.value !== t) sel.value = t;
+    }
+  });
+  obs.observe(document.documentElement, {subtree:true, attributes:true, attributeFilter:['class']});
+
+  // Initial sync
+  const active = document.querySelector('.inner-tab.active');
+  if(active){
+    const t = active.getAttribute('data-target');
+    if(t) sel.value = t;
+  }
+})();
+</script>
 
 </body>
 </html>

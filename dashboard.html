@@ -8,6 +8,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -1452,53 +1453,51 @@ function renderShootCard(gridEl){
   }
 
   function renderTransferCard(gridEl){
-    const total = transferRequests.length;
-
-    const adminApprovedCount = transferRequests.filter(t =>
-      isApproved(t.adminApproved) || isApproved(t.adminApproval)
-    ).length;
-
-    const financeApprovedCount = transferRequests.filter(t =>
-      isApproved(t.financeApproved) || isApproved(t.financeApproval)
-    ).length;
-
-    const adminPendingCount = total - adminApprovedCount;
-    const financePendingCount = total - financeApprovedCount;
+    const list = Array.isArray(transferRequests) ? transferRequests.slice() : [];
+    const needsAdmin = (t)=> !(isApproved(t.adminApproved) || isApproved(t.adminApproval));
+    const needsFinance = (t)=> !(isApproved(t.financeApproved) || isApproved(t.financeApproval));
+    const awaitingBoth = list.filter(t => needsAdmin(t) && needsFinance(t));
+    const awaitingCount = awaitingBoth.length;
+    const total = list.length;
 
     const card = document.createElement('div');
     card.className = 'card group-card';
-    card.id = 'transferCard';
     card.innerHTML = `
       <div class="group-head">
         <div class="group-left">
           <h3 class="group-title"><i class="fa-solid fa-right-left"></i> الموافقة المالية والإدارية</h3>
-          <div class="sub-metrics">
-            <span class="metric">
-              <i class="fa-solid fa-list-check"></i> طلبات النقل إلى مباع تم التسليم: <b>${total.toLocaleString('ar-SA')}</b>
-            </span>
-            <span class="metric">
-              <i class="fa-solid fa-user-check"></i> موافقة إدارية: <b>${adminPendingCount.toLocaleString('ar-SA')}</b>
-            </span>
-            <span class="metric">
-              <i class="fa-solid fa-coins"></i> موافقة مالية: <b>${financePendingCount.toLocaleString('ar-SA')}</b>
-            </span>
+          <div class="mini-kpis">
+            <div class="mini-kpi"><span>موافقة إدارية:</span> <b>${awaitingCount.toLocaleString('ar-SA')}</b></div>
+            <div class="mini-kpi"><span>موافقة مالية:</span> <b>${awaitingCount.toLocaleString('ar-SA')}</b></div>
           </div>
-          <div class="chips" style="margin-top:10px">
-            <button class="chip" data-tfilter="admin"><i class="fa-solid fa-user-check"></i> موافقة إدارية فقط</button>
-            <button class="chip" data-tfilter="finance"><i class="fa-solid fa-coins"></i> موافقة مالية فقط</button>
-            <button class="chip" data-tfilter="all"><i class="fa-solid fa-layer-group"></i> كل الطلبات</button>
-          </div>
-          <div class="hint">اضغط على الزرار لعرض المطلوب فقط — أو اضغط على الكارت لعرض الكل.</div>
+          <div class="card-actions">
+  <button class="card-action-btn" onclick="filterApprovals('awaiting')">
+    <span class="card-action-title">موافقة إدارية</span>
+    <span class="card-action-count" id="adminAwaitingCount">0</span>
+  </button>
+
+  <button class="card-action-btn" onclick="filterApprovals('awaiting')">
+    <span class="card-action-title">موافقة مالية</span>
+    <span class="card-action-count" id="financeAwaitingCount">0</span>
+  </button>
+
+  <button class="card-action-btn primary" onclick="filterApprovals('delivered')">
+    طلبات النقل إلى مباع تم التسليم
+  </button>
+</div>
+
         </div>
-        <div class="group-total" title="طلبات النقل بانتظار الموافقات">${total.toLocaleString('ar-SA')}</div>
+        <div class="group-total" title="إجمالي طلبات النقل">${total.toLocaleString('ar-SA')}</div>
       </div>
     `;
-    // فتح الكل عند الضغط على الكارت
+
+    // فتح الكل عند الضغط على الكارت (وليس الأزرار)
     card.addEventListener('click', (ev)=>{
       if(ev && ev.target && ev.target.closest && ev.target.closest('button[data-tfilter]')) return;
       openTransfersModal('all');
     });
-// أزرار الفلترة داخل الكارت
+
+    // أزرار الفلترة داخل الكارت
     card.querySelectorAll('button[data-tfilter]').forEach(btn=>{
       btn.addEventListener('click', (ev)=>{
         ev.stopPropagation();
@@ -1506,6 +1505,7 @@ function renderShootCard(gridEl){
         openTransfersModal(f);
       });
     });
+
     gridEl.appendChild(card);
   }
 
@@ -2355,15 +2355,18 @@ function openShootModal(filter='ALL'){
     const needsFinance = (t)=> !(isApproved(t.financeApproved) || isApproved(t.financeApproval));
 
     let picked = list;
-    if(filterKey==='admin') picked = list.filter(needsAdmin);
-    else if(filterKey==='finance') picked = list.filter(needsFinance);
+
+    // المطلوب: زر "موافقة إدارية" و "موافقة مالية" يعرضون فقط
+    // الطلبات اللي: إداري بانتظار + مالية بانتظار
+    if(filterKey==='awaiting') picked = list.filter(t => needsAdmin(t) && needsFinance(t));
 
     currentTransfersBase = picked.slice();
     filteredTransfers = sortTransfers(picked);
+
     const title =
-      filterKey==='admin' ? 'طلبات نقل السيارات — محتاجة موافقة إدارية' :
-      filterKey==='finance' ? 'طلبات نقل السيارات — محتاجة موافقة مالية' :
+      filterKey==='awaiting' ? 'طلبات نقل السيارات — بانتظار الموافقة الإدارية والمالية' :
       'طلبات نقل السيارات — كل الطلبات';
+
     openModal('transfers', title);
   }
   function renderTransfersTable(){

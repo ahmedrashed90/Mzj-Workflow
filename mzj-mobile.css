@@ -1,26 +1,28 @@
-/* ===== FORCE SMALL DOWNBAR TEXT ===== */
+/* ===== Downbar labels: TWO LINES (show full names) ===== */
+.mzj-downbar{
+  height: 110px !important;          /* زوّد ارتفاع البار عشان السطرين */
+}
+
+.mzj-main{
+  padding-bottom: 140px !important;  /* عشان المحتوى ما يدخل تحت البار */
+}
+
+.mzj-downbar .inner{
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+  padding: 10px 10px !important;
+}
 
 .mzj-downbar a span{
-  font-size: 5px !important;
-  line-height: 1 !important;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+  font-size: 9px !important;
+  line-height: 1.15 !important;
 
-/* الأيقونة نفسها */
-.mzj-downbar a{
-  font-size: 18px !important;
-}
+  /* سطرين بدل قص */
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: initial !important;
 
-/* تقليل المسافة بين الأيقونة والكتابة */
-.mzj-downbar a span{
-  margin-top: 2px !important;
-}
-
-/* شاشات صغيرة قوي */
-@media (max-width: 360px){
-  .mzj-downbar a span{
-    font-size: 6.5px !important;
-  }
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
 }

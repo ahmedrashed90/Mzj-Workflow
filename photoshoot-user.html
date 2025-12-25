@@ -1323,9 +1323,21 @@ function includesLoc(loc){ return myLocations().includes(loc); }
 function fmtTs(ts){
   if(!ts) return "—";
   try{
-    if(ts.toDate) return ts.toDate().toISOString().replace('T',' ').slice(0,19);
-  }catch(e){}
-  return "—";
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    // عرض بتوقيت السعودية (Asia/Riyadh)
+    return d.toLocaleString('en-GB', {
+      timeZone: 'Asia/Riyadh',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    }).replace(',', '');
+  }catch(e){
+    return "—";
+  }
 }
 function kindLabel(k){ return k==="shoot" ? "تصوير" : (k==="move" ? "نقل" : (k==="mixed"?"مختلط":"—")); }
 function statusLabel(req){ return (req && req.finishedAt) ? "مكتملة" : "تحت المتابعة"; }

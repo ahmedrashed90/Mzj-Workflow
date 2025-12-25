@@ -187,7 +187,33 @@
 
     /* منع وميض تسجيل الدخول أثناء التحقق */
     body.auth-checking #loginCard{display:none !important;}
-  </style>
+  
+/* ===== Mobile Create Order Grid (3x rows) ===== */
+@media (max-width: 768px){
+  .create-order-table thead{display:none}
+  .create-order-table tr{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap:10px;
+    border-bottom:1px solid #ead9cc;
+    margin-bottom:12px;
+    padding-bottom:12px;
+  }
+  .create-order-table td{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    padding:0;
+    border:none;
+  }
+  .create-order-table td label{
+    font-size:12px;
+    font-weight:800;
+    color:#3e2420;
+  }
+}
+
+</style>
 </head>
 
 <body class="auth-checking">
@@ -1709,7 +1735,6 @@ document.body.classList.add(isAdmin() ? 'is-admin' : 'not-admin');
       <a href="m.admin.html">🏠<span>الإدارة</span></a>
       <a href="m.Activity.html">🕘<span>سجل النشاط</span></a>
       <a href="m.act.html">🧾<span>سجل الحركات</span></a>
-      <a href="m.sales.html#all">📋<span>كل الطلبات</span></a>
     </div>
   </nav>
 

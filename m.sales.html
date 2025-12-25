@@ -2060,441 +2060,95 @@ function clearErpTable() {
     // ---- تبويب كل الطلبات ----
 
     async function loadOrdersList() {
-      ordersListBody.innerHTML = "<tr><td class='muted' colspan='7'>جاري تحميل الطلبات...</td></tr>";
-      
-        renderOrdersCards(null);
-try {
-        // ✅ نقرأ آخر 200 سجل من erp_orders (قد يكون في تكرار لأن كل سيارة سجل)
-        const q = query(collection(db, ERP_COLLECTION), limit(200));
+      ordersListBody.innerHTML = "";
+      renderOrdersCards(null); // show loading in cards view
+      const hasDate = (v) => (v && typeof v.toDate === "function");
+      const fmtDate = (ts) => {
+        try {
+          if (hasDate(ts)) return ts.toDate().toLocaleDateString("ar-SA");
+          if (typeof ts === "number") return new Date(ts).toLocaleDateString("ar-SA");
+          if (typeof ts === "string") return new Date(ts).toLocaleDateString("ar-SA");
+        } catch (e) {}
+        return "—";
+      };
+
+      try {
+        if (!db) throw new Error("Firestore غير مهيأ");
+        // IMPORTANT: keep the same collection name as desktop (erp_orders)
+        const q = query(collection(db, "erp_orders"), orderBy("createdAt", "desc"), limit(200));
         const snap = await getDocs(q);
+
         if (snap.empty) {
           ordersListBody.innerHTML = "<tr><td class='muted' colspan='7'>لا توجد طلبات مسجلة حالياً.</td></tr>";
+          renderOrdersCards([]); // empty state
           return;
         }
-        // ✅ نجمع حسب orderNo لتجنب تكرار الطلبات في القائمة
-        const byOrder = new Map();
-        for (const docSnap of snap.docs) {
-          const d = docSnap.data();
-          const orderNo = d.orderNo || d.OrderNo || docSnap.id;
-          if (!orderNo) continue;
 
-          if (!byOrder.has(orderNo)) {
-            byOrder.set(orderNo, { orderNo, docs: [] });
-          }
-          byOrder.get(orderNo).docs.push(d);
-        }
+        // Group by orderNo (desktop behavior)
+        const byOrder = {};
+        snap.forEach((d) => {
+          const data = d.data() || {};
+          const orderNo = data.orderNo || data.order_id || data.order || data.name || d.id;
+          if (!byOrder[orderNo]) byOrder[orderNo] = { orderNo, vins: [], rows: [] };
+          byOrder[orderNo].rows.push(data);
+          const vin = data.vin || data.vinNo || data.chassis || data.chassisNo || data.vin_number;
+          if (vin && !byOrder[orderNo].vins.includes(vin)) byOrder[orderNo].vins.push(vin);
+        });
 
-        const rows = [];
-        for (const group of byOrder.values()) {
-          const docsArr = group.docs || [];
-          const first = docsArr[0] || {};
-
-          const vins = Array.from(new Set(
-            docsArr
-              .map(x => (getFieldFlex("VIN", x) || "").toString().trim())
-              .filter(v => v && v !== "-" && v !== "—")
-          ));
-
-          const vinVal = (vins.length <= 1)
-            ? (vins[0] || "—")
-            : ("(" + vins.length + ") هياكل");
-
-          const customerName = getFieldFlex("CustomerName", first) || "";
-          const customerPhone = getFieldFlex("CustomerPhone", first) || "";
-          const branch = getFieldFlex("Branch", first) || "";
-          const deliveryDate = getFieldFlex("DeliveryDate", first) || "";
-          const orderDateRaw = getFieldFlex("OrderDate", first) || "";
-
-          // حالة التتبع (مرة واحدة لكل طلب)
-          let statusLabel = "لم يبدأ";
-          try {
-            const tSnap = await getDoc(doc(db, TRACK_COLLECTION, group.orderNo + "_1"));
-            if (tSnap.exists()) {
-              const t = tSnap.data();
-              const stagesObj = t.stages || {};
-              const doneCount = Object.keys(stagesObj).filter(k => stagesObj[k]).length;
-              if (doneCount === 0) statusLabel = "لم يبدأ";
-              else if (doneCount >= STAGES.length) statusLabel = "تم إتمام جميع المراحل";
-              else statusLabel = "تم تنفيذ " + doneCount + " من " + STAGES.length + " مراحل";
-            }
-          } catch (e) {
-            console.error("track read error", e);
-          }
-
-          rows.push({
-            orderNo: group.orderNo,
-            vinVal,
-            customerName,
-            customerPhone,
+        // Build list items once (no per-doc extra reads - avoids "stuck loading" on mobile networks)
+        const groups = Object.values(byOrder).map((g) => {
+          const first = g.rows[0] || {};
+          const customer = first.customerName || first.customer || first.customer_name || first.clientName || "—";
+          const branch = first.branch || first.branchName || first.showroom || first.location || "—";
+          const createdAt = first.createdAt || first.created_at || first.created || first.createdOn;
+          const totalCars = Number(first.totalCars || first.total_cars || g.vins.length || 0) || g.vins.length || 0;
+          const statusLabel = first.statusLabel || first.status || first.stage || "—";
+          return {
+            orderNo: g.orderNo,
+            customer,
             branch,
-            deliveryDate,
-            orderDateRaw,
+            createdAtText: fmtDate(createdAt),
+            totalCars,
+            vins: g.vins,
             statusLabel
-          });
-        }
-        
-        // ترتيب الصفوف بالأحدث أولاً (بدون الاعتماد على orderBy لتفادي مشاكل الفهارس/اختلاف أسماء الحقول)
-        function toMillis(v){
-          if (!v) return 0;
-          // Firestore Timestamp
-          if (v.toDate) return v.toDate().getTime();
-          // JS Date
-          if (v instanceof Date) return v.getTime();
-          // number
-          if (typeof v === "number") return v;
-          // string
-          const s = String(v).trim();
-          // try parse ISO / normal date
-          const t = Date.parse(s);
-          if (!Number.isNaN(t)) return t;
-          // fallback: if looks like dd/mm/yyyy or dd-mm-yyyy
-          const m = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
-          if (m){
-            const dd = parseInt(m[1],10), mm = parseInt(m[2],10)-1, yy = parseInt(m[3],10);
-            const yyyy = yy < 100 ? (2000 + yy) : yy;
-            const d = new Date(yyyy, mm, dd);
-            return d.getTime() || 0;
-          }
-          return 0;
-        }
-
-        rows.sort((a,b) => {
-          const aMs = toMillis(a.orderDateRaw || a.deliveryDate || "");
-          const bMs = toMillis(b.orderDateRaw || b.deliveryDate || "");
-          // desc
-          return bMs - aMs;
+          };
         });
 
-ordersListBody.innerHTML = "";
-        rows.forEach(r => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td><button class="link-btn" data-order="${r.orderNo}">${r.orderNo}</button></td>
-            <td>${r.customerName || "—"}</td>
-            <td>${r.customerPhone || "—"}</td>
-            <td>${r.branch || "—"}</td>
-            <td>${r.vinVal || "—"}</td>
-            <td>${r.deliveryDate || "—"}</td>
-            <td>${r.statusLabel || "—"}</td>
-          `;
-          ordersListBody.appendChild(tr);
+        // Sort newest first using createdAtText fallback (best-effort)
+        // Keep original snap order by createdAt desc: groups derived from that order; so no need heavy sort.
+
+        // Render table (desktop-like; in mobile it may be hidden but kept for parity)
+        const tbodyRows = [];
+        groups.forEach((it, idx) => {
+          const vinsText = (it.vins && it.vins.length) ? it.vins.slice(0, 3).join("، ") + (it.vins.length > 3 ? ` (+${it.vins.length - 3})` : "") : "—";
+          tbodyRows.push(`
+            <tr data-order="${escapeHtml(String(it.orderNo))}">
+              <td>${idx + 1}</td>
+              <td class="mono">${escapeHtml(String(it.orderNo))}</td>
+              <td>${escapeHtml(String(it.customer))}</td>
+              <td>${escapeHtml(String(it.branch))}</td>
+              <td>${escapeHtml(String(it.createdAtText))}</td>
+              <td>${escapeHtml(String(it.totalCars))}</td>
+              <td class="muted">${escapeHtml(String(vinsText))}</td>
+            </tr>
+          `);
         });
+        ordersListBody.innerHTML = tbodyRows.join("");
+
+        // Render cards (mobile-first)
+        renderOrdersCards(groups);
+
+        // Bind click on rows/cards to open details (existing handler)
+        hookAllOrdersClick();
+
       } catch (err) {
-        console.error(err);
-        ordersListBody.innerHTML = "<tr><td class='err' colspan='7'>تعذر تحميل قائمة الطلبات.</td></tr>";
+        console.error("loadOrdersList error:", err);
+        ordersListBody.innerHTML = "<tr><td class='muted' colspan='7'>تعذر تحميل الطلبات. تأكد من تسجيل الدخول واتصال الإنترنت.</td></tr>";
+        renderOrdersCards([]); // show empty
+        showToast("تعذر تحميل الطلبات");
       }
     }
 
-
-    function _esc(s){
-      return String(s ?? '').replace(/[&<>"']/g, (c)=>({
-        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-      }[c]));
-    }
-    function renderOrdersCards(groups){
-      const wrap = document.getElementById('ordersCards');
-      if(!wrap) return;
-      if(groups === null){
-        wrap.innerHTML = '<div class="o-card"><div class="o-id">جاري تحميل الطلبات…</div></div>';
-        return;
-      }
-      if(!Array.isArray(groups) || groups.length===0){
-        wrap.innerHTML = '<div class="o-card"><div class="o-id">لا توجد طلبات حالياً</div></div>';
-        return;
-      }
-      wrap.innerHTML = '';
-      groups.forEach(g=>{
-        const orderNo = g.orderNo || '—';
-        const customer = g.customerName || '—';
-        const vinsCount = (g.vins||[]).length;
-        const status = g.statusText || (g.status||'—');
-        const total = (g.totalText || g.total || g.total_incl_tax || g.grand_total || '—');
-        const trackUrl = g.trackLink || (g.orderNo ? ('tracking.html?order=' + encodeURIComponent(g.orderNo)) : '#');
-        const detailsUrl = g.detailsLink || (g.orderNo ? ('sales-order.html?order=' + encodeURIComponent(g.orderNo)) : '#');
-
-        const card = document.createElement('div');
-        card.className = 'o-card';
-        card.innerHTML = `
-          <div class="o-head">
-            <div class="o-id">طلب #${_esc(orderNo)}</div>
-            <div class="o-badge">${_esc(status)}</div>
-          </div>
-          <div class="o-row"><div class="o-k">العميل</div><div class="o-v">${_esc(customer)}</div></div>
-          <div class="o-row"><div class="o-k">عدد السيارات</div><div class="o-v">${_esc(vinsCount)}</div></div>
-          <div class="o-row"><div class="o-k">الإجمالي</div><div class="o-v">${_esc(total)}</div></div>
-          <div class="o-actions">
-            <a class="primary" href="${detailsUrl}">فتح الطلب</a>
-            <a href="${trackUrl}">التتبع</a>
-          </div>
-        `;
-        wrap.appendChild(card);
-      });
-    }
-
-
-
-    function activateTab(which) {
-      if (which === "list") {
-        orderCard.style.display = "none";
-        erpCard.style.display   = "none";
-        stagesCard.style.display= "none";
-        ordersListCard.style.display = "";
-        tabSearchBtn.classList.remove("tab-active");
-        tabListBtn.classList.add("tab-active");
-        loadOrdersList();
-      } else {
-        orderCard.style.display = "";
-        erpCard.style.display   = currentOrderId ? "" : "none";
-        stagesCard.style.display= "";
-        ordersListCard.style.display = "none";
-        tabSearchBtn.classList.add("tab-active");
-        tabListBtn.classList.remove("tab-active");
-      }
-    }
-
-    tabSearchBtn.addEventListener("click", () => activateTab("search"));
-    tabListBtn.addEventListener("click", () => activateTab("list"));
-
-    ordersListBody.addEventListener("click", async (e) => {
-      const btn = e.target.closest("button.link-btn");
-      if (!btn) return;
-      const ord = btn.dataset.order;
-      try { await navigator.clipboard.writeText(ord); } catch(e) { console.warn(e); }
-      orderIdInput.value = ord;
-      vinInput.value = "";
-      activateTab("search");
-      loadOrder();
-    });
-
-    // زر توليد رابط التتبع
-    if (trackLinkBtn) {
-      trackLinkBtn.addEventListener("click", async () => {
-        if (!currentVin) {
-          alert("لم يتم اختيار رقم الهيكل.");
-          return;
-        }
-
-        const url = `https://mzj-tracking.vercel.app/Test-Track.html?vin=${encodeURIComponent(currentVin)}`;
-
-        // فتح الرابط في تبويب جديد
-        window.open(url, "_blank");
-
-        // نسخ الرابط إلى الحافظة
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          try {
-            await navigator.clipboard.writeText(url);
-            alert("تم نسخ رابط التتبع:\n" + url);
-          } catch (err) {
-            console.warn("لم يتم النسخ إلى الحافظة", err);
-          }
-        }
-      });
-    }
-
-
-    // إدارة حالة تسجيل الدخول وتوزيع الواجهات
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        // مستخدم مسجل دخول
-        whoami.textContent = user.email || "";
-        logoutBtn.style.display = "inline-flex";
-
-        authCard.style.display = "none";
-        tabsBar.style.display  = "flex";
-
-        orderCard.style.display  = "";
-        if (currentOrderId) {
-          erpCard.style.display    = "";
-          stagesCard.style.display = "";
-        } else {
-          erpCard.style.display    = "none";
-          stagesCard.style.display = "none";
-        }
-        ordersListCard.style.display = "none";
-      } else {
-        // لا يوجد مستخدم
-        whoami.textContent = "";
-        logoutBtn.style.display = "none";
-
-        authCard.style.display     = "";
-        tabsBar.style.display      = "none";
-        orderCard.style.display    = "none";
-        erpCard.style.display      = "none";
-        stagesCard.style.display   = "none";
-        ordersListCard.style.display = "none";
-      }
-    });
-
-    // زر تسجيل الدخول
-    loginBtn.addEventListener("click", async () => {
-      authMsg.textContent = "";
-      const emailVal = (email.value || "").trim();
-      const passVal  = (password.value || "").trim();
-
-      if (!emailVal || !passVal) {
-        authMsg.innerHTML = "<span class='err'>أدخل البريد الإلكتروني وكلمة السر.</span>";
-        return;
-      }
-
-      try {
-        await signInWithEmailAndPassword(auth, emailVal, passVal);
-        authMsg.innerHTML = "<span class='ok'>تم تسجيل الدخول بنجاح.</span>";
-      } catch (e) {
-        console.error(e);
-        authMsg.innerHTML = "<span class='err'>تعذر تسجيل الدخول. تأكد من البيانات أو تواصل مع المسؤول.</span>";
-      }
-    });
-
-    // زر إنشاء حساب جديد (للمشرف فقط)
-    signupBtn.addEventListener("click", async () => {
-      authMsg.textContent = "";
-      const emailVal = (email.value || "").trim();
-      const passVal  = (password.value || "").trim();
-
-      if (!emailVal || !passVal) {
-        authMsg.innerHTML = "<span class='err'>أدخل البريد الإلكتروني وكلمة السر.</span>";
-        return;
-      }
-
-      try {
-        await createUserWithEmailAndPassword(auth, emailVal, passVal);
-        authMsg.innerHTML = "<span class='ok'>تم إنشاء الحساب وتسجيل الدخول.</span>";
-      } catch (e) {
-        console.error(e);
-        authMsg.innerHTML = "<span class='err'>تعذر إنشاء الحساب. ربما يكون البريد مستخدم من قبل.</span>";
-      }
-    });
-
-    // زر تسجيل الخروج
-    logoutBtn.addEventListener("click", async () => {
-      try {
-        await signOut(auth);
-      } catch (e) {
-        console.error(e);
-      }
-    });
-
-    // تهيئة أولية للصفحة
-    tabsBar.style.display      = "none";
-    orderCard.style.display    = "none";
-    erpCard.style.display      = "none";
-    stagesCard.style.display   = "none";
-    ordersListCard.style.display = "none";
-
-    clearErpTable();
-    buildStagesUI({ });
-
-  </script>
-
-<script>
-  // Topbar connection badge helper (non-invasive)
-  (function(){
-    const who = document.getElementById('whoami');
-    const dot = document.getElementById('connDot');
-    const txt = document.getElementById('connText');
-    function tick(){
-      const hasUser = who && (who.textContent||'').trim().length>0;
-      if(dot) dot.className = 'dot ' + (hasUser ? 'ok' : 'warn');
-      if(txt) txt.textContent = hasUser ? 'متصل' : 'غير مسجل';
-    }
-    setInterval(tick, 700);
-    setTimeout(tick, 50);
-  })();
-</script>
-
-  <script src="./mzj-ui.js"></script>
-
-      </div>
-    </main>
-  </div>
-
-
-  <!-- Message Modal (Edit before send) -->
-  <div id="msgModal" style="display:none;position:fixed;inset:0;z-index:9999;">
-    <div id="msgModalBackdrop" style="position:absolute;inset:0;background:rgba(0,0,0,.45);"></div>
-    <div style="position:relative;max-width:680px;margin:7vh auto;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden;">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid #e5e7eb;">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div style="width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:rgba(188,143,116,.16);color:var(--brown);font-weight:900;">
-            <i class="fa-solid fa-paper-plane"></i>
-          </div>
-          <div>
-            <div id="msgModalTitle" style="font-weight:900;color:var(--brown);">إرسال رسالة</div>
-            <div id="msgModalSub" style="font-size:12px;color:var(--muted);margin-top:2px;">—</div>
-          </div>
-        </div>
-        <button id="msgModalClose" class="btn-outline" type="button" style="font-size:12px;">إغلاق</button>
-      </div>
-
-      <div style="padding:12px 14px;">
-        <label style="margin:0 0 6px 0;">نص الرسالة (تقدر تعدّل قبل الإرسال)</label>
-        <textarea id="msgModalText" rows="9" style="width:100%;padding:10px 12px;border-radius:12px;border:1px solid #e5e7eb;background:#f9fafb;font-family:inherit;font-size:14px;outline:none;resize:vertical;"></textarea>
-        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-top:10px;">
-          <div class="muted" style="font-size:12px;">
-            <span class="badge" id="msgModalChannel">—</span>
-            <span class="badge" id="msgModalPhone">—</span>
-            <span class="badge" id="msgModalVin">—</span>
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button id="msgModalCopy" class="btn-outline" type="button" style="font-size:12px;"><i class="fa-regular fa-copy"></i> نسخ النص</button>
-            <button id="msgModalReset" class="btn-outline" type="button" style="font-size:12px;"><i class="fa-solid fa-rotate-left"></i> رجوع للنص الأصلي</button>
-            <button id="msgModalSend" class="btn" type="button" style="font-size:12px;"><i class="fa-solid fa-paper-plane"></i> إرسال</button>
-          </div>
-        </div>
-        <div id="msgModalMsg" class="muted" style="margin-top:8px;"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Dynamic QR (Clickable) -->
-  <div id="trackQrModal" style="display:none;position:fixed;inset:0;z-index:9998;">
-    <div id="trackQrBackdrop" style="position:absolute;inset:0;background:rgba(0,0,0,.45);"></div>
-    <div style="position:relative;max-width:420px;margin:10vh auto;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden;">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid #e5e7eb;">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div style="width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:rgba(188,143,116,.16);color:var(--brown);font-weight:900;">
-            <i class="fa-solid fa-qrcode"></i>
-          </div>
-          <div>
-            <div style="font-weight:900;color:var(--brown);">QR تتبع العميل</div>
-            <div id="trackQrSub" style="font-size:12px;color:var(--muted);margin-top:2px;">اضغط على الـ QR لفتح التتبع مباشرة</div>
-          </div>
-        </div>
-        <button id="trackQrClose" class="btn-outline" type="button" style="font-size:12px;">إغلاق</button>
-      </div>
-      <div style="padding:14px;text-align:center;">
-        <a id="trackQrLink" href="#" target="_blank" style="display:inline-block;text-decoration:none;">
-          <img id="trackQrImg" alt="QR Tracking" style="width:240px;height:240px;border-radius:14px;border:1px solid #e5e7eb;background:#fff;"/>
-        </a>
-        <div class="hint" style="margin-top:10px;">رابط التتبع: <button id="trackQrCopy" class="link-btn" type="button">نسخ الرابط</button></div>
-      </div>
-    </div>
-  </div>
-
-
-<nav class="mzj-downbar" aria-label="التنقل">
-  <div class="inner">
-    <a class="active" href="m.sales.html">💼<span>تتبع المبيعات</span></a>
-    <a href="m.dashboard.html">📊<span>الداش بورد</span></a>
-    <a href="m.inventory.html">📦<span>المخزون</span></a>
-    <a href="m.vt.html">↔️<span>نقل السيارات</span></a>
-    <a href="m.photoshoot-user.html">📷<span>إدارة الطلبات</span></a>
-
-    <a href="m.cars.html">🚗<span>كل السيارات</span></a>
-    <a href="m.admin.html">🏠<span>الإدارة</span></a>
-    <a href="m.Activity.html">🕘<span>سجل النشاط</span></a>
-    <a href="m.act.html">🧾<span>سجل الحركات</span></a>
-  </div>
-</nav>
-
-<style id="mzjSalesMobilePatch">
-:root{
-  --mzj-brown: rgb(62,36,32);
-  --mzj-beige: rgb(188,143,116);
-  --mzj-cream: #fff8ef;
-  --mzj-downbar-h: 138px;
-  --mzj-downbar-lift: 14px;
-}
 @media (max-width:1023px){
   html,body{margin:0!important;padding:0!important;overflow-x:hidden!important;background:var(--mzj-cream)!important;}
   .mzj-sidebar,.mzj-topbar,header,.topbar,.sidebar,.side-nav{display:none!important;}

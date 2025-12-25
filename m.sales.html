@@ -380,89 +380,6 @@
   .topbar-actions{justify-content:flex-start}
 }
 
-
-/* SAFE AREA DOWNBAR OVERRIDES */
-:root{ --mzj-downbar-gap: 10px; }
-.mzj-downbar{
-  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-  bottom: 0;
-}
-body{
-  padding-bottom: calc(160px + env(safe-area-inset-bottom, 0px));
-}
-.mzj-downbar .inner{ gap: 10px; }
-.mzj-downbar a span{ font-size: 12px; }
-
-/* Mobile Orders Cards (Sales) */
-.orders-cards{
-  display:none;
-  gap:12px;
-  margin-top:12px;
-}
-.orders-cards .o-card{
-  background:#fff;
-  border:1px solid rgba(0,0,0,.08);
-  border-radius:16px;
-  box-shadow:0 8px 24px rgba(0,0,0,.06);
-  padding:12px;
-}
-.orders-cards .o-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  margin-bottom:8px;
-}
-.orders-cards .o-id{
-  font-weight:900;
-  font-size:16px;
-  color:rgb(62,36,32);
-}
-.orders-cards .o-badge{
-  font-size:12px;
-  padding:4px 10px;
-  border-radius:999px;
-  background:rgba(188,143,116,.22);
-  border:1px solid rgba(188,143,116,.45);
-  color:rgb(62,36,32);
-  white-space:nowrap;
-}
-.orders-cards .o-row{
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
-  padding:8px 0;
-  border-top:1px dashed rgba(0,0,0,.1);
-}
-.orders-cards .o-k{ color:#666; font-size:12px; }
-.orders-cards .o-v{ color:#222; font-weight:700; font-size:13px; text-align:left; }
-.orders-cards .o-actions{
-  display:flex;
-  gap:8px;
-  margin-top:10px;
-}
-.orders-cards .o-actions a{
-  flex:1;
-  text-align:center;
-  padding:10px 10px;
-  border-radius:12px;
-  border:1px solid rgba(62,36,32,.25);
-  color:rgb(62,36,32);
-  background:#fff;
-  font-weight:800;
-  text-decoration:none;
-}
-.orders-cards .o-actions a.primary{
-  background:rgb(62,36,32);
-  color:#fff;
-  border-color:rgb(62,36,32);
-}
-@media (max-width: 720px){
-  .orders-cards{display:grid;}
-  /* keep table as fallback but not primary */
-  #ordersListTable{display:none;}
-}
-
 </style>
   <link rel="stylesheet" href="./mzj-ui.css" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
@@ -477,18 +394,6 @@ body{
 
   /* Keep content spacing nice */
   .legacy-sales{padding-top: 6px;}
-
-/* SAFE AREA DOWNBAR OVERRIDES */
-:root{ --mzj-downbar-gap: 10px; }
-.mzj-downbar{
-  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-  bottom: 0;
-}
-body{
-  padding-bottom: calc(160px + env(safe-area-inset-bottom, 0px));
-}
-.mzj-downbar .inner{ gap: 10px; }
-.mzj-downbar a span{ font-size: 12px; }
 </style>
 
 
@@ -496,23 +401,94 @@ body{
   /* Ensure the functional tabs bar (بحث عن طلب / كل الطلبات) is visible when JS enables it */
   .legacy-sales #tabsBar{ display:flex !important; }
   .legacy-sales #tabsBar[style*="display: none"]{ display:none !important; } /* respect JS when it hides */
-
-/* SAFE AREA DOWNBAR OVERRIDES */
-:root{ --mzj-downbar-gap: 10px; }
-.mzj-downbar{
-  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-  bottom: 0;
-}
-body{
-  padding-bottom: calc(160px + env(safe-area-inset-bottom, 0px));
-}
-.mzj-downbar .inner{ gap: 10px; }
-.mzj-downbar a span{ font-size: 12px; }
 </style>
 
   <link rel="stylesheet" href="mzj-mobile.css">
+<style id="mzjSalesMobileCSS">
+:root{
+  --mzj-brown: rgb(62,36,32);
+  --mzj-beige: rgb(188,143,116);
+  --mzj-cream: #fff8ef;
+  --mzj-downbar-h: 138px;
+  --mzj-downbar-lift: 14px;
+}
+@media (max-width:1023px){
+  html,body{margin:0!important;padding:0!important;overflow-x:hidden!important;background:var(--mzj-cream)!important;}
+  .mzj-topbar,.mzj-sidebar{display:none!important;}
+  body{padding:0!important;}
+  main,.mzj-content,.content,.main,.main-content,.page,
+  .container,.wrap,.content-wrap,.inner,.wrapper,[class*="container"],[class*="wrapper"]{
+    width:100%!important;max-width:100%!important;margin:0!important;padding-left:0!important;padding-right:0!important;
+  }
+  body{padding-bottom:calc(var(--mzj-downbar-h) + env(safe-area-inset-bottom,0px) + var(--mzj-downbar-lift) + 18px)!important;}
+
+  #tabsBar{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:10px!important;
+    padding:10px 10px 0!important;
+    margin:0!important;
+  }
+  #tabsBar .tab-btn{
+    border-radius:14px!important;
+    padding:10px 8px!important;
+    font-size:13px!important;
+    font-weight:900!important;
+    border:1px solid rgba(0,0,0,.10)!important;
+    background:rgba(255,248,239,.85)!important;
+    color:var(--mzj-brown)!important;
+  }
+  #tabsBar .tab-btn.tab-active{
+    background:rgba(188,143,116,.22)!important;
+    border-color:rgba(188,143,116,.40)!important;
+  }
+
+  body.mzj-orders-cards-ready .erp-table-wrap{display:none!important;}
+  #mzjOrdersCards{display:block!important;margin:10px 10px 0;}
+  .mzj-card-item{
+    background:rgba(255,255,255,.95);
+    border:1px solid rgba(0,0,0,.08);
+    border-radius:16px;
+    box-shadow:0 6px 18px rgba(0,0,0,.06);
+    padding:12px;
+    margin:10px 0;
+  }
+  .mzj-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;}
+  .mzj-card-title{font-weight:900;color:var(--mzj-brown);font-size:16px;line-height:1.2;}
+  .mzj-card-badge{font-size:12px;font-weight:900;color:var(--mzj-brown);background:rgba(188,143,116,.22);border:1px solid rgba(188,143,116,.35);padding:6px 10px;border-radius:999px;white-space:nowrap;}
+  .mzj-card-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;margin-top:8px;}
+  .mzj-field{background:rgba(255,248,239,.9);border:1px solid rgba(0,0,0,.06);border-radius:12px;padding:8px 10px;min-width:0;}
+  .mzj-field .k{display:block;font-size:11px;color:rgba(62,36,32,.75);font-weight:900;margin-bottom:3px;}
+  .mzj-field .v{display:block;font-size:13px;color:rgba(0,0,0,.8);font-weight:800;line-height:1.25;word-break:break-word;}
+
+  .mzj-downbar{
+    position:fixed!important;left:0!important;right:0!important;
+    bottom:calc(env(safe-area-inset-bottom,0px) + var(--mzj-downbar-lift))!important;
+    height:var(--mzj-downbar-h)!important;z-index:9999!important;
+    background:rgba(255,255,255,.96)!important;backdrop-filter:blur(8px);
+    border-top:1px solid rgba(0,0,0,.06);
+  }
+  .mzj-downbar .inner{
+    height:var(--mzj-downbar-h)!important;display:grid!important;
+    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+    grid-auto-rows:1fr!important;
+    gap:6px!important;padding:10px 10px 12px!important;
+  }
+  .mzj-downbar a{
+    display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;
+    gap:4px!important;padding:8px 4px!important;border-radius:14px!important;text-decoration:none!important;
+    font-size:17px!important;color:var(--mzj-brown)!important;
+  }
+  .mzj-downbar a.active{background:rgba(188,143,116,.22)!important;border:1px solid rgba(188,143,116,.35)!important;}
+  .mzj-downbar a span{
+    font-size:9px!important;font-weight:900!important;line-height:1.15!important;text-align:center!important;
+    display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;
+    max-width:100%!important;
+  }
+}
+</style>
 </head>
-<body class="mzj">
+<body class="mzj mzj-mobile-sales">
 
   <!-- MZJ Unified Topbar -->
   <header class="mzj-topbar">
@@ -673,9 +649,9 @@ body{
       </div>
 
       <div id="erpTotals" class="totals-box" style="display:none;"></div>
-      <div class="erp-table-wrap">
-        <div id="mzjOrdersCards" class="mzj-mobile-cards" aria-label="كل الطلبات"></div>
-<table>
+      <div id="mzjOrdersCards" class="mzj-mobile-cards" aria-label="كل الطلبات"></div>
+<div class="erp-table-wrap">
+        <table>
           <thead>
           <tr>
             <th>اسم العميل</th>
@@ -729,7 +705,6 @@ body{
           </thead>
           <tbody id="ordersListBody"></tbody>
         </table>
-        <div id="ordersCards" class="orders-cards"></div>
       </div>
     </div>
 
@@ -2049,7 +2024,7 @@ function clearErpTable() {
       buildStagesUI({ });
     };
 
-    vinPicker.addEventListener("change", () => {
+    vinPicker && vinPicker.addEventListener("change", () => {
       if (!currentOrderId || !currentOrderRecords.length) return;
       const selected = vinPicker.value;
       currentVin    = selected;
@@ -2060,201 +2035,397 @@ function clearErpTable() {
     // ---- تبويب كل الطلبات ----
 
     async function loadOrdersList() {
-      ordersListBody.innerHTML = "";
-      renderOrdersCards(null); // show loading in cards view
-      const hasDate = (v) => (v && typeof v.toDate === "function");
-      const fmtDate = (ts) => {
-        try {
-          if (hasDate(ts)) return ts.toDate().toLocaleDateString("ar-SA");
-          if (typeof ts === "number") return new Date(ts).toLocaleDateString("ar-SA");
-          if (typeof ts === "string") return new Date(ts).toLocaleDateString("ar-SA");
-        } catch (e) {}
-        return "—";
-      };
-
+      ordersListBody.innerHTML = "<tr><td class='muted' colspan='7'>جاري تحميل الطلبات...</td></tr>";
       try {
-        if (!db) throw new Error("Firestore غير مهيأ");
-        // IMPORTANT: keep the same collection name as desktop (erp_orders)
-        const q = query(collection(db, "erp_orders"), orderBy("createdAt", "desc"), limit(200));
+        // ✅ نقرأ آخر 200 سجل من erp_orders (قد يكون في تكرار لأن كل سيارة سجل)
+        const q = query(collection(db, ERP_COLLECTION), limit(200));
         const snap = await getDocs(q);
-
         if (snap.empty) {
           ordersListBody.innerHTML = "<tr><td class='muted' colspan='7'>لا توجد طلبات مسجلة حالياً.</td></tr>";
-          renderOrdersCards([]); // empty state
           return;
         }
+        // ✅ نجمع حسب orderNo لتجنب تكرار الطلبات في القائمة
+        const byOrder = new Map();
+        for (const docSnap of snap.docs) {
+          const d = docSnap.data();
+          const orderNo = d.orderNo || d.OrderNo || docSnap.id;
+          if (!orderNo) continue;
 
-        // Group by orderNo (desktop behavior)
-        const byOrder = {};
-        snap.forEach((d) => {
-          const data = d.data() || {};
-          const orderNo = data.orderNo || data.order_id || data.order || data.name || d.id;
-          if (!byOrder[orderNo]) byOrder[orderNo] = { orderNo, vins: [], rows: [] };
-          byOrder[orderNo].rows.push(data);
-          const vin = data.vin || data.vinNo || data.chassis || data.chassisNo || data.vin_number;
-          if (vin && !byOrder[orderNo].vins.includes(vin)) byOrder[orderNo].vins.push(vin);
-        });
+          if (!byOrder.has(orderNo)) {
+            byOrder.set(orderNo, { orderNo, docs: [] });
+          }
+          byOrder.get(orderNo).docs.push(d);
+        }
 
-        // Build list items once (no per-doc extra reads - avoids "stuck loading" on mobile networks)
-        const groups = Object.values(byOrder).map((g) => {
-          const first = g.rows[0] || {};
-          const customer = first.customerName || first.customer || first.customer_name || first.clientName || "—";
-          const branch = first.branch || first.branchName || first.showroom || first.location || "—";
-          const createdAt = first.createdAt || first.created_at || first.created || first.createdOn;
-          const totalCars = Number(first.totalCars || first.total_cars || g.vins.length || 0) || g.vins.length || 0;
-          const statusLabel = first.statusLabel || first.status || first.stage || "—";
-          return {
-            orderNo: g.orderNo,
-            customer,
+        const rows = [];
+        for (const group of byOrder.values()) {
+          const docsArr = group.docs || [];
+          const first = docsArr[0] || {};
+
+          const vins = Array.from(new Set(
+            docsArr
+              .map(x => (getFieldFlex("VIN", x) || "").toString().trim())
+              .filter(v => v && v !== "-" && v !== "—")
+          ));
+
+          const vinVal = (vins.length <= 1)
+            ? (vins[0] || "—")
+            : ("(" + vins.length + ") هياكل");
+
+          const customerName = getFieldFlex("CustomerName", first) || "";
+          const customerPhone = getFieldFlex("CustomerPhone", first) || "";
+          const branch = getFieldFlex("Branch", first) || "";
+          const deliveryDate = getFieldFlex("DeliveryDate", first) || "";
+          const orderDateRaw = getFieldFlex("OrderDate", first) || "";
+
+          // حالة التتبع (مرة واحدة لكل طلب)
+          let statusLabel = "لم يبدأ";
+          try {
+            const tSnap = await getDoc(doc(db, TRACK_COLLECTION, group.orderNo + "_1"));
+            if (tSnap.exists()) {
+              const t = tSnap.data();
+              const stagesObj = t.stages || {};
+              const doneCount = Object.keys(stagesObj).filter(k => stagesObj[k]).length;
+              if (doneCount === 0) statusLabel = "لم يبدأ";
+              else if (doneCount >= STAGES.length) statusLabel = "تم إتمام جميع المراحل";
+              else statusLabel = "تم تنفيذ " + doneCount + " من " + STAGES.length + " مراحل";
+            }
+          } catch (e) {
+            console.error("track read error", e);
+          }
+
+          rows.push({
+            orderNo: group.orderNo,
+            vinVal,
+            customerName,
+            customerPhone,
             branch,
-            createdAtText: fmtDate(createdAt),
-            totalCars,
-            vins: g.vins,
+            deliveryDate,
+            orderDateRaw,
             statusLabel
-          };
+          });
+        }
+        
+        // ترتيب الصفوف بالأحدث أولاً (بدون الاعتماد على orderBy لتفادي مشاكل الفهارس/اختلاف أسماء الحقول)
+        function toMillis(v){
+          if (!v) return 0;
+          // Firestore Timestamp
+          if (v.toDate) return v.toDate().getTime();
+          // JS Date
+          if (v instanceof Date) return v.getTime();
+          // number
+          if (typeof v === "number") return v;
+          // string
+          const s = String(v).trim();
+          // try parse ISO / normal date
+          const t = Date.parse(s);
+          if (!Number.isNaN(t)) return t;
+          // fallback: if looks like dd/mm/yyyy or dd-mm-yyyy
+          const m = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+          if (m){
+            const dd = parseInt(m[1],10), mm = parseInt(m[2],10)-1, yy = parseInt(m[3],10);
+            const yyyy = yy < 100 ? (2000 + yy) : yy;
+            const d = new Date(yyyy, mm, dd);
+            return d.getTime() || 0;
+          }
+          return 0;
+        }
+
+        rows.sort((a,b) => {
+          const aMs = toMillis(a.orderDateRaw || a.deliveryDate || "");
+          const bMs = toMillis(b.orderDateRaw || b.deliveryDate || "");
+          // desc
+          return bMs - aMs;
         });
 
-        // Sort newest first using createdAtText fallback (best-effort)
-        // Keep original snap order by createdAt desc: groups derived from that order; so no need heavy sort.
-
-        // Render table (desktop-like; in mobile it may be hidden but kept for parity)
-        const tbodyRows = [];
-        groups.forEach((it, idx) => {
-          const vinsText = (it.vins && it.vins.length) ? it.vins.slice(0, 3).join("، ") + (it.vins.length > 3 ? ` (+${it.vins.length - 3})` : "") : "—";
-          tbodyRows.push(`
-            <tr data-order="${escapeHtml(String(it.orderNo))}">
-              <td>${idx + 1}</td>
-              <td class="mono">${escapeHtml(String(it.orderNo))}</td>
-              <td>${escapeHtml(String(it.customer))}</td>
-              <td>${escapeHtml(String(it.branch))}</td>
-              <td>${escapeHtml(String(it.createdAtText))}</td>
-              <td>${escapeHtml(String(it.totalCars))}</td>
-              <td class="muted">${escapeHtml(String(vinsText))}</td>
-            </tr>
-          `);
+ordersListBody.innerHTML = "";
+        rows.forEach(r => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><button class="link-btn" data-order="${r.orderNo}">${r.orderNo}</button></td>
+            <td>${r.customerName || "—"}</td>
+            <td>${r.customerPhone || "—"}</td>
+            <td>${r.branch || "—"}</td>
+            <td>${r.vinVal || "—"}</td>
+            <td>${r.deliveryDate || "—"}</td>
+            <td>${r.statusLabel || "—"}</td>
+          `;
+          ordersListBody.appendChild(tr);
         });
-        ordersListBody.innerHTML = tbodyRows.join("");
-
-        // Render cards (mobile-first)
-        renderOrdersCards(groups);
-
-        // Bind click on rows/cards to open details (existing handler)
-        hookAllOrdersClick();
-
       } catch (err) {
-        console.error("loadOrdersList error:", err);
-        ordersListBody.innerHTML = "<tr><td class='muted' colspan='7'>تعذر تحميل الطلبات. تأكد من تسجيل الدخول واتصال الإنترنت.</td></tr>";
-        renderOrdersCards([]); // show empty
-        showToast("تعذر تحميل الطلبات");
+        console.error(err);
+        ordersListBody.innerHTML = "<tr><td class='err' colspan='7'>تعذر تحميل قائمة الطلبات.</td></tr>";
       }
     }
 
-@media (max-width:1023px){
-  html,body{margin:0!important;padding:0!important;overflow-x:hidden!important;background:var(--mzj-cream)!important;}
-  .mzj-sidebar,.mzj-topbar,header,.topbar,.sidebar,.side-nav{display:none!important;}
-  body{padding-left:0!important;padding-right:0!important;}
-  main,.mzj-content,.content,.main,.main-content,.page,
-  .container,.wrap,.content-wrap,.inner,.wrapper,[class*="container"],[class*="wrapper"]{
-    width:100%!important;max-width:100%!important;margin-left:0!important;margin-right:0!important;padding-left:0!important;padding-right:0!important;
-  }
-  body{padding-bottom:calc(var(--mzj-downbar-h) + env(safe-area-inset-bottom,0px) + var(--mzj-downbar-lift) + 18px)!important;}
-}
-@media (max-width:1023px){
-  .mzj-downbar{
-    position:fixed!important;left:0!important;right:0!important;
-    bottom:calc(env(safe-area-inset-bottom,0px) + var(--mzj-downbar-lift))!important;
-    height:var(--mzj-downbar-h)!important;z-index:9999!important;
-    background:rgba(255,255,255,.96)!important;backdrop-filter:blur(8px);
-    border-top:1px solid rgba(0,0,0,.06);
-  }
-  .mzj-downbar .inner{
-    height:var(--mzj-downbar-h)!important;display:grid!important;
-    grid-template-columns:repeat(5,minmax(0,1fr))!important;
-    grid-auto-flow:row!important;grid-auto-rows:1fr!important;
-    gap:6px!important;padding:10px 10px 12px!important;
-  }
-  .mzj-downbar a{
-    display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;
-    gap:4px!important;padding:8px 4px!important;border-radius:14px!important;text-decoration:none!important;
-    font-size:17px!important;color:var(--mzj-brown)!important;
-  }
-  .mzj-downbar a.active{background:rgba(188,143,116,.22)!important;border:1px solid rgba(188,143,116,.35)!important;}
-  .mzj-downbar a span{
-    font-size:9px!important;font-weight:900!important;line-height:1.15!important;text-align:center!important;
-    display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;
-    max-width:100%!important;
-  }
-}
+    function activateTab(which) {
+      if (which === "list") {
+        orderCard.style.display = "none";
+        erpCard.style.display   = "none";
+        stagesCard.style.display= "none";
+        ordersListCard.style.display = "";
+        tabSearchBtn.classList.remove("tab-active");
+        tabListBtn.classList.add("tab-active");
+        loadOrdersList();
+      } else {
+        orderCard.style.display = "";
+        erpCard.style.display   = currentOrderId ? "" : "none";
+        stagesCard.style.display= "";
+        ordersListCard.style.display = "none";
+        tabSearchBtn.classList.add("tab-active");
+        tabListBtn.classList.remove("tab-active");
+      }
+    }
 
-/* SAFE AREA DOWNBAR OVERRIDES */
-:root{ --mzj-downbar-gap: 10px; }
-.mzj-downbar{
-  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-  bottom: 0;
-}
-body{
-  padding-bottom: calc(160px + env(safe-area-inset-bottom, 0px));
-}
-.mzj-downbar .inner{ gap: 10px; }
-.mzj-downbar a span{ font-size: 12px; }
-</style>
-<style id="mzjSalesCardsOnlyCSS">
-@media (max-width:1023px){
-  /* hide ONLY the orders list table after cards are ready */
-  body.mzj-orders-cards-ready table:has(#ordersListBody){ display:none!important; }
-  #mzjOrdersCards{display:block!important;margin:0 10px;}
-  .mzj-card-item{
-    background:rgba(255,255,255,.95);border:1px solid rgba(0,0,0,.08);border-radius:16px;
-    box-shadow:0 6px 18px rgba(0,0,0,.06);padding:12px;margin:10px 0;
-  }
-  .mzj-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;}
-  .mzj-card-title{font-weight:900;color:rgb(62,36,32);font-size:16px;line-height:1.2;}
-  .mzj-card-badge{
-    font-size:12px;font-weight:900;color:rgb(62,36,32);
-    background:rgba(188,143,116,.22);border:1px solid rgba(188,143,116,.35);
-    padding:6px 10px;border-radius:999px;white-space:nowrap;
-  }
-  .mzj-card-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;margin-top:8px;}
-  .mzj-field{background:rgba(255,248,239,.9);border:1px solid rgba(0,0,0,.06);border-radius:12px;padding:8px 10px;min-width:0;}
-  .mzj-field .k{display:block;font-size:11px;color:rgba(62,36,32,.75);font-weight:900;margin-bottom:3px;}
-  .mzj-field .v{display:block;font-size:13px;color:rgba(0,0,0,.8);font-weight:800;line-height:1.25;word-break:break-word;}
-}
-@media (min-width:1024px){#mzjOrdersCards{display:none!important;}}
+    tabSearchBtn && tabSearchBtn.addEventListener("click", () => activateTab("search"));
+    tabListBtn && tabListBtn.addEventListener("click", () => activateTab("list"));
 
-/* SAFE AREA DOWNBAR OVERRIDES */
-:root{ --mzj-downbar-gap: 10px; }
-.mzj-downbar{
-  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-  bottom: 0;
-}
-body{
-  padding-bottom: calc(160px + env(safe-area-inset-bottom, 0px));
-}
-.mzj-downbar .inner{ gap: 10px; }
-.mzj-downbar a span{ font-size: 12px; }
-</style>
-<script id="mzjSalesCardsOnlyJS">
+    ordersListBody.addEventListener("click", async (e) => {
+      const btn = e.target.closest("button.link-btn");
+      if (!btn) return;
+      const ord = btn.dataset.order;
+      try { await navigator.clipboard.writeText(ord); } catch(e) { console.warn(e); }
+      orderIdInput.value = ord;
+      vinInput.value = "";
+      activateTab("search");
+      loadOrder();
+    });
+
+    // زر توليد رابط التتبع
+    if (trackLinkBtn) {
+      trackLinkBtn.addEventListener("click", async () => {
+        if (!currentVin) {
+          alert("لم يتم اختيار رقم الهيكل.");
+          return;
+        }
+
+        const url = `https://mzj-tracking.vercel.app/Test-Track.html?vin=${encodeURIComponent(currentVin)}`;
+
+        // فتح الرابط في تبويب جديد
+        window.open(url, "_blank");
+
+        // نسخ الرابط إلى الحافظة
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          try {
+            await navigator.clipboard.writeText(url);
+            alert("تم نسخ رابط التتبع:\n" + url);
+          } catch (err) {
+            console.warn("لم يتم النسخ إلى الحافظة", err);
+          }
+        }
+      });
+    }
+
+
+    // إدارة حالة تسجيل الدخول وتوزيع الواجهات
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // مستخدم مسجل دخول
+        whoami.textContent = user.email || "";
+        logoutBtn.style.display = "inline-flex";
+
+        authCard.style.display = "none";
+        tabsBar.style.display  = "flex";
+
+        orderCard.style.display  = "";
+        if (currentOrderId) {
+          erpCard.style.display    = "";
+          stagesCard.style.display = "";
+        } else {
+          erpCard.style.display    = "none";
+          stagesCard.style.display = "none";
+        }
+        ordersListCard.style.display = "none";
+      } else {
+        // لا يوجد مستخدم
+        whoami.textContent = "";
+        logoutBtn.style.display = "none";
+
+        authCard.style.display     = "";
+        tabsBar.style.display      = "none";
+        orderCard.style.display    = "none";
+        erpCard.style.display      = "none";
+        stagesCard.style.display   = "none";
+        ordersListCard.style.display = "none";
+      }
+    });
+
+    // زر تسجيل الدخول
+    loginBtn && loginBtn.addEventListener("click", async () => {
+      authMsg.textContent = "";
+      const emailVal = (email.value || "").trim();
+      const passVal  = (password.value || "").trim();
+
+      if (!emailVal || !passVal) {
+        authMsg.innerHTML = "<span class='err'>أدخل البريد الإلكتروني وكلمة السر.</span>";
+        return;
+      }
+
+      try {
+        await signInWithEmailAndPassword(auth, emailVal, passVal);
+        authMsg.innerHTML = "<span class='ok'>تم تسجيل الدخول بنجاح.</span>";
+      } catch (e) {
+        console.error(e);
+        authMsg.innerHTML = "<span class='err'>تعذر تسجيل الدخول. تأكد من البيانات أو تواصل مع المسؤول.</span>";
+      }
+    });
+
+    // زر إنشاء حساب جديد (للمشرف فقط)
+    signupBtn && signupBtn.addEventListener("click", async () => {
+      authMsg.textContent = "";
+      const emailVal = (email.value || "").trim();
+      const passVal  = (password.value || "").trim();
+
+      if (!emailVal || !passVal) {
+        authMsg.innerHTML = "<span class='err'>أدخل البريد الإلكتروني وكلمة السر.</span>";
+        return;
+      }
+
+      try {
+        await createUserWithEmailAndPassword(auth, emailVal, passVal);
+        authMsg.innerHTML = "<span class='ok'>تم إنشاء الحساب وتسجيل الدخول.</span>";
+      } catch (e) {
+        console.error(e);
+        authMsg.innerHTML = "<span class='err'>تعذر إنشاء الحساب. ربما يكون البريد مستخدم من قبل.</span>";
+      }
+    });
+
+    // زر تسجيل الخروج
+    logoutBtn.addEventListener("click", async () => {
+      try {
+        await signOut(auth);
+      } catch (e) {
+        console.error(e);
+      }
+    });
+
+    // تهيئة أولية للصفحة
+    tabsBar.style.display      = "none";
+    orderCard.style.display    = "none";
+    erpCard.style.display      = "none";
+    stagesCard.style.display   = "none";
+    ordersListCard.style.display = "none";
+
+    clearErpTable();
+    buildStagesUI({ });
+
+  </script>
+
+<script>
+  // Topbar connection badge helper (non-invasive)
+  (function(){
+    const who = document.getElementById('whoami');
+    const dot = document.getElementById('connDot');
+    const txt = document.getElementById('connText');
+    function tick(){
+      const hasUser = who && (who.textContent||'').trim().length>0;
+      if(dot) dot.className = 'dot ' + (hasUser ? 'ok' : 'warn');
+      if(txt) txt.textContent = hasUser ? 'متصل' : 'غير مسجل';
+    }
+    setInterval(tick, 700);
+    setTimeout(tick, 50);
+  })();
+</script>
+
+  <script src="./mzj-ui.js"></script>
+
+      </div>
+    </main>
+  </div>
+
+
+  <!-- Message Modal (Edit before send) -->
+  <div id="msgModal" style="display:none;position:fixed;inset:0;z-index:9999;">
+    <div id="msgModalBackdrop" style="position:absolute;inset:0;background:rgba(0,0,0,.45);"></div>
+    <div style="position:relative;max-width:680px;margin:7vh auto;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid #e5e7eb;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:rgba(188,143,116,.16);color:var(--brown);font-weight:900;">
+            <i class="fa-solid fa-paper-plane"></i>
+          </div>
+          <div>
+            <div id="msgModalTitle" style="font-weight:900;color:var(--brown);">إرسال رسالة</div>
+            <div id="msgModalSub" style="font-size:12px;color:var(--muted);margin-top:2px;">—</div>
+          </div>
+        </div>
+        <button id="msgModalClose" class="btn-outline" type="button" style="font-size:12px;">إغلاق</button>
+      </div>
+
+      <div style="padding:12px 14px;">
+        <label style="margin:0 0 6px 0;">نص الرسالة (تقدر تعدّل قبل الإرسال)</label>
+        <textarea id="msgModalText" rows="9" style="width:100%;padding:10px 12px;border-radius:12px;border:1px solid #e5e7eb;background:#f9fafb;font-family:inherit;font-size:14px;outline:none;resize:vertical;"></textarea>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-top:10px;">
+          <div class="muted" style="font-size:12px;">
+            <span class="badge" id="msgModalChannel">—</span>
+            <span class="badge" id="msgModalPhone">—</span>
+            <span class="badge" id="msgModalVin">—</span>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button id="msgModalCopy" class="btn-outline" type="button" style="font-size:12px;"><i class="fa-regular fa-copy"></i> نسخ النص</button>
+            <button id="msgModalReset" class="btn-outline" type="button" style="font-size:12px;"><i class="fa-solid fa-rotate-left"></i> رجوع للنص الأصلي</button>
+            <button id="msgModalSend" class="btn" type="button" style="font-size:12px;"><i class="fa-solid fa-paper-plane"></i> إرسال</button>
+          </div>
+        </div>
+        <div id="msgModalMsg" class="muted" style="margin-top:8px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dynamic QR (Clickable) -->
+  <div id="trackQrModal" style="display:none;position:fixed;inset:0;z-index:9998;">
+    <div id="trackQrBackdrop" style="position:absolute;inset:0;background:rgba(0,0,0,.45);"></div>
+    <div style="position:relative;max-width:420px;margin:10vh auto;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid #e5e7eb;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:rgba(188,143,116,.16);color:var(--brown);font-weight:900;">
+            <i class="fa-solid fa-qrcode"></i>
+          </div>
+          <div>
+            <div style="font-weight:900;color:var(--brown);">QR تتبع العميل</div>
+            <div id="trackQrSub" style="font-size:12px;color:var(--muted);margin-top:2px;">اضغط على الـ QR لفتح التتبع مباشرة</div>
+          </div>
+        </div>
+        <button id="trackQrClose" class="btn-outline" type="button" style="font-size:12px;">إغلاق</button>
+      </div>
+      <div style="padding:14px;text-align:center;">
+        <a id="trackQrLink" href="#" target="_blank" style="display:inline-block;text-decoration:none;">
+          <img id="trackQrImg" alt="QR Tracking" style="width:240px;height:240px;border-radius:14px;border:1px solid #e5e7eb;background:#fff;"/>
+        </a>
+        <div class="hint" style="margin-top:10px;">رابط التتبع: <button id="trackQrCopy" class="link-btn" type="button">نسخ الرابط</button></div>
+      </div>
+    </div>
+  </div>
+
+
+<nav id="mzjSalesDownbar" class="mzj-downbar" aria-label="التنقل">
+  <div class="inner">
+    <a class="active" href="m.sales.html">💼<span>تتبع المبيعات</span></a>
+    <a href="m.dashboard.html">📊<span>الداش بورد</span></a>
+    <a href="m.inventory.html">📦<span>المخزون</span></a>
+    <a href="m.vt.html">↔️<span>نقل السيارات</span></a>
+    <a href="m.photoshoot-user.html">📷<span>إدارة الطلبات</span></a>
+
+    <a href="m.cars.html">🚗<span>كل السيارات</span></a>
+    <a href="m.admin.html">🏠<span>الإدارة</span></a>
+    <a href="m.Activity.html">🕘<span>سجل النشاط</span></a>
+    <a href="m.act.html">🧾<span>سجل الحركات</span></a>
+  </div>
+</nav>
+<script id="mzjSalesCardsJS">
 (function(){
   function qs(s,r){return (r||document).querySelector(s)}
   function qsa(s,r){return Array.from((r||document).querySelectorAll(s))}
 
-  function getHeaders(table){
-    return qsa('thead th', table).map(th => (th.textContent||'').trim());
-  }
-
-  function build(){
+  function buildCards(){
     var root = qs('#mzjOrdersCards');
-    if(!root) return false;
     var tbody = qs('#ordersListBody');
-    if(!tbody) return false;
+    if(!root || !tbody) return false;
+
+    var rows = qsa('tr', tbody).filter(function(tr){ return qsa('td', tr).length; });
+    if(!rows.length){ root.innerHTML = ''; return false; }
+
     var table = tbody.closest('table');
-    if(!table) return false;
-
-    var rows = qsa('tr', tbody).filter(tr => qsa('td', tr).length);
-    if(!rows.length) return false;
-
-    var headers = getHeaders(table);
-    root.innerHTML='';
+    var headers = qsa('thead th', table).map(function(th){ return (th.textContent||'').trim(); });
 
     function findCol(names, fallback){
       for (var i=0;i<headers.length;i++){
@@ -2267,35 +2438,36 @@ body{
       return fallback;
     }
 
-    var customerI = findCol(['اسم العميل','العميل','Customer'], 1);
-    var orderI    = findCol(['رقم الطلب','الطلب','Order','ID','رقم'], 0);
+    var customerI = findCol(['اسمالعميل','العميل','Customer'], 1);
+    var orderI    = findCol(['رقمالطلب','الطلب','Order','ID','رقم'], 0);
 
-    rows.forEach(function(tr,idx){
-      var tds=qsa('td',tr);
-      var customer=(tds[customerI]?.textContent||'').trim();
-      var orderNo=(tds[orderI]?.textContent||'').trim() || String(idx+1);
+    root.innerHTML='';
+    rows.forEach(function(tr, idx){
+      var tds = qsa('td', tr);
+      var customer = (tds[customerI] ? (tds[customerI].textContent||'') : '').trim();
+      var orderNo  = (tds[orderI] ? (tds[orderI].textContent||'') : '').trim() || String(idx+1);
 
-      var card=document.createElement('div');
-      card.className='mzj-card-item';
-      card.innerHTML = `
-        <div class="mzj-card-head">
-          <div class="mzj-card-title">${customer || ('طلب #' + (idx+1))}</div>
-          <div class="mzj-card-badge">${headers[orderI]||'رقم الطلب'}: ${orderNo}</div>
-        </div>
-        <div class="mzj-card-grid"></div>
-      `;
-      var grid=card.querySelector('.mzj-card-grid');
+      var card = document.createElement('div');
+      card.className = 'mzj-card-item';
+      card.innerHTML =
+        '<div class="mzj-card-head">'
+          + '<div class="mzj-card-title">'+ (customer || ('طلب #' + (idx+1))) +'</div>'
+          + '<div class="mzj-card-badge">'+ (headers[orderI]||'رقم الطلب') + ': ' + orderNo +'</div>'
+        + '</div>'
+        + '<div class="mzj-card-grid"></div>';
 
+      var grid = card.querySelector('.mzj-card-grid');
       for (var i=0;i<tds.length;i++){
         if(i===customerI || i===orderI) continue;
-        var v=(tds[i].textContent||'').trim();
+        var v = (tds[i].textContent||'').trim();
         if(!v) continue;
-        var f=document.createElement('div');
+        var f = document.createElement('div');
         f.className='mzj-field';
-        f.innerHTML=`<span class="k">${headers[i]||('حقل '+(i+1))}</span><span class="v"></span>`;
-        f.querySelector('.v').textContent=v;
+        f.innerHTML = '<span class="k">'+ (headers[i]||('حقل '+(i+1))) +'</span><span class="v"></span>';
+        f.querySelector('.v').textContent = v;
         grid.appendChild(f);
       }
+
       root.appendChild(card);
     });
 
@@ -2303,47 +2475,39 @@ body{
     return true;
   }
 
-  function retry(){
-    var tries=0, max=120;
-    var t=setInterval(function(){
-      tries++;
-      var ok=build();
-      if(ok || tries>=max) clearInterval(t);
-    },200);
-  }
-
-  function observe(){
-    var tbody=qs('#ordersListBody');
+  function observeRows(){
+    var tbody = qs('#ordersListBody');
     if(!tbody) return;
-    var obs=new MutationObserver(function(){
-      clearTimeout(window.__mzjOrdersDeb);
-      window.__mzjOrdersDeb=setTimeout(build,120);
+    var obs = new MutationObserver(function(){
+      clearTimeout(window.__mzjSalesCardsT);
+      window.__mzjSalesCardsT = setTimeout(buildCards, 120);
     });
-    obs.observe(tbody,{childList:true,subtree:true,characterData:true});
+    obs.observe(tbody, {childList:true, subtree:true, characterData:true});
   }
 
-  function hookAllOrdersClick(){
-    var bar=qs('#tabsBar');
-    if(!bar) return;
-    bar.addEventListener('click', function(e){
-      var btn = e.target.closest('button,a,div');
-      if(!btn) return;
-      var t=(btn.textContent||'').trim();
-      if(t.indexOf('كل الطلبات')!==-1){
-        setTimeout(function(){ build(); }, 250);
-        setTimeout(function(){ build(); }, 900);
-      }
-    }, true);
+  function hookTabs(){
+    var listBtn = qs('#tabListBtn');
+    if(listBtn){
+      listBtn.addEventListener('click', function(){
+        var tries=0, max=60;
+        var t=setInterval(function(){
+          tries++;
+          var ok=buildCards();
+          if(ok || tries>=max) clearInterval(t);
+        }, 200);
+      }, {passive:true});
+    }
   }
 
   function init(){
-    retry();
-    hookAllOrdersClick();
-    var mo=new MutationObserver(function(){
-      var tbody=qs('#ordersListBody');
-      if(tbody && !window.__mzjOrdersObs){ window.__mzjOrdersObs=true; observe(); }
-    });
-    mo.observe(document.documentElement,{childList:true,subtree:true});
+    var tries=0, max=80;
+    var t=setInterval(function(){
+      tries++;
+      var ok=buildCards();
+      if(ok || tries>=max) clearInterval(t);
+    }, 200);
+    observeRows();
+    hookTabs();
   }
 
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init);

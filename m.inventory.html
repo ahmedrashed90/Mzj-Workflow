@@ -753,7 +753,8 @@
             </div>
           </div>
           <div class="table-wrap">
-            <table class="table" id="carsTable">
+            <div id="mzjMobileCards" class="mzj-mobile-cards" aria-label="قائمة المخزون"></div>
+<table class="table" id="carsTable">
               <thead>
                 <tr>
                   <th>م</th>
@@ -1803,6 +1804,206 @@ body{
   max-width: 100% !important;
 }
 </style>
+
+<style id="mzjInventoryCardsCSS">
+@media (max-width: 1023px){
+  table{ display:none !important; }
+  #mzjMobileCards{ display:block !important; }
+
+  .mzj-mobile-cards{ padding:0 !important; margin:0 !important; width:100% !important; }
+  .mzj-card-item{
+    background: rgba(255,255,255,.95);
+    border: 1px solid rgba(0,0,0,.08);
+    border-radius: 16px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.06);
+    padding: 12px 12px;
+    margin: 10px 10px;
+  }
+  .mzj-card-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom: 8px; }
+  .mzj-card-title{ font-weight: 900; color: rgb(62,36,32); font-size: 16px; line-height: 1.2; }
+  .mzj-card-badge{
+    font-size: 12px; font-weight: 900; color: rgb(62,36,32);
+    background: rgba(188,143,116,.22); border:1px solid rgba(188,143,116,.35);
+    padding: 6px 10px; border-radius: 999px; white-space:nowrap;
+  }
+  .mzj-card-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; margin-top: 8px; }
+  .mzj-field{
+    background: rgba(255,248,239,.9);
+    border: 1px solid rgba(0,0,0,.06);
+    border-radius: 12px;
+    padding: 8px 10px;
+    min-width: 0;
+  }
+  .mzj-field .k{ display:block; font-size: 11px; color: rgba(62,36,32,.75); font-weight: 900; margin-bottom: 3px; }
+  .mzj-field .v{ display:block; font-size: 13px; color: rgba(0,0,0,.8); font-weight: 800; line-height: 1.25; word-break: break-word; }
+  .mzj-card-actions{ margin-top: 10px; }
+  .mzj-card-actions .actions-wrap{ display:flex; flex-wrap:wrap; gap:8px; }
+  .mzj-card-actions button, .mzj-card-actions a{ border-radius: 12px !important; }
+}
+@media (min-width: 1024px){
+  #mzjMobileCards{ display:none !important; }
+}
+</style>
+<script id="mzjInventoryCardsJS">
+(function(){
+  function qs(sel, root){ return (root||document).querySelector(sel); }
+  function qsa(sel, root){ return Array.from((root||document).querySelectorAll(sel)); }
+  function findTable(){ return qs('table'); }
+  function getHeaders(table){
+    var ths = qsa('thead th', table);
+    if (ths.length) return ths.map(function(th){ return (th.textContent||'').trim(); });
+    var firstRow = qs('tr', table);
+    return firstRow ? qsa('td,th', firstRow).map(function(c){ return (c.textContent||'').trim(); }) : [];
+  }
+  function cloneActionNodes(cell){
+    var actionElems = Array.from(cell.querySelectorAll('a,button'));
+    if (!actionElems.length) return null;
+    var wrap = document.createElement('div');
+    wrap.className = 'actions-wrap';
+    actionElems.forEach(function(el){
+      var tag = el.tagName.toLowerCase();
+      if (tag === 'a'){
+        wrap.appendChild(el.cloneNode(true));
+      } else {
+        var b = el.cloneNode(true);
+        b.addEventListener('click', function(e){
+          e.preventDefault(); e.stopPropagation();
+          el.click();
+        });
+        wrap.appendChild(b);
+      }
+    });
+    return wrap;
+  }
+  function buildCards(){
+    var cardsRoot = qs('#mzjMobileCards');
+    if (!cardsRoot) return;
+    var table = findTable();
+    if (!table) return;
+
+    var headers = getHeaders(table);
+    var tbody = qs('tbody', table) || table;
+    var rows = qsa('tr', tbody).filter(function(tr){ return qsa('td', tr).length; });
+
+    cardsRoot.innerHTML = '';
+
+    function findCol(names, fallback){
+      for (var i=0;i<headers.length;i++){
+        var h = (headers[i]||'').replace(/\s+/g,'');
+        for (var j=0;j<names.length;j++){
+          var n = names[j].replace(/\s+/g,'');
+          if (h.indexOf(n) !== -1) return i;
+        }
+      }
+      return fallback;
+    }
+
+    var idxI  = findCol(['م','الرقم','#','No','ID'], 0);
+    var carI  = findCol(['السيارة','السياره','Car'], 1);
+    var bayanI= findCol(['البيان','الوصف','بيان','Description'], 2);
+
+    rows.forEach(function(tr, idx){
+      var tds = qsa('td', tr);
+      if (!tds.length) return;
+
+      var numVal  = tds[idxI] ? (tds[idxI].textContent||'').trim() : String(idx+1);
+      var carVal  = tds[carI] ? (tds[carI].textContent||'').trim() : '';
+      var bayanVal= tds[bayanI] ? (tds[bayanI].textContent||'').trim() : '';
+
+      var card = document.createElement('div');
+      card.className = 'mzj-card-item';
+
+      var head = document.createElement('div');
+      head.className = 'mzj-card-head';
+
+      var title = document.createElement('div');
+      title.className = 'mzj-card-title';
+      title.textContent = carVal || ('عنصر #' + (idx+1));
+
+      var badge = document.createElement('div');
+      badge.className = 'mzj-card-badge';
+      badge.textContent = (headers[idxI] || 'م') + ': ' + (numVal || (idx+1));
+
+      head.appendChild(title);
+      head.appendChild(badge);
+      card.appendChild(head);
+
+      var grid = document.createElement('div');
+      grid.className = 'mzj-card-grid';
+
+      var bayanField = document.createElement('div');
+      bayanField.className = 'mzj-field';
+      bayanField.style.gridColumn = '1 / -1';
+      bayanField.innerHTML = '<span class="k"></span><span class="v"></span>';
+      bayanField.querySelector('.k').textContent = headers[bayanI] || 'البيان';
+      bayanField.querySelector('.v').textContent = bayanVal || '-';
+      grid.appendChild(bayanField);
+
+      var skip = new Set([idxI, carI, bayanI]);
+      var actionsWraps = [];
+
+      for (var i=0;i<tds.length;i++){
+        if (skip.has(i)) continue;
+        var cell = tds[i];
+
+        var actions = cloneActionNodes(cell);
+        if (actions){
+          actionsWraps.push(actions);
+          continue;
+        }
+        var v = (cell.textContent||'').trim();
+        if (!v) continue;
+
+        var field = document.createElement('div');
+        field.className = 'mzj-field';
+        field.innerHTML = '<span class="k"></span><span class="v"></span>';
+        field.querySelector('.k').textContent = headers[i] || ('حقل ' + (i+1));
+        field.querySelector('.v').textContent = v;
+        grid.appendChild(field);
+      }
+
+      card.appendChild(grid);
+
+      if (actionsWraps.length){
+        var act = document.createElement('div');
+        act.className = 'mzj-card-actions';
+        var wrap = document.createElement('div');
+        wrap.className = 'actions-wrap';
+        actionsWraps.forEach(function(w){ wrap.appendChild(w); });
+        act.appendChild(wrap);
+        card.appendChild(act);
+      }
+
+      cardsRoot.appendChild(card);
+    });
+  }
+  function init(){
+    var table = findTable();
+    if (!table) return;
+    buildCards();
+
+    var tbody = table.querySelector('tbody') || table;
+    var obs = new MutationObserver(function(){
+      clearTimeout(window.__mzjCardsT);
+      window.__mzjCardsT = setTimeout(buildCards, 120);
+    });
+    obs.observe(tbody, {childList:true, subtree:true, characterData:true});
+
+    document.addEventListener('input', function(e){
+      var t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'SELECT')){
+        clearTimeout(window.__mzjCardsT2);
+        window.__mzjCardsT2 = setTimeout(buildCards, 180);
+      }
+    }, true);
+  }
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
 </body>
 </html>
 

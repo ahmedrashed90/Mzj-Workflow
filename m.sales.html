@@ -443,8 +443,10 @@
     border-color:rgba(188,143,116,.40)!important;
   }
 
-  body.mzj-orders-cards-ready .erp-table-wrap{display:none!important;}
-  #mzjOrdersCards{display:block!important;margin:10px 10px 0;}
+  /* Orders list: hide only its table wrap after cards built */
+  body.mzj-orders-cards-ready #ordersListCard .erp-table-wrap{display:none!important;}
+  #ordersListCard #mzjOrdersCards{display:block!important;margin:10px 0 0;}
+  #ordersListCard{padding-left:10px!important;padding-right:10px!important;}
   .mzj-card-item{
     background:rgba(255,255,255,.95);
     border:1px solid rgba(0,0,0,.08);
@@ -488,7 +490,7 @@
 }
 </style>
 </head>
-<body class="mzj mzj-mobile-sales">
+<body class="mzj" class="mzj mzj-mobile-sales">
 
   <!-- MZJ Unified Topbar -->
   <header class="mzj-topbar">
@@ -649,8 +651,7 @@
       </div>
 
       <div id="erpTotals" class="totals-box" style="display:none;"></div>
-      <div id="mzjOrdersCards" class="mzj-mobile-cards" aria-label="كل الطلبات"></div>
-<div class="erp-table-wrap">
+      <div class="erp-table-wrap">
         <table>
           <thead>
           <tr>
@@ -690,7 +691,8 @@
     <div class="card" id="ordersListCard" style="display:none;">
       <h3 class="title"><span class="icon">📋</span>كل الطلبات</h3>
       <div class="hint">اضغط على رقم الطلب لفتحه، واختيار رقم الهيكل من الأعلى لو كان أكثر من سيارة.</div>
-      <div class="erp-table-wrap">
+      <div id="mzjOrdersCards" class="mzj-mobile-cards" aria-label="كل الطلبات"></div>
+<div class="erp-table-wrap">
         <table>
           <thead>
           <tr>
@@ -2177,8 +2179,8 @@ ordersListBody.innerHTML = "";
       }
     }
 
-    tabSearchBtn && tabSearchBtn.addEventListener("click", () => activateTab("search"));
-    tabListBtn && tabListBtn.addEventListener("click", () => activateTab("list"));
+    tabSearchBtn.addEventListener("click", () => activateTab("search"));
+    tabListBtn.addEventListener("click", () => activateTab("list"));
 
     ordersListBody.addEventListener("click", async (e) => {
       const btn = e.target.closest("button.link-btn");
@@ -2417,7 +2419,7 @@ ordersListBody.innerHTML = "";
   function qsa(s,r){return Array.from((r||document).querySelectorAll(s))}
 
   function buildCards(){
-    var root = qs('#mzjOrdersCards');
+    var root = qs('#ordersListCard #mzjOrdersCards');
     var tbody = qs('#ordersListBody');
     if(!root || !tbody) return false;
 
@@ -2438,8 +2440,8 @@ ordersListBody.innerHTML = "";
       return fallback;
     }
 
-    var customerI = findCol(['اسمالعميل','العميل','Customer'], 1);
-    var orderI    = findCol(['رقمالطلب','الطلب','Order','ID','رقم'], 0);
+    var customerI = findCol(['اسم','العميل','Customer'], 1);
+    var orderI    = findCol(['رقم','الطلب','Order','ID'], 0);
 
     root.innerHTML='';
     rows.forEach(function(tr, idx){
@@ -2485,7 +2487,7 @@ ordersListBody.innerHTML = "";
     obs.observe(tbody, {childList:true, subtree:true, characterData:true});
   }
 
-  function hookTabs(){
+  function hookListBtn(){
     var listBtn = qs('#tabListBtn');
     if(listBtn){
       listBtn.addEventListener('click', function(){
@@ -2507,7 +2509,7 @@ ordersListBody.innerHTML = "";
       if(ok || tries>=max) clearInterval(t);
     }, 200);
     observeRows();
-    hookTabs();
+    hookListBtn();
   }
 
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init);

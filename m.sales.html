@@ -380,8 +380,12 @@
   .topbar-actions{justify-content:flex-start}
 }
 
+
+/* tighten downbar label for long titles */
+.mzj-downbar a span{font-size:11px}
+@media (max-width:420px){.mzj-downbar a span{font-size:10px}}
 </style>
-  <link rel="stylesheet" href="./mzj-ui.css" />
+  <link rel="stylesheet" href="mzj-mobile.css" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
 
 <style>
@@ -403,92 +407,8 @@
   .legacy-sales #tabsBar[style*="display: none"]{ display:none !important; } /* respect JS when it hides */
 </style>
 
-  <link rel="stylesheet" href="mzj-mobile.css">
-<style id="mzjSalesMobileCSS">
-:root{
-  --mzj-brown: rgb(62,36,32);
-  --mzj-beige: rgb(188,143,116);
-  --mzj-cream: #fff8ef;
-  --mzj-downbar-h: 138px;
-  --mzj-downbar-lift: 16px;
-}
-@media (max-width:1023px){
-  html,body{margin:0!important;padding:0!important;overflow-x:hidden!important;background:var(--mzj-cream)!important;}
-  .mzj-topbar,.mzj-sidebar{display:none!important;}
-  body{padding:0!important;}
-  main,.mzj-content,.content,.main,.main-content,.page,
-  .container,.wrap,.content-wrap,.inner,.wrapper,[class*="container"],[class*="wrapper"]{
-    width:100%!important;max-width:100%!important;margin:0!important;padding-left:0!important;padding-right:0!important;
-  }
-  body{padding-bottom:calc(var(--mzj-downbar-h) + env(safe-area-inset-bottom,0px) + var(--mzj-downbar-lift) + 18px)!important;}
-
-  #tabsBar{
-    display:grid!important;
-    grid-template-columns:1fr 1fr!important;
-    gap:10px!important;
-    padding:10px 10px 0!important;
-    margin:0!important;
-  }
-  #tabsBar .tab-btn{
-    border-radius:14px!important;
-    padding:10px 8px!important;
-    font-size:13px!important;
-    font-weight:900!important;
-    border:1px solid rgba(0,0,0,.10)!important;
-    background:rgba(255,248,239,.85)!important;
-    color:var(--mzj-brown)!important;
-  }
-  #tabsBar .tab-btn.tab-active{
-    background:rgba(188,143,116,.22)!important;
-    border-color:rgba(188,143,116,.40)!important;
-  }
-
-  body.mzj-orders-cards-ready .erp-table-wrap{display:none!important;}
-  #mzjOrdersCards{display:block!important;margin:10px 10px 0;}
-  .mzj-card-item{
-    background:rgba(255,255,255,.95);
-    border:1px solid rgba(0,0,0,.08);
-    border-radius:16px;
-    box-shadow:0 6px 18px rgba(0,0,0,.06);
-    padding:12px;
-    margin:10px 0;
-  }
-  .mzj-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;}
-  .mzj-card-title{font-weight:900;color:var(--mzj-brown);font-size:16px;line-height:1.2;}
-  .mzj-card-badge{font-size:12px;font-weight:900;color:var(--mzj-brown);background:rgba(188,143,116,.22);border:1px solid rgba(188,143,116,.35);padding:6px 10px;border-radius:999px;white-space:nowrap;}
-  .mzj-card-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;margin-top:8px;}
-  .mzj-field{background:rgba(255,248,239,.9);border:1px solid rgba(0,0,0,.06);border-radius:12px;padding:8px 10px;min-width:0;}
-  .mzj-field .k{display:block;font-size:11px;color:rgba(62,36,32,.75);font-weight:900;margin-bottom:3px;}
-  .mzj-field .v{display:block;font-size:13px;color:rgba(0,0,0,.8);font-weight:800;line-height:1.25;word-break:break-word;}
-
-  .mzj-downbar{
-    position:fixed!important;left:0!important;right:0!important;
-    bottom:calc(env(safe-area-inset-bottom,0px) + var(--mzj-downbar-lift))!important;
-    height:var(--mzj-downbar-h)!important;z-index:9999!important;
-    background:rgba(255,255,255,.96)!important;backdrop-filter:blur(8px);
-    border-top:1px solid rgba(0,0,0,.06);
-  }
-  .mzj-downbar .inner{
-    height:var(--mzj-downbar-h)!important;display:grid!important;
-    grid-template-columns:repeat(5,minmax(0,1fr))!important;
-    grid-auto-rows:1fr!important;
-    gap:6px!important;padding:10px 10px 12px!important;
-  }
-  .mzj-downbar a{
-    display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;
-    gap:4px!important;padding:8px 4px!important;border-radius:14px!important;text-decoration:none!important;
-    font-size:17px!important;color:var(--mzj-brown)!important;
-  }
-  .mzj-downbar a.active{background:rgba(188,143,116,.22)!important;border:1px solid rgba(188,143,116,.35)!important;}
-  .mzj-downbar a span{
-    font-size:9px!important;font-weight:900!important;line-height:1.15!important;text-align:center!important;
-    display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;
-    max-width:100%!important;
-  }
-}
-</style>
 </head>
-<body class="mzj mzj-mobile-sales">
+<body class="mzj">
 
   <!-- MZJ Unified Topbar -->
   <header class="mzj-topbar">
@@ -649,8 +569,7 @@
       </div>
 
       <div id="erpTotals" class="totals-box" style="display:none;"></div>
-      <div id="mzjOrdersCards" class="mzj-mobile-cards" aria-label="كل الطلبات"></div>
-<div class="erp-table-wrap">
+      <div class="erp-table-wrap">
         <table>
           <thead>
           <tr>
@@ -685,6 +604,7 @@
         </table>
       </div>
     </div>
+        <div id="ordersCards" class="mzj-orders-cards"></div>
 
     <!-- Orders list tab -->
     <div class="card" id="ordersListCard" style="display:none;">
@@ -2024,7 +1944,7 @@ function clearErpTable() {
       buildStagesUI({ });
     };
 
-    vinPicker && vinPicker.addEventListener("change", () => {
+    vinPicker.addEventListener("change", () => {
       if (!currentOrderId || !currentOrderRecords.length) return;
       const selected = vinPicker.value;
       currentVin    = selected;
@@ -2035,53 +1955,114 @@ function clearErpTable() {
     // ---- تبويب كل الطلبات ----
 
     async function loadOrdersList() {
-      ordersListBody.innerHTML = "<tr><td colspan='7' class='muted'>جاري تحميل الطلبات…</td></tr>";
+      ordersListBody.innerHTML = "<tr><td class='muted' colspan='7'>جاري تحميل الطلبات...</td></tr>";
       try {
-        // ⚡ موبايل: نعرض القائمة بسرعة من ERP فقط (بدون استعلامات Tracking الثقيلة)
-        // الهدف: يظهر رقم الطلب فوراً ويقدر المستخدم يفتحه.
-        const snap = await getDocs(query(collection(db, ERP_COLLECTION), limit(200)));
-
-        const groups = new Map();
-        snap.forEach((d) => {
-          const data = d.data() || {};
-          const orderNo = normalizeOrderNo(data.orderNo || data.order_id || data.name || d.id);
-          if (!orderNo) return;
-          if (!groups.has(orderNo)) groups.set(orderNo, []);
-          groups.get(orderNo).push({ id: d.id, ...data });
-        });
-
-        const rows = Array.from(groups.entries()).map(([orderNo, arr]) => {
-          // pick first as representative
-          const first = arr[0] || {};
-          const vins = [];
-          arr.forEach(x => {
-            const v = (x.vin || x.VIN || x.chassis || x.frameNo || x.vin_no || '').toString().trim();
-            if (v) vins.push(v);
-          });
-          const vinVal = vins.length === 1 ? vins[0] : (vins.length ? `VIN(${vins.length})` : "—");
-          const deliveryDate = (first.deliveryDate || first.delivery_date || first.deliveredAt || first.delivery || "");
-          return {
-            orderNo,
-            customerName: first.customerName || first.customer_name || first.customer || first.clientName || "—",
-            customerPhone: first.customerPhone || first.customer_phone || first.phone || first.mobile || "—",
-            branch: first.branch || first.branchName || first.branch_name || "—",
-            vinVal,
-            deliveryDate: deliveryDate ? fmtDate(deliveryDate) : "—",
-            statusLabel: "—"
-          };
-        });
-
-        // sort newest first if order number ends with digits, otherwise keep insertion order
-        rows.sort((a,b) => (b.orderNo||'').localeCompare(a.orderNo||'', 'en'));
-
-        if (!rows.length) {
-          ordersListBody.innerHTML = "<tr><td colspan='7' class='muted'>لا توجد طلبات.</td></tr>";
-          if (mzjOrdersCards) mzjOrdersCards.innerHTML = "";
+        // ✅ نقرأ آخر 200 سجل من erp_orders (قد يكون في تكرار لأن كل سيارة سجل)
+        const q = query(collection(db, ERP_COLLECTION), limit(200));
+        const snap = await getDocs(q);
+        if (snap.empty) {
+          ordersListBody.innerHTML = "<tr><td class='muted' colspan='7'>لا توجد طلبات مسجلة حالياً.</td></tr>";
           return;
         }
+        // ✅ نجمع حسب orderNo لتجنب تكرار الطلبات في القائمة
+        const byOrder = new Map();
+        for (const docSnap of snap.docs) {
+          const d = docSnap.data();
+          const orderNo = d.orderNo || d.OrderNo || docSnap.id;
+          if (!orderNo) continue;
 
-        ordersListBody.innerHTML = "";
-        rows.forEach((r) => {
+          if (!byOrder.has(orderNo)) {
+            byOrder.set(orderNo, { orderNo, docs: [] });
+          }
+          byOrder.get(orderNo).docs.push(d);
+        }
+
+        const rows = [];
+      const cards = [];
+      const ordersCards = document.getElementById("ordersCards");
+      if (ordersCards) ordersCards.innerHTML = "";
+        for (const group of byOrder.values()) {
+          const docsArr = group.docs || [];
+          const first = docsArr[0] || {};
+
+          const vins = Array.from(new Set(
+            docsArr
+              .map(x => (getFieldFlex("VIN", x) || "").toString().trim())
+              .filter(v => v && v !== "-" && v !== "—")
+          ));
+
+          const vinVal = (vins.length <= 1)
+            ? (vins[0] || "—")
+            : ("(" + vins.length + ") هياكل");
+
+          const customerName = getFieldFlex("CustomerName", first) || "";
+          const customerPhone = getFieldFlex("CustomerPhone", first) || "";
+          const branch = getFieldFlex("Branch", first) || "";
+          const deliveryDate = getFieldFlex("DeliveryDate", first) || "";
+          const orderDateRaw = getFieldFlex("OrderDate", first) || "";
+
+          // حالة التتبع (مرة واحدة لكل طلب)
+          let statusLabel = "لم يبدأ";
+          try {
+            const tSnap = await getDoc(doc(db, TRACK_COLLECTION, group.orderNo + "_1"));
+            if (tSnap.exists()) {
+              const t = tSnap.data();
+              const stagesObj = t.stages || {};
+              const doneCount = Object.keys(stagesObj).filter(k => stagesObj[k]).length;
+              if (doneCount === 0) statusLabel = "لم يبدأ";
+              else if (doneCount >= STAGES.length) statusLabel = "تم إتمام جميع المراحل";
+              else statusLabel = "تم تنفيذ " + doneCount + " من " + STAGES.length + " مراحل";
+            }
+          } catch (e) {
+            console.error("track read error", e);
+          }
+
+          rows.push({
+            orderNo: group.orderNo,
+            vinVal,
+            customerName,
+            customerPhone,
+            branch,
+            deliveryDate,
+            orderDateRaw,
+            statusLabel
+          });
+        }
+        
+        // ترتيب الصفوف بالأحدث أولاً (بدون الاعتماد على orderBy لتفادي مشاكل الفهارس/اختلاف أسماء الحقول)
+        function toMillis(v){
+          if (!v) return 0;
+          // Firestore Timestamp
+          if (v.toDate) return v.toDate().getTime();
+          // JS Date
+          if (v instanceof Date) return v.getTime();
+          // number
+          if (typeof v === "number") return v;
+          // string
+          const s = String(v).trim();
+          // try parse ISO / normal date
+          const t = Date.parse(s);
+          if (!Number.isNaN(t)) return t;
+          // fallback: if looks like dd/mm/yyyy or dd-mm-yyyy
+          const m = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+          if (m){
+            const dd = parseInt(m[1],10), mm = parseInt(m[2],10)-1, yy = parseInt(m[3],10);
+            const yyyy = yy < 100 ? (2000 + yy) : yy;
+            const d = new Date(yyyy, mm, dd);
+            return d.getTime() || 0;
+          }
+          return 0;
+        }
+
+        rows.sort((a,b) => {
+          const aMs = toMillis(a.orderDateRaw || a.deliveryDate || "");
+          const bMs = toMillis(b.orderDateRaw || b.deliveryDate || "");
+          // desc
+          return bMs - aMs;
+        });
+
+ordersListBody.innerHTML = "";
+        rows.forEach(r => {
           const tr = document.createElement("tr");
           tr.innerHTML = `
             <td><button class="link-btn" data-order="${r.orderNo}">${r.orderNo}</button></td>
@@ -2094,13 +2075,9 @@ function clearErpTable() {
           `;
           ordersListBody.appendChild(tr);
         });
-
-        buildCards();
-
       } catch (err) {
         console.error(err);
         ordersListBody.innerHTML = "<tr><td class='err' colspan='7'>تعذر تحميل قائمة الطلبات.</td></tr>";
-        if (mzjOrdersCards) mzjOrdersCards.innerHTML = "";
       }
     }
 
@@ -2123,8 +2100,8 @@ function clearErpTable() {
       }
     }
 
-    tabSearchBtn && tabSearchBtn.addEventListener("click", () => activateTab("search"));
-    tabListBtn && tabListBtn.addEventListener("click", () => activateTab("list"));
+    tabSearchBtn.addEventListener("click", () => activateTab("search"));
+    tabListBtn.addEventListener("click", () => activateTab("list"));
 
     ordersListBody.addEventListener("click", async (e) => {
       const btn = e.target.closest("button.link-btn");
@@ -2197,7 +2174,7 @@ function clearErpTable() {
     });
 
     // زر تسجيل الدخول
-    loginBtn && loginBtn.addEventListener("click", async () => {
+    loginBtn.addEventListener("click", async () => {
       authMsg.textContent = "";
       const emailVal = (email.value || "").trim();
       const passVal  = (password.value || "").trim();
@@ -2217,7 +2194,7 @@ function clearErpTable() {
     });
 
     // زر إنشاء حساب جديد (للمشرف فقط)
-    signupBtn && signupBtn.addEventListener("click", async () => {
+    signupBtn.addEventListener("click", async () => {
       authMsg.textContent = "";
       const emailVal = (email.value || "").trim();
       const passVal  = (password.value || "").trim();
@@ -2342,123 +2319,5 @@ function clearErpTable() {
     </div>
   </div>
 
-
-<nav id="mzjSalesDownbar" class="mzj-downbar" aria-label="التنقل">
-  <div class="inner">
-    <a class="active" href="m.sales.html">💼<span>تتبع المبيعات</span></a>
-    <a href="m.dashboard.html">📊<span>الداش بورد</span></a>
-    <a href="m.inventory.html">📦<span>المخزون</span></a>
-    <a href="m.vt.html">↔️<span>نقل السيارات</span></a>
-    <a href="m.photoshoot-user.html">📷<span>إدارة الطلبات</span></a>
-
-    <a href="m.cars.html">🚗<span>كل السيارات</span></a>
-    <a href="m.admin.html">🏠<span>الإدارة</span></a>
-    <a href="m.Activity.html">🕘<span>سجل النشاط</span></a>
-    <a href="m.act.html">🧾<span>سجل الحركات</span></a>
-  </div>
-</nav>
-<script id="mzjSalesCardsJS">
-(function(){
-  function qs(s,r){return (r||document).querySelector(s)}
-  function qsa(s,r){return Array.from((r||document).querySelectorAll(s))}
-
-  function buildCards(){
-    var root = qs('#mzjOrdersCards');
-    var tbody = qs('#ordersListBody');
-    if(!root || !tbody) return false;
-
-    var rows = qsa('tr', tbody).filter(function(tr){ return qsa('td', tr).length; });
-    if(!rows.length){ root.innerHTML = ''; return false; }
-
-    var table = tbody.closest('table');
-    var headers = qsa('thead th', table).map(function(th){ return (th.textContent||'').trim(); });
-
-    function findCol(names, fallback){
-      for (var i=0;i<headers.length;i++){
-        var h=(headers[i]||'').replace(/\s+/g,'');
-        for (var j=0;j<names.length;j++){
-          var n=names[j].replace(/\s+/g,'');
-          if(h.indexOf(n)!==-1) return i;
-        }
-      }
-      return fallback;
-    }
-
-    var customerI = findCol(['اسمالعميل','العميل','Customer'], 1);
-    var orderI    = findCol(['رقمالطلب','الطلب','Order','ID','رقم'], 0);
-
-    root.innerHTML='';
-    rows.forEach(function(tr, idx){
-      var tds = qsa('td', tr);
-      var customer = (tds[customerI] ? (tds[customerI].textContent||'') : '').trim();
-      var orderNo  = (tds[orderI] ? (tds[orderI].textContent||'') : '').trim() || String(idx+1);
-
-      var card = document.createElement('div');
-      card.className = 'mzj-card-item';
-      card.innerHTML =
-        '<div class="mzj-card-head">'
-          + '<div class="mzj-card-title">'+ (customer || ('طلب #' + (idx+1))) +'</div>'
-          + '<div class="mzj-card-badge">'+ (headers[orderI]||'رقم الطلب') + ': ' + orderNo +'</div>'
-        + '</div>'
-        + '<div class="mzj-card-grid"></div>';
-
-      var grid = card.querySelector('.mzj-card-grid');
-      for (var i=0;i<tds.length;i++){
-        if(i===customerI || i===orderI) continue;
-        var v = (tds[i].textContent||'').trim();
-        if(!v) continue;
-        var f = document.createElement('div');
-        f.className='mzj-field';
-        f.innerHTML = '<span class="k">'+ (headers[i]||('حقل '+(i+1))) +'</span><span class="v"></span>';
-        f.querySelector('.v').textContent = v;
-        grid.appendChild(f);
-      }
-
-      root.appendChild(card);
-    });
-
-    document.body.classList.add('mzj-orders-cards-ready');
-    return true;
-  }
-
-  function observeRows(){
-    var tbody = qs('#ordersListBody');
-    if(!tbody) return;
-    var obs = new MutationObserver(function(){
-      clearTimeout(window.__mzjSalesCardsT);
-      window.__mzjSalesCardsT = setTimeout(buildCards, 120);
-    });
-    obs.observe(tbody, {childList:true, subtree:true, characterData:true});
-  }
-
-  function hookTabs(){
-    var listBtn = qs('#tabListBtn');
-    if(listBtn){
-      listBtn.addEventListener('click', function(){
-        var tries=0, max=60;
-        var t=setInterval(function(){
-          tries++;
-          var ok=buildCards();
-          if(ok || tries>=max) clearInterval(t);
-        }, 200);
-      }, {passive:true});
-    }
-  }
-
-  function init(){
-    var tries=0, max=80;
-    var t=setInterval(function(){
-      tries++;
-      var ok=buildCards();
-      if(ok || tries>=max) clearInterval(t);
-    }, 200);
-    observeRows();
-    hookTabs();
-  }
-
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init);
-  else init();
-})();
-</script>
 </body>
 </html>

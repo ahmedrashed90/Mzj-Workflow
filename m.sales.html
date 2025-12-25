@@ -7,7 +7,6 @@
 
 
 
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -256,10 +255,6 @@
       padding:0;
     }
 
-    /* Orders list: unread (not opened yet) rows */
-    .unread-row td{font-weight:800;}
-    .unread-row td .link-btn{font-weight:900;}
-
     .totals-box{
       margin:6px 0 10px;
       padding:8px 10px;
@@ -385,8 +380,61 @@
   .topbar-actions{justify-content:flex-start}
 }
 
+
+/* tighten downbar label for long titles */
+.mzj-downbar a span{font-size:11px}
+@media (max-width:420px){.mzj-downbar a span{font-size:10px}}
+
+  /* ✅ Mobile Downbar (5 icons first row + 4 second row) */
+  :root{ --mzjDownbarPad: 10px; }
+  body{ padding-bottom: calc(170px + env(safe-area-inset-bottom)); }
+  .mzj-downbar{
+    position: fixed;
+    left: 0; right: 0;
+    bottom: 0;
+    z-index: 9999;
+    padding: var(--mzjDownbarPad) var(--mzjDownbarPad) calc(var(--mzjDownbarPad) + env(safe-area-inset-bottom));
+    background: rgba(255,255,255,.92);
+    border-top: 1px solid rgba(188,143,116,.35);
+    backdrop-filter: blur(10px);
+  }
+  .mzj-downbar .inner{
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+    align-items: stretch;
+  }
+  .mzj-downbar a{
+    text-decoration: none;
+    color: #2f2b29;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 6px;
+    background: #fff;
+    border: 1px solid rgba(188,143,116,.35);
+    border-radius: 14px;
+    box-shadow: 0 8px 18px rgba(0,0,0,.06);
+    min-height: 62px;
+    line-height: 1;
+    font-size: 20px; /* emoji icon */
+  }
+  .mzj-downbar a span{
+    display: block;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  .mzj-downbar a.active{
+    background: #efe2d8;
+    border-color: rgba(62,36,32,.35);
+  }
 </style>
-  <link rel="stylesheet" href="./mzj-ui.css" />
+  <link rel="stylesheet" href="mzj-mobile.css" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
 
 <style>
@@ -406,54 +454,6 @@
   /* Ensure the functional tabs bar (بحث عن طلب / كل الطلبات) is visible when JS enables it */
   .legacy-sales #tabsBar{ display:flex !important; }
   .legacy-sales #tabsBar[style*="display: none"]{ display:none !important; } /* respect JS when it hides */
-</style>
-
-
-<style>
-/* ===== MZJ Mobile Down Bar (fixed) — aligned with approved mobile template ===== */
-.mzj-downbar{
-  position:fixed;
-  left:0; right:0; bottom:0;
-  z-index:2000;
-  background:#fff;
-  border-top:1px solid rgba(62,36,32,.12);
-  box-shadow:0 -10px 30px rgba(62,36,32,.10);
-  padding:8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
-  display:none;
-}
-.mzj-downbar .db-inner{
-  max-width:900px;
-  margin:0 auto;
-  display:grid;
-  grid-template-columns:repeat(5,1fr);
-  gap:6px;
-}
-.mzj-downbar a{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-  padding:8px 6px;
-  border-radius:14px;
-  text-decoration:none;
-  color:var(--muted);
-  font-weight:800;
-  font-size:11px;
-  border:1px solid transparent;
-}
-.mzj-downbar a i{font-size:18px;color:var(--brown);}
-.mzj-downbar a.active{
-  background:rgba(188,143,116,.18);
-  color:var(--brown);
-  border-color:rgba(188,143,116,.45);
-}
-.mzj-downbar a.active i{color:var(--brown);}
-@media (max-width: 900px){
-  .mzj-downbar{display:block;}
-  /* give content room for downbar */
-  .mzj-content{padding-bottom:92px !important;}
-}
 </style>
 
 </head>
@@ -487,24 +487,6 @@
   </header>
 
   <div class="mzj-shell" id="mzjShell">
-    <aside class="mzj-sidebar" id="mzjSidebar">
-      <div class="side-section">
-        <div class="side-title">تتبع المبيعات</div>
-        <nav class="side-nav">
-          <a class="side-link tab active" href="./sales.html"><i class="fa-solid fa-handshake"></i><span>تتبع المبيعات</span></a>
-          <a class="side-link tab" href="./dashboard.html"><i class="fa-solid fa-gauge"></i><span>الداش بورد</span></a>
-          <a class="side-link tab" href="./inventory.html"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
-          <a class="side-link tab" href="./vt.html"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
-          <a class="side-link tab" href="./photoshoot-user.html"><i class="fa-solid fa-camera"></i><span>إدارة الطلبات</span></a>
-          <a class="side-link tab" href="./cars.html"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
-          <a class="side-link tab" href="./admin.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
-          <a class="side-link tab" href="./Activity.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل النشاط</span></a>
-
-      </div>
-    </aside>
-
-    <div class="mzj-backdrop" id="mzjBackdrop"></div>
-
     <main class="mzj-content">
       <section class="mzj-pagehead">
         <div class="pagehead-left">
@@ -653,18 +635,12 @@
         </table>
       </div>
     </div>
+        <div id="ordersCards" class="mzj-orders-cards"></div>
 
     <!-- Orders list tab -->
     <div class="card" id="ordersListCard" style="display:none;">
       <h3 class="title"><span class="icon">📋</span>كل الطلبات</h3>
       <div class="hint">اضغط على رقم الطلب لفتحه، واختيار رقم الهيكل من الأعلى لو كان أكثر من سيارة.</div>
-      <div class="row" style="margin-top:10px;">
-        <div class="col-6">
-          <label>بحث سريع</label>
-          <input id="ordersSearch" placeholder="اكتب اسم العميل / رقم الجوال / رقم الهيكل (VIN) / رقم الطلب" />
-          <div class="hint">تقدر تبحث بأي جزء من البيانات.</div>
-        </div>
-      </div>
       <div class="erp-table-wrap">
         <table>
           <thead>
@@ -674,6 +650,8 @@
             <th>رقم الجوال</th>
             <th>الفرع</th>
             <th>رقم الهيكل VIN</th>
+            <th>تاريخ التسليم</th>
+            <th>حالة الطلب (آخر مرحلة)</th>
           </tr>
           </thead>
           <tbody id="ordersListBody"></tbody>
@@ -714,8 +692,7 @@
       query,
       where,
       getDocs,
-      limit,
-      writeBatch
+      limit
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -755,11 +732,6 @@
     const ordersListCard  = document.getElementById("ordersListCard");
     const ordersListBody  = document.getElementById("ordersListBody");
 
-    const ordersSearchInput = document.getElementById("ordersSearch");
-    let ordersListCache = [];
-    let ordersReadSet = new Set();
-
-
     const email      = document.getElementById("email");
     const password   = document.getElementById("password");
     const loginBtn   = document.getElementById("loginBtn");
@@ -789,9 +761,6 @@
     let currentItemNo       = null;
     let currentOrderRecords = [];
     let currentCustomerPhone = ""; // رقم جوال العميل
-
-    let currentTrackData = null;
-    let currentStagesObjCache = {};
 
     const STAGES = [
       "1) طلب الشراء (خاص بالعميل)",
@@ -1707,71 +1676,53 @@ function clearErpTable() {
         stageMsg.innerHTML = "<span class='err'>اختر طلب ورقم هيكل أولاً قبل تحديث المراحل.</span>";
         return;
       }
-
-      const baseId = currentOrderId;
-      const docId = baseId + "_" + currentItemNo;
-      const key = "s" + num;
-
-      // ✅ استخدم كاش المراحل (بدون قراءة getDoc كل مرة)
-      const stagesObj = Object.assign({}, currentStagesObjCache || {});
-      if (stagesObj[key]) {
-        stageMsg.innerHTML = "<span class='muted'>هذه المرحلة تم ختمها مسبقاً.</span>";
-        return;
-      }
-
-      // ✅ تحديث واجهة بشكل فوري (Optimistic UI) لتحسّن السرعة
-      const optimisticStages = Object.assign({}, stagesObj, { [key]: new Date() });
-      currentStagesObjCache = optimisticStages;
-      currentTrackData = currentTrackData || {
-        orderId: baseId,
-        vin: currentVin || "",
-        itemNo: currentItemNo || 1,
-        currentStage: 0,
-        stages: {}
-      };
-      currentTrackData.orderId = baseId;
-      currentTrackData.vin = currentVin || "";
-      currentTrackData.itemNo = currentItemNo || 1;
-      currentTrackData.stages = optimisticStages;
-
-      const doneCount = Object.keys(optimisticStages).filter(k => optimisticStages[k]).length;
-      currentTrackData.currentStage = doneCount;
-
-      buildStagesUI(currentTrackData);
-      stageMsg.innerHTML = "<span class='muted'>جاري حفظ المرحلة...</span>";
-
       try {
-        const orderRef  = doc(db, TRACK_COLLECTION, docId);
-        const publicRef = doc(db, TRACK_COLLECTION, docId, "public", "status");
+        const baseId = currentOrderId;
+        const docId = baseId + "_" + currentItemNo;
 
-        // ✅ كتابة واحدة (Batch) بدل 2 setDoc متتابعين
-        const batch = writeBatch(db);
+        const orderRef = doc(db, TRACK_COLLECTION, docId);
+        const snap = await getDoc(orderRef);
+        let stagesObj = {};
+        if (snap.exists()) {
+          const data = snap.data();
+          stagesObj = data.stages || {};
+        }
 
-        batch.set(orderRef, {
+        const key = "s" + num;
+        if (stagesObj[key]) {
+          stageMsg.innerHTML = "<span class='muted'>هذه المرحلة تم ختمها مسبقاً.</span>";
+          await loadTrackingForCurrentSelection();
+          return;
+        }
+
+        // احسب عدد المراحل المكتملة بعد إضافة هذه المرحلة
+        const doneKeys = Object.keys(stagesObj).filter(k => stagesObj[k]);
+        const doneCount = doneKeys.length + 1;
+
+        await setDoc(orderRef, {
           orderId: baseId,
           vin: currentVin || "",
           itemNo: currentItemNo || 1,
           currentStage: doneCount,
-          stages: { [key]: serverTimestamp() }
+          stages: Object.assign({}, stagesObj, { [key]: serverTimestamp() })
         }, { merge: true });
 
-        batch.set(publicRef, {
+        const publicRef = doc(db, TRACK_COLLECTION, docId, "public", "status");
+        await setDoc(publicRef, {
           orderId: baseId,
           vin: currentVin || "",
           itemNo: currentItemNo || 1,
           currentStage: doneCount,
-          stages: { [key]: serverTimestamp() },
+          stages: Object.assign({}, stagesObj, { [key]: serverTimestamp() }),
           updatedAt: serverTimestamp()
         }, { merge: true });
 
-        await batch.commit();
+        await loadTrackingForCurrentSelection();
 
         stageMsg.innerHTML = "<span class='ok'>تم ختم المرحلة رقم " + num + " وتحديث صفحة التتبع.</span>";
       } catch (e) {
         console.error(e);
-        stageMsg.innerHTML = "<span class='err'>حدث خطأ أثناء حفظ المرحلة. حاول مرة أخرى.</span>";
-        // رجّع الداتا من السيرفر لضمان التطابق (قراءة واحدة فقط عند الفشل)
-        try { await loadTrackingForCurrentSelection(); } catch(e2) {}
+        stageMsg.innerHTML = "<span class='err'>حدث خطأ أثناء تحديث المرحلة.</span>";
       }
     }
 
@@ -1783,63 +1734,48 @@ function clearErpTable() {
         stageMsg.innerHTML = "<span class='err'>اختر طلب ورقم هيكل أولاً قبل التراجع عن المرحلة.</span>";
         return;
       }
-
-      const baseId = currentOrderId;
-      const docId = baseId + "_" + currentItemNo;
-      const key = "s" + num;
-
-      const stagesObj = Object.assign({}, currentStagesObjCache || {});
-      if (!stagesObj[key]) {
-        stageMsg.innerHTML = "<span class='muted'>هذه المرحلة غير مكتملة أصلاً.</span>";
-        return;
-      }
-
-      // ✅ Optimistic UI
-      delete stagesObj[key];
-      currentStagesObjCache = stagesObj;
-
-      currentTrackData = currentTrackData || {
-        orderId: baseId,
-        vin: currentVin || "",
-        itemNo: currentItemNo || 1,
-        currentStage: 0,
-        stages: {}
-      };
-      currentTrackData.orderId = baseId;
-      currentTrackData.vin = currentVin || "";
-      currentTrackData.itemNo = currentItemNo || 1;
-      currentTrackData.stages = stagesObj;
-
-      const doneCount = Object.keys(stagesObj).filter(k => stagesObj[k]).length;
-      currentTrackData.currentStage = doneCount;
-
-      buildStagesUI(currentTrackData);
-      stageMsg.innerHTML = "<span class='muted'>جاري حفظ التراجع...</span>";
-
       try {
-        const orderRef  = doc(db, TRACK_COLLECTION, docId);
-        const publicRef = doc(db, TRACK_COLLECTION, docId, "public", "status");
+        const baseId = currentOrderId;
+        const docId = baseId + "_" + currentItemNo;
 
-        const batch = writeBatch(db);
+        const orderRef = doc(db, TRACK_COLLECTION, docId);
+        const snap = await getDoc(orderRef);
+        if (!snap.exists()) {
+          stageMsg.innerHTML = "<span class='err'>لا توجد بيانات مراحل محفوظة لهذا الطلب.</span>";
+          return;
+        }
 
-        batch.update(orderRef, {
+        const data = snap.data() || {};
+        const stagesObj = Object.assign({}, data.stages || {});
+        const key = "s" + num;
+
+        if (!stagesObj[key]) {
+          stageMsg.innerHTML = "<span class='muted'>هذه المرحلة غير مكتملة أصلاً.</span>";
+          return;
+        }
+
+        delete stagesObj[key];
+        const doneKeys = Object.keys(stagesObj).filter(k => stagesObj[k]);
+        const doneCount = doneKeys.length;
+
+        await updateDoc(orderRef, {
           [`stages.${key}`]: deleteField(),
           currentStage: doneCount
         });
 
-        batch.update(publicRef, {
+        const publicRef = doc(db, TRACK_COLLECTION, docId, "public", "status");
+        await updateDoc(publicRef, {
           [`stages.${key}`]: deleteField(),
           currentStage: doneCount,
           updatedAt: serverTimestamp()
         });
 
-        await batch.commit();
+        await loadTrackingForCurrentSelection();
 
-        stageMsg.innerHTML = "<span class='ok'>تم التراجع عن المرحلة رقم " + num + " لهذا رقم الهيكل.</span>";
+        stageMsg.innerHTML = "<span class='ok'>تم التراجع عن المرحلة رقم " + num + " لهذا الرقم الهيكل.</span>";
       } catch (e) {
         console.error(e);
-        stageMsg.innerHTML = "<span class='err'>حدث خطأ أثناء حفظ التراجع. حاول مرة أخرى.</span>";
-        try { await loadTrackingForCurrentSelection(); } catch(e2) {}
+        stageMsg.innerHTML = "<span class='err'>حدث خطأ أثناء التراجع عن المرحلة.</span>";
       }
     }
 
@@ -1881,9 +1817,6 @@ function clearErpTable() {
         const doneKeys = Object.keys(stagesObj).filter(k => stagesObj[k]);
         const doneCount = doneKeys.length;
         trackData.currentStage = doneCount;
-
-        currentTrackData = trackData;
-        currentStagesObjCache = trackData.stages || {};
 
         buildStagesUI(trackData);
       }catch(e){
@@ -2052,59 +1985,14 @@ function clearErpTable() {
 
     // ---- تبويب كل الطلبات ----
 
-    
-    function loadReadOrders(){
-      try{
-        const arr = JSON.parse(localStorage.getItem("mzj_read_orders") || "[]");
-        if (Array.isArray(arr)) ordersReadSet = new Set(arr.map(String));
-      }catch(e){ ordersReadSet = new Set(); }
-    }
-    function saveReadOrders(){
-      try{
-        localStorage.setItem("mzj_read_orders", JSON.stringify(Array.from(ordersReadSet)));
-      }catch(e){}
-    }
-    function renderOrdersList(filterText=""){
-      const q = String(filterText||"").trim().toLowerCase();
-      const rows = Array.isArray(ordersListCache) ? ordersListCache : [];
-      const filtered = !q ? rows : rows.filter(r => {
-        const hay = [
-          r.orderNo, r.customerName, r.customerPhone, r.branch, r.vinVal, r.vinRaw
-        ].filter(Boolean).join(" ").toLowerCase();
-        return hay.includes(q);
-      });
-
-      ordersListBody.innerHTML = "";
-      if (!filtered.length){
-        ordersListBody.innerHTML = "<tr><td class='muted' colspan='5'>لا توجد نتائج مطابقة.</td></tr>";
-        return;
-      }
-
-      filtered.forEach(r => {
-        const tr = document.createElement("tr");
-        const isUnread = !ordersReadSet.has(String(r.orderNo||""));
-        if (isUnread) tr.classList.add("unread-row");
-
-        tr.innerHTML = `
-          <td><button class="link-btn" data-order="${r.orderNo}">${r.orderNo}</button></td>
-          <td>${r.customerName || "—"}</td>
-          <td>${r.customerPhone || "—"}</td>
-          <td>${r.branch || "—"}</td>
-          <td>${r.vinVal || "—"}</td>
-        `;
-        ordersListBody.appendChild(tr);
-      });
-    }
-
-
     async function loadOrdersList() {
-      ordersListBody.innerHTML = "<tr><td class='muted' colspan='5'>جاري تحميل الطلبات...</td></tr>";
+      ordersListBody.innerHTML = "<tr><td class='muted' colspan='7'>جاري تحميل الطلبات...</td></tr>";
       try {
         // ✅ نقرأ آخر 200 سجل من erp_orders (قد يكون في تكرار لأن كل سيارة سجل)
         const q = query(collection(db, ERP_COLLECTION), limit(200));
         const snap = await getDocs(q);
         if (snap.empty) {
-          ordersListBody.innerHTML = "<tr><td class='muted' colspan='5'>لا توجد طلبات مسجلة حالياً.</td></tr>";
+          ordersListBody.innerHTML = "<tr><td class='muted' colspan='7'>لا توجد طلبات مسجلة حالياً.</td></tr>";
           return;
         }
         // ✅ نجمع حسب orderNo لتجنب تكرار الطلبات في القائمة
@@ -2121,6 +2009,9 @@ function clearErpTable() {
         }
 
         const rows = [];
+      const cards = [];
+      const ordersCards = document.getElementById("ordersCards");
+      if (ordersCards) ordersCards.innerHTML = "";
         for (const group of byOrder.values()) {
           const docsArr = group.docs || [];
           const first = docsArr[0] || {};
@@ -2138,14 +2029,35 @@ function clearErpTable() {
           const customerName = getFieldFlex("CustomerName", first) || "";
           const customerPhone = getFieldFlex("CustomerPhone", first) || "";
           const branch = getFieldFlex("Branch", first) || "";
+          const deliveryDate = getFieldFlex("DeliveryDate", first) || "";
           const orderDateRaw = getFieldFlex("OrderDate", first) || "";
 
-          // حالة التتبع
-          // 🚀 تحسين أداء: لا نقرأ مراحل التتبع لكل طلب داخل القائمة (يسبب بطء شديد).
-          // التتبع والإجراءات تظهر بعد فتح الطلب من تبويب "بحث عن طلب".
-          
+          // حالة التتبع (مرة واحدة لكل طلب)
+          let statusLabel = "لم يبدأ";
+          try {
+            const tSnap = await getDoc(doc(db, TRACK_COLLECTION, group.orderNo + "_1"));
+            if (tSnap.exists()) {
+              const t = tSnap.data();
+              const stagesObj = t.stages || {};
+              const doneCount = Object.keys(stagesObj).filter(k => stagesObj[k]).length;
+              if (doneCount === 0) statusLabel = "لم يبدأ";
+              else if (doneCount >= STAGES.length) statusLabel = "تم إتمام جميع المراحل";
+              else statusLabel = "تم تنفيذ " + doneCount + " من " + STAGES.length + " مراحل";
+            }
+          } catch (e) {
+            console.error("track read error", e);
+          }
 
-          rows.push({ orderNo: group.orderNo, vinVal, vinRaw: vins.join(" "), customerName, customerPhone, branch, orderDateRaw });
+          rows.push({
+            orderNo: group.orderNo,
+            vinVal,
+            customerName,
+            customerPhone,
+            branch,
+            deliveryDate,
+            orderDateRaw,
+            statusLabel
+          });
         }
         
         // ترتيب الصفوف بالأحدث أولاً (بدون الاعتماد على orderBy لتفادي مشاكل الفهارس/اختلاف أسماء الحقول)
@@ -2180,12 +2092,23 @@ function clearErpTable() {
           return bMs - aMs;
         });
 
-ordersListCache = rows;
-        loadReadOrders();
-        renderOrdersList(ordersSearchInput ? ordersSearchInput.value : "");
-} catch (err) {
+ordersListBody.innerHTML = "";
+        rows.forEach(r => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><button class="link-btn" data-order="${r.orderNo}">${r.orderNo}</button></td>
+            <td>${r.customerName || "—"}</td>
+            <td>${r.customerPhone || "—"}</td>
+            <td>${r.branch || "—"}</td>
+            <td>${r.vinVal || "—"}</td>
+            <td>${r.deliveryDate || "—"}</td>
+            <td>${r.statusLabel || "—"}</td>
+          `;
+          ordersListBody.appendChild(tr);
+        });
+      } catch (err) {
         console.error(err);
-        ordersListBody.innerHTML = "<tr><td class='err' colspan='5'>تعذر تحميل قائمة الطلبات.</td></tr>";
+        ordersListBody.innerHTML = "<tr><td class='err' colspan='7'>تعذر تحميل قائمة الطلبات.</td></tr>";
       }
     }
 
@@ -2211,20 +2134,10 @@ ordersListCache = rows;
     tabSearchBtn.addEventListener("click", () => activateTab("search"));
     tabListBtn.addEventListener("click", () => activateTab("list"));
 
-    if (ordersSearchInput) {
-      ordersSearchInput.addEventListener("input", () => {
-        renderOrdersList(ordersSearchInput.value);
-      });
-    }
-
     ordersListBody.addEventListener("click", async (e) => {
       const btn = e.target.closest("button.link-btn");
       if (!btn) return;
       const ord = btn.dataset.order;
-      // mark as read (opened once) like mail behavior
-      ordersReadSet.add(String(ord || ""));
-      saveReadOrders();
-
       try { await navigator.clipboard.writeText(ord); } catch(e) { console.warn(e); }
       orderIdInput.value = ord;
       vinInput.value = "";
@@ -2438,16 +2351,21 @@ ordersListCache = rows;
   </div>
 
 
-  <!-- MZJ Mobile Down Bar -->
-  <nav class="mzj-downbar" id="mzjDownbar" aria-label="التنقل السفلي">
-    <div class="db-inner">
-      <a href="./dashboard.html" title="الداش بورد"><i class="fa-solid fa-gauge"></i><span>الداش</span></a>
-      <a href="./inventory.html" title="المخزون"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
-      <a href="./vt.html" title="نقل السيارات"><i class="fa-solid fa-right-left"></i><span>نقل</span></a>
-      <a href="./photoshoot-user.html" title="الطلبات"><i class="fa-solid fa-camera"></i><span>الطلبات</span></a>
-      <a href="./sales.html" class="active" title="المبيعات"><i class="fa-solid fa-handshake"></i><span>المبيعات</span></a>
+  <!-- Mobile Down Bar -->
+  <nav class="mzj-downbar" aria-label="التنقل">
+    <div class="inner">
+      <a class="active" href="m.sales.html">💼<span>تتبع المبيعات</span></a>
+      <a href="m.dashboard.html">📊<span>الداش بورد</span></a>
+      <a href="m.inventory.html">🚗<span>المخزون</span></a>
+      <a href="m.vt.html">🧭<span>نقل السيارات</span></a>
+      <a href="m.photoshoot-user.html">📷<span>إدارة الطلبات</span></a>
+
+      <a href="m.cars.html">🚙<span>كل السيارات</span></a>
+      <a href="m.admin.html">🏠<span>الإدارة</span></a>
+      <a href="m.Activity.html">🕘<span>سجل النشاط</span></a>
+      <a href="m.act.html">🧾<span>سجل الحركات</span></a>
     </div>
   </nav>
 
-</body>
+  </body>
 </html>

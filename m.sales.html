@@ -410,7 +410,7 @@
   --mzj-beige: rgb(188,143,116);
   --mzj-cream: #fff8ef;
   --mzj-downbar-h: 138px;
-  --mzj-downbar-lift: 14px;
+  --mzj-downbar-lift: 16px;
 }
 @media (max-width:1023px){
   html,body{margin:0!important;padding:0!important;overflow-x:hidden!important;background:var(--mzj-cream)!important;}
@@ -443,10 +443,8 @@
     border-color:rgba(188,143,116,.40)!important;
   }
 
-  /* Orders list: hide only its table wrap after cards built */
-  body.mzj-orders-cards-ready #ordersListCard .erp-table-wrap{display:none!important;}
-  #ordersListCard #mzjOrdersCards{display:block!important;margin:10px 0 0;}
-  #ordersListCard{padding-left:10px!important;padding-right:10px!important;}
+  body.mzj-orders-cards-ready .erp-table-wrap{display:none!important;}
+  #mzjOrdersCards{display:block!important;margin:10px 10px 0;}
   .mzj-card-item{
     background:rgba(255,255,255,.95);
     border:1px solid rgba(0,0,0,.08);
@@ -490,7 +488,7 @@
 }
 </style>
 </head>
-<body class="mzj" class="mzj mzj-mobile-sales">
+<body class="mzj mzj-mobile-sales">
 
   <!-- MZJ Unified Topbar -->
   <header class="mzj-topbar">
@@ -651,7 +649,8 @@
       </div>
 
       <div id="erpTotals" class="totals-box" style="display:none;"></div>
-      <div class="erp-table-wrap">
+      <div id="mzjOrdersCards" class="mzj-mobile-cards" aria-label="كل الطلبات"></div>
+<div class="erp-table-wrap">
         <table>
           <thead>
           <tr>
@@ -691,8 +690,7 @@
     <div class="card" id="ordersListCard" style="display:none;">
       <h3 class="title"><span class="icon">📋</span>كل الطلبات</h3>
       <div class="hint">اضغط على رقم الطلب لفتحه، واختيار رقم الهيكل من الأعلى لو كان أكثر من سيارة.</div>
-      <div id="mzjOrdersCards" class="mzj-mobile-cards" aria-label="كل الطلبات"></div>
-<div class="erp-table-wrap">
+      <div class="erp-table-wrap">
         <table>
           <thead>
           <tr>
@@ -2037,111 +2035,53 @@ function clearErpTable() {
     // ---- تبويب كل الطلبات ----
 
     async function loadOrdersList() {
-      ordersListBody.innerHTML = "<tr><td class='muted' colspan='7'>جاري تحميل الطلبات...</td></tr>";
+      ordersListBody.innerHTML = "<tr><td colspan='7' class='muted'>جاري تحميل الطلبات…</td></tr>";
       try {
-        // ✅ نقرأ آخر 200 سجل من erp_orders (قد يكون في تكرار لأن كل سيارة سجل)
-        const q = query(collection(db, ERP_COLLECTION), limit(200));
-        const snap = await getDocs(q);
-        if (snap.empty) {
-          ordersListBody.innerHTML = "<tr><td class='muted' colspan='7'>لا توجد طلبات مسجلة حالياً.</td></tr>";
-          return;
-        }
-        // ✅ نجمع حسب orderNo لتجنب تكرار الطلبات في القائمة
-        const byOrder = new Map();
-        for (const docSnap of snap.docs) {
-          const d = docSnap.data();
-          const orderNo = d.orderNo || d.OrderNo || docSnap.id;
-          if (!orderNo) continue;
+        // ⚡ موبايل: نعرض القائمة بسرعة من ERP فقط (بدون استعلامات Tracking الثقيلة)
+        // الهدف: يظهر رقم الطلب فوراً ويقدر المستخدم يفتحه.
+        const snap = await getDocs(query(collection(db, ERP_COLLECTION), limit(200)));
 
-          if (!byOrder.has(orderNo)) {
-            byOrder.set(orderNo, { orderNo, docs: [] });
-          }
-          byOrder.get(orderNo).docs.push(d);
-        }
-
-        const rows = [];
-        for (const group of byOrder.values()) {
-          const docsArr = group.docs || [];
-          const first = docsArr[0] || {};
-
-          const vins = Array.from(new Set(
-            docsArr
-              .map(x => (getFieldFlex("VIN", x) || "").toString().trim())
-              .filter(v => v && v !== "-" && v !== "—")
-          ));
-
-          const vinVal = (vins.length <= 1)
-            ? (vins[0] || "—")
-            : ("(" + vins.length + ") هياكل");
-
-          const customerName = getFieldFlex("CustomerName", first) || "";
-          const customerPhone = getFieldFlex("CustomerPhone", first) || "";
-          const branch = getFieldFlex("Branch", first) || "";
-          const deliveryDate = getFieldFlex("DeliveryDate", first) || "";
-          const orderDateRaw = getFieldFlex("OrderDate", first) || "";
-
-          // حالة التتبع (مرة واحدة لكل طلب)
-          let statusLabel = "لم يبدأ";
-          try {
-            const tSnap = await getDoc(doc(db, TRACK_COLLECTION, group.orderNo + "_1"));
-            if (tSnap.exists()) {
-              const t = tSnap.data();
-              const stagesObj = t.stages || {};
-              const doneCount = Object.keys(stagesObj).filter(k => stagesObj[k]).length;
-              if (doneCount === 0) statusLabel = "لم يبدأ";
-              else if (doneCount >= STAGES.length) statusLabel = "تم إتمام جميع المراحل";
-              else statusLabel = "تم تنفيذ " + doneCount + " من " + STAGES.length + " مراحل";
-            }
-          } catch (e) {
-            console.error("track read error", e);
-          }
-
-          rows.push({
-            orderNo: group.orderNo,
-            vinVal,
-            customerName,
-            customerPhone,
-            branch,
-            deliveryDate,
-            orderDateRaw,
-            statusLabel
-          });
-        }
-        
-        // ترتيب الصفوف بالأحدث أولاً (بدون الاعتماد على orderBy لتفادي مشاكل الفهارس/اختلاف أسماء الحقول)
-        function toMillis(v){
-          if (!v) return 0;
-          // Firestore Timestamp
-          if (v.toDate) return v.toDate().getTime();
-          // JS Date
-          if (v instanceof Date) return v.getTime();
-          // number
-          if (typeof v === "number") return v;
-          // string
-          const s = String(v).trim();
-          // try parse ISO / normal date
-          const t = Date.parse(s);
-          if (!Number.isNaN(t)) return t;
-          // fallback: if looks like dd/mm/yyyy or dd-mm-yyyy
-          const m = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
-          if (m){
-            const dd = parseInt(m[1],10), mm = parseInt(m[2],10)-1, yy = parseInt(m[3],10);
-            const yyyy = yy < 100 ? (2000 + yy) : yy;
-            const d = new Date(yyyy, mm, dd);
-            return d.getTime() || 0;
-          }
-          return 0;
-        }
-
-        rows.sort((a,b) => {
-          const aMs = toMillis(a.orderDateRaw || a.deliveryDate || "");
-          const bMs = toMillis(b.orderDateRaw || b.deliveryDate || "");
-          // desc
-          return bMs - aMs;
+        const groups = new Map();
+        snap.forEach((d) => {
+          const data = d.data() || {};
+          const orderNo = normalizeOrderNo(data.orderNo || data.order_id || data.name || d.id);
+          if (!orderNo) return;
+          if (!groups.has(orderNo)) groups.set(orderNo, []);
+          groups.get(orderNo).push({ id: d.id, ...data });
         });
 
-ordersListBody.innerHTML = "";
-        rows.forEach(r => {
+        const rows = Array.from(groups.entries()).map(([orderNo, arr]) => {
+          // pick first as representative
+          const first = arr[0] || {};
+          const vins = [];
+          arr.forEach(x => {
+            const v = (x.vin || x.VIN || x.chassis || x.frameNo || x.vin_no || '').toString().trim();
+            if (v) vins.push(v);
+          });
+          const vinVal = vins.length === 1 ? vins[0] : (vins.length ? `VIN(${vins.length})` : "—");
+          const deliveryDate = (first.deliveryDate || first.delivery_date || first.deliveredAt || first.delivery || "");
+          return {
+            orderNo,
+            customerName: first.customerName || first.customer_name || first.customer || first.clientName || "—",
+            customerPhone: first.customerPhone || first.customer_phone || first.phone || first.mobile || "—",
+            branch: first.branch || first.branchName || first.branch_name || "—",
+            vinVal,
+            deliveryDate: deliveryDate ? fmtDate(deliveryDate) : "—",
+            statusLabel: "—"
+          };
+        });
+
+        // sort newest first if order number ends with digits, otherwise keep insertion order
+        rows.sort((a,b) => (b.orderNo||'').localeCompare(a.orderNo||'', 'en'));
+
+        if (!rows.length) {
+          ordersListBody.innerHTML = "<tr><td colspan='7' class='muted'>لا توجد طلبات.</td></tr>";
+          if (mzjOrdersCards) mzjOrdersCards.innerHTML = "";
+          return;
+        }
+
+        ordersListBody.innerHTML = "";
+        rows.forEach((r) => {
           const tr = document.createElement("tr");
           tr.innerHTML = `
             <td><button class="link-btn" data-order="${r.orderNo}">${r.orderNo}</button></td>
@@ -2154,9 +2094,13 @@ ordersListBody.innerHTML = "";
           `;
           ordersListBody.appendChild(tr);
         });
+
+        buildCards();
+
       } catch (err) {
         console.error(err);
         ordersListBody.innerHTML = "<tr><td class='err' colspan='7'>تعذر تحميل قائمة الطلبات.</td></tr>";
+        if (mzjOrdersCards) mzjOrdersCards.innerHTML = "";
       }
     }
 
@@ -2179,8 +2123,8 @@ ordersListBody.innerHTML = "";
       }
     }
 
-    tabSearchBtn.addEventListener("click", () => activateTab("search"));
-    tabListBtn.addEventListener("click", () => activateTab("list"));
+    tabSearchBtn && tabSearchBtn.addEventListener("click", () => activateTab("search"));
+    tabListBtn && tabListBtn.addEventListener("click", () => activateTab("list"));
 
     ordersListBody.addEventListener("click", async (e) => {
       const btn = e.target.closest("button.link-btn");
@@ -2419,7 +2363,7 @@ ordersListBody.innerHTML = "";
   function qsa(s,r){return Array.from((r||document).querySelectorAll(s))}
 
   function buildCards(){
-    var root = qs('#ordersListCard #mzjOrdersCards');
+    var root = qs('#mzjOrdersCards');
     var tbody = qs('#ordersListBody');
     if(!root || !tbody) return false;
 
@@ -2440,8 +2384,8 @@ ordersListBody.innerHTML = "";
       return fallback;
     }
 
-    var customerI = findCol(['اسم','العميل','Customer'], 1);
-    var orderI    = findCol(['رقم','الطلب','Order','ID'], 0);
+    var customerI = findCol(['اسمالعميل','العميل','Customer'], 1);
+    var orderI    = findCol(['رقمالطلب','الطلب','Order','ID','رقم'], 0);
 
     root.innerHTML='';
     rows.forEach(function(tr, idx){
@@ -2487,7 +2431,7 @@ ordersListBody.innerHTML = "";
     obs.observe(tbody, {childList:true, subtree:true, characterData:true});
   }
 
-  function hookListBtn(){
+  function hookTabs(){
     var listBtn = qs('#tabListBtn');
     if(listBtn){
       listBtn.addEventListener('click', function(){
@@ -2509,7 +2453,7 @@ ordersListBody.innerHTML = "";
       if(ok || tries>=max) clearInterval(t);
     }, 200);
     observeRows();
-    hookListBtn();
+    hookTabs();
   }
 
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init);

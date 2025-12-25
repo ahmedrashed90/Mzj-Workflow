@@ -2329,26 +2329,87 @@ ordersListBody.innerHTML = "";
   </div>
 </nav>
 
+
+
+
+
 <style id="mzjSalesMobileOverrides">
 :root{
   --mzj-brown: rgb(62,36,32);
+  --mzj-beige: rgb(188,143,116);
   --mzj-cream: #fff8ef;
 }
 @media (max-width: 1023px){
   html,body{ margin:0 !important; padding:0 !important; overflow-x:hidden !important; background: var(--mzj-cream) !important; }
   .mzj-sidebar, .mzj-topbar, header, .topbar, .sidebar, .side-nav{ display:none !important; }
-  body{ padding-left:0 !important; padding-right:0 !important; }
+  body{ padding-left:0 !important; padding-right:0 !important; padding-bottom: 120px !important; }
   main, .mzj-content, .content, .main, .main-content, .page,
-  .container, .wrap, .content-wrap, .inner, .wrapper, [class*="container"], [class*="wrapper"]{
+  .container, .wrap, .content-wrap, .wrapper, [class*="container"], [class*="wrapper"]{
     width:100% !important; max-width:100% !important;
     margin-left:0 !important; margin-right:0 !important;
     padding-left:0 !important; padding-right:0 !important;
   }
 }
 </style>
+<style id="mzjSalesDownbarCSS">
+@media (max-width: 1023px){
+  .mzj-downbar{
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+    z-index: 9999;
+    background: rgba(255,255,255,.96);
+    border: 1px solid rgba(0,0,0,.10);
+    border-radius: 18px;
+    box-shadow: 0 10px 26px rgba(0,0,0,.12);
+    padding: 10px 8px;
+    backdrop-filter: blur(10px);
+  }
+  .mzj-downbar .inner{
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px 8px;
+    align-items: stretch;
+  }
+  .mzj-downbar a{
+    display:flex !important;
+    flex-direction: column;
+    align-items:center;
+    justify-content:center;
+    gap: 4px;
+    text-decoration:none !important;
+    color: rgba(0,0,0,.72) !important;
+    font-weight: 900;
+    border: 1px solid rgba(0,0,0,.08);
+    border-radius: 14px;
+    padding: 8px 6px;
+    background: rgba(255,248,239,.70);
+    min-height: 44px;
+  }
+  .mzj-downbar a span{
+    display:block;
+    font-size: 10.5px;
+    line-height: 1.05;
+    text-align:center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  .mzj-downbar a.active{
+    background: rgba(188,143,116,.22);
+    border-color: rgba(188,143,116,.40);
+    color: rgb(62,36,32) !important;
+  }
+}
+@media (min-width: 1024px){
+  .mzj-downbar{ display:none !important; }
+}
+</style>
 <style id="mzjSalesCardsCSS">
 @media (max-width: 1023px){
-  table{ display:none !important; }
+  body.mzj-cards-ready table{ display:none !important; }
   #mzjMobileCards{ display:block !important; }
   .mzj-mobile-cards{ padding:0 !important; margin:0 !important; width:100% !important; }
   .mzj-card-item{
@@ -2380,21 +2441,37 @@ ordersListBody.innerHTML = "";
   .mzj-card-actions .actions-wrap{ display:flex; flex-wrap:wrap; gap:8px; }
   .mzj-card-actions button, .mzj-card-actions a{ border-radius: 12px !important; }
 }
-@media (min-width: 1024px){
-  #mzjMobileCards{ display:none !important; }
-}
 </style>
 <script id="mzjSalesCardsJS">
 (function(){
   function qs(sel, root){ return (root||document).querySelector(sel); }
   function qsa(sel, root){ return Array.from((root||document).querySelectorAll(sel)); }
-  function findTable(){ return qs('table'); }
+
+  function tableScore(t){
+    try{
+      var rows = qsa('tbody tr', t).filter(function(r){ return qsa('td', r).length; });
+      if (!rows.length) rows = qsa('tr', t).filter(function(r){ return qsa('td', r).length; });
+      var cols = rows[0] ? qsa('td', rows[0]).length : 0;
+      return rows.length * 10 + cols;
+    }catch(e){ return 0; }
+  }
+
+  function findBestTable(){
+    var tables = qsa('table');
+    if (!tables.length) return null;
+    tables.sort(function(a,b){ return tableScore(b) - tableScore(a); });
+    return tables[0] || null;
+  }
+
   function getHeaders(table){
     var ths = qsa('thead th', table);
     if (ths.length) return ths.map(function(th){ return (th.textContent||'').trim(); });
-    var firstRow = qs('tr', table);
-    return firstRow ? qsa('td,th', firstRow).map(function(c){ return (c.textContent||'').trim(); }) : [];
+    var first = qs('tr', table);
+    if (!first) return [];
+    var cells = qsa('th,td', first);
+    return cells.map(function(c){ return (c.textContent||'').trim(); });
   }
+
   function cloneActionNodes(cell){
     var actionElems = Array.from(cell.querySelectorAll('a,button'));
     if (!actionElems.length) return null;
@@ -2418,13 +2495,16 @@ ordersListBody.innerHTML = "";
 
   function buildCards(){
     var cardsRoot = qs('#mzjMobileCards');
-    if (!cardsRoot) return;
-    var table = findTable();
-    if (!table) return;
+    if (!cardsRoot) return false;
+
+    var table = findBestTable();
+    if (!table) return false;
 
     var headers = getHeaders(table);
     var tbody = qs('tbody', table) || table;
     var rows = qsa('tr', tbody).filter(function(tr){ return qsa('td', tr).length; });
+
+    if (!rows.length) return false;
 
     cardsRoot.innerHTML = '';
 
@@ -2508,26 +2588,38 @@ ordersListBody.innerHTML = "";
 
       cardsRoot.appendChild(card);
     });
+
+    if (cardsRoot.children.length){
+      document.body.classList.add('mzj-cards-ready');
+      return true;
+    }
+    return false;
+  }
+
+  function scheduleRetries(){
+    var tries = 0;
+    var maxTries = 80;
+    var t = setInterval(function(){
+      tries++;
+      var ok = buildCards();
+      if (ok || tries >= maxTries) clearInterval(t);
+    }, 200);
+  }
+
+  function observeDom(){
+    var obs = new MutationObserver(function(){
+      clearTimeout(window.__mzjSalesCardsDeb);
+      window.__mzjSalesCardsDeb = setTimeout(buildCards, 120);
+    });
+    obs.observe(document.documentElement, {childList:true, subtree:true});
   }
 
   function init(){
-    var table = findTable();
-    if (!table) return;
-    buildCards();
-
-    var tbody = table.querySelector('tbody') || table;
-    var obs = new MutationObserver(function(){
-      clearTimeout(window.__mzjSalesCardsT);
-      window.__mzjSalesCardsT = setTimeout(buildCards, 120);
-    });
-    obs.observe(tbody, {childList:true, subtree:true, characterData:true});
-
-    document.addEventListener('input', function(e){
-      var t = e.target;
-      if (t && (t.tagName === 'INPUT' || t.tagName === 'SELECT')){
-        clearTimeout(window.__mzjSalesCardsT2);
-        window.__mzjSalesCardsT2 = setTimeout(buildCards, 180);
-      }
+    scheduleRetries();
+    observeDom();
+    document.addEventListener('input', function(){
+      clearTimeout(window.__mzjSalesCardsDeb2);
+      window.__mzjSalesCardsDeb2 = setTimeout(buildCards, 180);
     }, true);
   }
 

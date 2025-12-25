@@ -251,6 +251,7 @@ th.col-year, td.col-year {
 
 <style>
 /* FULL WIDTH PAGE + NO TABLE MARGINS */
+/* FILTERS RESPONSIVE PATCH */
 .container{
   max-width:100% !important;
   margin:0 !important;
@@ -269,6 +270,23 @@ th.col-year, td.col-year {
 }
 .table th,.table td{
   padding:6px 8px !important;
+}
+</style>
+
+
+<style>
+/* FILTERS RESPONSIVE PATCH */
+@media(max-width:1200px){
+  .filter-grid{grid-template-columns:repeat(4,1fr)!important;}
+  .filter-grid .search{grid-column:span 2!important;}
+}
+@media(max-width:900px){
+  .filter-grid{grid-template-columns:repeat(2,1fr)!important;}
+  .filter-grid .search{grid-column:span 2!important;}
+}
+@media(max-width:560px){
+  .filter-grid{grid-template-columns:1fr!important;}
+  .filter-grid .search{grid-column:span 1!important;}
 }
 </style>
 
@@ -390,18 +408,70 @@ th.col-year, td.col-year {
           </div>
         </div>
 
-        <!-- Filters -->
+                <!-- Filters -->
         <div class="card">
           <h3><i class="fa-solid fa-filter" style="color:var(--beige)"></i> الفلاتر</h3>
-          <div class="filter-grid">
-            <div class="search">
-              <input id="search" class="input" placeholder="بحث في: سيارة/بيان/ألوان/موديل/المفتاح">
+
+          <div class="filter-grid" style="grid-template-columns:repeat(6,1fr);">
+            <div class="search" style="grid-column:span 2">
+              <input id="search" class="input" placeholder="بحث عام (مفتاح/سيارة/بيان/ألوان/موديل)">
               <i class="fa-solid fa-magnifying-glass"></i>
             </div>
+
             <select id="carFilter" class="select">
-              <option value="">كل السيارات</option>
+              <option value="">السيارة (الكل)</option>
             </select>
+
+            <select id="variantFilter" class="select">
+              <option value="">البيان (الكل)</option>
+            </select>
+
+            <input id="extColorFilter" class="input" placeholder="اللون الخارجي (اكتب)">
+            <input id="intColorFilter" class="input" placeholder="اللون الداخلي (اكتب)">
+
             <input id="yearFilter" class="input" type="number" min="2000" max="2100" placeholder="الموديل (سنة)">
+
+            <select id="shootFilter" class="select">
+              <option value="">تصوير (الكل)</option>
+              <option value="نعم">نعم</option>
+              <option value="لا">لا</option>
+            </select>
+
+            <select id="editFilter" class="select">
+              <option value="">مونتاج (الكل)</option>
+              <option value="نعم">نعم</option>
+              <option value="لا">لا</option>
+            </select>
+
+            <select id="specsReelFilter" class="select">
+              <option value="">تفاصيل المونتاج (الكل)</option>
+              <option value="نعم">صور + ريل مواصفات: نعم</option>
+              <option value="لا">صور + ريل مواصفات: لا</option>
+            </select>
+
+            <select id="agendaFilter" class="select">
+              <option value="">داخل الأجندة (الكل)</option>
+              <option value="نعم">نعم</option>
+              <option value="لا">لا</option>
+            </select>
+
+            <select id="agendaMonthFilter" class="select">
+              <option value="">شهر الأجندة (الكل)</option>
+              <option value="1">يناير</option>
+              <option value="2">فبراير</option>
+              <option value="3">مارس</option>
+              <option value="4">أبريل</option>
+              <option value="5">مايو</option>
+              <option value="6">يونيو</option>
+              <option value="7">يوليو</option>
+              <option value="8">أغسطس</option>
+              <option value="9">سبتمبر</option>
+              <option value="10">أكتوبر</option>
+              <option value="11">نوفمبر</option>
+              <option value="12">ديسمبر</option>
+            </select>
+
+            <input id="agendaYearFilter" class="input" type="number" min="2000" max="2100" placeholder="سنة الأجندة (اكتب)">
           </div>
 
           <div class="row" style="margin-top:10px;justify-content:flex-start">
@@ -602,7 +672,16 @@ th.col-year, td.col-year {
 
   const searchEl   = $('#search');
   const carFilter  = $('#carFilter');
+  const variantFilter = $('#variantFilter');
+  const extColorFilter = $('#extColorFilter');
+  const intColorFilter = $('#intColorFilter');
   const yearFilter = $('#yearFilter');
+  const shootFilter = $('#shootFilter');
+  const editFilter = $('#editFilter');
+  const specsReelFilter = $('#specsReelFilter');
+  const agendaFilter = $('#agendaFilter');
+  const agendaMonthFilter = $('#agendaMonthFilter');
+  const agendaYearFilter = $('#agendaYearFilter');
   const btnExport  = $('#btnExport');
   const btnClear   = $('#btnClear');
 
@@ -625,7 +704,7 @@ th.col-year, td.col-year {
   let mediaMap = new Map(); // docId -> media
   let currentUserEmail = '';
 
-  const filters = { q:'', car:'', year:'' };
+  const filters = { q:'', car:'', variant:'', ext:'', intr:'', year:'', shoot:'', edit:'', specsReel:'', inAgenda:'', agendaMonth:'', agendaYear:'' };
 
   function computeSpecsFromStock(rows){
     const map = new Map();
@@ -661,14 +740,52 @@ th.col-year, td.col-year {
 
   function initCarFilter(){
     const cars = Array.from(new Set(specs.map(s=> s.car).filter(Boolean))).sort((a,b)=> a.localeCompare(b,'ar'));
-    carFilter.innerHTML = '<option value="">كل السيارات</option>' + cars.map(c=> `<option value="${clean(c)}">${c}</option>`).join('');
+    carFilter.innerHTML = '<option value="">السيارة (الكل)</option>' + cars.map(c=> `<option value="${clean(c)}">${c}</option>`).join('');
+    initVariantFilter();
+  }
+
+  function initVariantFilter(){
+    const carSel = clean(filters.car || carFilter.value || '');
+    const pool = carSel ? specs.filter(s => clean(s.car) === carSel) : specs;
+    const vars = Array.from(new Set(pool.map(s=> s.variant).filter(Boolean))).sort((a,b)=> a.localeCompare(b,'ar'));
+    variantFilter.innerHTML = '<option value="">البيان (الكل)</option>' + vars.map(v=> `<option value="${clean(v)}">${v}</option>`).join('');
   }
 
   function applyFilters(list){
     const q = (filters.q||'').trim().toLowerCase();
+    const extQ = clean(filters.ext).toLowerCase();
+    const intQ = clean(filters.intr).toLowerCase();
+    const agendaYearQ = clean(filters.agendaYear);
+
     return list.filter(s=>{
       if(filters.car && clean(s.car) !== clean(filters.car)) return false;
+      if(filters.variant && clean(s.variant) !== clean(filters.variant)) return false;
       if(filters.year && String(s.modelYear) !== String(filters.year)) return false;
+
+      if(extQ){
+        if(!(clean(s.extColor).toLowerCase().includes(extQ))) return false;
+      }
+      if(intQ){
+        if(!(clean(s.intColor).toLowerCase().includes(intQ))) return false;
+      }
+
+      const m = getMedia(s.docId);
+
+      if(filters.shoot && (m.shoot||'لا') !== filters.shoot) return false;
+      if(filters.edit && (m.edit||'لا') !== filters.edit) return false;
+
+      // details of edit (specs reel yes/no). Only meaningful when edit=yes, but filter still works.
+      if(filters.specsReel){
+        const val = (m.specsReel||'لا');
+        if(val !== filters.specsReel) return false;
+      }
+
+      if(filters.inAgenda && (m.inAgenda||'لا') !== filters.inAgenda) return false;
+      if(filters.agendaMonth && String(m.agendaMonth||'') !== String(filters.agendaMonth)) return false;
+      if(agendaYearQ){
+        if(String(m.agendaYear||'') !== String(agendaYearQ)) return false;
+      }
+
       if(q){
         const hay = [s.car,s.variant,s.extColor,s.intColor,s.modelYear,s.key].join(' ').toLowerCase();
         if(!hay.includes(q)) return false;
@@ -923,12 +1040,48 @@ th.col-year, td.col-year {
 
   /* Events - filters */
   searchEl.addEventListener('input', (e)=>{ filters.q = e.target.value || ''; render(); });
-  carFilter.addEventListener('change', (e)=>{ filters.car = e.target.value || ''; render(); });
+
+  carFilter.addEventListener('change', (e)=>{
+    filters.car = e.target.value || '';
+    // reset variant when car changes
+    filters.variant = '';
+    initVariantFilter();
+    variantFilter.value = '';
+    render();
+  });
+
+  variantFilter.addEventListener('change', (e)=>{ filters.variant = e.target.value || ''; render(); });
+  extColorFilter.addEventListener('input', (e)=>{ filters.ext = e.target.value || ''; render(); });
+  intColorFilter.addEventListener('input', (e)=>{ filters.intr = e.target.value || ''; render(); });
   yearFilter.addEventListener('input', (e)=>{ filters.year = (e.target.value||'').trim(); render(); });
 
+  shootFilter.addEventListener('change', (e)=>{ filters.shoot = e.target.value || ''; render(); });
+  editFilter.addEventListener('change', (e)=>{ filters.edit = e.target.value || ''; render(); });
+  specsReelFilter.addEventListener('change', (e)=>{ filters.specsReel = e.target.value || ''; render(); });
+
+  agendaFilter.addEventListener('change', (e)=>{ filters.inAgenda = e.target.value || ''; render(); });
+  agendaMonthFilter.addEventListener('change', (e)=>{ filters.agendaMonth = e.target.value || ''; render(); });
+  agendaYearFilter.addEventListener('input', (e)=>{ filters.agendaYear = (e.target.value||'').trim(); render(); });
+
   btnClear.addEventListener('click', ()=>{
-    filters.q=''; filters.car=''; filters.year='';
-    searchEl.value=''; carFilter.value=''; yearFilter.value='';
+    filters.q=''; filters.car=''; filters.variant=''; filters.ext=''; filters.intr='';
+    filters.year=''; filters.shoot=''; filters.edit=''; filters.specsReel='';
+    filters.inAgenda=''; filters.agendaMonth=''; filters.agendaYear='';
+
+    searchEl.value='';
+    carFilter.value='';
+    variantFilter.value='';
+    extColorFilter.value='';
+    intColorFilter.value='';
+    yearFilter.value='';
+    shootFilter.value='';
+    editFilter.value='';
+    specsReelFilter.value='';
+    agendaFilter.value='';
+    agendaMonthFilter.value='';
+    agendaYearFilter.value='';
+
+    initVariantFilter();
     render();
     showToast('تم تصفير الفلاتر');
   });

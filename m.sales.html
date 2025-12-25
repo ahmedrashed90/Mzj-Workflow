@@ -1,12 +1,3 @@
-
-
-
-
-
-
-
-
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -700,8 +691,9 @@ font-weight:900;color:#5c3b00;box-shadow:0 8px 18px rgba(0,0,0,.12);}
     const orderCard  = document.getElementById("orderCard");
     const erpCard    = document.getElementById("erpCard");
     const stagesCard = document.getElementById("stagesCard");
-    const whoami     = document.getElementById("whoami");
-    const logoutBtn  = document.getElementById("logoutBtn");
+	    const whoami     = document.getElementById("whoami");
+	    // fallback IDs (موبايل/ديسكتوب) علشان السكربت ما يوقفش
+	    const logoutBtn  = document.getElementById("logoutBtn") || document.getElementById("btnSignOut");
 
     const tabsBar      = document.getElementById("tabsBar");
     const tabSearchBtn = document.getElementById("tabSearchBtn");
@@ -711,8 +703,8 @@ font-weight:900;color:#5c3b00;box-shadow:0 8px 18px rgba(0,0,0,.12);}
 
     const email      = document.getElementById("email");
     const password   = document.getElementById("password");
-    const loginBtn   = document.getElementById("loginBtn");
-    const signupBtn  = document.getElementById("signupBtn");
+	    const loginBtn   = document.getElementById("loginBtn") || document.getElementById("btnSignIn");
+	    const signupBtn  = document.getElementById("signupBtn");
     const authMsg    = document.getElementById("authMsg");
 
     const orderIdInput = document.getElementById("orderId");
@@ -2149,8 +2141,8 @@ ordersListBody.innerHTML = "";
     onAuthStateChanged(auth, (user) => {
       if (user) {
         // مستخدم مسجل دخول
-        whoami.textContent = user.email || "";
-        logoutBtn.style.display = "inline-flex";
+	        whoami.textContent = user.email || "";
+	        if (logoutBtn) logoutBtn.style.display = "inline-flex";
 
         authCard.style.display = "none";
         tabsBar.style.display  = "flex";
@@ -2166,8 +2158,8 @@ ordersListBody.innerHTML = "";
         ordersListCard.style.display = "none";
       } else {
         // لا يوجد مستخدم
-        whoami.textContent = "";
-        logoutBtn.style.display = "none";
+	        whoami.textContent = "";
+	        if (logoutBtn) logoutBtn.style.display = "none";
 
         authCard.style.display     = "";
         tabsBar.style.display      = "none";
@@ -2179,7 +2171,7 @@ ordersListBody.innerHTML = "";
     });
 
     // زر تسجيل الدخول
-    loginBtn.addEventListener("click", async () => {
+	    if (loginBtn) loginBtn.addEventListener("click", async () => {
       authMsg.textContent = "";
       const emailVal = (email.value || "").trim();
       const passVal  = (password.value || "").trim();
@@ -2219,7 +2211,7 @@ ordersListBody.innerHTML = "";
     });
 
     // زر تسجيل الخروج
-    logoutBtn.addEventListener("click", async () => {
+	    if (logoutBtn) logoutBtn.addEventListener("click", async () => {
       try {
         await signOut(auth);
       } catch (e) {
@@ -2349,11 +2341,13 @@ ordersListBody.innerHTML = "";
   --mzj-brown: rgb(62,36,32);
   --mzj-beige: rgb(188,143,116);
   --mzj-cream: #fff8ef;
+  --mzj-downbar-lift: 56px;
 }
 @media (max-width: 1023px){
   html,body{ margin:0 !important; padding:0 !important; overflow-x:hidden !important; background: var(--mzj-cream) !important; }
   .mzj-sidebar, .mzj-topbar, header, .topbar, .sidebar, .side-nav{ display:none !important; }
-  body{ padding-left:0 !important; padding-right:0 !important; padding-bottom: 120px !important; }
+  /* lift علشان صفّين البار ما يختفوش تحت شريط المتصفح/أزرار النظام */
+  body{ padding-left:0 !important; padding-right:0 !important; padding-bottom: calc(120px + var(--mzj-downbar-lift)) !important; }
   main, .mzj-content, .content, .main, .main-content, .page,
   .container, .wrap, .content-wrap, .wrapper, [class*="container"], [class*="wrapper"]{
     width:100% !important; max-width:100% !important;
@@ -2364,11 +2358,11 @@ ordersListBody.innerHTML = "";
 </style>
 <style id="mzjSalesDownbarCSS">
 @media (max-width: 1023px){
-  .mzj-downbar{
-    position: fixed;
-    left: 8px;
-    right: 8px;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+	  .mzj-downbar{
+	    position: fixed;
+	    left: 8px;
+	    right: 8px;
+	    bottom: calc(env(safe-area-inset-bottom, 0px) + var(--mzj-downbar-lift));
     z-index: 9999;
     background: rgba(255,255,255,.96);
     border: 1px solid rgba(0,0,0,.10);

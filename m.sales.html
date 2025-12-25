@@ -1,3 +1,12 @@
+
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -383,6 +392,77 @@ body{
 }
 .mzj-downbar .inner{ gap: 10px; }
 .mzj-downbar a span{ font-size: 12px; }
+
+/* Mobile Orders Cards (Sales) */
+.orders-cards{
+  display:none;
+  gap:12px;
+  margin-top:12px;
+}
+.orders-cards .o-card{
+  background:#fff;
+  border:1px solid rgba(0,0,0,.08);
+  border-radius:16px;
+  box-shadow:0 8px 24px rgba(0,0,0,.06);
+  padding:12px;
+}
+.orders-cards .o-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:8px;
+}
+.orders-cards .o-id{
+  font-weight:900;
+  font-size:16px;
+  color:rgb(62,36,32);
+}
+.orders-cards .o-badge{
+  font-size:12px;
+  padding:4px 10px;
+  border-radius:999px;
+  background:rgba(188,143,116,.22);
+  border:1px solid rgba(188,143,116,.45);
+  color:rgb(62,36,32);
+  white-space:nowrap;
+}
+.orders-cards .o-row{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  padding:8px 0;
+  border-top:1px dashed rgba(0,0,0,.1);
+}
+.orders-cards .o-k{ color:#666; font-size:12px; }
+.orders-cards .o-v{ color:#222; font-weight:700; font-size:13px; text-align:left; }
+.orders-cards .o-actions{
+  display:flex;
+  gap:8px;
+  margin-top:10px;
+}
+.orders-cards .o-actions a{
+  flex:1;
+  text-align:center;
+  padding:10px 10px;
+  border-radius:12px;
+  border:1px solid rgba(62,36,32,.25);
+  color:rgb(62,36,32);
+  background:#fff;
+  font-weight:800;
+  text-decoration:none;
+}
+.orders-cards .o-actions a.primary{
+  background:rgb(62,36,32);
+  color:#fff;
+  border-color:rgb(62,36,32);
+}
+@media (max-width: 720px){
+  .orders-cards{display:grid;}
+  /* keep table as fallback but not primary */
+  #ordersListTable{display:none;}
+}
+
 </style>
   <link rel="stylesheet" href="./mzj-ui.css" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
@@ -649,6 +729,7 @@ body{
           </thead>
           <tbody id="ordersListBody"></tbody>
         </table>
+        <div id="ordersCards" class="orders-cards"></div>
       </div>
     </div>
 
@@ -1980,7 +2061,9 @@ function clearErpTable() {
 
     async function loadOrdersList() {
       ordersListBody.innerHTML = "<tr><td class='muted' colspan='7'>جاري تحميل الطلبات...</td></tr>";
-      try {
+      
+        renderOrdersCards(null);
+try {
         // ✅ نقرأ آخر 200 سجل من erp_orders (قد يكون في تكرار لأن كل سيارة سجل)
         const q = query(collection(db, ERP_COLLECTION), limit(200));
         const snap = await getDocs(q);
@@ -2101,6 +2184,54 @@ ordersListBody.innerHTML = "";
         ordersListBody.innerHTML = "<tr><td class='err' colspan='7'>تعذر تحميل قائمة الطلبات.</td></tr>";
       }
     }
+
+
+    function _esc(s){
+      return String(s ?? '').replace(/[&<>"']/g, (c)=>({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      }[c]));
+    }
+    function renderOrdersCards(groups){
+      const wrap = document.getElementById('ordersCards');
+      if(!wrap) return;
+      if(groups === null){
+        wrap.innerHTML = '<div class="o-card"><div class="o-id">جاري تحميل الطلبات…</div></div>';
+        return;
+      }
+      if(!Array.isArray(groups) || groups.length===0){
+        wrap.innerHTML = '<div class="o-card"><div class="o-id">لا توجد طلبات حالياً</div></div>';
+        return;
+      }
+      wrap.innerHTML = '';
+      groups.forEach(g=>{
+        const orderNo = g.orderNo || '—';
+        const customer = g.customerName || '—';
+        const vinsCount = (g.vins||[]).length;
+        const status = g.statusText || (g.status||'—');
+        const total = (g.totalText || g.total || g.total_incl_tax || g.grand_total || '—');
+        const trackUrl = g.trackLink || (g.orderNo ? ('tracking.html?order=' + encodeURIComponent(g.orderNo)) : '#');
+        const detailsUrl = g.detailsLink || (g.orderNo ? ('sales-order.html?order=' + encodeURIComponent(g.orderNo)) : '#');
+
+        const card = document.createElement('div');
+        card.className = 'o-card';
+        card.innerHTML = `
+          <div class="o-head">
+            <div class="o-id">طلب #${_esc(orderNo)}</div>
+            <div class="o-badge">${_esc(status)}</div>
+          </div>
+          <div class="o-row"><div class="o-k">العميل</div><div class="o-v">${_esc(customer)}</div></div>
+          <div class="o-row"><div class="o-k">عدد السيارات</div><div class="o-v">${_esc(vinsCount)}</div></div>
+          <div class="o-row"><div class="o-k">الإجمالي</div><div class="o-v">${_esc(total)}</div></div>
+          <div class="o-actions">
+            <a class="primary" href="${detailsUrl}">فتح الطلب</a>
+            <a href="${trackUrl}">التتبع</a>
+          </div>
+        `;
+        wrap.appendChild(card);
+      });
+    }
+
+
 
     function activateTab(which) {
       if (which === "list") {

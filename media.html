@@ -64,7 +64,7 @@
 
     /* Inputs */
     label{display:block;font-size:12px;font-weight:700;color:var(--brown);margin-bottom:4px}
-    .input,.select{
+    .input,.select,.mini{
       width:100%;
       padding:9px 11px;
       border:1px solid var(--line);
@@ -74,7 +74,8 @@
       font-size:13px;
       transition:border-color .15s, box-shadow .15s, background-color .15s;
     }
-    .input:focus,.select:focus{
+    .mini{padding:7px 10px;font-size:12px;border-radius:10px}
+    .input:focus,.select:focus,.mini:focus{
       outline:none;
       border-color:var(--beige);
       box-shadow:0 0 0 1px rgba(188,143,116,.35);
@@ -128,10 +129,11 @@
     /* Summary */
     .summary{
       display:grid;
-      grid-template-columns:repeat(3,1fr);
+      grid-template-columns:repeat(4,1fr);
       gap:12px;
     }
-    @media (max-width:860px){.summary{grid-template-columns:1fr}}
+    @media (max-width:980px){.summary{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:560px){.summary{grid-template-columns:1fr}}
     .stat{
       display:flex;
       align-items:center;
@@ -193,6 +195,10 @@
     .keycell:hover{text-decoration:underline}
     .muted-text{color:var(--muted);font-size:12px}
 
+    .cell-stack{display:flex;flex-direction:column;gap:6px;min-width:170px}
+    .inline-2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+    .hidden{display:none!important}
+
     /* Toast bottom-right */
     .toast{
       position:fixed;
@@ -230,6 +236,18 @@
 
   <!-- MZJ unified css -->
   <link rel="stylesheet" href="./mzj-ui.css"/>
+
+<style>
+/* Hide detail columns to widen table */
+th.col-car, td.col-car,
+th.col-variant, td.col-variant,
+th.col-ext, td.col-ext,
+th.col-int, td.col-int,
+th.col-year, td.col-year {
+  display: none;
+}
+</style>
+
 </head>
 
 <body class="mzj">
@@ -334,9 +352,17 @@
                 <div class="stat-num" id="visibleCount">0</div>
               </div>
             </div>
+            <div class="stat">
+              <i class="fa-solid fa-camera"></i>
+              <div>
+                <div class="stat-title">ناقص تصوير (ضمن المعروض)</div>
+                <div class="stat-num" id="missingShoot">0</div>
+              </div>
+            </div>
           </div>
           <div class="hint" style="margin-top:10px">
-            المفتاح مبني على: <b>السيارة + البيان + اللون الخارجي + اللون الداخلي + الموديل</b>. اضغط على المفتاح لنسخه.
+            المفتاح مبني على: <b>السيارة + البيان + اللون الخارجي + اللون الداخلي + الموديل</b>.
+            يتم حفظ حالات (تصوير/مونتاج/أجندة) على مستوى <b>التركيبة</b> داخل Firestore في مجموعة <b>media_specs</b>.
           </div>
         </div>
 
@@ -377,20 +403,27 @@
               <thead>
                 <tr>
                   <th>م</th>
-                  <th>السيارة</th>
-                  <th>البيان</th>
-                  <th>اللون الخارجي</th>
-                  <th>اللون الداخلي</th>
-                  <th>الموديل</th>
+                  <th class='col-car'>السيارة</th>
+                  <th class='col-variant'>البيان</th>
+                  <th class='col-ext'>اللون الخارجي</th>
+                  <th class='col-int'>اللون الداخلي</th>
+                  <th class='col-year'>الموديل</th>
                   <th>Unique Spec Key (اضغط للنسخ)</th>
                   <th>العدد</th>
+                  <th>تصوير</th>
+                  <th>مونتاج</th>
+                  <th>تفاصيل المونتاج</th>
+                  <th>داخل الأجندة</th>
+                  <th>تفاصيل الأجندة</th>
                 </tr>
               </thead>
               <tbody></tbody>
             </table>
           </div>
           <div class="hint" style="margin-top:8px">
-            ملاحظة: “العدد” مجرد معلومة. تقييم النواقص لاحقًا سيكون على مستوى <b>التركيبة</b> وليس عدد الهياكل.
+            - لو <b>مونتاج = نعم</b> يظهر: (صور + ريل مواصفات) + (تاريخ التصوير).<br/>
+            - لو <b>داخل الأجندة = نعم</b> يظهر: (الشهر الميلادي) + (السنة الميلادية).<br/>
+            - أي تعديل يُحفظ فورًا على مستوى التركيبة.
           </div>
         </div>
 
@@ -410,7 +443,11 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  import {
+    getFirestore, doc, getDoc, onSnapshot,
+    collection, getDocs, query, where, documentId,
+    setDoc, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyC614bGqnYf4Q-weTNemzWENTpa8DjGeHw",
@@ -425,6 +462,7 @@
   const auth = getAuth(app);
   const db   = getFirestore(app);
   const STATE_REF = doc(db, "mzj_admin_state", "v1");
+  const MEDIA_COL = collection(db, "media_specs");
 
   /* Roles & Permissions (same behavior as inventory) */
   const ROLE_ADMIN   = 'الادارة';
@@ -475,7 +513,6 @@
     .trim();
 
   function normArabicBasic(s){
-    // توحيد بسيط لتقليل اختلاف "أ/إ/آ" و "ة/ه" والمسافات
     return clean(s)
       .replace(/[أإآ]/g,'ا')
       .replace(/ة/g,'ه')
@@ -484,7 +521,6 @@
   }
 
   function buildSpecKey(rec){
-    // Human readable key
     const parts = [
       clean(rec.car),
       clean(rec.variant),
@@ -495,11 +531,26 @@
     return parts.join(' | ');
   }
 
+  function docIdFromKeyNorm(keyNorm){
+    // Firestore doc id must not contain "/"
+    return (keyNorm || '').replaceAll('/', '_').slice(0, 900);
+  }
+
+  const DEFAULT_MEDIA = {
+    shoot: 'لا',
+    edit: 'لا',
+    specsReel: 'لا',
+    shootDate: '',
+    inAgenda: 'لا',
+    agendaMonth: '',
+    agendaYear: ''
+  };
+
   function showToast(text){
     const toast = $('#toast');
     toast.textContent = text;
     toast.classList.add('show');
-    setTimeout(()=> toast.classList.remove('show'), 1700);
+    setTimeout(()=> toast.classList.remove('show'), 1600);
   }
 
   function setStatus(mode, txt){
@@ -534,12 +585,21 @@
   const uniqueCountEl = $('#uniqueCount');
   const stockCountEl  = $('#stockCount');
   const visibleCountEl= $('#visibleCount');
+  const missingShootEl= $('#missingShoot');
   const rowsBadgeEl   = $('#rowsBadge');
   const tb = $('#specTable tbody');
+
+  const months = [
+    {v:'1',t:'يناير'},{v:'2',t:'فبراير'},{v:'3',t:'مارس'},{v:'4',t:'أبريل'},
+    {v:'5',t:'مايو'},{v:'6',t:'يونيو'},{v:'7',t:'يوليو'},{v:'8',t:'أغسطس'},
+    {v:'9',t:'سبتمبر'},{v:'10',t:'أكتوبر'},{v:'11',t:'نوفمبر'},{v:'12',t:'ديسمبر'}
+  ];
 
   /* State */
   let stock = [];
   let specs = []; // grouped specs
+  let mediaMap = new Map(); // docId -> media
+  let currentUserEmail = '';
 
   const filters = { q:'', car:'', year:'' };
 
@@ -548,9 +608,10 @@
     for(const r of rows){
       const keyHuman = buildSpecKey(r);
       const keyNorm  = normArabicBasic(keyHuman);
+      const docId    = docIdFromKeyNorm(keyNorm);
 
-      if(!map.has(keyNorm)){
-        map.set(keyNorm,{
+      if(!map.has(docId)){
+        map.set(docId,{
           car: clean(r.car),
           variant: clean(r.variant),
           extColor: clean(r.extColor),
@@ -558,13 +619,13 @@
           modelYear: clean(r.modelYear),
           key: keyHuman,
           keyNorm,
+          docId,
           count: 1
         });
       }else{
-        map.get(keyNorm).count++;
+        map.get(docId).count++;
       }
     }
-    // sort: car then year desc then count desc
     return Array.from(map.values()).sort((a,b)=>{
       const c = (a.car||'').localeCompare(b.car||'','ar');
       if(c!==0) return c;
@@ -592,6 +653,71 @@
     });
   }
 
+  async function fetchMediaForDocIds(docIds){
+    const missing = docIds.filter(id => id && !mediaMap.has(id));
+    if(!missing.length) return;
+
+    // Firestore "in" max 30
+    const chunks = [];
+    for(let i=0;i<missing.length;i+=30) chunks.push(missing.slice(i,i+30));
+
+    for(const chunk of chunks){
+      const qy = query(MEDIA_COL, where(documentId(), 'in', chunk));
+      const snap = await getDocs(qy);
+      snap.forEach(docu=>{
+        const d = docu.data() || {};
+        mediaMap.set(docu.id, {
+          shoot: d.shoot || 'لا',
+          edit: d.edit || 'لا',
+          specsReel: d.specsReel || 'لا',
+          shootDate: d.shootDate || '',
+          inAgenda: d.inAgenda || 'لا',
+          agendaMonth: d.agendaMonth || '',
+          agendaYear: d.agendaYear || ''
+        });
+      });
+
+      // For docIds not returned, keep defaults but don't write automatically (write only when user edits)
+      chunk.forEach(id=>{
+        if(!mediaMap.has(id)) mediaMap.set(id, {...DEFAULT_MEDIA});
+      });
+    }
+  }
+
+  function getMedia(docId){
+    return mediaMap.get(docId) || {...DEFAULT_MEDIA};
+  }
+
+  async function saveMedia(docId, patch){
+    const before = getMedia(docId);
+    const after  = {...before, ...patch};
+
+    // conditional cleanup
+    if(after.edit !== 'نعم'){
+      after.specsReel = 'لا';
+      after.shootDate = '';
+    }
+    if(after.inAgenda !== 'نعم'){
+      after.agendaMonth = '';
+      after.agendaYear  = '';
+    }
+
+    mediaMap.set(docId, after);
+
+    try{
+      await setDoc(doc(MEDIA_COL, docId), {
+        ...after,
+        updatedAt: serverTimestamp(),
+        updatedBy: currentUserEmail || ''
+      }, { merge:true });
+      showToast('تم حفظ التعديل');
+      render(); // update counters and conditional UI
+    }catch(e){
+      console.error(e);
+      showToast('تعذّر الحفظ');
+    }
+  }
+
   function render(){
     const filtered = applyFilters(specs);
 
@@ -600,37 +726,178 @@
     visibleCountEl.textContent = (filtered.length||0).toLocaleString('ar-SA');
     rowsBadgeEl.textContent    = `${filtered.length} صف`;
 
+    // missing shoot within filtered
+    const missShoot = filtered.filter(s => (getMedia(s.docId).shoot || 'لا') !== 'نعم').length;
+    missingShootEl.textContent = (missShoot||0).toLocaleString('ar-SA');
+
     tb.innerHTML = '';
     filtered.forEach((s,idx)=>{
+      const m = getMedia(s.docId);
+
       const tr = document.createElement('tr');
+      tr.dataset.docId = s.docId;
+
       tr.innerHTML = `
         <td>${idx+1}</td>
-        <td>${s.car||''}</td>
-        <td>${s.variant||''}</td>
-        <td>${s.extColor||''}</td>
-        <td>${s.intColor||''}</td>
-        <td>${s.modelYear||''}</td>
+        <td class='col-car'>${s.car||''}</td>
+        <td class='col-variant'>${s.variant||''}</td>
+        <td class='col-ext'>${s.extColor||''}</td>
+        <td class='col-int'>${s.intColor||''}</td>
+        <td class='col-year'>${s.modelYear||''}</td>
         <td class="keycell" data-key="${s.key.replace(/"/g,'&quot;')}">${s.key}</td>
         <td><span class="badge">× ${Number(s.count||0).toLocaleString('ar-SA')}</span></td>
+
+        <td>
+          <select class="mini js-shoot">
+            <option value="لا" ${m.shoot==='لا'?'selected':''}>لا</option>
+            <option value="نعم" ${m.shoot==='نعم'?'selected':''}>نعم</option>
+          </select>
+        </td>
+
+        <td>
+          <select class="mini js-edit">
+            <option value="لا" ${m.edit==='لا'?'selected':''}>لا</option>
+            <option value="نعم" ${m.edit==='نعم'?'selected':''}>نعم</option>
+          </select>
+        </td>
+
+        <td>
+          <div class="cell-stack js-editBox ${m.edit==='نعم'?'':'hidden'}">
+            <select class="mini js-specsReel">
+              <option value="لا" ${m.specsReel==='لا'?'selected':''}>صور + ريل مواصفات: لا</option>
+              <option value="نعم" ${m.specsReel==='نعم'?'selected':''}>صور + ريل مواصفات: نعم</option>
+            </select>
+            <input class="mini js-shootDate" type="date" value="${(m.shootDate||'').slice(0,10)}" />
+          </div>
+          <div class="muted-text js-editHint ${m.edit==='نعم'?'hidden':''}">—</div>
+        </td>
+
+        <td>
+          <select class="mini js-inAgenda">
+            <option value="لا" ${m.inAgenda==='لا'?'selected':''}>لا</option>
+            <option value="نعم" ${m.inAgenda==='نعم'?'selected':''}>نعم</option>
+          </select>
+        </td>
+
+        <td>
+          <div class="cell-stack js-agendaBox ${m.inAgenda==='نعم'?'':'hidden'}">
+            <select class="mini js-agendaMonth">
+              <option value="">اختر الشهر</option>
+              ${months.map(mm=>`<option value="${mm.v}" ${(m.agendaMonth==mm.v)?'selected':''}>${mm.t}</option>`).join('')}
+            </select>
+            <input class="mini js-agendaYear" type="number" min="2000" max="2100" placeholder="السنة (مثال 2026)" value="${m.agendaYear||''}"/>
+          </div>
+          <div class="muted-text js-agendaHint ${m.inAgenda==='نعم'?'hidden':''}">—</div>
+        </td>
       `;
+
       tb.appendChild(tr);
+    });
+
+    wireRowEvents(); // ensure events are attached
+  }
+
+  function wireRowEvents(){
+    // attach once per render using delegation
+    // (we'll use a flag on tbody)
+    if(tb.dataset.wired === '1') return;
+    tb.dataset.wired = '1';
+
+    tb.addEventListener('change', async (e)=>{
+      const row = e.target.closest('tr');
+      if(!row) return;
+      const docId = row.dataset.docId;
+      if(!docId) return;
+
+      if(e.target.classList.contains('js-shoot')){
+        await saveMedia(docId, { shoot: e.target.value });
+        return;
+      }
+
+      if(e.target.classList.contains('js-edit')){
+        const val = e.target.value;
+        // UI toggle immediately
+        row.querySelector('.js-editBox')?.classList.toggle('hidden', val!=='نعم');
+        row.querySelector('.js-editHint')?.classList.toggle('hidden', val==='نعم');
+        await saveMedia(docId, { edit: val });
+        return;
+      }
+
+      if(e.target.classList.contains('js-specsReel')){
+        await saveMedia(docId, { specsReel: e.target.value });
+        return;
+      }
+
+      if(e.target.classList.contains('js-inAgenda')){
+        const val = e.target.value;
+        row.querySelector('.js-agendaBox')?.classList.toggle('hidden', val!=='نعم');
+        row.querySelector('.js-agendaHint')?.classList.toggle('hidden', val==='نعم');
+        await saveMedia(docId, { inAgenda: val });
+        return;
+      }
+
+      if(e.target.classList.contains('js-agendaMonth')){
+        await saveMedia(docId, { agendaMonth: e.target.value });
+        return;
+      }
+
+      if(e.target.classList.contains('js-agendaYear')){
+        await saveMedia(docId, { agendaYear: (e.target.value||'').trim() });
+        return;
+      }
+    });
+
+    tb.addEventListener('input', async (e)=>{
+      const row = e.target.closest('tr');
+      if(!row) return;
+      const docId = row.dataset.docId;
+      if(!docId) return;
+
+      if(e.target.classList.contains('js-shootDate')){
+        await saveMedia(docId, { shootDate: e.target.value || '' });
+        return;
+      }
+      if(e.target.classList.contains('js-agendaYear')){
+        // allow typing without waiting for change
+        // do nothing here, handled on change
+      }
+    });
+
+    // key copy
+    tb.addEventListener('click', (e)=>{
+      const el = e.target.closest('.keycell');
+      if(!el) return;
+      const key = el.getAttribute('data-key') || '';
+      if(!key) return;
+      navigator.clipboard.writeText(key).then(()=> showToast('تم نسخ Unique Spec Key'));
     });
   }
 
   function exportExcel(list){
-    const header = ["م","السيارة","البيان","اللون الخارجي","اللون الداخلي","الموديل","Unique Spec Key","العدد"];
+    const header = [
+      "م","السيارة","البيان","اللون الخارجي","اللون الداخلي","الموديل","Unique Spec Key","العدد",
+      "تصوير","مونتاج","صور+ريل مواصفات","تاريخ التصوير","داخل الأجندة","شهر الأجندة","سنة الأجندة"
+    ];
     const data = [header];
     list.forEach((s,idx)=>{
-      data.push([idx+1, s.car, s.variant, s.extColor, s.intColor, s.modelYear, s.key, s.count]);
+      const m = getMedia(s.docId);
+      data.push([
+        idx+1, s.car, s.variant, s.extColor, s.intColor, s.modelYear, s.key, s.count,
+        m.shoot, m.edit, (m.edit==='نعم'? m.specsReel : '—'), (m.edit==='نعم'? (m.shootDate||'') : '—'),
+        m.inAgenda, (m.inAgenda==='نعم'? (m.agendaMonth||'') : '—'), (m.inAgenda==='نعم'? (m.agendaYear||'') : '—')
+      ]);
     });
     const ws = XLSX.utils.aoa_to_sheet(data);
-    ws['!cols'] = [{wch:5},{wch:20},{wch:26},{wch:16},{wch:16},{wch:10},{wch:52},{wch:8}];
+    ws['!cols'] = [
+      {wch:5},{wch:20},{wch:26},{wch:16},{wch:16},{wch:10},{wch:52},{wch:8},
+      {wch:10},{wch:10},{wch:18},{wch:14},{wch:12},{wch:12},{wch:12}
+    ];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "UniqueSpecKeys");
     XLSX.writeFile(wb, "mzj-unique-spec-keys.xlsx");
   }
 
-  /* Events */
+  /* Events - filters */
   searchEl.addEventListener('input', (e)=>{ filters.q = e.target.value || ''; render(); });
   carFilter.addEventListener('change', (e)=>{ filters.car = e.target.value || ''; render(); });
   yearFilter.addEventListener('input', (e)=>{ filters.year = (e.target.value||'').trim(); render(); });
@@ -647,16 +914,6 @@
     exportExcel(filtered);
   });
 
-  document.addEventListener('click', (e)=>{
-    const el = e.target.closest('.keycell');
-    if(!el) return;
-    const key = el.getAttribute('data-key') || '';
-    if(!key) return;
-    navigator.clipboard.writeText(key).then(()=>{
-      showToast('تم نسخ Unique Spec Key');
-    });
-  });
-
   document.addEventListener('keydown',(e)=>{
     if(e.key==='/'){
       e.preventDefault();
@@ -667,6 +924,7 @@
   /* Auth gate */
   onAuthStateChanged(auth, async (user)=>{
     if(user){
+      currentUserEmail = user.email || '';
       const role = await fetchUserRole(user);
 
       if(!role || !PAGE_ALLOWED_ROLES.includes(role)){
@@ -724,7 +982,12 @@
       }
       specs = computeSpecsFromStock(stock);
       initCarFilter();
+
+      // preload media for all specs (once)
+      await fetchMediaForDocIds(specs.map(x=> x.docId));
+      tb.dataset.wired = '0'; // re-wire after first render
       render();
+
       setStatus('ok','تم تحميل البيانات');
     }catch(e){
       console.error(e);
@@ -734,13 +997,18 @@
 
   function subscribeLive(){
     try{
-      onSnapshot(STATE_REF,(snap)=>{
+      onSnapshot(STATE_REF, async (snap)=>{
         if(!snap.exists()) return;
         const d = snap.data() || {};
         stock = Array.isArray(d.stock) ? d.stock : stock;
         specs = computeSpecsFromStock(stock);
         initCarFilter();
+
+        // fetch any newly appeared specs
+        await fetchMediaForDocIds(specs.map(x=> x.docId));
+        tb.dataset.wired = '0';
         render();
+
         setStatus('ok','متصل — مزامنة حيّة');
       },(err)=>{
         console.warn('snapshot error', err);

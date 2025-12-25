@@ -6,6 +6,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -2002,11 +2003,9 @@ async function finishRequest(){
     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
   }, { merge:true });
 
-  // لو طلب نقل: ثبت المكان الفعلي للسيارة داخل stock
-  if((openRequestDoc?.kind||'')==='move'){
-    try{ await updateStockLocationsAfterMoveFinish(openRows); }catch(e){ console.error(e); }
-  }
-
+  // ✅ ثبّت المكان النهائي للسيارة داخل stock (mzj_admin_state/v1)
+  // سواء كان الطلب نقل أو تصوير — المكان النهائي = الوجهة المختارة في الطلب
+  try{ await updateStockLocationsAfterMoveFinish(openRows); }catch(e){ console.error(e); }
   await logAction("تم الانتهاء", `تم إنهاء الطلب #${openRequestId} بواسطة ${myName()}`);
 }
 

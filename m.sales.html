@@ -501,6 +501,38 @@ body{margin:0;background:var(--cream);font-family:Tajawal, Arial, sans-serif;pad
 }
 </style>
 
+
+<style id="mzj-sales-spacing-tight">
+@media (max-width:900px){
+  /* Remove gaps between columns */
+  #ordersListCard table{
+    table-layout:fixed !important;
+    border-collapse:collapse !important;
+  }
+  #ordersListCard th, 
+  #ordersListCard td{
+    padding-left:4px !important;
+    padding-right:4px !important;
+  }
+
+  /* Column widths: Order | Customer | VIN */
+  #ordersListCard th:nth-child(1),
+  #ordersListCard td:nth-child(1){
+    width:14% !important;
+  }
+  #ordersListCard th:nth-child(2),
+  #ordersListCard td:nth-child(2){
+    width:58% !important;
+    font-size:10px !important;
+    font-weight:700 !important;
+  }
+  #ordersListCard th:nth-child(3),
+  #ordersListCard td:nth-child(3){
+    width:28% !important;
+  }
+}
+</style>
+
 </head>
 <body class="legacy-sales">
   <header class="m-header">

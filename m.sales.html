@@ -187,6 +187,18 @@
       border-bottom:1px solid #e5e7eb;
       white-space:nowrap;
     }
+/* Mobile compact orders table (no horizontal scroll) */
+#ordersListCard .erp-table-wrap{overflow-x:hidden !important;}
+#ordersListCard table{width:100% !important; table-layout:fixed; font-size:12px;}
+#ordersListCard th,#ordersListCard td{padding:6px 6px !important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+#ordersListCard th:nth-child(1),#ordersListCard td:nth-child(1){width:34%;}
+#ordersListCard th:nth-child(2),#ordersListCard td:nth-child(2){width:36%;}
+#ordersListCard th:nth-child(3),#ordersListCard td:nth-child(3){width:18%;}
+#ordersListCard th:nth-child(4),#ordersListCard td:nth-child(4){width:12%;}
+
+#ordersListCard .erp-table-wrap{margin:0 !important; padding:0 !important;}
+#ordersListCard table{margin:0 !important;}
+
     th{font-weight:600;color:#374151;text-align:right;}
     td{color:#111827;}
     .grid-2{
@@ -409,7 +421,7 @@ body{margin:0;background:var(--cream);font-family:Tajawal, Arial, sans-serif;pad
 .col-6,.col-4,.col-3,.col-2,.col-1{width:100% !important;max-width:100% !important;}
 .tabs{display:grid !important;grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:8px !important;}
 .tab-btn{width:100% !important;padding:10px 8px !important;font-size:12px !important;border-radius:14px !important;}
-@media (max-width: 900px){#ordersListCard .erp-table-wrap{display:none !important;}#ordersCards{display:block !important;}}
+@media (max-width: 900px){#ordersListCard .erp-table-wrap{display:block !important; overflow-x:hidden;}#ordersCards{display:none !important;}}
 #ordersCards{display:none;margin-top:12px;}
 .order-card{background:#fff;border:1px solid rgba(234,217,204,.95);border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,.05);padding:12px;margin:10px 0;cursor:pointer;}
 .order-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}

@@ -189,6 +189,17 @@
     }
 /* Mobile compact orders table (no horizontal scroll) */
 #ordersListCard .erp-table-wrap{overflow-x:hidden !important;}
+#ordersListCard table{width:100%; table-layout:fixed;}
+#ordersListCard th,#ordersListCard td{padding:10px 10px !important; font-size:13px;}
+#ordersListCard th{font-size:13px;}
+#ordersListCard td.order-id a{font-size:12.5px;}
+#ordersListCard td.phone{font-size:12px;}
+#ordersListCard td.customer{
+  max-width:80vw;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
 #ordersListCard table{width:100% !important; table-layout:fixed; font-size:12px;}
 #ordersListCard th,#ordersListCard td{padding:6px 6px !important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 #ordersListCard th:nth-child(1),#ordersListCard td:nth-child(1){width:32%; font-size:11px;}
@@ -262,6 +273,8 @@
     /* Orders list: unread (not opened yet) rows */
     .unread-row td{font-weight:800;}
     .unread-row td .link-btn{font-weight:900;}
+
+    .truncate{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
     .totals-box{
       margin:6px 0 10px;
@@ -407,7 +420,7 @@
 </style>
   
 <style id="mzj-sales-mobile-overrides">
-:root{--brown:#3e2420;--beige:#bc8f74;--cream:#fff8ef;--line:#ead9cc;--muted:#6b7280;--radius:16px;--downbar-h:96px;}
+:root{--brown:#3e2420;--beige:#bc8f74;--cream:#fff8ef;--line:#ead9cc;--muted:#6b7280;--radius:16px;--downbar-h:190px;}
 html,body{max-width:100%;overflow-x:hidden}
 body{margin:0;background:var(--cream);font-family:Tajawal, Arial, sans-serif;padding-bottom:calc(var(--downbar-h) + env(safe-area-inset-bottom) + 18px);}
 .mzj-topbar,.mzj-sidebar,.topbar,.sidebar{display:none !important;}
@@ -440,7 +453,7 @@ body{margin:0;background:var(--cream);font-family:Tajawal, Arial, sans-serif;pad
 
 /* --- Mobile full-bleed + downbar grid fix (Sales) --- */
 @media (max-width: 900px){
-  body{ padding:0 !important; }
+  body{ padding:0 !important; padding-bottom:calc(var(--downbar-h) + env(safe-area-inset-bottom, 0px) + 18px) !important; }
   .mzj-page, .mzj-container, .mzj-content, .page-content{ padding-left:0 !important; padding-right:0 !important; margin:0 !important; width:100% !important; max-width:100% !important; }
   .mzj-card, .card, .panel{ margin-left:0 !important; margin-right:0 !important; }
   .mzj-card{ border-radius:18px; }
@@ -3730,12 +3743,21 @@ function clearErpTable() {
         localStorage.setItem("mzj_read_orders", JSON.stringify(Array.from(ordersReadSet)));
       }catch(e){}
     }
+    function shortOrderNo(orderNo){
+      const s = String(orderNo||"").trim();
+      const m = s.match(/(\d{4}-\d{3,})$/);
+      if (m) return m[1];
+      const m2 = s.match(/(\d{4}-\d+)/);
+      if (m2) return m2[1];
+      return s.replace(/^SAL-ORD-/, "").replace(/^ORD-/, "");
+    }
+
     function renderOrdersList(filterText=""){
       const q = String(filterText||"").trim().toLowerCase();
       const rows = Array.isArray(ordersListCache) ? ordersListCache : [];
       const filtered = !q ? rows : rows.filter(r => {
         const hay = [
-          r.orderNo, r.customerName, r.customerPhone, r.branch, r.vinVal, r.vinRaw
+          r.orderNo, r.customerName, r.customerPhone, r.vinVal, r.vinRaw
         ].filter(Boolean).join(" ").toLowerCase();
         return hay.includes(q);
       });
@@ -3751,12 +3773,11 @@ function clearErpTable() {
         const isUnread = !ordersReadSet.has(String(r.orderNo||""));
         if (isUnread) tr.classList.add("unread-row");
 
+        const displayOrder = shortOrderNo(r.orderNo);
         tr.innerHTML = `
-          <td><button class="link-btn" data-order="${r.orderNo}">${r.orderNo}</button></td>
-          <td>${r.customerName || "—"}</td>
-          <td>${r.customerPhone || "—"}</td>
-          <td>${r.branch || "—"}</td>
-          <td>${r.vinVal || "—"}</td>
+          <td class="order-id"><button class="link-btn" data-order="${r.orderNo}">${displayOrder}</button></td>
+          <td class="customer"><span class="truncate">${r.customerName || "—"}</span></td>
+          <td class="vin">${r.vinVal || "—"}</td>
         `;
         ordersListBody.appendChild(tr);
       });

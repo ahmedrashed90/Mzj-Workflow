@@ -747,26 +747,46 @@ body{
 
 .mzj-content{padding:12px 10px 0 !important; max-width:100% !important; margin:0 !important;}
 .card{border-radius:16px !important;}
-/* Make create-request "table" become 3-per-row grid on mobile */
+/* Create request grid: 3 حقول في كل صف (موبايل) بدون سكرول أفقي */
 @media (max-width: 900px){
-  /* common pattern: form rows or table used for create request */
-  .create-request-grid, .request-grid, .form-grid, .grid-form, .grid-3{
+  /* This table is used for "إنشاء طلب" rows */
+  table.create-request-grid{display:block !important; width:100% !important; border-collapse:separate !important; border-spacing:0 !important; overflow:hidden !important;}
+  table.create-request-grid thead{display:none !important;}
+  table.create-request-grid tbody{display:block !important;}
+  table.create-request-grid tr{
     display:grid !important;
     grid-template-columns:repeat(3, minmax(0,1fr)) !important;
     gap:8px !important;
+    padding:10px !important;
+    margin:0 0 10px 0 !important;
+    border:1px solid rgba(188,143,116,.35) !important;
+    border-radius:16px !important;
+    background:#fff !important;
   }
-  /* try to convert table-like form: wrap labels/controls */
-  .create-request-grid .field, .request-grid .field,
-  .create-request-grid .form-group, .request-grid .form-group,
-  .create-request-grid .input-group, .request-grid .input-group,
-  .create-request-grid > div, .request-grid > div{
+  table.create-request-grid td{
+    display:block !important;
+    border:none !important;
+    padding:0 !important;
     min-width:0 !important;
   }
-  label{font-size:11px !important; font-weight:900 !important; color:rgba(62,36,32,.8)!important;}
-  input, select, textarea{width:100% !important; min-width:0 !important;}
-  textarea{grid-column:1 / -1 !important;} /* ملاحظة full width */
+
+  /* Inputs compact + tighter spacing */
+  table.create-request-grid input,
+  table.create-request-grid select,
+  table.create-request-grid textarea{
+    width:100% !important;
+    min-width:0 !important;
+    font-size:12px !important;
+    padding:10px 10px !important;
+  }
+  table.create-request-grid textarea{grid-column:1 / -1 !important; min-height:44px !important;}
+
+  /* make index + remove button smaller (if present) */
+  table.create-request-grid td:first-child,
+  table.create-request-grid td:last-child{font-size:12px !important;}
+
   @media (max-width:420px){
-    .create-request-grid, .request-grid, .form-grid, .grid-form, .grid-3{grid-template-columns:repeat(2,minmax(0,1fr)) !important;}
+    table.create-request-grid tr{grid-template-columns:repeat(2, minmax(0,1fr)) !important;}
   }
 }
 /* Approved downbar */
@@ -899,7 +919,7 @@ body{
       
 
       <div class="tableWrap" style="margin-top:10px">
-        <table class="table" class="create-request-grid">
+              <table class="table create-request-grid">
           <thead>
             <tr>
               <th style="width:60px" class="center">#</th>

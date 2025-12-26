@@ -191,10 +191,9 @@
 #ordersListCard .erp-table-wrap{overflow-x:hidden !important;}
 #ordersListCard table{width:100% !important; table-layout:fixed; font-size:12px;}
 #ordersListCard th,#ordersListCard td{padding:6px 6px !important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-#ordersListCard th:nth-child(1),#ordersListCard td:nth-child(1){width:34%;}
-#ordersListCard th:nth-child(2),#ordersListCard td:nth-child(2){width:36%;}
-#ordersListCard th:nth-child(3),#ordersListCard td:nth-child(3){width:18%;}
-#ordersListCard th:nth-child(4),#ordersListCard td:nth-child(4){width:12%;}
+#ordersListCard th:nth-child(1),#ordersListCard td:nth-child(1){width:32%; font-size:11px;}
+#ordersListCard th:nth-child(2),#ordersListCard td:nth-child(2){width:40%;}
+#ordersListCard th:nth-child(3),#ordersListCard td:nth-child(3){width:28%;}
 
 #ordersListCard .erp-table-wrap{margin:0 !important; padding:0 !important;}
 #ordersListCard table{margin:0 !important;}
@@ -633,8 +632,6 @@ body{margin:0;background:var(--cream);font-family:Tajawal, Arial, sans-serif;pad
           <tr>
             <th>رقم الطلب</th>
             <th>اسم العميل</th>
-            <th>رقم الجوال</th>
-            <th>الفرع</th>
             <th>رقم الهيكل VIN</th>
           </tr>
           </thead>
@@ -2027,6 +2024,14 @@ function clearErpTable() {
         localStorage.setItem("mzj_read_orders", JSON.stringify(Array.from(ordersReadSet)));
       }catch(e){}
     }
+    function shortOrderNumber(orderNo){
+      if(!orderNo) return "";
+      const parts = String(orderNo).split("-").filter(Boolean);
+      // SAL-ORD-2025-01606 -> 2025-01606
+      if(parts.length >= 2) return parts.slice(-2).join("-");
+      return String(orderNo);
+    }
+
     function renderOrdersList(filterText=""){
       const q = String(filterText||"").trim().toLowerCase();
       const rows = Array.isArray(ordersListCache) ? ordersListCache : [];
@@ -2039,7 +2044,7 @@ function clearErpTable() {
 
       ordersListBody.innerHTML = "";
       if (!filtered.length){
-        ordersListBody.innerHTML = "<tr><td class='muted' colspan='5'>لا توجد نتائج مطابقة.</td></tr>";
+        ordersListBody.innerHTML = "<tr><td class='muted' colspan='3'>لا توجد نتائج مطابقة.</td></tr>";
         return;
       }
 
@@ -2049,10 +2054,8 @@ function clearErpTable() {
         if (isUnread) tr.classList.add("unread-row");
 
         tr.innerHTML = `
-          <td><button class="link-btn" data-order="${r.orderNo}">${r.orderNo}</button></td>
+          <td><button class="link-btn" data-order="${r.orderNo}">${shortOrderNumber(r.orderNo)}</button></td>
           <td>${r.customerName || "—"}</td>
-          <td>${r.customerPhone || "—"}</td>
-          <td>${r.branch || "—"}</td>
           <td>${r.vinVal || "—"}</td>
         `;
         ordersListBody.appendChild(tr);
@@ -2061,13 +2064,13 @@ function clearErpTable() {
 
 
     async function loadOrdersList() {
-      ordersListBody.innerHTML = "<tr><td class='muted' colspan='5'>جاري تحميل الطلبات...</td></tr>";
+      ordersListBody.innerHTML = "<tr><td class='muted' colspan='3'>جاري تحميل الطلبات...</td></tr>";
       try {
         // ✅ نقرأ آخر 200 سجل من erp_orders (قد يكون في تكرار لأن كل سيارة سجل)
         const q = query(collection(db, ERP_COLLECTION), limit(200));
         const snap = await getDocs(q);
         if (snap.empty) {
-          ordersListBody.innerHTML = "<tr><td class='muted' colspan='5'>لا توجد طلبات مسجلة حالياً.</td></tr>";
+          ordersListBody.innerHTML = "<tr><td class='muted' colspan='3'>لا توجد طلبات مسجلة حالياً.</td></tr>";
           return;
         }
         // ✅ نجمع حسب orderNo لتجنب تكرار الطلبات في القائمة
@@ -2151,7 +2154,7 @@ ordersListCache = rows;
         renderOrdersList(ordersSearchInput ? ordersSearchInput.value : "");
 } catch (err) {
         console.error(err);
-        ordersListBody.innerHTML = "<tr><td class='err' colspan='5'>تعذر تحميل قائمة الطلبات.</td></tr>";
+        ordersListBody.innerHTML = "<tr><td class='err' colspan='3'>تعذر تحميل قائمة الطلبات.</td></tr>";
       }
     }
 
@@ -3739,7 +3742,7 @@ function clearErpTable() {
 
       ordersListBody.innerHTML = "";
       if (!filtered.length){
-        ordersListBody.innerHTML = "<tr><td class='muted' colspan='5'>لا توجد نتائج مطابقة.</td></tr>";
+        ordersListBody.innerHTML = "<tr><td class='muted' colspan='3'>لا توجد نتائج مطابقة.</td></tr>";
         return;
       }
 
@@ -3761,13 +3764,13 @@ function clearErpTable() {
 
 
     async function loadOrdersList() {
-      ordersListBody.innerHTML = "<tr><td class='muted' colspan='5'>جاري تحميل الطلبات...</td></tr>";
+        ordersListBody.innerHTML = "<tr><td class='muted' colspan='3'>جاري تحميل الطلبات...</td></tr>";
       try {
         // ✅ نقرأ آخر 200 سجل من erp_orders (قد يكون في تكرار لأن كل سيارة سجل)
         const q = query(collection(db, ERP_COLLECTION), limit(200));
         const snap = await getDocs(q);
         if (snap.empty) {
-          ordersListBody.innerHTML = "<tr><td class='muted' colspan='5'>لا توجد طلبات مسجلة حالياً.</td></tr>";
+          ordersListBody.innerHTML = "<tr><td class='muted' colspan='3'>لا توجد طلبات مسجلة حالياً.</td></tr>";
           return;
         }
         // ✅ نجمع حسب orderNo لتجنب تكرار الطلبات في القائمة
@@ -3851,7 +3854,7 @@ ordersListCache = rows;
         renderOrdersList(ordersSearchInput ? ordersSearchInput.value : "");
 } catch (err) {
         console.error(err);
-        ordersListBody.innerHTML = "<tr><td class='err' colspan='5'>تعذر تحميل قائمة الطلبات.</td></tr>";
+        ordersListBody.innerHTML = "<tr><td class='err' colspan='3'>تعذر تحميل قائمة الطلبات.</td></tr>";
       }
     }
 

@@ -472,6 +472,26 @@ body{margin:0;background:var(--cream);font-family:Tajawal, Arial, sans-serif;pad
 }
 </style>
 
+
+<style id="mzj-sales-table-v2">
+@media (max-width: 900px){
+  html,body{overflow-x:hidden!important;}
+  .mzj-content, .page, main{padding-left:10px!important;padding-right:10px!important;max-width:100%!important;margin:0!important;}
+  #ordersListCard table{width:100%!important;table-layout:fixed!important;border-collapse:collapse!important;}
+  #ordersListCard th, #ordersListCard td{
+    padding:7px 6px!important;
+    font-size:12px!important;
+    vertical-align:middle!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+  #ordersListCard th:nth-child(1), #ordersListCard td:nth-child(1){width:16%!important;font-size:10.5px!important;font-weight:800!important;}
+  #ordersListCard th:nth-child(2), #ordersListCard td:nth-child(2){width:56%!important;font-size:13px!important;font-weight:900!important;}
+  #ordersListCard th:nth-child(3), #ordersListCard td:nth-child(3){width:28%!important;font-size:11px!important;font-weight:800!important;direction:ltr!important;text-align:left!important;}
+}
+</style>
+
 </head>
 <body class="legacy-sales">
   <header class="m-header">
@@ -2067,7 +2087,7 @@ function clearErpTable() {
         if (isUnread) tr.classList.add("unread-row");
 
         tr.innerHTML = `
-          <td><button class="link-btn" data-order="${r.orderNo}">${shortOrderNumber(r.orderNo)}</button></td>
+          <td><button class="link-btn" data-order="${shortOrderNo(r.orderNo)}">${shortOrderNumber(r.orderNo)}</button></td>
           <td>${r.customerName || "—"}</td>
           <td>${r.vinVal || "—"}</td>
         `;
@@ -3775,7 +3795,7 @@ function clearErpTable() {
 
         const displayOrder = shortOrderNo(r.orderNo);
         tr.innerHTML = `
-          <td class="order-id"><button class="link-btn" data-order="${r.orderNo}">${displayOrder}</button></td>
+          <td class="order-id"><button class="link-btn" data-order="${shortOrderNo(r.orderNo)}">${displayOrder}</button></td>
           <td class="customer"><span class="truncate">${r.customerName || "—"}</span></td>
           <td class="vin">${r.vinVal || "—"}</td>
         `;

@@ -3802,7 +3802,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 <style>
 @media (max-width:991px){
   /* hide any bars visually without touching DOM */
-  header, nav, .topbar, .sidebar, .mzj-downbar, .downbar, .mobile-nav {
+header, nav:not(.mzj-qm), .topbar, .sidebar, .mzj-downbar, .downbar, .mobile-nav {display:none !important;}
     display:none !important;
   }
   body{padding-bottom:0 !important}

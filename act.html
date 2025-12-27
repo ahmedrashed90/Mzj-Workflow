@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
@@ -48,6 +49,8 @@
     tbody tr:nth-child(odd){background:#fff}
     tbody tr:nth-child(even){background:#fcfcfc}
     tbody tr:hover{background:#f8fafc}
+    tbody tr.row-latest{background:rgba(188,143,116,.10)}
+    tbody tr.row-latest td{font-weight:800}
     td,th{border-left:1px solid var(--line)}
     td:last-child,th:last-child{border-left:0}
     .nowrap{white-space:nowrap}
@@ -70,7 +73,10 @@
 
     /* No flash */
     #noFlash{position:fixed;inset:0;background:var(--cream);z-index:999999}
-  </style>
+  
+    .stock-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px;border:1px solid #f0e6dd;border-radius:12px;background:#fff}
+    .stock-bar .hint{color:var(--muted);font-size:12px}
+</style>
 </head>
 
 <body class="mzj">
@@ -171,6 +177,11 @@
               <button class="btn btn-ghost" id="btnClearSearch"><i class="fa-solid fa-minus"></i> مسح</button>
             </div>
           </div>
+            <div class="stock-bar" id="stockPlaceBar" style="display:none;margin-top:10px">
+              <div class="status-badge"><span class="dot warn" id="stockDot"></span><span id="stockText">—</span></div>
+              <div class="hint" id="stockHint">—</div>
+            </div>
+
 
           <div class="table-wrap">
             <table id="movesTable">
@@ -182,6 +193,7 @@
                   <th>السيارة</th>
                   <th>من</th>
                   <th>إلى</th>
+                  <th>المكان الحالي (المخزون)</th>
                   <th class="w-120">ID</th>
                 </tr>
               </thead>
@@ -253,6 +265,30 @@
     const ar={'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9'};
     return v.toString().replace(/[٠-٩]/g,d=>ar[d]).toUpperCase().replace(/[\s\-\._]/g,'').trim();
   }
+
+  // تحويل أي شكل تاريخ/وقت لقيمة رقمية للمقارنة (الأحدث أكبر)
+  function toMillis(x){
+    try{
+      if(x == null) return 0;
+      // Firestore Timestamp {seconds, nanoseconds}
+      if(typeof x === 'object' && typeof x.seconds === 'number'){
+        return (x.seconds * 1000) + Math.floor((x.nanoseconds||0)/1e6);
+      }
+      if(typeof x === 'number') return x;
+      const s = String(x).trim();
+      if(!s) return 0;
+      // إذا كان YYYY-MM-DD
+      if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return Date.parse(s + 'T00:00:00Z') || 0;
+      const t = Date.parse(s);
+      return isNaN(t) ? 0 : t;
+    }catch(_){ return 0; }
+  }
+
+  function moveTs(m){
+    // الأفضلية: when ثم date ثم id
+    return toMillis(m?.when) || toMillis(m?.date) || toMillis(m?.id) || 0;
+  }
+
   function liftNoFlash(){
     const nf = document.getElementById('noFlash');
     if(nf) nf.remove();
@@ -267,9 +303,43 @@
   const movesFromDate=$('#movesFromDate'), movesToDate=$('#movesToDate'), btnClearDate=$('#btnClearDate');
   const quickSearch=$('#quickSearch'), btnClearSearch=$('#btnClearSearch');
   const movesTableBody = document.querySelector('#movesTable tbody');
+  const stockPlaceBar = $('#stockPlaceBar');
+  const stockDot = $('#stockDot');
+  const stockText = $('#stockText');
+  const stockHint = $('#stockHint');
   const rowsHint = $('#rowsHint');
 
   let moves = [];
+  let stockItems = [];
+  let stockPlaceMap = new Map();
+
+  // بناء خريطة (VIN -> المكان الحالي) من stock داخل mzj_admin_state/v1
+  function buildStockMap(list){
+    stockPlaceMap = new Map();
+    (Array.isArray(list)?list:[]).forEach((s)=>{
+      const vin = (s && (s.vin || s.VIN || s.chassis || s.chassisNo || s.vinNumber || s['رقم_الهيكل'] || s['رقم الهيكل'] || s['رقمهيكل'] || s.vehicleVin)) ?? '';
+      const vNorm = normalizeVin(String(vin||''));
+      if(!vNorm) return;
+
+      const place = (s.place || s.location || s.branch || s.currentPlace || s.placeText || s['مكان'] || s['المكان'] || s['المكان الحالي'] || s['مكان السيارة'] || s['مكان_السيارة'] || '') ?? '';
+      const p = String(place||'').trim();
+      if(p) stockPlaceMap.set(vNorm, p);
+    });
+  }
+
+  function getStockPlace(vinRaw){
+    const vNorm = normalizeVin(String(vinRaw||''));
+    return stockPlaceMap.get(vNorm) || '';
+  }
+
+  function setStockBar(mode, text, hint=''){
+    if(!stockPlaceBar) return;
+    stockPlaceBar.style.display = 'flex';
+    stockDot.className = 'dot ' + (mode==='ok'?'ok':mode==='err'?'err':'warn');
+    stockText.textContent = text || '—';
+    stockHint.textContent = hint || '';
+  }
+
   let unsub = null;
 
   function setStatus(mode, txt){
@@ -291,8 +361,20 @@
   }
 
   function filterBySearch(list){
-    const q = (quickSearch.value||'').trim().toLowerCase();
+    const raw = (quickSearch.value||'').trim();
+    const q = raw.toLowerCase();
     if(!q) return list;
+
+    // لو المستخدم كتب رقم هيكل (VIN) بشكل واضح: اعرض كل حركات هذا الهيكل + ترتيبها بالأحدث
+    const qVin = normalizeVin(raw);
+    const looksLikeVin = qVin.length >= 11 && /^[A-Z0-9]+$/.test(qVin);
+    if(looksLikeVin){
+      const vinMoves = list.filter(m => normalizeVin(m.vin||'') === qVin);
+      vinMoves.sort((a,b)=> (moveTs(b) - moveTs(a)) || ((b.__idx||0) - (a.__idx||0)));
+      return vinMoves;
+    }
+
+    // غير ذلك: بحث عام
     return list.filter(m=>{
       const hay = [
         m.vin||'', m.car||'', m.from||'', m.to||'', m.id||'',
@@ -310,11 +392,16 @@
     rows = filterBySearch(rows);
 
     // الأحدث أولاً (اختياري) — نفس تبويب الإدارة كان حسب الترتيب الحالي، لكن ده أنسب لسجل
-    rows.sort((a,b)=> (b.when||'').localeCompare(a.when||''));
+    rows.sort((a,b)=> (moveTs(b) - moveTs(a)) || ((b.__idx||0) - (a.__idx||0)));
 
     rows.forEach((m,i)=>{
       const vin = m.vin || '';
       const tr=document.createElement('tr');
+      // تمييز أحدث حركة عند البحث بـ VIN
+      const qRaw = (quickSearch.value||'').trim();
+      const qVin = normalizeVin(qRaw);
+      const looksLikeVin = qVin.length >= 11 && /^[A-Z0-9]+$/.test(qVin);
+      if(looksLikeVin && i===0){ tr.classList.add('row-latest'); }
       tr.innerHTML=`
         <td>${i+1}</td>
         <td class="nowrap">${m.date || onlyDate(m.when||'')}</td>
@@ -322,9 +409,33 @@
         <td>${m.car||''}</td>
         <td>${m.from||''}</td>
         <td>${m.to||''}</td>
+        <td>${getStockPlace(vin) || ''}</td>
         <td class="nowrap">${m.id||''}</td>`;
       movesTableBody.appendChild(tr);
     });
+
+    
+    // تحديث شريط المكان الحالي عند البحث برقم الهيكل
+    const raw = (quickSearch.value||'').trim();
+    if(looksLikeVinInput(raw)){
+      const vNorm = normalizeVin(raw);
+      const p = stockPlaceMap.get(vNorm) || '';
+      if(!p){
+        setStockBar('err','لم يتم العثور على هذا الهيكل في المخزون', vNorm);
+      }else{
+        // قارن مع أحدث حركة في السجل (إلى)
+        const latest = rows.find(r => normalizeVin(r.vin||'')===vNorm);
+        const latestTo = latest ? String(latest.to||'').trim() : '';
+        const mismatch = latestTo && latestTo !== String(p).trim();
+        if(mismatch){
+          setStockBar('warn', `المكان الحالي (المخزون): ${p}`, `⚠️ آخر حركة في السجل تقول: ${latestTo} — واضح إن طلب النقل (إرسال/استلام) ما اتسجلش في moves`);
+        }else{
+          setStockBar('ok', `المكان الحالي (المخزون): ${p}`, '');
+        }
+      }
+    }else{
+      if(stockPlaceBar) stockPlaceBar.style.display='none';
+    }
 
     rowsHint.textContent = `عدد السجلات المعروضة: ${rows.length}`;
   }
@@ -397,7 +508,11 @@
       unsub = onSnapshot(STATE_REF,(snap)=>{
         if(!snap.exists()) return;
         const d = snap.data() || {};
+        stockItems = Array.isArray(d.stock) ? d.stock.slice() : [];
+        buildStockMap(stockItems);
         moves = Array.isArray(d.moves) ? d.moves : [];
+        // فهرسة داخلية لضمان ترتيب صحيح عند تساوي/غياب التوقيت
+        moves.forEach((m,i)=>{ try{ m.__idx = i; }catch(_){ } });
         renderMoves();
         setStatus('ok','مزامنة حيّة');
       }, ()=>{

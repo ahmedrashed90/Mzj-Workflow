@@ -121,3 +121,20 @@
   }
 
 }
+/* 🔴 Disable any existing Down Bar on mobile */
+@media (max-width: 991px) {
+  .down-bar,
+  .bottom-bar,
+  .mobile-bottom-bar,
+  .mzj-downbar,
+  .footer-fixed,
+  .fixed-bottom,
+  nav.bottom,
+  .mobile-nav-bottom {
+    display: none !important;
+  }
+
+  body {
+    padding-bottom: 0 !important;
+  }
+}

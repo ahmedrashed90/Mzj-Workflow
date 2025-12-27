@@ -142,3 +142,47 @@ body.mzj-menu-open .mzj-menu-drawer{
 
 /* Keep content readable: if any element is fixed at top-right, avoid overlap */
 .mzj-main{ padding-top: calc(14px + 52px) !important; }
+/* ===== Force Quick Menu Styles (fix purple links + wrapping) ===== */
+@media (max-width: 991px){
+
+  /* غصبًا عن أي ستايل لينكات في الصفحة */
+  .mzj-quickmenu a,
+  nav#mzjQuickMenu a{
+    color: rgb(62,36,32) !important;
+    text-decoration: none !important;
+    font-weight: 800 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 10px 12px !important;
+    margin: 6px 0 !important;
+    border-radius: 14px !important;
+    background: #fff !important;
+    border: 1px solid rgba(62,36,32,.10) !important;
+    direction: rtl !important;
+  }
+
+  .mzj-quickmenu a:active{ transform: scale(.99) !important; }
+
+  /* تأكيد شكل صندوق المنيو */
+  .mzj-quickmenu,
+  nav#mzjQuickMenu{
+    background: #fff8ef !important;
+    border: 1px solid rgba(62,36,32,.12) !important;
+    box-shadow: 0 16px 38px rgba(0,0,0,.18) !important;
+  }
+
+  /* تأكيد زر المنيو فوق كل شيء */
+  .mzj-quickmenu-btn{
+    z-index: 20000 !important;
+  }
+  .mzj-quickmenu-overlay{
+    z-index: 19990 !important;
+  }
+  .mzj-quickmenu{
+    z-index: 19995 !important;
+  }
+}
+@media (max-width: 991px){
+  .mzj-quickmenu{ top: 140px !important; right: 12px !important; }
+}

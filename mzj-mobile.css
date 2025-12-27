@@ -50,3 +50,16 @@ body{
 .mzj-menu-btn:active{
   background: rgba(62,36,32,.2) !important;
 }
+.mzj-menu-btn{
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  
+  background: rgba(62,36,32,.12);
+  color: rgb(62,36,32);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(62,36,32,.25);
+  z-index: 9999;
+}
+

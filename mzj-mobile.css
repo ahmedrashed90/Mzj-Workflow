@@ -1,22 +1,80 @@
-/* MZJ Mobile – Right Side Bar (Off-canvas, from the right)
-   - Replaces any bottom/down bar behavior (no content hiding from bottom)
-   - Toggle via: document.body.classList.toggle('mzj-rbar-open')
-*/
+/* =========================================================
+   MZJ Mobile Overrides (RIGHT BAR) - Clean
+   - Removes Down Bar on mobile
+   - Hides old sidebars (common selectors)
+   - Adds Right Side Bar (off-canvas) that opens/closes
+   Brand colors:
+   - Brown: rgb(62,36,32)
+   - Beige: rgb(188,143,116)
+   - Cream: #fff8ef
+========================================================= */
 
+/* Prevent horizontal scroll on mobile (without clipping fixed overlays) */
+html, body{
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* =========================
+   1) Disable any Down Bar
+========================= */
 @media (max-width: 991px){
-
-  /* If your topbar height differs, override this variable in your main CSS */
-  :root{
-    --mzj-topbar-h: 72px;
-    --mzj-rbar-w: 270px;        /* width when open */
-    --mzj-rbar-handle: 48px;    /* visible handle width when closed */
-    --mzj-rbar-z: 1200;
+  /* hide known downbar */
+  .mzj-downbar,
+  .down-bar,
+  .bottom-bar,
+  .mobile-bottom-bar,
+  .footer-fixed,
+  .fixed-bottom,
+  nav.bottom,
+  .mobile-nav-bottom{
+    display: none !important;
+    height: 0 !important;
   }
 
-  /* Optional: when you add a rightbar, it's nice to prevent horizontal scroll */
-  html, body{ overflow-x: hidden; }
+  /* remove extra padding that was added for downbar */
+  .mzj-main,
+  main,
+  .main,
+  .content,
+  .page-content{
+    padding-bottom: 0 !important;
+  }
+}
 
-  /* ===== Overlay (click to close) ===== */
+/* =========================
+   2) Hide old sidebars (if any)
+========================= */
+@media (max-width: 991px){
+  .mzj-sidebar,
+  .mzj-side,
+  .sidebar,
+  .side-bar,
+  .side-nav,
+  .sidenav,
+  .drawer,
+  .offcanvas,
+  .off-canvas{
+    /* لو عندك سايد بار قديم مش شغال/بيشوّه الموبايل */
+    display: none !important;
+  }
+}
+
+/* =========================
+   3) Right Bar (the one you want)
+   NOTE: requires HTML:
+   <div class="mzj-rbar-overlay" id="mzjRbarOverlay"></div>
+   <aside class="mzj-rightbar" id="mzjRightbar">...</aside>
+   And JS toggles body class: mzj-rbar-open
+========================= */
+@media (max-width: 991px){
+  :root{
+    --mzj-rbar-w: 270px;        /* width when open */
+    --mzj-rbar-handle: 54px;    /* visible part when closed */
+    --mzj-rbar-top: 72px;       /* top offset under topbar */
+    --mzj-rbar-z: 9999;
+  }
+
   .mzj-rbar-overlay{
     position: fixed;
     inset: 0;
@@ -24,65 +82,57 @@
     background: rgba(0,0,0,.28);
     opacity: 0;
     pointer-events: none;
-    transition: opacity .22s ease;
+    transition: opacity .2s ease;
   }
   body.mzj-rbar-open .mzj-rbar-overlay{
     opacity: 1;
     pointer-events: auto;
   }
 
-  /* ===== Right Bar ===== */
   .mzj-rightbar{
-    position: fixed;
-    top: var(--mzj-topbar-h);
+    position: fixed !important;
+    top: var(--mzj-rbar-top);
     right: 0;
     width: var(--mzj-rbar-w);
-    height: calc(100vh - var(--mzj-topbar-h));
+    height: calc(100vh - var(--mzj-rbar-top));
     z-index: var(--mzj-rbar-z);
-
-    /* Closed state: keep only the handle visible */
-    transform: translateX(calc(100% - var(--mzj-rbar-handle)));
-    transition: transform .22s ease;
-
+    background: #fff;
     border-radius: 16px 0 0 16px;
+    box-shadow: 0 14px 34px rgba(0,0,0,.20);
     overflow: hidden;
 
-    background: #fff;
-    box-shadow: 0 12px 30px rgba(0,0,0,.18);
+    /* closed state: only handle shows */
+    transform: translateX(calc(100% - var(--mzj-rbar-handle)));
+    transition: transform .22s ease;
+    will-change: transform;
   }
-
   body.mzj-rbar-open .mzj-rightbar{
     transform: translateX(0);
   }
 
-  /* ===== Toggle button (handle) ===== */
+  /* Handle / Toggle button */
   .mzj-rightbar__toggle{
     position: absolute;
     top: 14px;
-    left: 14px;
-
+    left: 14px; /* inside the bar */
     width: 42px;
     height: 42px;
-
     border: 0;
-    border-radius: 12px;
+    border-radius: 14px;
     cursor: pointer;
-
-    background: rgb(62,36,32);   /* MZJ dark brown */
+    background: rgb(62,36,32);
     color: #fff;
-
     display: grid;
     place-items: center;
-
     box-shadow: 0 10px 22px rgba(0,0,0,.18);
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* ===== Content ===== */
+  /* Content */
   .mzj-rightbar__content{
     height: 100%;
-    padding: 72px 14px 14px;
-    background: #fff8ef;         /* MZJ cream */
+    padding: 70px 14px 14px;
+    background: #fff8ef;
   }
 
   .mzj-rightbar__title{
@@ -102,13 +152,11 @@
     display: flex;
     align-items: center;
     gap: 10px;
-
     padding: 12px 12px;
-    border-radius: 12px;
-
+    border-radius: 14px;
     text-decoration: none;
-    color: rgb(62,36,32);
     background: #fff;
+    color: rgb(62,36,32);
     border: 1px solid rgba(62,36,32,.10);
   }
 
@@ -116,25 +164,13 @@
     width: 10px;
     height: 10px;
     border-radius: 999px;
-    background: rgb(188,143,116); /* MZJ beige */
+    background: rgb(188,143,116);
     flex: 0 0 auto;
   }
 
-}
-/* 🔴 Disable any existing Down Bar on mobile */
-@media (max-width: 991px) {
-  .down-bar,
-  .bottom-bar,
-  .mobile-bottom-bar,
-  .mzj-downbar,
-  .footer-fixed,
-  .fixed-bottom,
-  nav.bottom,
-  .mobile-nav-bottom {
-    display: none !important;
-  }
-
-  body {
-    padding-bottom: 0 !important;
+  /* If your page has any fixed floating buttons on right, keep them visible */
+  body.mzj-rbar-open .float-right,
+  body.mzj-rbar-open .fab-right{
+    right: calc(var(--mzj-rbar-w) + 12px) !important;
   }
 }

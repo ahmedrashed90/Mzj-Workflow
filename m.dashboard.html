@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -233,62 +234,12 @@ tr:hover{ filter: brightness(0.98); }
   .legacy-dash{padding-top: 6px;}
 </style>
 
-  <link rel="stylesheet" href="mzj-mobile.css">
+  <link rel="stylesheet" href="mzj-mobile.menu.fixed.css">
 </head>
 <body class="mzj">
 
   <!-- MZJ Unified Topbar -->
-  <header class="mzj-topbar">
-    <div class="topbar-left">
-      <button class="icon-btn" id="mzjSidebarBtn" aria-label="القائمة"><i class="fa-solid fa-bars"></i></button>
-      <div class="brand">
-        <div class="brand-mark">MZJ</div>
-        <div class="brand-text">
-          <div class="brand-title">محمد بن ذعار العجمي للسيارات</div>
-          <div class="brand-sub">Workspace</div>
-        </div>
-      </div>
-    </div>
-    <div class="topbar-center">
-      <div class="mzj-breadcrumb">
-        <span class="crumb">الرئيسية</span>
-        <i class="fa-solid fa-chevron-left"></i>
-        <span class="crumb current">الداش بورد</span>
-      </div>
-    </div>
-    <div class="topbar-right">
-      <div class="mzj-chip"><i class="fa-regular fa-clock"></i><span id="mzjNow">—</span></div>
-<button class="mzj-btn mzj-btn-ghost" id="btnSignOut" style="display:none" type="button">
-      <i class="fa-solid fa-right-from-bracket"></i>
-      <span>تسجيل الخروج</span>
-    </button>      <div class="mzj-user">
-        <div class="avatar">DB</div>
-        <div class="user-text">
-          <div class="user-name">الداش بورد</div>
-          <div class="user-role">Dashboard</div>
-        </div>
-      </div>
-    </div>
-  </header>
-
   <div class="mzj-shell" id="mzjShell">
-    <aside class="mzj-sidebar" id="mzjSidebar">
-      <div class="side-section">
-        <div class="side-title">العمليات</div>
-        <nav class="side-nav">
-          <a class="side-link tab" href="./sales.html"><i class="fa-solid fa-handshake"></i><span>تتبع المبيعات</span></a>
-        <a class="side-link tab active" href="./dashboard.html"><i class="fa-solid fa-gauge"></i><span>الداش بورد</span></a>
-        <a class="side-link tab" href="./inventory.html"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
-        <a class="side-link tab" href="./vt.html"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
-        <a class="side-link tab" href="./photoshoot-user.html"><i class="fa-solid fa-camera"></i><span>إدارة الطلبات</span></a>
-        <a class="side-link tab" href="./cars.html"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
-        <a class="side-link tab" href="./admin.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
-        <a class="side-link tab" href="./Activity.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل النشاط</span></a>
-        <a class="side-link tab" href="./act.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل الحركات</span></a>
-
-      </div>
-    </aside>
-
     <div class="mzj-backdrop" id="mzjBackdrop"></div>
 
     <main class="mzj-content">
@@ -2946,6 +2897,64 @@ body{
   body{padding-left:0 !important; padding-right:0 !important;}
 }
 </style>
+<!-- ===== MZJ Mobile Menu (Single Button) ===== -->
+<button class="mzj-menu-btn" id="mzjMenuBtn" type="button" aria-label="القائمة">☰</button>
+
+<div class="mzj-menu-overlay" id="mzjMenuOverlay" aria-hidden="true"></div>
+
+<aside class="mzj-menu-drawer" id="mzjMenuDrawer" aria-label="قائمة الصفحات">
+  <div class="mzj-menu-head">
+    <div class="mzj-menu-title">القائمة</div>
+    <button class="mzj-menu-close" id="mzjMenuClose" type="button" aria-label="إغلاق">✕</button>
+  </div>
+
+  <nav class="mzj-menu-links">
+    <a class="mzj-menu-link" href="m.dashboard.html">📊 الداش بورد</a>
+    <a class="mzj-menu-link" href="m.admin.html">🏠 الإدارة</a>
+    <a class="mzj-menu-link" href="m.sales.html">💼 تتبع المبيعات</a>
+    <a class="mzj-menu-link" href="m.vt.html">↔️ نقل السيارات</a>
+    <a class="mzj-menu-link" href="m.photoshoot-user.html">📷 إدارة الطلبات</a>
+    <a class="mzj-menu-link" href="m.cars.html">🚗 كل السيارات</a>
+    <a class="mzj-menu-link" href="m.Activity.html">🕘 سجل النشاط</a>
+    <a class="mzj-menu-link" href="m.act.html">🧾 سجل الحركات</a>
+  </nav>
+</aside>
+
+<script>
+(function () {
+  const btn = document.getElementById('mzjMenuBtn');
+  const overlay = document.getElementById('mzjMenuOverlay');
+  const closeBtn = document.getElementById('mzjMenuClose');
+  const drawer = document.getElementById('mzjMenuDrawer');
+  if (!btn || !overlay || !closeBtn || !drawer) return;
+
+  function openMenu(){ document.body.classList.add('mzj-menu-open'); }
+  function closeMenu(){ document.body.classList.remove('mzj-menu-open'); }
+
+  btn.addEventListener('click', function(){ 
+    document.body.classList.contains('mzj-menu-open') ? closeMenu() : openMenu();
+  });
+  closeBtn.addEventListener('click', closeMenu);
+  overlay.addEventListener('click', closeMenu);
+
+  // Close on ESC
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') closeMenu();
+  });
+
+  // Active link
+  try{
+    const here = (location.pathname.split('/').pop() || '').toLowerCase();
+    const links = drawer.querySelectorAll('a.mzj-menu-link');
+    links.forEach(a=>{
+      const href = (a.getAttribute('href') || '').toLowerCase();
+      if (href === here) a.classList.add('active');
+    });
+  }catch(_){}
+})();
+</script>
+<!-- ===== /MZJ Mobile Menu ===== -->
+
 </body>
 </html>
 

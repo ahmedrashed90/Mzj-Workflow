@@ -1,6 +1,5 @@
 
 
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -502,99 +501,8 @@ body{margin:0;background:var(--cream);font-family:Tajawal, Arial, sans-serif;pad
 }
 </style>
 
-<style id="mzj-quickmenu-style">
-@media (max-width: 991px){
-  /* Hide known bars only (DOM kept for JS safety) */
-  .mzj-topbar,.mzj-sidebar,.topbar,.sidebar,.m-header,nav.mzj-downbar,.mzj-downbar,.down-bar,.bottom-bar,.mobile-bottom-bar,.fixed-bottom,.footer-fixed{
-    display:none !important;
-    visibility:hidden !important;
-    height:0 !important;
-    min-height:0 !important;
-    padding:0 !important;
-    margin:0 !important;
-    border:0 !important;
-  }
-  body{ padding-top:0 !important; padding-bottom:0 !important; }
-  .mzj-main{ padding-bottom:0 !important; }
-
-  .mzj-quickmenu-btn{
-    position: fixed; right: 12px; top: 12px;
-    z-index: 20000; width: 48px; height: 48px;
-    border: 0; border-radius: 16px;
-    background: rgb(62,36,32); color: #fff;
-    font-size: 22px; font-weight: 900;
-    box-shadow: 0 10px 22px rgba(0,0,0,.18);
-  }
-  .mzj-quickmenu-overlay{
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,.18);
-    backdrop-filter: blur(2px);
-    z-index: 19990;
-    opacity: 0; pointer-events: none;
-    transition: .18s ease;
-  }
-  .mzj-quickmenu{
-    position: fixed; right: 12px; top: 72px;
-    width: min(320px, calc(100vw - 24px));
-    background: #fff8ef;
-    border: 1px solid rgba(62,36,32,.12);
-    border-radius: 18px;
-    box-shadow: 0 16px 38px rgba(0,0,0,.18);
-    z-index: 19995;
-    transform: translateY(-6px);
-    opacity: 0; pointer-events: none;
-    transition: .18s ease;
-    padding: 10px;
-  }
-  .mzj-quickmenu-head{
-    display:flex; align-items:center; justify-content:space-between; gap:10px;
-    font-weight: 900; color: rgb(62,36,32);
-    padding: 10px 12px 6px;
-  }
-  .mzj-quickmenu-close{
-    border:0; background:#fff; color: rgb(62,36,32);
-    width:38px;height:38px; border-radius:14px;
-    font-size:18px;
-    box-shadow: 0 8px 18px rgba(0,0,0,.10);
-  }
-  .mzj-quickmenu a{
-    color: rgb(62,36,32) !important;
-    text-decoration: none !important;
-    font-weight: 800 !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 10px !important;
-    padding: 10px 12px !important;
-    margin: 6px 0 !important;
-    border-radius: 14px !important;
-    background: #fff !important;
-    border: 1px solid rgba(62,36,32,.10) !important;
-    direction: rtl !important;
-  }
-  body.mzj-qm-open .mzj-quickmenu-overlay{ opacity: 1; pointer-events: auto; }
-  body.mzj-qm-open .mzj-quickmenu{ opacity: 1; pointer-events: auto; transform: translateY(0); }
-}
-</style>
 </head>
 <body class="legacy-sales">
-<!-- MZJ Quick Menu (Mobile) -->
-<button class="mzj-quickmenu-btn" id="mzjQuickMenuBtn" type="button" aria-label="فتح القائمة">☰</button>
-<div class="mzj-quickmenu-overlay" id="mzjQuickMenuOverlay" aria-hidden="true"></div>
-<nav class="mzj-quickmenu" id="mzjQuickMenu" aria-label="قائمة الصفحات">
-  <div class="mzj-quickmenu-head">
-    <span>القائمة</span>
-    <button class="mzj-quickmenu-close" id="mzjQuickMenuClose" type="button" aria-label="إغلاق القائمة">✕</button>
-  </div>
-  <a href="m.dashboard.html">📊 الداش بورد</a>
-  <a href="m.admin.html">🏠 الإدارة</a>
-  <a href="m.sales.html">💼 تتبع المبيعات</a>
-  <a href="m.vt.html">↔️ نقل السيارات</a>
-  <a href="m.photoshoot-user.html">📷 إدارة الطلبات</a>
-  <a href="m.cars.html">🚗 كل السيارات</a>
-  <a href="m.Activity.html">🕘 سجل النشاط</a>
-  <a href="m.act.html">🧾 سجل الحركات</a>
-</nav>
-
   <header class="m-header">
     <h1 class="title">تتبع المبيعات</h1>
     <p class="sub">قائمة الطلبات كروت — اضغط على الكارت لفتح الطلب</p>
@@ -625,7 +533,7 @@ body{margin:0;background:var(--cream);font-family:Tajawal, Arial, sans-serif;pad
       <div class="tabs">
         <a class="tab" href="admin.html">الإدارة</a>
         <a class="tab active" href="sales.html">المبيعات</a>
-        <a class="tab" href="inventory.html">المخزون</a>
+        <a class="tab" href="#">المخزون</a>
         <a class="tab" href="dashboard.html">الداش بورد</a>
         <a class="tab" href="vt.html">نقل السيارات</a>
         <a class="tab" href="photoshoot-user.html">إدارة الطلبات</a>
@@ -2477,20 +2385,7 @@ ordersListCache = rows;
     </main>
 
   
-<nav class="mzj-downbar" aria-label="التنقل السفلي">
-  <div class="inner">
-    <a class="active" href="m.sales.html">💼<span>تتبع المبيعات</span></a>
-    <a href="m.dashboard.html">📊<span>الداش بورد</span></a>
-    <a href="m.inventory.html">🚗<span>المخزون</span></a>
-    <a href="m.vt.html">🧭<span>نقل السيارات</span></a>
-    <a href="m.photoshoot-user.html">📷<span>إدارة الطلبات</span></a>
-
-    <a href="m.cars.html">🚙<span>كل السيارات</span></a>
-    <a href="m.admin.html">🏠<span>الإدارة</span></a>
-    <a href="m.Activity.html">🕘<span>سجل النشاط</span></a>
-    <a href="m.act.html">🧾<span>سجل الحركات</span></a>
-  </div>
-</nav>
+<!-- REMOVED BAR -->
 
 
   <script type="module">
@@ -4250,22 +4145,5 @@ ordersListCache = rows;
 })();
 </script>
 
-<script id="mzj-quickmenu-js">
-(function(){
-  const btn = document.getElementById('mzjQuickMenuBtn');
-  const overlay = document.getElementById('mzjQuickMenuOverlay');
-  const closeBtn = document.getElementById('mzjQuickMenuClose');
-  if(!btn || !overlay || !closeBtn) return;
-
-  function closeMenu(){ document.body.classList.remove('mzj-qm-open'); }
-  function toggleMenu(){ document.body.classList.toggle('mzj-qm-open'); }
-
-  btn.addEventListener('click', (e)=>{ e.preventDefault(); toggleMenu(); });
-  overlay.addEventListener('click', closeMenu);
-  closeBtn.addEventListener('click', closeMenu);
-
-  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeMenu(); });
-})();
-</script>
 </body>
 </html>

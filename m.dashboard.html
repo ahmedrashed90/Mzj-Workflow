@@ -1,11 +1,10 @@
 
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <link rel="icon" type="image/x-icon" href="assets/favicon.png">
 <link rel="prefetch" href="admin.html">
-<link rel="prefetch" href="inventory.html">
+<link rel="prefetch" href="#">
 <link rel="prefetch" href="dashboard.html">
 <link rel="prefetch" href="vt.html">
 <link rel="prefetch" href="photoshoot-user.html">
@@ -236,14 +235,19 @@ tr:hover{ filter: brightness(0.98); }
   <link rel="stylesheet" href="mzj-mobile.css">
 </head>
 <body class="mzj">
-<div class="mzj-shell" id="mzjShell">
-<div class="mzj-backdrop" id="mzjBackdrop"></div>
+
+  <!-- MZJ Unified Topbar -->
+  <!-- REMOVED BAR -->
+
+  <div class="mzj-shell" id="mzjShell">
+    <!-- REMOVED BAR -->
+
+    <div class="mzj-backdrop" id="mzjBackdrop"></div>
 
     <main class="mzj-content">
 <section class="mzj-pagehead">
 <div class="pagehead-left">
-  
-<h1 class="page-title"> لوحة الداش بورد  </h1>
+<h1 class="page-title">لوحة الداش بورد</h1>
 <p class="page-desc"></p>
 </div>
 </section>
@@ -260,7 +264,7 @@ tr:hover{ filter: brightness(0.98); }
 </div>
 <div class="tabs">
 <a class="tab" href="admin.html">الإدارة</a>
-<a class="tab" href="inventory.html">المخزون</a>
+<a class="tab" href="#">المخزون</a>
 <a class="tab" href="vt.html">نقل السيارات</a>
 <a class="tab" href="photoshoot-user.html">إدارة الطلبات</a>
 <a class="tab" href="cars.html">كل السيارات</a>
@@ -2791,6 +2795,8 @@ try{
 </div>
 </main>
   </div>
+
+<!-- REMOVED BAR -->
 <style id="mzjMobileOverrides">
 /* ===== MOBILE OVERRIDES (keep original JS/buttons working) ===== */
 :root{
@@ -2911,75 +2917,6 @@ body{
   body{padding-left:0 !important; padding-right:0 !important;}
 }
 </style>
-
-
-<!-- MZJ Menu Button + Drawer (Source Standard) -->
-<button class="mzj-menu-btn" id="mzjMenuBtn" type="button" aria-label="القائمة">☰</button>
-<div class="mzj-menu-overlay" id="mzjMenuOverlay" aria-hidden="true"></div>
-
-<aside class="mzj-menu-drawer" id="mzjMenuDrawer" aria-label="قائمة الصفحات">
-  <div class="mzj-menu-head">
-    <div class="mzj-menu-brand">
-      <span class="mzj-menu-badge">MZJ</span>
-      <span class="mzj-menu-title">القائمة</span>
-    </div>
-    <button class="mzj-menu-close" id="mzjMenuClose" type="button" aria-label="إغلاق">✕</button>
-  </div>
-
-  <nav class="mzj-menu-links">
-    <a class="mzj-menu-link" href="m.dashboard.html">📊 الداش بورد</a>
-    <a class="mzj-menu-link" href="m.admin.html">🧩 إدارة</a>
-    <a class="mzj-menu-link" href="m.sales.html">💼 تتبع المبيعات</a>
-    <a class="mzj-menu-link" href="m.vt.html">↔️ نقل السيارات</a>
-    <a class="mzj-menu-link" href="m.photoshoot-user.html">📷 إدارة الطلبات</a>
-    <a class="mzj-menu-link" href="m.cars.html">🚗 كل السيارات</a>
-    <a class="mzj-menu-link" href="m.Activity.html">🕘 سجل النشاط</a>
-    <a class="mzj-menu-link" href="m.act.html">🧾 سجل الحركات</a>
-  </nav>
-</aside>
-
-<script>
-(function(){
-  const body = document.body;
-  const btn = document.getElementById('mzjMenuBtn');
-  const closeBtn = document.getElementById('mzjMenuClose');
-  const overlay = document.getElementById('mzjMenuOverlay');
-
-  if(!btn || !overlay) return;
-
-  function openMenu(){
-    body.classList.add('mzj-menu-open');
-    overlay.setAttribute('aria-hidden','false');
-  }
-  function closeMenu(){
-    body.classList.remove('mzj-menu-open');
-    overlay.setAttribute('aria-hidden','true');
-  }
-
-  btn.addEventListener('click', (e)=>{ e.preventDefault(); openMenu(); });
-  overlay.addEventListener('click', closeMenu);
-  if(closeBtn) closeBtn.addEventListener('click', closeMenu);
-
-  document.addEventListener('keydown', (e)=>{
-    if(e.key === 'Escape') closeMenu();
-  });
-
-  // highlight active link
-  try{
-    const path = (location.pathname.split('/').pop() || '').toLowerCase();
-    document.querySelectorAll('.mzj-menu-link').forEach(a=>{
-      const href = (a.getAttribute('href')||'').toLowerCase();
-      if(href && path === href) a.classList.add('active');
-    });
-  }catch(_){}
-})();
-</script>
-
-<!-- Hidden placeholders to avoid JS null errors (not a bar) -->
-<div style="display:none!important">
-  <button id="mzjSidebarBtn" type="button"></button>
-</div>
-
 </body>
 </html>
 

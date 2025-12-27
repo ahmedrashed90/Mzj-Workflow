@@ -3,7 +3,6 @@
 
 
 
-
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
@@ -166,89 +165,14 @@
 </style>
 
   <link rel="stylesheet" href="mzj-mobile.css">
-<style id="mzjMenuOverrides">
-@media (max-width: 991px){
-  /* Hide any bars (top/side/down) visually without touching JS dependencies */
-  .mzj-topbar,
-  header.mzj-topbar,
-  .topbar,
-  header,
-  nav.mzj-downbar,
-  .mzj-downbar,
-  .downbar,
-  .bottom-bar,
-  .mobile-bottom-bar,
-  .fixed-bottom,
-  .footer-fixed,
-  .mzj-sidebar,
-  aside.mzj-sidebar,
-  .sidebar,
-  aside.sidebar{
-    display:none !important;
-    visibility:hidden !important;
-    height:0 !important;
-    min-height:0 !important;
-    margin:0 !important;
-    padding:0 !important;
-  }
-  /* Remove reserved space that old bars might have added */
-  body{ padding-bottom:0 !important; padding-top:0 !important; }
-  .mzj-main, .mzj-content, main, .content, .main, .app, .container{ padding-bottom:0 !important; padding-top:0 !important; }
-}
-</style>
 </head>
 <body class="mzj">
 
   <!-- MZJ Unified Topbar -->
-  <header class="mzj-topbar">
-    <div class="topbar-left">
-      <button class="icon-btn" id="mzjSidebarBtn" aria-label="القائمة"><i class="fa-solid fa-bars"></i></button>
-      <div class="brand">
-        <div class="brand-mark">MZJ</div>
-        <div class="brand-text">
-          <div class="brand-title">محمد بن ذعار العجمي للسيارات</div>
-          <div class="brand-sub">Workspace</div>
-        </div>
-      </div>
-    </div>
-    <div class="topbar-center">
-      <div class="mzj-breadcrumb">
-        <span class="crumb">الرئيسية</span>
-        <i class="fa-solid fa-chevron-left"></i>
-        <span class="crumb current">نقل السيارات</span>
-      </div>
-    </div>
-    <div class="topbar-right">
-      <div class="mzj-chip"><i class="fa-regular fa-clock"></i><span id="mzjNow">—</span></div>
-      <button class="mzj-btn mzj-btn-ghost" id="mzjThemeBtn" type="button"><i class="fa-solid fa-moon"></i><span>وضع ليلي</span></button>
-      <div class="mzj-user">
-        <div class="avatar">VT</div>
-        <div class="user-text">
-          <div class="user-name">نقل السيارات</div>
-          <div class="user-role">Operations</div>
-        </div>
-      </div>
-    </div>
-  </header>
+  <!-- REMOVED BAR -->
 
   <div class="mzj-shell" id="mzjShell">
-    <aside class="mzj-sidebar" id="mzjSidebar">
-      <div class="side-section">
-        <div class="side-title">العمليات</div>
-        <nav class="side-nav">
-          <a class="side-link tab" href="./sales.html"><i class="fa-solid fa-handshake"></i><span>تتبع المبيعات</span></a>
-        <a class="side-link tab" href="./dashboard.html"><i class="fa-solid fa-gauge"></i><span>الداش بورد</span></a>
-        <a class="side-link tab" href="./inventory.html"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
-        <a class="side-link tab active" href="./vt.html"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
-        <a class="side-link tab" href="./photoshoot-user.html"><i class="fa-solid fa-camera"></i><span>إدارة الطلبات</span></a>
-        <a class="side-link tab" href="./cars.html"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
-        <a class="side-link tab" href="./admin.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
-        <a class="side-link tab" href="./Activity.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل النشاط</span></a>
-        <a class="side-link tab" href="./act.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل الحركات</span></a>
-
-        </nav>
-      </div>
-    </aside>
+    <!-- REMOVED BAR -->
 
     <div class="mzj-backdrop" id="mzjBackdrop"></div>
 
@@ -274,7 +198,7 @@
     </div>
     <div class="tabs">
       <a class="tab" href="admin.html">الإدارة</a>
-      <a class="tab" href="inventory.html">المخزون</a>
+      <a class="tab" href="#">المخزون</a>
       <a class="tab" href="dashboard.html">الداش بورد</a>
       <a class="tab active" href="vt.html">نقل السيارات</a>
       <a class="tab" href="photoshoot-user.html">إدارة الطلبات</a>
@@ -1129,19 +1053,7 @@ if (goingDeliveredRow) {
   </div>
 
 
-<nav class="mzj-downbar" aria-label="التنقل">
-  <div class="inner">
-    <a href="m.sales.html">💼<span>تتبع المبيعات</span></a>
-    <a href="m.dashboard.html">📊<span>الداش بورد</span></a>
-    <a class="active" href="m.vt.html">↔️<span>نقل السيارات</span></a>
-    <a href="m.photoshoot-user.html">📷<span>إدارة الطلبات</span></a>
-
-    <a href="m.cars.html">🚗<span>كل السيارات</span></a>
-    <a href="m.admin.html">🏠<span>الإدارة</span></a>
-    <a href="m.Activity.html">🕘<span>سجل النشاط</span></a>
-    <a href="m.act.html">🧾<span>سجل الحركات</span></a>
-  </div>
-</nav>
+<!-- REMOVED BAR -->
 
 <style id="mzjMobileOverrides">
 :root{
@@ -1411,111 +1323,6 @@ body{
   } else {
     init();
   }
-})();
-</script>
-<!-- MZJ Quick Menu (single button) -->
-<style id="mzjQuickMenuStyle">
-@media (max-width: 991px){
-  .mzj-qm-btn{
-    position: fixed; top: 12px; right: 12px;
-    z-index: 2147483000;
-    width: 46px; height: 46px;
-    border: 0; border-radius: 16px;
-    background: rgb(62,36,32);
-    color: #fff;
-    font-size: 22px; font-weight: 900;
-    box-shadow: 0 10px 22px rgba(0,0,0,.18);
-    display: grid; place-items: center;
-    cursor: pointer;
-  }
-  .mzj-qm-ov{
-    position: fixed; inset: 0;
-    z-index: 2147482990;
-    background: rgba(0,0,0,.20);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .18s ease;
-  }
-  .mzj-qm{
-    position: fixed;
-    top: 64px; right: 12px;
-    width: min(320px, calc(100vw - 24px));
-    z-index: 2147482995;
-    background: #fff8ef;
-    border: 1px solid rgba(62,36,32,.12);
-    border-radius: 18px;
-    box-shadow: 0 16px 38px rgba(0,0,0,.18);
-    transform: translateY(-6px);
-    opacity: 0;
-    pointer-events: none;
-    transition: .18s ease;
-    padding: 10px;
-  }
-  .mzj-qm-head{
-    display:flex; align-items:center; justify-content:space-between;
-    padding: 8px 10px 6px;
-    color: rgb(62,36,32);
-    font-weight: 900;
-  }
-  .mzj-qm-close{
-    width: 38px; height: 38px;
-    border: 0; border-radius: 14px;
-    background: #fff;
-    color: rgb(62,36,32);
-    font-size: 18px; font-weight: 900;
-    cursor: pointer;
-    box-shadow: 0 8px 18px rgba(0,0,0,.10);
-  }
-  .mzj-qm a{
-    display:flex; align-items:center; gap: 10px;
-    padding: 10px 12px;
-    border-radius: 14px;
-    text-decoration: none !important;
-    color: rgb(62,36,32) !important;
-    font-weight: 800;
-    background: #fff;
-    border: 1px solid rgba(62,36,32,.10);
-    margin: 6px 0;
-  }
-  body.mzj-qm-open .mzj-qm-ov{ opacity:1; pointer-events:auto; }
-  body.mzj-qm-open .mzj-qm{ opacity:1; pointer-events:auto; transform: translateY(0); }
-}
-</style>
-
-<button class="mzj-qm-btn" id="mzjQMBtn" type="button" aria-label="فتح القائمة">☰</button>
-<div class="mzj-qm-ov" id="mzjQMOverlay" aria-hidden="true"></div>
-
-<nav class="mzj-qm" id="mzjQM" aria-label="قائمة الصفحات">
-  <div class="mzj-qm-head">
-    <span>القائمة</span>
-    <button class="mzj-qm-close" id="mzjQMClose" type="button" aria-label="إغلاق">✕</button>
-  </div>
-
-  <a href="m.sales.html">💼<span>تتبع المبيعات</span></a>
-    <a href="m.dashboard.html">📊<span>الداش بورد</span></a>
-    <a class="active" href="m.vt.html">↔️<span>نقل السيارات</span></a>
-    <a href="m.photoshoot-user.html">📷<span>إدارة الطلبات</span></a>
-    <a href="m.cars.html">🚗<span>كل السيارات</span></a>
-    <a href="m.admin.html">🏠<span>الإدارة</span></a>
-    <a href="m.Activity.html">🕘<span>سجل النشاط</span></a>
-    <a href="m.act.html">🧾<span>سجل الحركات</span></a>
-</nav>
-
-<script>
-(function(){
-  const btn = document.getElementById('mzjQMBtn');
-  const ov = document.getElementById('mzjQMOverlay');
-  const closeBtn = document.getElementById('mzjQMClose');
-  if(!btn || !ov || !closeBtn) return;
-
-  const open = () => document.body.classList.add('mzj-qm-open');
-  const close = () => document.body.classList.remove('mzj-qm-open');
-  const toggle = () => document.body.classList.toggle('mzj-qm-open');
-
-  btn.addEventListener('click', (e)=>{ e.preventDefault(); toggle(); });
-  ov.addEventListener('click', close);
-  closeBtn.addEventListener('click', close);
-  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') close(); });
 })();
 </script>
 </body>

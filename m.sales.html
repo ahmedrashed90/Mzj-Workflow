@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -402,6 +403,110 @@
   .topbar-actions{justify-content:flex-start}
 }
 
+
+/* ===== MZJ Quick Menu (Mobile) — single button, no bars ===== */
+@media (max-width: 991px){
+  body{ padding-bottom: 0 !important; }
+
+  .mzj-quickmenu-btn{
+    position: fixed;
+    right: 12px;
+    top: 12px;
+    z-index: 20000;
+    width: 48px;
+    height: 48px;
+    border: 0;
+    border-radius: 16px;
+    background: rgb(62,36,32);
+    color: #fff;
+    font-size: 22px;
+    font-weight: 900;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 10px 22px rgba(0,0,0,.18);
+    cursor: pointer;
+  }
+
+  .mzj-quickmenu-overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.18);
+    backdrop-filter: blur(2px);
+    z-index: 19990;
+    opacity: 0;
+    pointer-events: none;
+    transition: .18s ease;
+  }
+
+  .mzj-quickmenu{
+    position: fixed;
+    top: 72px;
+    right: 12px;
+    width: min(320px, calc(100vw - 24px));
+    max-height: calc(100vh - 92px);
+    overflow: auto;
+    background: #fff8ef;
+    border: 1px solid rgba(62,36,32,.12);
+    border-radius: 18px;
+    box-shadow: 0 16px 38px rgba(0,0,0,.18);
+    z-index: 19995;
+    transform: translateY(-6px);
+    opacity: 0;
+    pointer-events: none;
+    transition: .18s ease;
+    padding: 10px;
+  }
+
+  .mzj-quickmenu-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding: 10px 12px 6px;
+    font-weight: 900;
+    color: rgb(62,36,32);
+  }
+
+  .mzj-quickmenu-close{
+    border:0;
+    background:#fff;
+    color: rgb(62,36,32);
+    width: 38px;
+    height: 38px;
+    border-radius: 14px;
+    box-shadow: 0 8px 16px rgba(0,0,0,.08);
+    cursor:pointer;
+    font-size: 18px;
+    font-weight: 900;
+    display:grid;
+    place-items:center;
+  }
+
+  .mzj-quickmenu a{
+    color: rgb(62,36,32) !important;
+    text-decoration: none !important;
+    font-weight: 800 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 10px 12px !important;
+    margin: 6px 0 !important;
+    border-radius: 14px !important;
+    background: #fff !important;
+    border: 1px solid rgba(62,36,32,.10) !important;
+  }
+
+  body.mzj-qm-open .mzj-quickmenu-overlay{
+    opacity: 1;
+    pointer-events: auto;
+  }
+  body.mzj-qm-open .mzj-quickmenu{
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+}
+
 </style>
 <style>
   /* ===== Sales Safe Refactor: hide legacy topbar ONLY (keep #tabsBar visible) ===== */
@@ -503,7 +608,22 @@ body{margin:0;background:var(--cream);font-family:Tajawal, Arial, sans-serif;pad
 
 </head>
 <body class="legacy-sales">
-  <header class="m-header">
+  
+<!-- MZJ Quick Menu (Mobile) -->
+<button class="mzj-quickmenu-btn" id="mzjQuickMenuBtn" type="button" aria-label="فتح القائمة">☰</button>
+<div class="mzj-quickmenu-overlay" id="mzjQuickMenuOverlay" aria-hidden="true"></div>
+<nav class="mzj-quickmenu" id="mzjQuickMenu" aria-label="قائمة الصفحات">
+  <div class="mzj-quickmenu-head">
+    <span>القائمة</span>
+    <button class="mzj-quickmenu-close" id="mzjQuickMenuClose" type="button" aria-label="إغلاق">✕</button>
+  </div>
+  <a href="m.dashboard.html">📊 الداش بورد</a>
+  <a href="m.admin.html">🏠 الإدارة</a>
+  <a href="m.sales.html">💼 تتبع المبيعات</a>
+  <a href="m.inventory.html">📦 المخزون</a>
+</nav>
+
+<header class="m-header">
     <h1 class="title">تتبع المبيعات</h1>
     <p class="sub">قائمة الطلبات كروت — اضغط على الكارت لفتح الطلب</p>
   </header>
@@ -520,37 +640,6 @@ body{margin:0;background:var(--cream);font-family:Tajawal, Arial, sans-serif;pad
 
   
   <!-- Topbar (Matched with Admin) -->
-  <div class="topbar">
-    <div class="topbar-inner">
-      <div class="brand">
-        <div class="logo" title="MZJ">MZJ</div>
-        <div class="brand-text">
-          <h1>لوحة تتبع المبيعات</h1>
-          <small class="hint">مجموعة محمد بن ذعار العجمي للسيارات</small>
-        </div>
-      </div>
-
-      <div class="tabs">
-        <a class="tab" href="admin.html">الإدارة</a>
-        <a class="tab active" href="sales.html">المبيعات</a>
-        <a class="tab" href="inventory.html">المخزون</a>
-        <a class="tab" href="dashboard.html">الداش بورد</a>
-        <a class="tab" href="vt.html">نقل السيارات</a>
-        <a class="tab" href="photoshoot-user.html">إدارة الطلبات</a>
-        <a class="tab" href="cars.html">كل السيارات</a>
-        <a class="tab" href="Activity.html">سجل النشاط</a>
-      </div>
-
-      <div class="topbar-actions">
-        <div class="status-badge">
-          <span class="dot warn" id="connDot"></span>
-          <span id="connText">—</span>
-        </div>
-        <span id="whoami" class="whoami"></span>
-        <button id="logoutBtn" class="tb-btn" style="display:none;">تسجيل الخروج</button>
-      </div>
-    </div>
-  </div>
 <div class="wrap">
 
     <!-- Auth -->
@@ -2383,24 +2472,6 @@ ordersListCache = rows;
 
       </div>
     </main>
-
-  
-<nav class="mzj-downbar" aria-label="التنقل السفلي">
-  <div class="inner">
-    <a class="active" href="m.sales.html">💼<span>تتبع المبيعات</span></a>
-    <a href="m.dashboard.html">📊<span>الداش بورد</span></a>
-    <a href="m.inventory.html">🚗<span>المخزون</span></a>
-    <a href="m.vt.html">🧭<span>نقل السيارات</span></a>
-    <a href="m.photoshoot-user.html">📷<span>إدارة الطلبات</span></a>
-
-    <a href="m.cars.html">🚙<span>كل السيارات</span></a>
-    <a href="m.admin.html">🏠<span>الإدارة</span></a>
-    <a href="m.Activity.html">🕘<span>سجل النشاط</span></a>
-    <a href="m.act.html">🧾<span>سجل الحركات</span></a>
-  </div>
-</nav>
-
-
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import {
@@ -4155,6 +4226,25 @@ ordersListCache = rows;
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init);
   else init();
+})();
+</script>
+
+
+<script>
+(function(){
+  const btn = document.getElementById('mzjQuickMenuBtn');
+  const overlay = document.getElementById('mzjQuickMenuOverlay');
+  const closeBtn = document.getElementById('mzjQuickMenuClose');
+
+  if(!btn || !overlay || !closeBtn) return;
+
+  function openMenu(){ document.body.classList.add('mzj-qm-open'); }
+  function closeMenu(){ document.body.classList.remove('mzj-qm-open'); }
+
+  btn.addEventListener('click', (e)=>{ e.preventDefault(); document.body.classList.toggle('mzj-qm-open'); });
+  overlay.addEventListener('click', closeMenu);
+  closeBtn.addEventListener('click', closeMenu);
+  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeMenu(); });
 })();
 </script>
 

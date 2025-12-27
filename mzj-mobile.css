@@ -1,28 +1,123 @@
-/* ===== Downbar labels: TWO LINES (show full names) ===== */
-.mzj-downbar{
-  height: 110px !important;          /* زوّد ارتفاع البار عشان السطرين */
-}
+/* MZJ Mobile – Right Side Bar (Off-canvas, from the right)
+   - Replaces any bottom/down bar behavior (no content hiding from bottom)
+   - Toggle via: document.body.classList.toggle('mzj-rbar-open')
+*/
 
-.mzj-main{
-  padding-bottom: 140px !important;  /* عشان المحتوى ما يدخل تحت البار */
-}
+@media (max-width: 991px){
 
-.mzj-downbar .inner{
-  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-  gap: 6px !important;
-  padding: 10px 10px !important;
-}
+  /* If your topbar height differs, override this variable in your main CSS */
+  :root{
+    --mzj-topbar-h: 72px;
+    --mzj-rbar-w: 270px;        /* width when open */
+    --mzj-rbar-handle: 48px;    /* visible handle width when closed */
+    --mzj-rbar-z: 1200;
+  }
 
-.mzj-downbar a span{
-  font-size: 9px !important;
-  line-height: 1.15 !important;
+  /* Optional: when you add a rightbar, it's nice to prevent horizontal scroll */
+  html, body{ overflow-x: hidden; }
 
-  /* سطرين بدل قص */
-  white-space: normal !important;
-  overflow: visible !important;
-  text-overflow: initial !important;
+  /* ===== Overlay (click to close) ===== */
+  .mzj-rbar-overlay{
+    position: fixed;
+    inset: 0;
+    z-index: calc(var(--mzj-rbar-z) - 1);
+    background: rgba(0,0,0,.28);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .22s ease;
+  }
+  body.mzj-rbar-open .mzj-rbar-overlay{
+    opacity: 1;
+    pointer-events: auto;
+  }
 
-  display: -webkit-box !important;
-  -webkit-line-clamp: 2 !important;
-  -webkit-box-orient: vertical !important;
+  /* ===== Right Bar ===== */
+  .mzj-rightbar{
+    position: fixed;
+    top: var(--mzj-topbar-h);
+    right: 0;
+    width: var(--mzj-rbar-w);
+    height: calc(100vh - var(--mzj-topbar-h));
+    z-index: var(--mzj-rbar-z);
+
+    /* Closed state: keep only the handle visible */
+    transform: translateX(calc(100% - var(--mzj-rbar-handle)));
+    transition: transform .22s ease;
+
+    border-radius: 16px 0 0 16px;
+    overflow: hidden;
+
+    background: #fff;
+    box-shadow: 0 12px 30px rgba(0,0,0,.18);
+  }
+
+  body.mzj-rbar-open .mzj-rightbar{
+    transform: translateX(0);
+  }
+
+  /* ===== Toggle button (handle) ===== */
+  .mzj-rightbar__toggle{
+    position: absolute;
+    top: 14px;
+    left: 14px;
+
+    width: 42px;
+    height: 42px;
+
+    border: 0;
+    border-radius: 12px;
+    cursor: pointer;
+
+    background: rgb(62,36,32);   /* MZJ dark brown */
+    color: #fff;
+
+    display: grid;
+    place-items: center;
+
+    box-shadow: 0 10px 22px rgba(0,0,0,.18);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ===== Content ===== */
+  .mzj-rightbar__content{
+    height: 100%;
+    padding: 72px 14px 14px;
+    background: #fff8ef;         /* MZJ cream */
+  }
+
+  .mzj-rightbar__title{
+    margin: 0 0 10px;
+    font-family: Tajawal, system-ui, -apple-system, "Segoe UI", Arial;
+    font-weight: 800;
+    font-size: 14px;
+    color: rgb(62,36,32);
+  }
+
+  .mzj-rightbar__links{
+    display: grid;
+    gap: 10px;
+  }
+
+  .mzj-rightbar__link{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 12px 12px;
+    border-radius: 12px;
+
+    text-decoration: none;
+    color: rgb(62,36,32);
+    background: #fff;
+    border: 1px solid rgba(62,36,32,.10);
+  }
+
+  .mzj-rightbar__dot{
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: rgb(188,143,116); /* MZJ beige */
+    flex: 0 0 auto;
+  }
+
 }

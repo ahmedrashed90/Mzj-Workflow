@@ -2981,5 +2981,14 @@ html, body{ min-height: 100dvh; }
   max-width: 100% !important;
 }
 </style>
+  <!-- MZJ Unified Menu Mount -->
+<div id="mzjMenuMount"></div>
+<script>
+fetch('mzj-menu.html')
+  .then(r => r.text())
+  .then(html => { document.getElementById('mzjMenuMount').innerHTML = html; })
+  .catch(()=>{});
+</script>
+
 </body>
 </html>

@@ -26,3 +26,17 @@
   -webkit-line-clamp: 2 !important;
   -webkit-box-orient: vertical !important;
 }
+/* KILL ANY DOWN BAR – FINAL */
+.mzj-downbar,
+.downbar,
+.bottom-bar,
+.mobile-bottom-bar,
+nav[aria-label="التنقل"]{
+  display: none !important;
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+body{
+  padding-bottom: 0 !important;
+}

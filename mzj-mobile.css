@@ -154,3 +154,98 @@ body.mzj-menu-open .mzj-menu-overlay{
 @media (min-width: 992px){
   .mzj-menu-btn, .mzj-menu-overlay, .mzj-menu-drawer{ display:none !important; }
 }
+/* =========================
+   MZJ Unified Menu (Mobile)
+   ========================= */
+@media (max-width: 991px){
+
+  .mzj-menu-btn{
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 99999;
+    width: 50px;
+    height: 50px;
+    border: 0;
+    border-radius: 16px;
+    background: rgb(62,36,32);
+    color: #fff;
+    font-size: 22px;
+    font-weight: 900;
+    box-shadow: 0 10px 22px rgba(0,0,0,.18);
+  }
+
+  .mzj-menu-overlay{
+    position: fixed;
+    inset: 0;
+    z-index: 99998;
+    background: rgba(0,0,0,.18);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    pointer-events: none;
+    transition: .18s ease;
+  }
+
+  .mzj-menu{
+    position: fixed;
+    top: 72px;
+    right: 12px;
+    z-index: 99999;
+    width: min(360px, calc(100vw - 24px));
+    background: #fff8ef;
+    border: 1px solid rgba(62,36,32,.12);
+    border-radius: 18px;
+    box-shadow: 0 16px 38px rgba(0,0,0,.18);
+    padding: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-6px);
+    transition: .18s ease;
+  }
+
+  body.mzj-menu-open .mzj-menu-overlay{
+    opacity: 1;
+    pointer-events: auto;
+  }
+  body.mzj-menu-open .mzj-menu{
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  .mzj-menu-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding: 6px 6px 10px;
+  }
+  .mzj-menu-title{
+    font-weight: 900;
+    color: rgb(62,36,32);
+    font-size: 18px;
+  }
+  .mzj-menu-close{
+    width: 42px;
+    height: 42px;
+    border: 0;
+    border-radius: 14px;
+    background: #fff;
+    color: rgb(62,36,32);
+    font-size: 20px;
+    box-shadow: 0 8px 16px rgba(0,0,0,.10);
+  }
+
+  .mzj-menu-link{
+    display:block;
+    padding: 12px 12px;
+    margin: 8px 0;
+    border-radius: 16px;
+    background: #fff;
+    border: 1px solid rgba(62,36,32,.10);
+    color: rgb(62,36,32);
+    text-decoration: none;
+    font-weight: 900;
+  }
+}
+

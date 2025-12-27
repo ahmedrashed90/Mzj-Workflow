@@ -709,7 +709,29 @@ header, .topbar, .navbar, .header, .sidebar, aside.sidebar, nav.sidebar, .side-b
   <main class="mzj-main">
     
 
-<!-- REMOVED BAR -->
+<header class="mzj-topbar">
+  <div class="topbar-left">
+    <button class="icon-btn" id="mzjSidebarBtn" aria-label="القائمة"><i class="fa-solid fa-bars"></i></button>
+    <div class="brand">
+      <div class="brand-mark">MZJ</div>
+      <div class="brand-text">
+        <div class="brand-title">محمد بن ذعار العجمي للسيارات</div>
+        <div class="brand-sub">Workspace</div>
+      </div>
+    </div>
+  </div>
+  <div class="topbar-center">
+    <div class="mzj-breadcrumb">
+      <span class="crumb">الرئيسية</span>
+      <i class="fa-solid fa-chevron-left"></i>
+      <span class="crumb current">الإدارة</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="mzj-chip"><i class="fa-regular fa-clock"></i><span id="mzjNow">—</span></div>
+    <button id="btnSignOut" class="btn btn-ghost" style="display:none"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</button>
+  </div>
+</header>
 
 <main class="mzj-content mzj-mobile-only">
 
@@ -727,7 +749,7 @@ header, .topbar, .navbar, .header, .sidebar, aside.sidebar, nav.sidebar, .side-b
 </div>
 <div class="tabs">
 <a class="tab active" href="m.admin.html">الإدارة</a>
-<a class="tab" href="#">المخزون</a>
+<a class="tab" href="m.inventory.html">المخزون</a>
 <a class="tab" href="m.dashboard.html">الداش بورد</a>
 <a class="tab" href="m.vt.html">نقل السيارات</a>
 <a class="tab" href="m.photoshoot-user.html">إدارة الطلبات</a>
@@ -2577,7 +2599,19 @@ if(!movedCount){
     </div>
   
 </main>
-<!-- REMOVED BAR -->
+<nav class="mzj-downbar" aria-label="التنقل">
+    <div class="inner">
+<a href="m.sales.html">💼<span>تتبع المبيعات</span></a>
+    <a href="m.dashboard.html">📊<span>الداش بورد</span></a>
+    <a href="m.vt.html">↔️<span>نقل السيارات</span></a>
+    <a href="m.photoshoot-user.html">📷<span>إدارة الطلبات</span></a>
+
+    <a href="m.cars.html">🚗<span>كل السيارات</span></a>
+    <a class="active" href="m.admin.html">🏠<span>الإدارة</span></a>
+    <a href="m.Activity.html">🕘<span>سجل النشاط</span></a>
+    <a href="m.act.html">🧾<span>سجل الحركات</span></a>
+</div>
+  </nav>
 </div>
 
 <script>
@@ -2918,26 +2952,52 @@ html, body{ min-height: 100dvh; }
 }
 </style>
 
-<!-- MZJ MENU BUTTON -->
-<button id="mzjMenuBtn" style="position:fixed;top:12px;right:12px;z-index:9999;width:48px;height:48px;border-radius:14px;border:0;background:#3e2420;color:#fff;font-size:22px">☰</button>
-<div id="mzjMenuOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:9998"></div>
-<div id="mzjMenuPanel" style="display:none;position:fixed;top:70px;right:12px;z-index:9999;background:#fff8ef;border-radius:16px;padding:12px;width:260px">
-<a href="m.dashboard.html">Dashboard</a><br>
-<a href="m.sales.html">Sales</a><br>
-<a href="m.vt.html">Vehicle Transfer</a><br>
-<a href="m.photoshoot-user.html">Photoshoot</a><br>
-<a href="m.cars.html">Cars</a><br>
-<a href="m.Activity.html">Activity</a><br>
-<a href="m.act.html">Actions</a>
+<!-- MZJ MENU POPUP -->
+<style>
+.mzj-menu-btn{
+ position:fixed;top:12px;right:12px;z-index:9999;
+ background:#3e2420;color:#fff;border:0;
+ padding:10px 14px;border-radius:14px;
+ font-family:Tajawal,Arial;font-weight:700
+}
+.mzj-menu-overlay{
+ display:none;position:fixed;inset:0;
+ background:rgba(0,0,0,.25);z-index:9998
+}
+.mzj-menu-popup{
+ display:none;position:fixed;top:60px;right:12px;
+ background:#fff8ef;border-radius:16px;
+ padding:12px;width:280px;z-index:9999;
+ box-shadow:0 16px 30px rgba(0,0,0,.18)
+}
+.mzj-menu-popup a{
+ display:block;padding:10px;border-radius:12px;
+ color:#3e2420;text-decoration:none;font-weight:700
+}
+.mzj-menu-popup a:hover{background:#f2e6da}
+</style>
+
+<button id="mzjMenuBtn" class="mzj-menu-btn">القائمة ☰</button>
+<div id="mzjMenuOverlay" class="mzj-menu-overlay"></div>
+<div id="mzjMenuPopup" class="mzj-menu-popup">
+ <a href="m.dashboard.html">📊 الداش بورد</a>
+ <a href="m.admin.html">🏠 الإدارة</a>
+ <a href="m.sales.html">💼 المبيعات</a>
+ <a href="m.vt.html">↔️ نقل السيارات</a>
+ <a href="m.photoshoot-user.html">📷 طلبات التصوير</a>
+ <a href="m.cars.html">🚗 السيارات</a>
+ <a href="m.Activity.html">🕘 سجل النشاط</a>
+ <a href="m.act.html">🧾 سجل الحركات</a>
 </div>
+
 <script>
 (function(){
-const b=document.getElementById('mzjMenuBtn'),
-o=document.getElementById('mzjMenuOverlay'),
-p=document.getElementById('mzjMenuPanel');
-if(!b) return;
-b.onclick=()=>{o.style.display='block';p.style.display='block';};
-o.onclick=()=>{o.style.display='none';p.style.display='none';};
+ const b=document.getElementById('mzjMenuBtn'),
+ o=document.getElementById('mzjMenuOverlay'),
+ p=document.getElementById('mzjMenuPopup');
+ if(!b) return;
+ b.onclick=()=>{o.style.display='block';p.style.display='block';};
+ o.onclick=()=>{o.style.display='none';p.style.display='none';};
 })();
 </script>
 

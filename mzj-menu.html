@@ -1,6 +1,6 @@
 <!-- mzj-menu.html -->
 <button class="mzj-menu-btn" id="mzjMenuBtn" type="button" aria-label="القائمة">☰</button>
-<div class="mzj-menu-overlay" id="mzjMenuOverlay"></div>
+<div class="mzj-menu-overlay" id="mzjMenuOverlay" aria-hidden="true"></div>
 
 <nav class="mzj-menu" id="mzjMenu" aria-label="قائمة الصفحات">
   <div class="mzj-menu-head">
@@ -25,12 +25,13 @@
   const ov  = document.getElementById('mzjMenuOverlay');
   const close = document.getElementById('mzjMenuClose');
 
-  function openM(){ document.body.classList.add('mzj-menu-open'); }
   function closeM(){ document.body.classList.remove('mzj-menu-open'); }
+  function toggleM(){ document.body.classList.toggle('mzj-menu-open'); }
 
-  if(btn) btn.addEventListener('click', ()=> document.body.classList.toggle('mzj-menu-open'));
+  if(btn) btn.addEventListener('click', toggleM);
   if(ov) ov.addEventListener('click', closeM);
   if(close) close.addEventListener('click', closeM);
+
   document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeM(); });
 })();
 </script>

@@ -3,6 +3,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
@@ -165,6 +166,36 @@
 </style>
 
   <link rel="stylesheet" href="mzj-mobile.css">
+<style id="mzjMenuOverrides">
+@media (max-width: 991px){
+  /* Hide any bars (top/side/down) visually without touching JS dependencies */
+  .mzj-topbar,
+  header.mzj-topbar,
+  .topbar,
+  header,
+  nav.mzj-downbar,
+  .mzj-downbar,
+  .downbar,
+  .bottom-bar,
+  .mobile-bottom-bar,
+  .fixed-bottom,
+  .footer-fixed,
+  .mzj-sidebar,
+  aside.mzj-sidebar,
+  .sidebar,
+  aside.sidebar{
+    display:none !important;
+    visibility:hidden !important;
+    height:0 !important;
+    min-height:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+  }
+  /* Remove reserved space that old bars might have added */
+  body{ padding-bottom:0 !important; padding-top:0 !important; }
+  .mzj-main, .mzj-content, main, .content, .main, .app, .container{ padding-bottom:0 !important; padding-top:0 !important; }
+}
+</style>
 </head>
 <body class="mzj">
 
@@ -1380,6 +1411,108 @@ body{
   } else {
     init();
   }
+})();
+</script>
+<!-- MZJ Quick Menu (single button) -->
+<style id="mzjQuickMenuStyle">
+@media (max-width: 991px){
+  .mzj-qm-btn{
+    position: fixed; top: 12px; right: 12px;
+    z-index: 2147483000;
+    width: 46px; height: 46px;
+    border: 0; border-radius: 16px;
+    background: rgb(62,36,32);
+    color: #fff;
+    font-size: 22px; font-weight: 900;
+    box-shadow: 0 10px 22px rgba(0,0,0,.18);
+    display: grid; place-items: center;
+    cursor: pointer;
+  }
+  .mzj-qm-ov{
+    position: fixed; inset: 0;
+    z-index: 2147482990;
+    background: rgba(0,0,0,.20);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s ease;
+  }
+  .mzj-qm{
+    position: fixed;
+    top: 64px; right: 12px;
+    width: min(320px, calc(100vw - 24px));
+    z-index: 2147482995;
+    background: #fff8ef;
+    border: 1px solid rgba(62,36,32,.12);
+    border-radius: 18px;
+    box-shadow: 0 16px 38px rgba(0,0,0,.18);
+    transform: translateY(-6px);
+    opacity: 0;
+    pointer-events: none;
+    transition: .18s ease;
+    padding: 10px;
+  }
+  .mzj-qm-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 8px 10px 6px;
+    color: rgb(62,36,32);
+    font-weight: 900;
+  }
+  .mzj-qm-close{
+    width: 38px; height: 38px;
+    border: 0; border-radius: 14px;
+    background: #fff;
+    color: rgb(62,36,32);
+    font-size: 18px; font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 8px 18px rgba(0,0,0,.10);
+  }
+  .mzj-qm a{
+    display:flex; align-items:center; gap: 10px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    text-decoration: none !important;
+    color: rgb(62,36,32) !important;
+    font-weight: 800;
+    background: #fff;
+    border: 1px solid rgba(62,36,32,.10);
+    margin: 6px 0;
+  }
+  body.mzj-qm-open .mzj-qm-ov{ opacity:1; pointer-events:auto; }
+  body.mzj-qm-open .mzj-qm{ opacity:1; pointer-events:auto; transform: translateY(0); }
+}
+</style>
+
+<button class="mzj-qm-btn" id="mzjQMBtn" type="button" aria-label="فتح القائمة">☰</button>
+<div class="mzj-qm-ov" id="mzjQMOverlay" aria-hidden="true"></div>
+
+<nav class="mzj-qm" id="mzjQM" aria-label="قائمة الصفحات">
+  <div class="mzj-qm-head">
+    <span>القائمة</span>
+    <button class="mzj-qm-close" id="mzjQMClose" type="button" aria-label="إغلاق">✕</button>
+  </div>
+
+  <a href="m.dashboard.html">📊 الداش بورد</a>
+  <a href="m.admin.html">🏠 الإدارة</a>
+  <a href="m.inventory.html">📦 المخزون</a>
+  <a href="m.sales.html">💼 المبيعات</a>
+  <a href="m.vt.html">↔️ نقل السيارات</a>
+</nav>
+
+<script>
+(function(){
+  const btn = document.getElementById('mzjQMBtn');
+  const ov = document.getElementById('mzjQMOverlay');
+  const closeBtn = document.getElementById('mzjQMClose');
+  if(!btn || !ov || !closeBtn) return;
+
+  const open = () => document.body.classList.add('mzj-qm-open');
+  const close = () => document.body.classList.remove('mzj-qm-open');
+  const toggle = () => document.body.classList.toggle('mzj-qm-open');
+
+  btn.addEventListener('click', (e)=>{ e.preventDefault(); toggle(); });
+  ov.addEventListener('click', close);
+  closeBtn.addEventListener('click', close);
+  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') close(); });
 })();
 </script>
 </body>

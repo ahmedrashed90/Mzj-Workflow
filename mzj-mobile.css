@@ -1,176 +1,28 @@
-/* =========================================================
-   MZJ Mobile Overrides (RIGHT BAR) - Clean
-   - Removes Down Bar on mobile
-   - Hides old sidebars (common selectors)
-   - Adds Right Side Bar (off-canvas) that opens/closes
-   Brand colors:
-   - Brown: rgb(62,36,32)
-   - Beige: rgb(188,143,116)
-   - Cream: #fff8ef
-========================================================= */
-
-/* Prevent horizontal scroll on mobile (without clipping fixed overlays) */
-html, body{
-  max-width: 100%;
-  overflow-x: hidden;
+/* ===== Downbar labels: TWO LINES (show full names) ===== */
+.mzj-downbar{
+  height: 110px !important;          /* زوّد ارتفاع البار عشان السطرين */
 }
 
-/* =========================
-   1) Disable any Down Bar
-========================= */
-@media (max-width: 991px){
-  /* hide known downbar */
-  .mzj-downbar,
-  .down-bar,
-  .bottom-bar,
-  .mobile-bottom-bar,
-  .footer-fixed,
-  .fixed-bottom,
-  nav.bottom,
-  .mobile-nav-bottom{
-    display: none !important;
-    height: 0 !important;
-  }
-
-  /* remove extra padding that was added for downbar */
-  .mzj-main,
-  main,
-  .main,
-  .content,
-  .page-content{
-    padding-bottom: 0 !important;
-  }
+.mzj-main{
+  padding-bottom: 140px !important;  /* عشان المحتوى ما يدخل تحت البار */
 }
 
-/* =========================
-   2) Hide old sidebars (if any)
-========================= */
-@media (max-width: 991px){
-  .mzj-sidebar,
-  .mzj-side,
-  .sidebar,
-  .side-bar,
-  .side-nav,
-  .sidenav,
-  .drawer,
-  .offcanvas,
-  .off-canvas{
-    /* لو عندك سايد بار قديم مش شغال/بيشوّه الموبايل */
-    display: none !important;
-  }
+.mzj-downbar .inner{
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+  padding: 10px 10px !important;
 }
 
-/* =========================
-   3) Right Bar (the one you want)
-   NOTE: requires HTML:
-   <div class="mzj-rbar-overlay" id="mzjRbarOverlay"></div>
-   <aside class="mzj-rightbar" id="mzjRightbar">...</aside>
-   And JS toggles body class: mzj-rbar-open
-========================= */
-@media (max-width: 991px){
-  :root{
-    --mzj-rbar-w: 270px;        /* width when open */
-    --mzj-rbar-handle: 54px;    /* visible part when closed */
-    --mzj-rbar-top: 72px;       /* top offset under topbar */
-    --mzj-rbar-z: 9999;
-  }
+.mzj-downbar a span{
+  font-size: 9px !important;
+  line-height: 1.15 !important;
 
-  .mzj-rbar-overlay{
-    position: fixed;
-    inset: 0;
-    z-index: calc(var(--mzj-rbar-z) - 1);
-    background: rgba(0,0,0,.28);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .2s ease;
-  }
-  body.mzj-rbar-open .mzj-rbar-overlay{
-    opacity: 1;
-    pointer-events: auto;
-  }
+  /* سطرين بدل قص */
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: initial !important;
 
-  .mzj-rightbar{
-    position: fixed !important;
-    top: var(--mzj-rbar-top);
-    right: 0;
-    width: var(--mzj-rbar-w);
-    height: calc(100vh - var(--mzj-rbar-top));
-    z-index: var(--mzj-rbar-z);
-    background: #fff;
-    border-radius: 16px 0 0 16px;
-    box-shadow: 0 14px 34px rgba(0,0,0,.20);
-    overflow: hidden;
-
-    /* closed state: only handle shows */
-    transform: translateX(calc(100% - var(--mzj-rbar-handle)));
-    transition: transform .22s ease;
-    will-change: transform;
-  }
-  body.mzj-rbar-open .mzj-rightbar{
-    transform: translateX(0);
-  }
-
-  /* Handle / Toggle button */
-  .mzj-rightbar__toggle{
-    position: absolute;
-    top: 14px;
-    left: 14px; /* inside the bar */
-    width: 42px;
-    height: 42px;
-    border: 0;
-    border-radius: 14px;
-    cursor: pointer;
-    background: rgb(62,36,32);
-    color: #fff;
-    display: grid;
-    place-items: center;
-    box-shadow: 0 10px 22px rgba(0,0,0,.18);
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  /* Content */
-  .mzj-rightbar__content{
-    height: 100%;
-    padding: 70px 14px 14px;
-    background: #fff8ef;
-  }
-
-  .mzj-rightbar__title{
-    margin: 0 0 10px;
-    font-family: Tajawal, system-ui, -apple-system, "Segoe UI", Arial;
-    font-weight: 800;
-    font-size: 14px;
-    color: rgb(62,36,32);
-  }
-
-  .mzj-rightbar__links{
-    display: grid;
-    gap: 10px;
-  }
-
-  .mzj-rightbar__link{
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 12px;
-    border-radius: 14px;
-    text-decoration: none;
-    background: #fff;
-    color: rgb(62,36,32);
-    border: 1px solid rgba(62,36,32,.10);
-  }
-
-  .mzj-rightbar__dot{
-    width: 10px;
-    height: 10px;
-    border-radius: 999px;
-    background: rgb(188,143,116);
-    flex: 0 0 auto;
-  }
-
-  /* If your page has any fixed floating buttons on right, keep them visible */
-  body.mzj-rbar-open .float-right,
-  body.mzj-rbar-open .fab-right{
-    right: calc(var(--mzj-rbar-w) + 12px) !important;
-  }
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
 }

@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -298,30 +299,13 @@ tr:hover{ filter: brightness(0.98); }
 </div>
 </section>
 <div class="legacy legacy-dash">
-<!-- Topbar -->
-<div class="topbar">
-<div class="topbar-inner">
-<div class="brand">
-<div class="logo">MZJ</div>
-<div>
-<h1>لوحة المؤشرات</h1>
-<small class="hint">مجموعة محمد بن ذعار العجمي للسيارات</small>
-</div>
-</div>
-<div class="tabs">
-<a class="tab" href="admin.html">الإدارة</a>
-<a class="tab" href="inventory.html">المخزون</a>
-<a class="tab" href="vt.html">نقل السيارات</a>
-<a class="tab" href="photoshoot-user.html">إدارة الطلبات</a>
-<a class="tab" href="cars.html">كل السيارات</a>
-<a class="tab" href="Activity.html">سجل النشاط</a>
-<a class="tab" href="sales.html"> التتبع</a>
-</div>
-<div class="row">
-<div class="status-badge"><span class="dot warn" id="connDot"></span><span id="connText">جارِ الاتصال…</span></div>
-<button class="btn btn-ghost" id="btnSignOut" style="display:none"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</button>
-</div>
-</div>
+<!-- Topbar (desktop legacy removed) -->
+<div id="legacyTopbarHooks" style="display:none">
+  <div class="status-badge"><span class="dot warn" id="connDot"></span><span id="connText">جارِ الاتصال…</span></div>
+  <button class="mzj-btn mzj-btn-ghost" id="btnSignOut" style="display:none" type="button">
+      <i class="fa-solid fa-right-from-bracket"></i>
+      <span>تسجيل الخروج</span>
+    </button>
 </div>
 <!-- Auth Gate -->
 <div id="authGate" style="min-height:60vh;display:none;place-items:center;padding:24px">
@@ -2842,19 +2826,6 @@ try{
 </main>
   </div>
 
-<nav class="mzj-downbar" aria-label="التنقل">
-  <div class="inner">
-    <a href="m.sales.html">💼<span>تتبع المبيعات</span></a>
-    <a class="active" href="m.dashboard.html">📊<span>الداش بورد</span></a>
-    <a href="m.vt.html">↔️<span>نقل السيارات</span></a>
-    <a href="m.photoshoot-user.html">📷<span>إدارة الطلبات</span></a>
-
-    <a href="m.cars.html">🚗<span>كل السيارات</span></a>
-    <a href="m.admin.html">🏠<span>الإدارة</span></a>
-    <a href="m.Activity.html">🕘<span>سجل النشاط</span></a>
-    <a href="m.act.html">🧾<span>سجل الحركات</span></a>
-  </div>
-</nav>
 <style id="mzjMobileOverrides">
 /* ===== MOBILE OVERRIDES (keep original JS/buttons working) ===== */
 :root{

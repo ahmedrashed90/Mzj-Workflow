@@ -1,28 +1,112 @@
-/* ===== Downbar labels: TWO LINES (show full names) ===== */
-.mzj-downbar{
-  height: 110px !important;          /* زوّد ارتفاع البار عشان السطرين */
+/* ==========================================================================
+   MZJ Mobile (override)
+   - Remove Down Bar completely
+   - Add Right Sidebar (toggle) for mobile navigation
+   ========================================================================== */
+
+/* 1) Remove Down Bar */
+.mzj-downbar{ display:none !important; }
+.mzj-main{ padding-bottom: 0 !important; }
+
+/* 2) Right Sidebar */
+.mzj-rbar-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease;
+  z-index: 2147483000;
 }
 
-.mzj-main{
-  padding-bottom: 140px !important;  /* عشان المحتوى ما يدخل تحت البار */
+.mzj-rightbar{
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: min(86vw, 320px);
+  background: #fff8ef; /* cream */
+  border-left: 1px solid rgba(62,36,32,.10);
+  transform: translateX(105%);
+  transition: transform .22s ease;
+  z-index: 2147483001;
+  box-shadow: -14px 0 30px rgba(0,0,0,.10);
+  display: flex;
+  flex-direction: column;
 }
 
-.mzj-downbar .inner{
-  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-  gap: 6px !important;
-  padding: 10px 10px !important;
+body.mzj-rbar-open .mzj-rightbar{ transform: translateX(0); }
+body.mzj-rbar-open .mzj-rbar-overlay{
+  opacity: 1;
+  pointer-events: auto;
 }
 
-.mzj-downbar a span{
-  font-size: 9px !important;
-  line-height: 1.15 !important;
+/* Toggle button (floating) */
+.mzj-rightbar__toggle{
+  position: absolute;
+  left: -52px;
+  top: 120px;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  border: 1px solid rgba(62,36,32,.18);
+  background: rgb(62,36,32); /* brown */
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.12);
+}
 
-  /* سطرين بدل قص */
-  white-space: normal !important;
-  overflow: visible !important;
-  text-overflow: initial !important;
+/* Content */
+.mzj-rightbar__content{
+  padding: 16px 14px 18px;
+  overflow: auto;
+}
 
-  display: -webkit-box !important;
-  -webkit-line-clamp: 2 !important;
-  -webkit-box-orient: vertical !important;
+.mzj-rightbar__title{
+  margin: 6px 6px 10px;
+  font-family: "Tajawal", system-ui, Arial;
+  font-weight: 800;
+  color: rgb(62,36,32);
+  font-size: 15px;
+}
+
+.mzj-rightbar__links{
+  display: grid;
+  gap: 8px;
+}
+
+.mzj-rightbar__link{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(62,36,32,.12);
+  background: #ffffff;
+  color: #1f2937;
+  font-family: "Tajawal", system-ui, Arial;
+  font-weight: 700;
+}
+
+.mzj-rightbar__link:active{ transform: scale(.99); }
+
+.mzj-rightbar__dot{
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: 2px solid rgb(188,143,116); /* beige */
+  flex: 0 0 auto;
+}
+
+.mzj-rightbar__link.active{
+  border-color: rgba(62,36,32,.30);
+  background: rgba(188,143,116,.18);
+}
+
+/* Make sure sidebar never gets hidden under any fixed mobile bars */
+@supports (padding: max(0px)) {
+  .mzj-rightbar{ padding-bottom: max(0px, env(safe-area-inset-bottom)); }
 }

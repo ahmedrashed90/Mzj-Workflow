@@ -1,27 +1,26 @@
 
 
-
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+
+<html dir="rtl" lang="ar">
 <head>
-  <link rel="icon" type="image/x-icon" href="assets/favicon.png">
-<link rel="prefetch" href="admin.html">
-<link rel="prefetch" href="inventory.html">
-<link rel="prefetch" href="dashboard.html">
-<link rel="prefetch" href="vt.html">
-<link rel="prefetch" href="photoshoot-user.html">
-<link rel="prefetch" href="cars.html">
-<link rel="prefetch" href="Activity.html">
+<link href="assets/favicon.png" rel="icon" type="image/x-icon"/>
+<link href="admin.html" rel="prefetch"/>
+<link href="inventory.html" rel="prefetch"/>
+<link href="dashboard.html" rel="prefetch"/>
+<link href="vt.html" rel="prefetch"/>
+<link href="photoshoot-user.html" rel="prefetch"/>
+<link href="cars.html" rel="prefetch"/>
+<link href="Activity.html" rel="prefetch"/>
 <style id="noFlash">
 html{background:#fff8ef}
 body{opacity:0}
 </style>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
 <title>لوحة المؤشرات — MZJ Cars</title>
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
-
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 <style>
   :root{
     --brown:#3e2420; --beige:#bc8f74; --cream:#fff8ef;
@@ -221,28 +220,17 @@ tr:has(.tag[data-status="مكتملة"]){
 
 tr:hover{ filter: brightness(0.98); }
 </style>
-  <link rel="stylesheet" href="./mzj-ui.css" />
+<link href="./mzj-ui.css" rel="stylesheet">
 
-<style>
-  /* ===== Dashboard Safe Refactor: hide legacy topbar/tabs (keep DOM for JS) ===== */
-  .legacy-dash .dashboard-topbar{display:none !important;}
-  .legacy-dash .topbar,
-  .legacy-dash .tabs,
-  .legacy-dash .nav-tabs,
-  .legacy-dash .header,
-  .legacy-dash header:not(.mzj-topbar){display:none !important;}
-  .legacy-dash{padding-top: 6px;}
-</style>
-
-  <link rel="stylesheet" href="mzj-mobile.menu.fixed.css">
-</head>
+<link href="mzj-mobile.menu.fixed.css" rel="stylesheet"/>
+</link></link></link></head>
 <body class="mzj">
+<!-- MZJ Unified Topbar -->
 
-  <!-- MZJ Unified Topbar -->
-  <div class="mzj-shell" id="mzjShell">
-    <div class="mzj-backdrop" id="mzjBackdrop"></div>
+<div class="mzj-shell" id="mzjShell">
 
-    <main class="mzj-content">
+<div class="mzj-backdrop" id="mzjBackdrop"></div>
+<main class="mzj-content">
 <section class="mzj-pagehead">
 <div class="pagehead-left">
 <h1 class="page-title">لوحة الداش بورد</h1>
@@ -252,11 +240,11 @@ tr:hover{ filter: brightness(0.98); }
 <div class="legacy legacy-dash">
 <!-- Topbar (desktop legacy removed) -->
 <div id="legacyTopbarHooks" style="display:none">
-  <div class="status-badge"><span class="dot warn" id="connDot"></span><span id="connText">جارِ الاتصال…</span></div>
-  <button class="mzj-btn mzj-btn-ghost" id="btnSignOut" style="display:none" type="button">
-      <i class="fa-solid fa-right-from-bracket"></i>
-      <span>تسجيل الخروج</span>
-    </button>
+<div class="status-badge"><span class="dot warn" id="connDot"></span><span id="connText">جارِ الاتصال…</span></div>
+<button class="mzj-btn mzj-btn-ghost" id="btnSignOut" style="display:none" type="button">
+<i class="fa-solid fa-right-from-bracket"></i>
+<span>تسجيل الخروج</span>
+</button>
 </div>
 <!-- Auth Gate -->
 <div id="authGate" style="min-height:60vh;display:none;place-items:center;padding:24px">
@@ -277,7 +265,6 @@ tr:hover{ filter: brightness(0.98); }
 <div id="app" style="display:none">
 <div class="container">
 <!-- Shortages Summary Card (Branches only) -->
-
 <!-- Group Cards + تصوير + طلبات نقل -->
 <div class="cards" id="topCards"><div class="card short-card" id="shortagesCard" title="عرض النواقص لأفرع المعارض (المصدر: مجموع الإجمالي الفعلي للمستودع + الفروع | التركيبة: سيارة + بيان + لون داخلي + لون خارجي + موديل | لو كمية الفرع = 0 تعتبر نقص)">
 <div class="group-head">
@@ -292,13 +279,13 @@ tr:hover{ filter: brightness(0.98); }
 <div class="short-pills" id="shortagesPills"></div>
 </div><div class="card" id="stockCard" title="المخزون حسب الأماكن">
 <div class="group-head">
-  <div class="group-left">
-    <h3 class="group-title"><i class="fa-solid fa-boxes-stacked"></i> المخزون</h3>
-    <div class="sub-metrics">
-      <span class="metric" title="إجمالي السيارات في المخزون"><i class="fa-solid fa-equals"></i> اجمالي السيارات: <b id="stockTotalInline">0</b></span>
-    </div>
-  </div>
-  <div class="group-total" id="stockTotalBig">0</div>
+<div class="group-left">
+<h3 class="group-title"><i class="fa-solid fa-boxes-stacked"></i> المخزون</h3>
+<div class="sub-metrics">
+<span class="metric" title="إجمالي السيارات في المخزون"><i class="fa-solid fa-equals"></i> اجمالي السيارات: <b id="stockTotalInline">0</b></span>
+</div>
+</div>
+<div class="group-total" id="stockTotalBig">0</div>
 </div>
 <p class="hint" style="margin:0"></p>
 </div></div><div class="cards" id="groupsGrid"></div>
@@ -339,16 +326,14 @@ tr:hover{ filter: brightness(0.98); }
 <button class="btn btn-primary" id="btnSaveApproval"><i class="fa-solid fa-floppy-disk"></i> حفظ التعديلات</button>
 </div>
 </div>
-
 <!-- Stock Places Panel -->
 <div id="stockPlacesPanel" style="display:none;margin:0 0 12px">
-  <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
-    <div class="hint" style="margin:0">اختر مكان لعرض السيارات الموجودة فيه.</div>
-    <button class="btn btn-xs btn-outline" id="stockShowAllBtn" type="button"><i class="fa-solid fa-layer-group"></i> عرض الكل</button>
-  </div>
-  <div class="places-grid" id="stockPlacesGridModal"></div>
+<div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
+<div class="hint" style="margin:0">اختر مكان لعرض السيارات الموجودة فيه.</div>
+<button class="btn btn-xs btn-outline" id="stockShowAllBtn" type="button"><i class="fa-solid fa-layer-group"></i> عرض الكل</button>
 </div>
-
+<div class="places-grid" id="stockPlacesGridModal"></div>
+</div>
 <!-- تبويبات لنواقص الفروع فقط -->
 <div class="tabs2" id="shortTabs" style="display:none"></div>
 <!-- جدول السيارات (rows) -->
@@ -2775,84 +2760,7 @@ try{
 <script src="./mzj-ui.js"></script>
 </div>
 </main>
-  </div>
-
-<style id="mzjMobileOverrides">
-/* ===== MOBILE OVERRIDES (keep original JS/buttons working) ===== */
-:root{
-  --mzj-brown: rgb(62,36,32);
-  --mzj-cream: #fff8ef;
-  --mzj-downbar-h: 138px;
-  --mzj-downbar-lift: 14px;
-}
-html,body{ background: var(--mzj-cream) !important; overflow-x:hidden !important; }
-
-/* Hide desktop UI visually ONLY (do not remove elements) */
-@media (max-width: 1023px){
-  .mzj-sidebar, .mzj-topbar, .topbar, header, .sidebar { display:none !important; }
-  /* Make main area full width */
-  .mzj-content, main, .content, .main, .main-content, .page, .container{
-    width:100% !important; max-width:100% !important; margin:0 !important;
-  }
-  /* Reduce side padding if any */
-  .mzj-content, main{ padding-left:12px !important; padding-right:12px !important; }
-  /* Tables: allow horizontal scroll */
-  table{ display:block !important; overflow-x:auto !important; width:100% !important; }
-}
-
-/* ===== DOWNBAR FINAL (2 rows visible) ===== */
-body{
-  padding-bottom: calc(var(--mzj-downbar-h) + env(safe-area-inset-bottom, 0px) + var(--mzj-downbar-lift) + 18px) !important;
-}
-.mzj-downbar{
-  position: fixed !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + var(--mzj-downbar-lift)) !important;
-  height: var(--mzj-downbar-h) !important;
-  z-index: 9999 !important;
-  background: rgba(255,255,255,.96) !important;
-  backdrop-filter: blur(8px);
-  border-top: 1px solid rgba(0,0,0,.06);
-}
-.mzj-downbar .inner{
-  height: var(--mzj-downbar-h) !important;
-  display: grid !important;
-  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-  grid-auto-flow: row !important;
-  grid-auto-rows: 1fr !important;
-  gap: 6px !important;
-  padding: 10px 10px 12px !important;
-}
-.mzj-downbar a{
-  display:flex !important;
-  flex-direction:column !important;
-  align-items:center !important;
-  justify-content:center !important;
-  gap: 4px !important;
-  padding: 8px 4px !important;
-  border-radius: 14px !important;
-  text-decoration:none !important;
-  font-size: 17px !important;
-  color: var(--mzj-brown) !important;
-}
-.mzj-downbar a.active{
-  background: rgba(188,143,116,.22) !important;
-  border:1px solid rgba(188,143,116,.35) !important;
-}
-.mzj-downbar a span{
-  font-size: 9px !important;
-  font-weight: 900 !important;
-  line-height: 1.15 !important;
-  text-align:center !important;
-  white-space: normal !important;
-  overflow: hidden !important;
-  display: -webkit-box !important;
-  -webkit-line-clamp: 2 !important;
-  -webkit-box-orient: vertical !important;
-  max-width: 100% !important;
-}
-</style>
+</div>
 
 <style id="mzjFullBleedCards">
 @media (max-width: 1023px){
@@ -2897,68 +2805,34 @@ body{
   body{padding-left:0 !important; padding-right:0 !important;}
 }
 </style>
-<!-- ===== MZJ Mobile Menu (Single Button) ===== -->
-<button class="mzj-menu-btn" id="mzjMenuBtn" type="button" aria-label="القائمة">☰</button>
 
-<div class="mzj-menu-overlay" id="mzjMenuOverlay" aria-hidden="true"></div>
-
-<aside class="mzj-menu-drawer" id="mzjMenuDrawer" aria-label="قائمة الصفحات">
-  <div class="mzj-menu-head">
-    <div class="mzj-menu-title">القائمة</div>
-    <button class="mzj-menu-close" id="mzjMenuClose" type="button" aria-label="إغلاق">✕</button>
-  </div>
-
-  <nav class="mzj-menu-links">
-    <a class="mzj-menu-link" href="m.dashboard.html">📊 الداش بورد</a>
-    <a class="mzj-menu-link" href="m.admin.html">🏠 الإدارة</a>
-    <a class="mzj-menu-link" href="m.sales.html">💼 تتبع المبيعات</a>
-    <a class="mzj-menu-link" href="m.vt.html">↔️ نقل السيارات</a>
-    <a class="mzj-menu-link" href="m.photoshoot-user.html">📷 إدارة الطلبات</a>
-    <a class="mzj-menu-link" href="m.cars.html">🚗 كل السيارات</a>
-    <a class="mzj-menu-link" href="m.Activity.html">🕘 سجل النشاط</a>
-    <a class="mzj-menu-link" href="m.act.html">🧾 سجل الحركات</a>
-  </nav>
-</aside>
-
+<!-- MZJ Quick Menu (Mobile) -->
+<button aria-label="فتح القائمة" class="mzj-quickmenu-btn" id="mzjQuickMenuBtn" type="button">☰</button>
+<div aria-hidden="true" class="mzj-quickmenu-overlay" id="mzjQuickMenuOverlay"></div>
+<nav aria-label="قائمة الصفحات" class="mzj-quickmenu" id="mzjQuickMenu">
+<div class="mzj-quickmenu-head">القائمة</div>
+<a href="m.dashboard.html">📊 الداش بورد</a>
+<a href="m.admin.html">🏠 الإدارة</a>
+<a href="m.sales.html">💼 تتبع المبيعات</a>
+<a href="m.inventory.html">📦 المخزون</a>
+<a href="m.vt.html">↔️ نقل</a>
+<a href="m.photoshoot-user.html">📷 إدارة الطلبات</a>
+<a href="m.cars.html">🚗 كل السيارات</a>
+<a href="m.Activity.html">🕘 سجل النشاط</a>
+<a href="m.act.html">🧾 سجل الحركات</a>
+</nav>
 <script>
-(function () {
-  const btn = document.getElementById('mzjMenuBtn');
-  const overlay = document.getElementById('mzjMenuOverlay');
-  const closeBtn = document.getElementById('mzjMenuClose');
-  const drawer = document.getElementById('mzjMenuDrawer');
-  if (!btn || !overlay || !closeBtn || !drawer) return;
+(function(){
+  const btn = document.getElementById('mzjQuickMenuBtn');
+  const overlay = document.getElementById('mzjQuickMenuOverlay');
+  const menu = document.getElementById('mzjQuickMenu');
+  if(!btn || !overlay || !menu) return;
 
-  function openMenu(){ document.body.classList.add('mzj-menu-open'); }
-  function closeMenu(){ document.body.classList.remove('mzj-menu-open'); }
-
-  btn.addEventListener('click', function(){ 
-    document.body.classList.contains('mzj-menu-open') ? closeMenu() : openMenu();
-  });
-  closeBtn.addEventListener('click', closeMenu);
+  function closeMenu(){ document.body.classList.remove('mzj-qm-open'); }
+  btn.addEventListener('click', (e)=>{ e.preventDefault(); document.body.classList.toggle('mzj-qm-open'); });
   overlay.addEventListener('click', closeMenu);
-
-  // Close on ESC
-  document.addEventListener('keydown', function(e){
-    if (e.key === 'Escape') closeMenu();
-  });
-
-  // Active link
-  try{
-    const here = (location.pathname.split('/').pop() || '').toLowerCase();
-    const links = drawer.querySelectorAll('a.mzj-menu-link');
-    links.forEach(a=>{
-      const href = (a.getAttribute('href') || '').toLowerCase();
-      if (href === here) a.classList.add('active');
-    });
-  }catch(_){}
+  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeMenu(); });
 })();
 </script>
-<!-- ===== /MZJ Mobile Menu ===== -->
-
 </body>
 </html>
-
-
-
-
-

@@ -3,6 +3,7 @@
 
 
 
+
 <!DOCTYPE html>
 
 <html dir="rtl" lang="ar">
@@ -205,6 +206,21 @@
   .notes-col{
     display:none;
   }
+
+  /* ===== Track current place bar ===== */
+  .place-bar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:999px;
+    background:#fff;
+    box-shadow:0 8px 24px rgba(0,0,0,.04);
+  }
+  .place-bar .dot{width:10px;height:10px;border-radius:50%;background:var(--beige); flex:0 0 auto;}
+  .place-bar .text{font-weight:800;color:var(--brown); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1;}
+  .place-bar .hint{font-size:12px;color:var(--muted); white-space:nowrap;}
 </style>
 <style id="noFlash">
   html{background:#fff8ef;}
@@ -570,6 +586,11 @@
 <input id="trackVin" list="vinHints" placeholder="اكتب رقم الهيكل لعرض جميع حركاته"/>
 <button class="btn btn-ghost" id="btnClearTrack">مسح</button>
 </div>
+<div id="trackPlaceBar" class="place-bar" style="display:none;margin-top:10px">
+  <span class="dot"></span>
+  <div class="text"></div>
+  <div class="hint"></div>
+</div>
 </div>
 <div class="table-wrap">
 <table id="trackTable">
@@ -782,7 +803,98 @@
   function showToast(msg,type='ok'){toast.textContent=msg;toast.className='toast '+type;toast.style.display='block';setTimeout(()=>toast.style.display='none',1800)}
   function pad(n){return n<10?'0'+n:n}
   function now(){const d=new Date();return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;}
-  function onlyDate(str){return (str||'').toString().slice(0,10)}
+  function onlyDate(str){
+    return (str||'').toString().slice(0,10);
+  }
+  function toDateObj(val){
+    if(!val) return null;
+    try{
+      if(val instanceof Date) return val;
+      if(typeof val === 'number' && isFinite(val)) return new Date(val);
+      if(typeof val === 'string'){
+        const s = val.trim();
+        if(!s) return null;
+        const d = new Date(s);
+        if(!isNaN(d)) return d;
+        // try yyyy-mm-dd
+        if(/^\d{4}-\d{2}-\d{2}/.test(s)) return new Date(s.slice(0,10));
+        return null;
+      }
+      if(typeof val === 'object'){
+        if(typeof val.toDate === 'function'){
+          const d = val.toDate();
+          if(d instanceof Date && !isNaN(d)) return d;
+        }
+        if(typeof val.seconds === 'number'){
+          const ms = (val.seconds*1000) + Math.floor((val.nanoseconds||0)/1e6);
+          const d = new Date(ms);
+          if(!isNaN(d)) return d;
+        }
+        if(typeof val._seconds === 'number'){
+          const d = new Date(val._seconds*1000);
+          if(!isNaN(d)) return d;
+        }
+      }
+    }catch(e){}
+    return null;
+  }
+  function getMoveDateObj(m){
+    if(!m) return null;
+    return toDateObj(m.when || m.createdAt || m.timestamp || m.time || m.at || m.date);
+  }
+  function fmtDateOnlyFromMove(m){
+    const d = getMoveDateObj(m);
+    if(d) return d.toISOString().slice(0,10);
+    return (m && (m.date || onlyDate(m.when||''))) || '';
+  }
+  function compareMovesNewestFirst(a,b){
+    const da = getMoveDateObj(a);
+    const db = getMoveDateObj(b);
+    const ta = da?da.getTime():-1;
+    const tb = db?db.getTime():-1;
+    return tb - ta;
+  }
+
+  // ===== stock place helpers (same logic as صفحة المخزون) =====
+  function pickVinFromStockRow(s){
+    if(!s) return '';
+    const candidates = [
+      s.vin, s.VIN, s.chassis, s.chassisNo, s.vinNumber,
+      s['رقم الهيكل'], s['رقم_الهيكل'], s['chassis_no'],
+      s.idVin, s.vin_no
+    ];
+    for(const c of candidates){
+      const v = normalizeVin(String(c||''));
+      if(v) return v;
+    }
+    return '';
+  }
+  function pickPlaceFromStockRow(s){
+    if(!s) return '';
+    const candidates = [
+      s.place, s.location, s.branch, s.currentPlace, s.placeText,
+      s['المكان'], s['مكان السيارة'], s['المكان الحالي']
+    ];
+    for(const c of candidates){
+      const p = String(c||'').trim();
+      if(p) return p;
+    }
+    return '';
+  }
+  function pickUpdatedAtFromStockRow(s){
+    if(!s) return null;
+    return toDateObj(s.updatedAt || s.updated_at || s.lastUpdate || s.lastUpdated || s.modifiedAt || s.modified_at || s.ts || s.time);
+  }
+  function buildStockIndex(){
+    const byVin = new Map();
+    (Array.isArray(stock)?stock:[]).forEach(s=>{
+      const v = pickVinFromStockRow(s);
+      if(!v) return;
+      byVin.set(v, s);
+    });
+    return byVin;
+  }
+
   function normalizeVin(v){if(!v)return'';const ar={'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9'};return v.toString().replace(/[٠-٩]/g,d=>ar[d]).toUpperCase().replace(/[\s\-\._]/g,'').trim()}
   function nextId(){return stock.length?Math.max(...stock.map(r=>Number(r.id)||0))+1:1}
   function debounce(fn,wait=250){let t;return (...args)=>{clearTimeout(t);t=setTimeout(()=>fn(...args),wait)};}
@@ -814,7 +926,7 @@
   const movesFromDate=$('#movesFromDate'), movesToDate=$('#movesToDate'), btnClearDate=$('#btnClearDate');
 
   // تتبع VIN
-  const trackVin=$('#trackVin'), trackTableBody=document.querySelector('#trackTable tbody'), btnClearTrack=$('#btnClearTrack');
+  const trackVin=$('#trackVin'), trackPlaceBar=$('#trackPlaceBar'), trackTableBody=document.querySelector('#trackTable tbody'), btnClearTrack=$('#btnClearTrack');
 
   // Modals
   const modelModal = $('#modelModal');
@@ -1930,7 +2042,7 @@ if(!movedCount){
     const t = movesToDate.value || null;
     if(!f && !t) return list;
     return list.filter(m=>{
-      const d = m.date || onlyDate(m.when||'');
+      const d = fmtDateOnlyFromMove(m);
       if(f && d < f) return false;
       if(t && d > t) return false;
       return true;
@@ -1941,11 +2053,12 @@ if(!movedCount){
     movesTableBody.innerHTML='';
     let rows = moves.slice();
     rows = filterMovesByDate(rows);
+    rows.sort(compareMovesNewestFirst);
     rows.forEach((m,i)=>{
       const tr=document.createElement('tr');
       tr.innerHTML=`
         <td>${i+1}</td>
-        <td class="nowrap">${m.date || onlyDate(m.when||'')}</td>
+        <td class="nowrap">${fmtDateOnlyFromMove(m)}</td>
         <td class="nowrap"><span class="copyable" data-copy="${m.vin||''}" title="انسخ رقم الهيكل">${m.vin||''}</span></td>
         <td>${m.car||''}</td>
         <td>${m.from||''}</td>
@@ -1962,11 +2075,53 @@ if(!movedCount){
   function renderTrack(){
     trackTableBody.innerHTML='';
     const v = normalizeVin((trackVin.value||'').trim());
-    if(!v){ return; }
+    if(!v){ if(window.trackPlaceBar){trackPlaceBar.style.display='none';} return; }
+
+    const stockIndex = buildStockIndex();
+    const stockRow = stockIndex.get(v) || null;
+    const stockPlace = stockRow ? pickPlaceFromStockRow(stockRow) : '';
+    const stockUpdatedAt = stockRow ? pickUpdatedAtFromStockRow(stockRow) : null;
+
+    // UI: show current place from stock
+    if(window.trackPlaceBar){
+      const bar = trackPlaceBar;
+      bar.style.display = 'flex';
+      const textEl = bar.querySelector('.text');
+      const hintEl = bar.querySelector('.hint');
+      if(stockPlace){
+        textEl.textContent = `المكان الحالي (من المخزون): ${stockPlace}`;
+        hintEl.textContent = stockUpdatedAt ? `آخر تحديث بالمخزون: ${stockUpdatedAt.toISOString().slice(0,10)}` : '';
+      }else{
+        textEl.textContent = 'المكان الحالي (من المخزون): غير متوفر';
+        hintEl.textContent = '';
+      }
+    }
+
     const list = moves
       .filter(m=> normalizeVin(m.vin||'').startsWith(v) )
-      .sort((a,b)=> (a.when||'').localeCompare(b.when||''));
-    list.forEach((m,i)=>{
+      .sort(compareMovesNewestFirst);
+
+    // If stock place differs from آخر حركة مسجلة، أظهر سطر "تحديث المخزون" كحركة مُستنتجة
+    let inferred = null;
+    if(stockPlace){
+      const last = list[0] || null; // لأننا بنرتب من الأحدث للأقدم
+      const lastTo = last ? String(last.to||'').trim() : '';
+      if(!last || (lastTo && lastTo !== stockPlace)){
+        inferred = {
+          _inferred:true,
+          vin: v,
+          from: lastTo || (last ? String(last.from||'').trim() : ''),
+          to: stockPlace,
+          car: (stockRow && (stockRow.car||stockRow['السيارة']||'')) || (last ? last.car : ''),
+          when: stockUpdatedAt || null,
+          date: stockUpdatedAt ? stockUpdatedAt.toISOString().slice(0,10) : '',
+          notes: 'مستنتج من صفحة المخزون (المكان الفعلي)'
+        };
+      }
+    }
+    const finalList = inferred ? [inferred, ...list] : list;
+
+    finalList.forEach((m,i)=>{
       const notesParts = [];
       if(m.adminApproved===true) notesParts.push('✔ موافقة إدارية');
       if(m.adminApproved===false) notesParts.push('✖ موافقة إدارية');
@@ -1979,7 +2134,7 @@ if(!movedCount){
       const tr=document.createElement('tr');
       tr.innerHTML=`
         <td>${i+1}</td>
-        <td class="nowrap">${m.date || onlyDate(m.when||'')}</td>
+        <td class="nowrap">${fmtDateOnlyFromMove(m)}</td>
         <td>${m.from||''}</td>
         <td>${m.to||''}</td>
         <td>${m.car||''}</td>

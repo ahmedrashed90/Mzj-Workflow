@@ -1,119 +1,156 @@
-/* =========================================================
-   MZJ Mobile — Quick Menu Only (No Top/Side/Down Bars)
-   File: mzj-mobile.menu.fixed.css
-   ========================================================= */
-
-:root{
-  --mzj-brown: rgb(62,36,32);
-  --mzj-beige: rgb(188,143,116);
-  --mzj-cream: #fff8ef;
-  --mzj-stroke: rgba(62,36,32,.12);
+/* ===== Downbar labels: TWO LINES (show full names) ===== */
+.mzj-downbar{
+  height: 110px !important;          /* زوّد ارتفاع البار عشان السطرين */
 }
 
-html, body{ max-width:100%; overflow-x:hidden; background: var(--mzj-cream); }
-*{ -webkit-tap-highlight-color: transparent; }
-
-/* ✅ Kill ANY bars (mobile only) */
-@media (max-width: 991px){
-
-  /* common bar wrappers */
-  .mzj-topbar, .topbar, header,
-  .mzj-sidebar, .sidebar, aside,
-  nav.mzj-downbar, .mzj-downbar, .downbar,
-  .bottom-bar, .mobile-bottom-bar, .fixed-bottom, .footer-fixed{
-    display:none !important;
-  }
-
-  /* remove any reserved space for old downbars */
-  body{ padding-bottom: 0 !important; }
-  .mzj-main, main, .mzj-content, .content, .main, .main-content, .page, .container{
-    padding-bottom: 0 !important;
-  }
+.mzj-main{
+  padding-bottom: 140px !important;  /* عشان المحتوى ما يدخل تحت البار */
 }
 
+.mzj-downbar .inner{
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+  padding: 10px 10px !important;
+}
+
+.mzj-downbar a span{
+  font-size: 9px !important;
+  line-height: 1.15 !important;
+
+  /* سطرين بدل قص */
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: initial !important;
+
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+}
+
+
 /* =========================================================
-   ✅ Quick Menu (button + overlay + panel)
-   ========================================================= */
-@media (max-width: 991px){
+   ✅ MZJ Mobile Drawer Menu (Button + Overlay) — Global
+   ملاحظة: ده بديل لأي Topbar/Sidebar/Downbar على الموبايل
+========================================================= */
+.mzj-menu-btn{
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 9999;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: rgb(62,36,32);
+  color: #fff;
+  font-size: 20px;
+  line-height: 44px;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(0,0,0,.18);
+}
 
-  .mzj-quickmenu-btn{
-    position: fixed;
-    right: 12px;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
-    z-index: 20000;
-    width: 52px;
-    height: 52px;
-    border: 0;
-    border-radius: 16px;
-    background: var(--mzj-brown);
-    color: #fff;
-    font-size: 22px;
-    font-weight: 900;
-    box-shadow: 0 12px 24px rgba(0,0,0,.22);
-  }
+.mzj-menu-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.35);
+  z-index: 9998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease;
+}
 
-  .mzj-quickmenu-overlay{
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.22);
-    backdrop-filter: blur(2px);
-    z-index: 19990;
-    opacity: 0;
-    pointer-events: none;
-    transition: .18s ease;
-  }
+.mzj-menu-drawer{
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100dvh;
+  width: min(84vw, 320px);
+  background: #fff8ef;
+  z-index: 9999;
+  transform: translateX(110%);
+  transition: transform .22s ease;
+  box-shadow: -18px 0 40px rgba(0,0,0,.18);
+  display: flex;
+  flex-direction: column;
+  padding: 14px 14px 18px;
+}
 
-  .mzj-quickmenu{
-    position: fixed;
-    right: 12px;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 74px);
-    width: min(340px, calc(100vw - 24px));
-    max-height: calc(100vh - 140px);
-    overflow: auto;
-    background: #fff;
-    border: 1px solid var(--mzj-stroke);
-    border-radius: 18px;
-    box-shadow: 0 18px 42px rgba(0,0,0,.22);
-    z-index: 19995;
-    transform: translateY(10px);
-    opacity: 0;
-    pointer-events: none;
-    transition: .18s ease;
-    padding: 10px;
-  }
+body.mzj-menu-open .mzj-menu-drawer{ transform: translateX(0); }
+body.mzj-menu-open .mzj-menu-overlay{
+  opacity: 1;
+  pointer-events: auto;
+}
 
-  .mzj-quickmenu .mzj-quickmenu-head{
-    font-weight: 900;
-    color: var(--mzj-brown);
-    padding: 10px 12px 8px;
-  }
+.mzj-menu-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom: 10px;
+}
 
-  .mzj-quickmenu a{
-    color: var(--mzj-brown) !important;
-    text-decoration: none !important;
-    font-weight: 800;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    margin: 6px 0;
-    border-radius: 14px;
-    background: #fff;
-    border: 1px solid transparent;
-  }
+.mzj-menu-brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
 
-  .mzj-quickmenu a:hover{
-    border-color: rgba(188,143,116,.35);
-    background: rgba(188,143,116,.10);
-  }
+.mzj-menu-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: rgb(62,36,32);
+  color:#fff;
+  font-weight: 900;
+  letter-spacing: .5px;
+}
 
-  body.mzj-qm-open .mzj-quickmenu-overlay{
-    opacity: 1;
-    pointer-events: auto;
-  }
-  body.mzj-qm-open .mzj-quickmenu{
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateY(0);
-  }
+.mzj-menu-title{
+  font-weight: 900;
+  color: rgb(62,36,32);
+  font-size: 16px;
+}
+
+.mzj-menu-close{
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid rgba(62,36,32,.18);
+  background: #fff;
+  color: rgb(62,36,32);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.mzj-menu-links{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-top: 6px;
+}
+
+.mzj-menu-link{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding: 12px 12px;
+  border-radius: 14px;
+  background: rgba(188,143,116,.10);
+  border: 1px solid rgba(188,143,116,.20);
+  color: rgb(62,36,32);
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.mzj-menu-link.active{
+  background: rgba(62,36,32,.10);
+  border-color: rgba(62,36,32,.22);
+}
+
+/* نخلي الزر موجود على الموبايل بس (لو حبيت تسيب الديسكتوب زي ما هو) */
+@media (min-width: 992px){
+  .mzj-menu-btn, .mzj-menu-overlay, .mzj-menu-drawer{ display:none !important; }
 }

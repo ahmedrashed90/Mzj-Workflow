@@ -53,7 +53,7 @@ body{
 .mzj-menu-btn{
   position: fixed;
   top: 12px;
-  left: 50%;
+  left: 80%;
   transform: translateX(-50%);
   
   background: rgba(62,36,32,.12);
@@ -63,6 +63,6 @@ body{
   z-index: 9999;
 }
 .mzj-menu-btn{
-  top: 64px; /* أو 72px حسب شكل الصفحة */
+  top: 5px; /* أو 72px حسب شكل الصفحة */
 }
 

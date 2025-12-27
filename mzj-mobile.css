@@ -1,65 +1,90 @@
-/* ==========================================================
-   MZJ Mobile Shared CSS
-   - Downbar disabled بالكامل
-   - Right Sidebar (يفتح/يقفل) للموبايل
-   ========================================================== */
+/* MZJ Mobile – Clean Sidebar + Disable Down Bar (safe overrides)
+   - Does NOT touch your existing page logic/JS
+   - Mobile only (<= 991px)
+*/
 
 @media (max-width: 991px){
 
-  /* إلغاء الداون بار نهائيًا */
-  .mzj-downbar{
-    display:none !important;
-    height:0 !important;
-    min-height:0 !important;
-    padding:0 !important;
-    margin:0 !important;
+  /* =========================
+     1) Disable ANY Down Bar
+     ========================= */
+  .mzj-downbar,
+  .down-bar,
+  .bottom-bar,
+  .mobile-bottom-bar,
+  .footer-fixed,
+  .fixed-bottom,
+  nav.bottom,
+  .mobile-nav-bottom{
+    display: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
 
-  /* تأكد إن المحتوى مايبقاش عامل padding بسبب الداون بار */
+  /* prevent content being pushed for the old down bar */
   .mzj-main{
-    padding-bottom: calc(14px + env(safe-area-inset-bottom)) !important;
+    padding-bottom: 16px !important;
+  }
+  body{
+    padding-bottom: 0 !important;
   }
 
-  /* Right Sidebar */
+  /* =========================
+     2) Right Sidebar (handle)
+     ========================= */
   :root{
-    --mzj-rbar-w: 260px;
-    --mzj-rbar-handle: 48px;
+    --mzj-rbar-w: 260px;        /* opened width */
+    --mzj-rbar-handle: 46px;    /* visible handle width when closed */
     --mzj-rbar-z: 1200;
-    --mzj-brown: rgb(62,36,32);
-    --mzj-beige: rgb(188,143,116);
-    --mzj-cream: #fff8ef;
+    --mzj-topbar-h: 72px;       /* adjust if your topbar height differs */
+  }
+
+  .mzj-rbar-overlay{
+    position: fixed;
+    inset: 0;
+    z-index: calc(var(--mzj-rbar-z) - 1);
+    background: rgba(0,0,0,.25);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .22s ease;
+  }
+  body.mzj-rbar-open .mzj-rbar-overlay{
+    opacity: 1;
+    pointer-events: auto;
   }
 
   .mzj-rightbar{
     position: fixed;
-    top: 70px; /* تحت التوب بار */
+    top: var(--mzj-topbar-h);
     right: 0;
-    height: calc(100vh - 70px);
+    height: calc(100vh - var(--mzj-topbar-h));
     width: var(--mzj-rbar-w);
     z-index: var(--mzj-rbar-z);
     transform: translateX(calc(100% - var(--mzj-rbar-handle)));
     transition: transform .22s ease;
-    border-radius: 16px 0 0 16px;
+    border-radius: 14px 0 0 14px;
     overflow: hidden;
+    box-shadow: 0 10px 28px rgba(0,0,0,.18);
     background: #fff;
-    box-shadow: 0 12px 28px rgba(0,0,0,.18);
   }
-
   body.mzj-rbar-open .mzj-rightbar{
     transform: translateX(0);
   }
 
+  /* Toggle button must stay within the visible handle area when closed */
   .mzj-rightbar__toggle{
     position: absolute;
-    top: 12px;
+    top: 14px;
+    right: 6px;      /* keep it visible */
     left: auto;
-    right: 6px;
     width: 40px;
     height: 40px;
     border: 0;
     border-radius: 12px;
     cursor: pointer;
-    background: var(--mzj-brown);
+    background: rgb(62,36,32);
     color: #fff;
     display: grid;
     place-items: center;
@@ -68,17 +93,16 @@
 
   .mzj-rightbar__content{
     height: 100%;
-    padding: 64px 14px 14px;
-    background: var(--mzj-cream);
-    overflow: auto;
+    padding: 68px 14px 14px;
+    background: #fff8ef;
   }
 
   .mzj-rightbar__title{
-    margin: 0 0 10px;
+    font-family: Tajawal, system-ui, -apple-system, "Segoe UI", Arial;
     font-weight: 800;
     font-size: 14px;
-    color: var(--mzj-brown);
-    font-family: "Tajawal", system-ui, -apple-system, "Segoe UI", Arial;
+    color: rgb(62,36,32);
+    margin: 0 0 10px;
   }
 
   .mzj-rightbar__links{
@@ -94,31 +118,14 @@
     border-radius: 12px;
     text-decoration: none;
     background: #fff;
-    color: var(--mzj-brown);
+    color: rgb(62,36,32);
     border: 1px solid rgba(62,36,32,.10);
-    font-weight: 800;
   }
 
   .mzj-rightbar__dot{
     width: 10px;
     height: 10px;
     border-radius: 999px;
-    background: var(--mzj-beige);
-    flex: 0 0 auto;
-  }
-
-  .mzj-rbar-overlay{
-    position: fixed;
-    inset: 0;
-    z-index: calc(var(--mzj-rbar-z) - 1);
-    background: rgba(0,0,0,.25);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .22s ease;
-  }
-
-  body.mzj-rbar-open .mzj-rbar-overlay{
-    opacity: 1;
-    pointer-events: auto;
+    background: rgb(188,143,116);
   }
 }

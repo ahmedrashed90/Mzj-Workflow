@@ -706,33 +706,73 @@ header, .topbar, .navbar, .header, .sidebar, aside.sidebar, nav.sidebar, .side-b
 </style></head>
 <body>
 
+<!-- ✅ MZJ Mobile Menu Button + Drawer (no topbar/downbar) -->
+<button class="mzj-menu-btn" id="mzjMenuBtn" type="button" aria-label="القائمة">☰</button>
+<div class="mzj-menu-overlay" id="mzjMenuOverlay" aria-hidden="true"></div>
+
+<aside class="mzj-menu-drawer" id="mzjMenuDrawer" aria-label="قائمة الصفحات">
+  <div class="mzj-menu-head">
+    <div class="mzj-menu-brand">
+      <span class="mzj-menu-badge">MZJ</span>
+      <span class="mzj-menu-title">القائمة</span>
+    </div>
+    <button class="mzj-menu-close" id="mzjMenuClose" type="button" aria-label="إغلاق">✕</button>
+  </div>
+
+  <nav class="mzj-menu-links">
+    <a class="mzj-menu-link" href="m.dashboard.html">📊 الداش بورد</a>
+    <a class="mzj-menu-link" href="m.admin.html">🧩 إدارة</a>
+    <a class="mzj-menu-link" href="m.inventory.html">🚗 المخزون</a>
+    <a class="mzj-menu-link" href="m.sales.html">💼 تتبع المبيعات</a>
+    <a class="mzj-menu-link" href="m.vt.html">↔️ نقل السيارات</a>
+    <a class="mzj-menu-link" href="m.photoshoot-user.html">📷 إدارة الطلبات</a>
+    <a class="mzj-menu-link" href="m.Activity.html">🧾 سجل الحركات</a>
+  </nav>
+</aside>
+
+<script>
+(function(){
+  const body = document.body;
+  const btn = document.getElementById('mzjMenuBtn');
+  const closeBtn = document.getElementById('mzjMenuClose');
+  const overlay = document.getElementById('mzjMenuOverlay');
+
+  if(!btn || !overlay) return;
+
+  function openMenu(){
+    body.classList.add('mzj-menu-open');
+    overlay.setAttribute('aria-hidden','false');
+  }
+  function closeMenu(){
+    body.classList.remove('mzj-menu-open');
+    overlay.setAttribute('aria-hidden','true');
+  }
+
+  btn.addEventListener('click', (e)=>{ e.preventDefault(); openMenu(); });
+  overlay.addEventListener('click', closeMenu);
+  if(closeBtn) closeBtn.addEventListener('click', closeMenu);
+
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape') closeMenu();
+  });
+
+  // highlight active link
+  try{
+    const path = (location.pathname.split('/').pop() || '').toLowerCase();
+    document.querySelectorAll('.mzj-menu-link').forEach(a=>{
+      const href = (a.getAttribute('href')||'').toLowerCase();
+      if(href && path === href) a.classList.add('active');
+    });
+  }catch(_){}
+})();
+</script>
+
+
 <div class="mzj-mobile-shell">
   <main class="mzj-main">
     
 
-<header class="mzj-topbar">
-  <div class="topbar-left">
-    <button class="icon-btn" id="mzjSidebarBtn" aria-label="القائمة"><i class="fa-solid fa-bars"></i></button>
-    <div class="brand">
-      <div class="brand-mark">MZJ</div>
-      <div class="brand-text">
-        <div class="brand-title">محمد بن ذعار العجمي للسيارات</div>
-        <div class="brand-sub">Workspace</div>
-      </div>
-    </div>
-  </div>
-  <div class="topbar-center">
-    <div class="mzj-breadcrumb">
-      <span class="crumb">الرئيسية</span>
-      <i class="fa-solid fa-chevron-left"></i>
-      <span class="crumb current">الإدارة</span>
-    </div>
-  </div>
-  <div class="topbar-right">
-    <div class="mzj-chip"><i class="fa-regular fa-clock"></i><span id="mzjNow">—</span></div>
-    <button id="btnSignOut" class="btn btn-ghost" style="display:none"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</button>
-  </div>
-</header>
+
 
 <main class="mzj-content mzj-mobile-only">
 
@@ -2600,6 +2640,7 @@ if(!movedCount){
     </div>
   
 </main>
+
 </div>
 
 <script>
@@ -2939,44 +2980,5 @@ html, body{ min-height: 100dvh; }
   max-width: 100% !important;
 }
 </style>
-<!-- ===== MZJ Mobile Right Sidebar (Added) ===== -->
-<div class="mzj-rbar-overlay" id="mzjRbarOverlay" aria-hidden="true"></div>
-
-<aside class="mzj-rightbar" id="mzjRightbar" aria-label="قائمة الصفحات">
-  <button class="mzj-rightbar__toggle" id="mzjRbarToggle" type="button" aria-label="فتح / إغلاق القائمة">☰</button>
-
-  <div class="mzj-rightbar__content">
-    <p class="mzj-rightbar__title">القائمة</p>
-
-    <div class="mzj-rightbar__links">
-      <a class="mzj-rightbar__link" href="m.dashboard.html"><span class="mzj-rightbar__dot"></span>الداش بورد</a>
-      <a class="mzj-rightbar__link" href="m.sales.html"><span class="mzj-rightbar__dot"></span>تتبع المبيعات</a>
-      <a class="mzj-rightbar__link" href="m.vt.html"><span class="mzj-rightbar__dot"></span>نقل السيارات</a>
-      <a class="mzj-rightbar__link" href="m.photoshoot-user.html"><span class="mzj-rightbar__dot"></span>إدارة الطلبات</a>
-      <a class="mzj-rightbar__link" href="m.cars.html"><span class="mzj-rightbar__dot"></span>كل السيارات</a>
-      <a class="mzj-rightbar__link" href="m.admin.html"><span class="mzj-rightbar__dot"></span>الإدارة</a>
-      <a class="mzj-rightbar__link" href="m.Activity.html"><span class="mzj-rightbar__dot"></span>سجل النشاط</a>
-      <a class="mzj-rightbar__link" href="m.act.html"><span class="mzj-rightbar__dot"></span>سجل الحركات</a>
-    </div>
-  </div>
-</aside>
-
-<style id="mzjNoDownbar">
-  /* Force disable Downbar everywhere (this style is placed at the end so it wins) */
-  .mzj-downbar{ display:none !important; height:0 !important; }
-  .mzj-main{ padding-bottom: calc(14px + env(safe-area-inset-bottom)) !important; }
-</style>
-
-<script>
-(function () {
-  const btn = document.getElementById('mzjRbarToggle');
-  const overlay = document.getElementById('mzjRbarOverlay');
-  if (!btn || !overlay) return;
-
-  btn.addEventListener('click', () => document.body.classList.toggle('mzj-rbar-open'));
-  overlay.addEventListener('click', () => document.body.classList.remove('mzj-rbar-open'));
-})();
-</script>
-
 </body>
 </html>

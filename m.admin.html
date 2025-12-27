@@ -2951,42 +2951,5 @@ html, body{ min-height: 100dvh; }
   max-width: 100% !important;
 }
 </style>
-</head>
-
-<body>
-
-  <div class="mzj-rbar-overlay" id="mzjRbarOverlay"></div>
-
-  <aside class="mzj-rightbar" id="mzjRightbar">
-    <button class="mzj-rightbar__toggle" id="mzjRbarToggle" aria-label="فتح / إغلاق القائمة">☰</button>
-
-    <div class="mzj-rightbar__content">
-      <p class="mzj-rightbar__title">القائمة</p>
-
-      <div class="mzj-rightbar__links">
-        <a class="mzj-rightbar__link" href="dashboard.html"><span class="mzj-rightbar__dot"></span>الداش بورد</a>
-        <a class="mzj-rightbar__link" href="orders.html"><span class="mzj-rightbar__dot"></span>الطلبات</a>
-        <a class="mzj-rightbar__link" href="inventory.html"><span class="mzj-rightbar__dot"></span>المخزون</a>
-      </div>
-    </div>
-  </aside>
-
-  <!-- باقي محتوى الصفحة الطبيعي يكون هنا -->
-  <!-- ... -->
-
-  <script>
-  (function () {
-    const btn = document.getElementById('mzjRbarToggle');
-    const overlay = document.getElementById('mzjRbarOverlay');
-    if (!btn || !overlay) return;
-
-    btn.addEventListener('click', () => document.body.classList.toggle('mzj-rbar-open'));
-    overlay.addEventListener('click', () => document.body.classList.remove('mzj-rbar-open'));
-  })();
-  </script>
-
 </body>
 </html>
-
-
-

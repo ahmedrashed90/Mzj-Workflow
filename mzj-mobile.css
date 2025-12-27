@@ -1,111 +1,95 @@
-/* ===== Downbar labels: TWO LINES (show full names) ===== */
-.mzj-downbar{
-  height: 110px !important;          /* زوّد ارتفاع البار عشان السطرين */
+/* ==============================
+   MZJ Mobile: Single Menu Button
+   (No Topbar / No Sidebar / No Downbar)
+================================= */
+
+/* Kill any bars if they exist (safe) */
+.mzj-downbar,
+nav.mzj-downbar,
+.mzj-topbar,
+header.mzj-topbar,
+.mzj-sidebar,
+aside.mzj-sidebar,
+.topbar, .navbar, .header, .sidebar, .side-bar, .sidenav, .drawer, .app-sidebar, .layout-sidebar,
+.mobile-bottom-bar, .bottom-bar, .fixed-bottom, .footer-fixed {
+  display: none !important;
 }
 
-.mzj-main{
-  padding-bottom: 140px !important;  /* عشان المحتوى ما يدخل تحت البار */
-}
+/* Remove any reserved space for a bottom bar */
+body{ padding-bottom: 0 !important; }
 
-.mzj-downbar .inner{
-  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-  gap: 6px !important;
-  padding: 10px 10px !important;
-}
-
-.mzj-downbar a span{
-  font-size: 9px !important;
-  line-height: 1.15 !important;
-
-  /* سطرين بدل قص */
-  white-space: normal !important;
-  overflow: visible !important;
-  text-overflow: initial !important;
-
-  display: -webkit-box !important;
-  -webkit-line-clamp: 2 !important;
-  -webkit-box-orient: vertical !important;
-}
-
-
-/* =========================================================
-   ✅ MZJ Mobile Drawer Menu (Button + Overlay) — Global
-   ملاحظة: ده بديل لأي Topbar/Sidebar/Downbar على الموبايل
-========================================================= */
+/* Menu button */
 .mzj-menu-btn{
   position: fixed;
-  top: 2px;
-  right: 12px;
+  right: 14px;
+  top: calc(14px + env(safe-area-inset-top, 0px));
   z-index: 9999;
-  width: 38px;
-  height: 38px;
-  border: 0;
-  border-radius: 12px;
+
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(62,36,32,.22);
   background: rgb(62,36,32);
   color: #fff;
-  font-size: 20px;
-  line-height: 30px;
-  cursor: pointer;
-  box-shadow: 0 10px 25px rgba(0,0,0,.18);
+
+  font-size: 22px;
+  line-height: 1;
+
+  box-shadow: 0 10px 22px rgba(0,0,0,.18);
 }
 
+/* Overlay */
 .mzj-menu-overlay{
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.35);
-  z-index: 9998;
+  z-index: 9997;
+  background: rgba(0,0,0,.40);
   opacity: 0;
   pointer-events: none;
-  transition: opacity .2s ease;
+  transition: opacity .18s ease;
 }
 
+/* Drawer */
 .mzj-menu-drawer{
   position: fixed;
   top: 0;
   right: 0;
-  height: 100dvh;
-  width: min(84vw, 320px);
-  background: #fff8ef;
-  z-index: 9999;
-  transform: translateX(110%);
+  z-index: 9998;
+
+  width: min(320px, 88vw);
+  height: 100vh;
+
+  transform: translateX(102%);
   transition: transform .22s ease;
-  box-shadow: -18px 0 40px rgba(0,0,0,.18);
-  display: flex;
-  flex-direction: column;
-  padding: 14px 14px 18px;
+
+  background: #fff8ef;
+  border-left: 1px solid rgba(62,36,32,.12);
+  box-shadow: -18px 0 32px rgba(0,0,0,.14);
+
+  padding: calc(14px + env(safe-area-inset-top, 0px)) 14px calc(18px + env(safe-area-inset-bottom, 0px));
 }
 
-body.mzj-menu-open .mzj-menu-drawer{ transform: translateX(0); }
+/* Open state */
 body.mzj-menu-open .mzj-menu-overlay{
   opacity: 1;
   pointer-events: auto;
 }
+body.mzj-menu-open .mzj-menu-drawer{
+  transform: translateX(0);
+}
 
+/* Drawer header */
 .mzj-menu-head{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:10px;
-  margin-bottom: 10px;
-}
-
-.mzj-menu-brand{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-
-.mzj-menu-badge{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  background: rgb(62,36,32);
-  color:#fff;
-  font-weight: 900;
-  letter-spacing: .5px;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .mzj-menu-title{
@@ -121,25 +105,31 @@ body.mzj-menu-open .mzj-menu-overlay{
   border: 1px solid rgba(62,36,32,.18);
   background: #fff;
   color: rgb(62,36,32);
-  font-size: 16px;
-  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
+/* Links */
 .mzj-menu-links{
   display:flex;
   flex-direction:column;
-  gap:8px;
-  margin-top: 6px;
+  gap: 10px;
+  margin-top: 8px;
 }
 
 .mzj-menu-link{
   display:flex;
   align-items:center;
-  gap:10px;
+  gap: 10px;
+
   padding: 12px 12px;
   border-radius: 14px;
-  background: rgba(188,143,116,.10);
-  border: 1px solid rgba(188,143,116,.20);
+  border: 1px solid rgba(62,36,32,.10);
+
+  background: rgba(255,255,255,.70);
   color: rgb(62,36,32);
   text-decoration: none;
   font-weight: 800;
@@ -150,7 +140,5 @@ body.mzj-menu-open .mzj-menu-overlay{
   border-color: rgba(62,36,32,.22);
 }
 
-/* نخلي الزر موجود على الموبايل بس (لو حبيت تسيب الديسكتوب زي ما هو) */
-@media (min-width: 992px){
-  .mzj-menu-btn, .mzj-menu-overlay, .mzj-menu-drawer{ display:none !important; }
-}
+/* Keep content readable: if any element is fixed at top-right, avoid overlap */
+.mzj-main{ padding-top: calc(14px + 52px) !important; }

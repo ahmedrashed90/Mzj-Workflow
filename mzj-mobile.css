@@ -1,49 +1,113 @@
-/* ===== Downbar labels: TWO LINES (show full names) ===== */
-.mzj-downbar{
-  height: 110px !important;          /* زوّد ارتفاع البار عشان السطرين */
+/* =========================================================
+   MZJ MOBILE CSS — FINAL (Sidebar Safe / Downbar Removed)
+   ========================================================= */
+
+/* ===== Root Colors ===== */
+:root{
+  --mzj-brown: rgb(62,36,32);
+  --mzj-beige: rgb(188,143,116);
+  --mzj-cream: #fff8ef;
+  --mzj-stroke: rgba(62,36,32,.12);
+  --mzj-shadow: 0 10px 24px rgba(0,0,0,.08);
+  --mzj-radius: 16px;
 }
 
-.mzj-main{
-  padding-bottom: 140px !important;  /* عشان المحتوى ما يدخل تحت البار */
+/* ===== Global Mobile Reset ===== */
+html, body{
+  max-width:100%;
+  overflow-x:hidden;
 }
 
-.mzj-downbar .inner{
-  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-  gap: 6px !important;
-  padding: 10px 10px !important;
+body{
+  font-family: "Tajawal", system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  background: var(--mzj-cream);
 }
 
-.mzj-downbar a span{
-  font-size: 9px !important;
-  line-height: 1.15 !important;
-
-  /* سطرين بدل قص */
-  white-space: normal !important;
-  overflow: visible !important;
-  text-overflow: initial !important;
-
-  display: -webkit-box !important;
-  -webkit-line-clamp: 2 !important;
-  -webkit-box-orient: vertical !important;
-}
-/* ✅ Kill Down Bar (mobile) بدون ما نلمس السايد بار */
+/* =========================================================
+   ❌ REMOVE DOWN BAR COMPLETELY (MOBILE ONLY)
+   ⚠️ بدون لمس السايد بار
+   ========================================================= */
 @media (max-width: 991px) {
+
+  /* Kill any down/bottom bar variants */
   nav.mzj-downbar,
   .mzj-downbar,
   .down-bar,
   .bottom-bar,
   .mobile-bottom-bar,
   .fixed-bottom,
-  .footer-fixed {
-    display: none !important;
-    visibility: hidden !important;
-    height: 0 !important;
-    min-height: 0 !important;
-    padding: 0 !important;
-    margin: 0 !important;
+  .footer-fixed{
+    display:none !important;
+    visibility:hidden !important;
+    height:0 !important;
+    min-height:0 !important;
+    padding:0 !important;
+    margin:0 !important;
   }
 
-  body {
-    padding-bottom: 0 !important; /* كان بيعمل مساحة للداون بار */
+  /* Remove reserved space for downbar */
+  body{
+    padding-bottom:0 !important;
   }
+
+  .mzj-main,
+  main.mzj-content,
+  .mzj-content,
+  .container,
+  .wrap{
+    padding-bottom:0 !important;
+  }
+}
+
+/* =========================================================
+   ✅ SIDEBAR — DO NOT TOUCH
+   (سايبينه زي ما هو بالظبط)
+   ========================================================= */
+/*
+  ⚠️ مفيش أي:
+  - display:none
+  - visibility:hidden
+  - position override
+  على:
+  .mzj-sidebar
+*/
+
+/* =========================================================
+   📱 Mobile Content Tweaks (Safe)
+   ========================================================= */
+@media (max-width: 991px){
+
+  /* Full width content */
+  main.mzj-content,
+  .mzj-content,
+  .content,
+  .main,
+  .main-content,
+  .page,
+  .container{
+    width:100% !important;
+    max-width:100% !important;
+    margin:0 !important;
+    padding-left:12px !important;
+    padding-right:12px !important;
+  }
+
+  /* Tables scroll */
+  table{
+    display:block !important;
+    width:100% !important;
+    overflow-x:auto !important;
+  }
+}
+
+/* =========================================================
+   🧼 Small UI Safety Fixes
+   ========================================================= */
+*{
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, a{
+  -webkit-touch-callout:none;
+  user-select:none;
 }

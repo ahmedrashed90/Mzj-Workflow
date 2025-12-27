@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl" data-theme="light">
 <head>
@@ -616,6 +617,105 @@
 </style>
 <link rel="stylesheet" href="./mzj-ui.css"/>
   <link rel="stylesheet" href="mzj-mobile.css">
+<style id="mzj-quickmenu-style">
+/* ===== MZJ Quick Menu (Mobile Only) ===== */
+@media (max-width: 991px){
+  /* Hide any existing bars (visual only) */
+  nav.mzj-downbar, .mzj-downbar, .down-bar, .bottom-bar, .mobile-bottom-bar, .fixed-bottom, .footer-fixed,
+  .mzj-topbar, .topbar, header.topbar, header.mzj-topbar,
+  .mzj-sidebar, .sidebar, aside.sidebar, nav.sidebar {
+    display:none !important;
+    visibility:hidden !important;
+    height:0 !important;
+    min-height:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+    border:0 !important;
+  }
+
+  body{ padding-bottom:0 !important; }
+  .mzj-main, main, .main, .content, .mzj-content{ padding-bottom:0 !important; }
+
+  .mzj-quickmenu-btn{
+    position: fixed;
+    right: 12px;
+    top: 18px; /* أعلى الصفحة بعد إلغاء التوب بار */
+    z-index: 20000;
+    width: 48px;
+    height: 48px;
+    border: 0;
+    border-radius: 16px;
+    background: rgb(62,36,32);
+    color: #fff;
+    font-size: 22px;
+    font-weight: 900;
+    box-shadow: 0 10px 22px rgba(0,0,0,.18);
+  }
+
+  .mzj-quickmenu-overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.18);
+    backdrop-filter: blur(2px);
+    z-index: 19990;
+    opacity: 0;
+    pointer-events: none;
+    transition: .18s ease;
+  }
+
+  .mzj-quickmenu{
+    position: fixed;
+    right: 12px;
+    top: 74px;
+    width: min(340px, calc(100vw - 24px));
+    max-height: calc(100vh - 110px);
+    overflow: auto;
+    background: #fff8ef;
+    border: 1px solid rgba(62,36,32,.12);
+    border-radius: 18px;
+    box-shadow: 0 16px 38px rgba(0,0,0,.18);
+    z-index: 19995;
+    transform: translateY(-6px);
+    opacity: 0;
+    pointer-events: none;
+    transition: .18s ease;
+    padding: 10px;
+    direction: rtl;
+  }
+
+  .mzj-quickmenu .mzj-quickmenu-head{
+    font-weight: 900;
+    color: rgb(62,36,32);
+    padding: 10px 12px 6px;
+    font-family: Tajawal, system-ui, -apple-system, "Segoe UI", Arial;
+  }
+
+  .mzj-quickmenu a{
+    color: rgb(62,36,32) !important;
+    text-decoration: none !important;
+    font-weight: 800 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 10px 12px !important;
+    margin: 6px 0 !important;
+    border-radius: 14px !important;
+    background: #fff !important;
+    border: 1px solid rgba(62,36,32,.10) !important;
+  }
+  .mzj-quickmenu a:active{ transform: scale(.99) !important; }
+
+  body.mzj-qm-open .mzj-quickmenu-overlay{
+    opacity: 1;
+    pointer-events: auto;
+  }
+  body.mzj-qm-open .mzj-quickmenu{
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+}
+</style>
 </head>
 <body class="mzj"> 
 
@@ -2004,6 +2104,37 @@ body{
   }
 })();
 </script>
+
+
+<!-- MZJ Quick Menu (Mobile) -->
+<button class="mzj-quickmenu-btn" id="mzjQuickMenuBtn" type="button" aria-label="فتح القائمة">☰</button>
+<div class="mzj-quickmenu-overlay" id="mzjQuickMenuOverlay" aria-hidden="true"></div>
+<nav class="mzj-quickmenu" id="mzjQuickMenu" aria-label="قائمة الصفحات">
+  <div class="mzj-quickmenu-head">القائمة</div>
+  <a href="m.dashboard.html">📊 الداش بورد</a>
+  <a href="m.admin.html">🏠 الإدارة</a>
+  <a href="m.inventory.html">📦 المخزون</a>
+  <a href="m.sales.html">💼 تتبع المبيعات</a>
+  <a href="m.vt.html">↔️ نقل السيارات</a>
+  <a href="m.photoshoot-user.html">📷 إدارة الطلبات</a>
+  <a href="m.cars.html">🚗 كل السيارات</a>
+  <a href="m.Activity.html">🕘 سجل النشاط</a>
+  <a href="m.act.html">🧾 سجل الحركات</a>
+</nav>
+<script id="mzj-quickmenu-script">
+(function(){
+  const btn = document.getElementById('mzjQuickMenuBtn');
+  const overlay = document.getElementById('mzjQuickMenuOverlay');
+  if(!btn || !overlay) return;
+
+  function closeMenu(){ document.body.classList.remove('mzj-qm-open'); }
+  btn.addEventListener('click', (e)=>{ e.preventDefault(); document.body.classList.toggle('mzj-qm-open'); });
+  overlay.addEventListener('click', closeMenu);
+  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeMenu(); });
+})();
+</script>
+
+
 </body>
 </html>
 

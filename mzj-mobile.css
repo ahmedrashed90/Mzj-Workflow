@@ -52,15 +52,21 @@ body{
 }
 .mzj-menu-btn{
   position: fixed;
-  top: 12px;
-  left: 40%;
+  top: 64px;
+  left: 50%;
   transform: translateX(-50%);
-  
+
+  padding: 6px 10px;          /* ⬅️ أصغر */
+  font-size: 14px;            /* ⬅️ أصغر */
+  border-radius: 12px;        /* ⬅️ أنعم */
+
   background: rgba(62,36,32,.12);
   color: rgb(62,36,32);
   backdrop-filter: blur(6px);
   border: 1px solid rgba(62,36,32,.25);
   z-index: 9999;
+}
+
 }
 .mzj-menu-btn{
   top: 64px; /* أو 72px حسب شكل الصفحة */

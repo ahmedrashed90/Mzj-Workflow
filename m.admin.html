@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 
 <html dir="rtl" lang="ar">
@@ -2599,19 +2600,6 @@ if(!movedCount){
     </div>
   
 </main>
-<nav class="mzj-downbar" aria-label="التنقل">
-    <div class="inner">
-<a href="m.sales.html">💼<span>تتبع المبيعات</span></a>
-    <a href="m.dashboard.html">📊<span>الداش بورد</span></a>
-    <a href="m.vt.html">↔️<span>نقل السيارات</span></a>
-    <a href="m.photoshoot-user.html">📷<span>إدارة الطلبات</span></a>
-
-    <a href="m.cars.html">🚗<span>كل السيارات</span></a>
-    <a class="active" href="m.admin.html">🏠<span>الإدارة</span></a>
-    <a href="m.Activity.html">🕘<span>سجل النشاط</span></a>
-    <a href="m.act.html">🧾<span>سجل الحركات</span></a>
-</div>
-  </nav>
 </div>
 
 <script>
@@ -2951,5 +2939,44 @@ html, body{ min-height: 100dvh; }
   max-width: 100% !important;
 }
 </style>
+<!-- ===== MZJ Mobile Right Sidebar (Added) ===== -->
+<div class="mzj-rbar-overlay" id="mzjRbarOverlay" aria-hidden="true"></div>
+
+<aside class="mzj-rightbar" id="mzjRightbar" aria-label="قائمة الصفحات">
+  <button class="mzj-rightbar__toggle" id="mzjRbarToggle" type="button" aria-label="فتح / إغلاق القائمة">☰</button>
+
+  <div class="mzj-rightbar__content">
+    <p class="mzj-rightbar__title">القائمة</p>
+
+    <div class="mzj-rightbar__links">
+      <a class="mzj-rightbar__link" href="m.dashboard.html"><span class="mzj-rightbar__dot"></span>الداش بورد</a>
+      <a class="mzj-rightbar__link" href="m.sales.html"><span class="mzj-rightbar__dot"></span>تتبع المبيعات</a>
+      <a class="mzj-rightbar__link" href="m.vt.html"><span class="mzj-rightbar__dot"></span>نقل السيارات</a>
+      <a class="mzj-rightbar__link" href="m.photoshoot-user.html"><span class="mzj-rightbar__dot"></span>إدارة الطلبات</a>
+      <a class="mzj-rightbar__link" href="m.cars.html"><span class="mzj-rightbar__dot"></span>كل السيارات</a>
+      <a class="mzj-rightbar__link" href="m.admin.html"><span class="mzj-rightbar__dot"></span>الإدارة</a>
+      <a class="mzj-rightbar__link" href="m.Activity.html"><span class="mzj-rightbar__dot"></span>سجل النشاط</a>
+      <a class="mzj-rightbar__link" href="m.act.html"><span class="mzj-rightbar__dot"></span>سجل الحركات</a>
+    </div>
+  </div>
+</aside>
+
+<style id="mzjNoDownbar">
+  /* Force disable Downbar everywhere (this style is placed at the end so it wins) */
+  .mzj-downbar{ display:none !important; height:0 !important; }
+  .mzj-main{ padding-bottom: calc(14px + env(safe-area-inset-bottom)) !important; }
+</style>
+
+<script>
+(function () {
+  const btn = document.getElementById('mzjRbarToggle');
+  const overlay = document.getElementById('mzjRbarOverlay');
+  if (!btn || !overlay) return;
+
+  btn.addEventListener('click', () => document.body.classList.toggle('mzj-rbar-open'));
+  overlay.addEventListener('click', () => document.body.classList.remove('mzj-rbar-open'));
+})();
+</script>
+
 </body>
 </html>

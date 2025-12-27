@@ -1,188 +1,119 @@
-/* ==============================
-   MZJ Mobile: Single Menu Button
-   (No Topbar / No Sidebar / No Downbar)
-================================= */
+/* =========================================================
+   MZJ Mobile — Quick Menu Only (No Top/Side/Down Bars)
+   File: mzj-mobile.menu.fixed.css
+   ========================================================= */
 
-/* Kill any bars if they exist (safe) */
-.mzj-downbar,
-nav.mzj-downbar,
-.mzj-topbar,
-header.mzj-topbar,
-.mzj-sidebar,
-aside.mzj-sidebar,
-.topbar, .navbar, .header, .sidebar, .side-bar, .sidenav, .drawer, .app-sidebar, .layout-sidebar,
-.mobile-bottom-bar, .bottom-bar, .fixed-bottom, .footer-fixed {
-  display: none !important;
+:root{
+  --mzj-brown: rgb(62,36,32);
+  --mzj-beige: rgb(188,143,116);
+  --mzj-cream: #fff8ef;
+  --mzj-stroke: rgba(62,36,32,.12);
 }
 
-/* Remove any reserved space for a bottom bar */
-body{ padding-bottom: 0 !important; }
+html, body{ max-width:100%; overflow-x:hidden; background: var(--mzj-cream); }
+*{ -webkit-tap-highlight-color: transparent; }
 
-/* Menu button */
-.mzj-menu-btn{
-  position: fixed;
-  right: 14px;
-  top: calc(14px + env(safe-area-inset-top, 0px));
-  z-index: 9999;
-
-  width: 46px;
-  height: 46px;
-  border-radius: 14px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  border: 1px solid rgba(62,36,32,.22);
-  background: rgb(62,36,32);
-  color: #fff;
-
-  font-size: 22px;
-  line-height: 1;
-
-  box-shadow: 0 10px 22px rgba(0,0,0,.18);
-}
-
-/* Overlay */
-.mzj-menu-overlay{
-  position: fixed;
-  inset: 0;
-  z-index: 9997;
-  background: rgba(0,0,0,.40);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .18s ease;
-}
-
-/* Drawer */
-.mzj-menu-drawer{
-  position: fixed;
-  top: 0;
-  right: 0;
-  z-index: 9998;
-
-  width: min(320px, 88vw);
-  height: 100vh;
-
-  transform: translateX(102%);
-  transition: transform .22s ease;
-
-  background: #fff8ef;
-  border-left: 1px solid rgba(62,36,32,.12);
-  box-shadow: -18px 0 32px rgba(0,0,0,.14);
-
-  padding: calc(14px + env(safe-area-inset-top, 0px)) 14px calc(18px + env(safe-area-inset-bottom, 0px));
-}
-
-/* Open state */
-body.mzj-menu-open .mzj-menu-overlay{
-  opacity: 1;
-  pointer-events: auto;
-}
-body.mzj-menu-open .mzj-menu-drawer{
-  transform: translateX(0);
-}
-
-/* Drawer header */
-.mzj-menu-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-.mzj-menu-title{
-  font-weight: 900;
-  color: rgb(62,36,32);
-  font-size: 16px;
-}
-
-.mzj-menu-close{
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  border: 1px solid rgba(62,36,32,.18);
-  background: #fff;
-  color: rgb(62,36,32);
-  font-size: 18px;
-  line-height: 1;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-/* Links */
-.mzj-menu-links{
-  display:flex;
-  flex-direction:column;
-  gap: 10px;
-  margin-top: 8px;
-}
-
-.mzj-menu-link{
-  display:flex;
-  align-items:center;
-  gap: 10px;
-
-  padding: 12px 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(62,36,32,.10);
-
-  background: rgba(255,255,255,.70);
-  color: rgb(62,36,32);
-  text-decoration: none;
-  font-weight: 800;
-}
-
-.mzj-menu-link.active{
-  background: rgba(62,36,32,.10);
-  border-color: rgba(62,36,32,.22);
-}
-
-/* Keep content readable: if any element is fixed at top-right, avoid overlap */
-.mzj-main{ padding-top: calc(14px + 52px) !important; }
-/* ===== Force Quick Menu Styles (fix purple links + wrapping) ===== */
+/* ✅ Kill ANY bars (mobile only) */
 @media (max-width: 991px){
 
-  /* غصبًا عن أي ستايل لينكات في الصفحة */
-  .mzj-quickmenu a,
-  nav#mzjQuickMenu a{
-    color: rgb(62,36,32) !important;
-    text-decoration: none !important;
-    font-weight: 800 !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 10px !important;
-    padding: 10px 12px !important;
-    margin: 6px 0 !important;
-    border-radius: 14px !important;
-    background: #fff !important;
-    border: 1px solid rgba(62,36,32,.10) !important;
-    direction: rtl !important;
+  /* common bar wrappers */
+  .mzj-topbar, .topbar, header,
+  .mzj-sidebar, .sidebar, aside,
+  nav.mzj-downbar, .mzj-downbar, .downbar,
+  .bottom-bar, .mobile-bottom-bar, .fixed-bottom, .footer-fixed{
+    display:none !important;
   }
 
-  .mzj-quickmenu a:active{ transform: scale(.99) !important; }
-
-  /* تأكيد شكل صندوق المنيو */
-  .mzj-quickmenu,
-  nav#mzjQuickMenu{
-    background: #fff8ef !important;
-    border: 1px solid rgba(62,36,32,.12) !important;
-    box-shadow: 0 16px 38px rgba(0,0,0,.18) !important;
+  /* remove any reserved space for old downbars */
+  body{ padding-bottom: 0 !important; }
+  .mzj-main, main, .mzj-content, .content, .main, .main-content, .page, .container{
+    padding-bottom: 0 !important;
   }
+}
 
-  /* تأكيد زر المنيو فوق كل شيء */
+/* =========================================================
+   ✅ Quick Menu (button + overlay + panel)
+   ========================================================= */
+@media (max-width: 991px){
+
   .mzj-quickmenu-btn{
-    z-index: 20000 !important;
+    position: fixed;
+    right: 12px;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+    z-index: 20000;
+    width: 52px;
+    height: 52px;
+    border: 0;
+    border-radius: 16px;
+    background: var(--mzj-brown);
+    color: #fff;
+    font-size: 22px;
+    font-weight: 900;
+    box-shadow: 0 12px 24px rgba(0,0,0,.22);
   }
+
   .mzj-quickmenu-overlay{
-    z-index: 19990 !important;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.22);
+    backdrop-filter: blur(2px);
+    z-index: 19990;
+    opacity: 0;
+    pointer-events: none;
+    transition: .18s ease;
   }
+
   .mzj-quickmenu{
-    z-index: 19995 !important;
+    position: fixed;
+    right: 12px;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 74px);
+    width: min(340px, calc(100vw - 24px));
+    max-height: calc(100vh - 140px);
+    overflow: auto;
+    background: #fff;
+    border: 1px solid var(--mzj-stroke);
+    border-radius: 18px;
+    box-shadow: 0 18px 42px rgba(0,0,0,.22);
+    z-index: 19995;
+    transform: translateY(10px);
+    opacity: 0;
+    pointer-events: none;
+    transition: .18s ease;
+    padding: 10px;
   }
-}
-@media (max-width: 991px){
-  .mzj-quickmenu{ top: 140px !important; right: 12px !important; }
+
+  .mzj-quickmenu .mzj-quickmenu-head{
+    font-weight: 900;
+    color: var(--mzj-brown);
+    padding: 10px 12px 8px;
+  }
+
+  .mzj-quickmenu a{
+    color: var(--mzj-brown) !important;
+    text-decoration: none !important;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    margin: 6px 0;
+    border-radius: 14px;
+    background: #fff;
+    border: 1px solid transparent;
+  }
+
+  .mzj-quickmenu a:hover{
+    border-color: rgba(188,143,116,.35);
+    background: rgba(188,143,116,.10);
+  }
+
+  body.mzj-qm-open .mzj-quickmenu-overlay{
+    opacity: 1;
+    pointer-events: auto;
+  }
+  body.mzj-qm-open .mzj-quickmenu{
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
 }

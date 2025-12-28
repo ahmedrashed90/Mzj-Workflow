@@ -52,6 +52,41 @@ body{opacity:0}
 .appr-note{width:100%;min-height:38px;resize:vertical}
 .appr-miniRow{display:flex;gap:8px;flex-wrap:wrap}
 
+
+/* ===== Approvals Modal (prefixed) ===== */
+.mzj-appr-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px}
+.mzj-appr-modal{width:min(1100px,100%);background:#fff;border-radius:18px;box-shadow:0 10px 40px rgba(0,0,0,.25);overflow:hidden}
+.mzj-appr-hd{display:flex;align-items:flex-start;justify-content:space-between;padding:16px 18px;border-bottom:1px solid #eee}
+.mzj-appr-title{display:flex;flex-direction:column;gap:6px}
+.mzj-appr-title h3{margin:0;font-size:18px;color:rgb(62,36,32)}
+.mzj-appr-sub{font-size:12px;color:#6b7280}
+.mzj-appr-hd .mzj-appr-actions{display:flex;gap:10px;align-items:center}
+.mzj-appr-btn{border:1px solid rgba(62,36,32,.25);background:#fff;border-radius:12px;padding:10px 12px;font-weight:700;cursor:pointer}
+.mzj-appr-btn.primary{background:#f59e0b;border-color:#d97706;color:#1f2937}
+.mzj-appr-btn:disabled{opacity:.45;cursor:not-allowed}
+.mzj-appr-bd{padding:16px 18px;max-height:75vh;overflow:auto;background:linear-gradient(180deg,#fff, #fff8ef 55%, #fff)}
+.mzj-appr-filters{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.mzj-appr-chip{border:1px solid rgba(62,36,32,.18);background:#fff;border-radius:999px;padding:8px 12px;font-weight:800;cursor:pointer}
+.mzj-appr-chip.active{background:rgb(62,36,32);color:#fff;border-color:rgb(62,36,32)}
+.mzj-appr-table{width:100%;border-collapse:separate;border-spacing:0 10px}
+.mzj-appr-row{background:#fff;border:1px solid rgba(0,0,0,.06);box-shadow:0 6px 18px rgba(0,0,0,.06);border-radius:16px;overflow:hidden}
+.mzj-appr-row td{padding:12px 12px;vertical-align:top}
+.mzj-appr-meta{display:flex;flex-direction:column;gap:4px}
+.mzj-appr-meta .vin{font-weight:900;color:rgb(62,36,32)}
+.mzj-appr-meta .small{font-size:12px;color:#6b7280}
+.mzj-appr-split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:900px){.mzj-appr-split{grid-template-columns:1fr}}
+.mzj-appr-box{background:#fff8ef;border:1px solid rgba(188,143,116,.35);border-radius:14px;padding:10px}
+.mzj-appr-box h4{margin:0 0 8px 0;font-size:14px;color:rgb(62,36,32);display:flex;align-items:center;justify-content:space-between}
+.mzj-appr-badge{font-size:12px;font-weight:900;padding:4px 10px;border-radius:999px;border:1px solid rgba(62,36,32,.18);background:#fff}
+.mzj-appr-badge.ok{border-color:#16a34a;color:#16a34a}
+.mzj-appr-badge.no{border-color:#dc2626;color:#dc2626}
+.mzj-appr-note{width:100%;border:1px solid rgba(0,0,0,.1);border-radius:12px;padding:10px;min-height:42px;background:#fff}
+.mzj-appr-box .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.mzj-appr-mini{padding:8px 10px;border-radius:12px;border:1px solid rgba(62,36,32,.18);background:#fff;font-weight:900;cursor:pointer}
+.mzj-appr-mini.ok{background:#16a34a;color:#fff;border-color:#16a34a}
+.mzj-appr-mini.rev{background:#fff;color:#111827}
+.mzj-appr-mini:disabled{opacity:.45;cursor:not-allowed}
 </style>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
@@ -632,6 +667,52 @@ tr:hover{ filter: brightness(0.98); }
 </div>
 </div>
 <div class="toast" id="toast">تم</div>
+<!-- Approvals Transfers Modal -->
+<div class="appr-modal-backdrop" id="apprModalBackdrop" aria-hidden="true">
+  <div class="appr-modal" role="dialog" aria-modal="true" aria-labelledby="apprModalTitle">
+    <div class="appr-modal-hd">
+      <div class="appr-title" id="apprModalTitle">طلبات تحت التسليم</div>
+      <div class="appr-hd-row">
+        <span class="appr-badge" id="apprModalMeta">—</span>
+        <div class="appr-actions">
+          <input class="input" id="apprModalSearch" placeholder="بحث داخل الطلبات..." style="min-width:260px" />
+          <button class="btn btn-outline" id="apprBtnAwaitFinance"><i class="fa-solid fa-coins"></i> بانتظار مالية</button>
+          <button class="btn btn-outline" id="apprBtnAwaitAdmin"><i class="fa-solid fa-user-check"></i> بانتظار إدارية</button>
+          <button class="btn" id="apprBtnAll"><i class="fa-solid fa-layer-group"></i> الكل</button>
+          <button class="btn btn-danger" id="apprBtnClose"><i class="fa-solid fa-xmark"></i> إغلاق</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="appr-modal-bd">
+      <div class="appr-tableWrap">
+        <table class="appr-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>التاريخ</th>
+              <th>VIN</th>
+              <th>السيارة</th>
+              <th>البيان</th>
+              <th>من</th>
+              <th>إلى</th>
+              <th>موافقة مالية</th>
+              <th>موافقة إدارية</th>
+              <th>الحالة</th>
+            </tr>
+          </thead>
+          <tbody id="apprRowsTbody"></tbody>
+        </table>
+      </div>
+      <div class="small" id="apprPermHint" style="margin-top:10px">—</div>
+    </div>
+
+    <div class="appr-modal-ft">
+      <div class="small">ملاحظة: النقل إلى <b>تم التسليم</b> لازم يكون بعد اكتمال <b>الموافقة المالية</b> و <b>الموافقة الإدارية</b>.</div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
@@ -1938,12 +2019,16 @@ function renderShootCard(gridEl){
   const shootDetailsIdSpan = $('#shootDetailsId');
   const shootDetailsTableBody = document.querySelector('#shootDetailsTable tbody');
 
-  const approvalBox = $('#approvalBox');
-  const approvalStatus = $('#approvalStatus');
-  const approvalNotes  = $('#approvalNotes');
-  const approvalTarget = $('#approvalTarget');
-  const btnSaveApproval = $('#btnSaveApproval');
-  const btnCancelApproval = $('#btnCancelApproval');
+
+  // ===== Approvals Modal (new) =====
+  const mzjApprBackdrop = document.getElementById('mzjApprBackdrop');
+  const mzjApprTableBody = document.querySelector('#mzjApprTable tbody');
+  const mzjApprClose = document.getElementById('mzjApprClose');
+  const mzjApprRefresh = document.getElementById('mzjApprRefresh');
+  const mzjApprCount = document.getElementById('mzjApprCount');
+  const mzjApprHint = document.getElementById('mzjApprHint');
+  const mzjApprChips = Array.from(document.querySelectorAll('.mzj-appr-chip[data-appr-filter]'));
+
 
   let currentMode = 'rows'; // 'rows' | 'shortagesBranches' | 'shoot' | 'transfers'
   let currentRows = []; let filteredRows = [];
@@ -2150,111 +2235,242 @@ function renderShootCard(gridEl){
   }
 
 
-  async function saveApproval(){
-    if(!approvalContext){
-      showToast('اختر نوع الموافقة أولاً');
-      return;
-    }
+  async 
+  // ===== Approvals Modal logic =====
+  let apprActiveFilter = 'all';
 
-    const vin  = approvalContext.vin;
-    const kind = approvalContext.kind;
-    const ctx  = approvalContext.ctx || 'stock';
+  function getDestText(m){
+    return (m.to || m.toLocation || m.to_place || m.destination || m.target || m.targetPlace || m.placeTo || m.newPlace || m.finalPlace || m.finalLocation || m.locationTo || '').toString();
+  }
 
-    const statusVal = (approvalStatus.value || '').toString();
-    let newVal = null;
-    if(statusVal === 'true') newVal = true;
-    if(statusVal === 'false') newVal = false;
+  function getMoveVin(m){
+    return String(m.vin || m.VIN || m.chassis || m.chassisNo || m.chassisNumber || m.vinNumber || m.frame || m.frameNo || '');
+  }
 
-    const noteVal = (approvalNotes.value || '').trim();
+  function getMoveId(m){
+    return String(m.orderId || m.requestId || m.id || m.docId || m._id || m.code || '');
+  }
 
-    const isAdmin = (kind==='admin');
-    const apprKey = isAdmin ? 'adminApproved' : 'financeApproved';
-    const noteKey = isAdmin ? 'adminNotes' : 'financeNotes';
+  function getMoveCar(m){
+    return (m.car || m.carName || m.vehicle || m.model || m.title || m البيان || '').toString();
+  }
 
-    // 1) حدّث المخزون لو السيارة موجودة
-    let stockUpdated = false;
-    const sidx = stock.findIndex(r => String(r.vin)===String(vin));
-    if(sidx !== -1){
-      const row = stock[sidx];
-      if(newVal === null) { try{ delete row[apprKey]; }catch(_e){} }
-      else { row[apprKey] = newVal; }
+  function isTransferPending(m){
+    const toLoc = getDestText(m);
+    const toLower = toLoc.toLowerCase();
 
-      if(noteVal) row[noteKey] = noteVal;
-      else { try{ delete row[noteKey]; }catch(_e){} }
+    // نعتبر أي نقل للمرحلة المرتبطة بالتسليم (تحت التسليم) داخل الكارت
+    if(!(toLoc.includes('تحت التسليم') || toLoc.includes('تحت-التسليم') || toLower.includes('under delivery') || toLoc.includes('تحت  التسليم'))) return false;
 
-      stock[sidx] = row;
-      stockUpdated = true;
-    }
+    const status = (m.status || m.stage || '').toString();
+    if (status === 'cancelled' || status === 'rejected') return false;
 
-    // 2) لو السياق "transfer" حدّث طلب النقل نفسه (moves)
-    let movesUpdated = false;
-    if(ctx === 'transfer'){
-      const tIdx = Number(approvalContext.transferIdx);
-      if(!isNaN(tIdx) && moves && moves[tIdx]){
-        const m = moves[tIdx];
+    return true;
+  }
 
-        if(isAdmin){
-          if(newVal !== null) m.adminApproved = newVal;
-          if(noteVal) m.adminNote = noteVal;
-        }else{
-          if(newVal !== null) m.financeApproved = newVal;
-          if(noteVal) m.financeNote = noteVal;
-        }
-
-        m.updatedAt = new Date().toISOString();
-        moves[tIdx] = m;
-        movesUpdated = true;
+  function computeTransferRequests(){
+    transferRequests = [];
+    if(!Array.isArray(moves)) return;
+    moves.forEach((m,idx)=>{
+      if(isTransferPending(m)){
+        transferRequests.push({ ...m, _idx: idx });
       }
-    }
+    });
+  }
 
-    // لا يوجد شيء للحفظ
-    if(!stockUpdated && !movesUpdated){
-      showToast('لا يوجد بيانات للحفظ');
+  function getApprovalFromStock(vin){
+    if(!vin) return {};
+    const row = Array.isArray(stock) ? stock.find(r => String(r.vin)===String(vin) || String(r.VIN)===String(vin)) : null;
+    return row || {};
+  }
+
+  function isApproved(val){
+    return val === true || val === 'true' || val === 1 || val === '1' || val === 'yes' || val === 'approved';
+  }
+
+  function needsFinance(t){
+    const vin = getMoveVin(t);
+    const s = getApprovalFromStock(vin);
+    return !isApproved(s.financeApproved || s.financeApproval);
+  }
+
+  function needsAdmin(t){
+    const vin = getMoveVin(t);
+    const s = getApprovalFromStock(vin);
+    return !isApproved(s.adminApproved || s.adminApproval);
+  }
+
+  function canFinance(){
+    const em = (currentUser && currentUser.email) ? currentUser.email.toLowerCase() : '';
+    return em === 'cfo@mzjcars.com' || isAdminUser();
+  }
+  function canAdmin(){
+    const em = (currentUser && currentUser.email) ? currentUser.email.toLowerCase() : '';
+    return em === 'coo@mzjcars.com' || isAdminUser();
+  }
+
+  function openApprovalsModal(filter='all'){
+    apprActiveFilter = filter;
+    mzjApprBackdrop.style.display='flex';
+    mzjApprBackdrop.setAttribute('aria-hidden','false');
+    document.body.style.overflow='hidden';
+    mzjApprHint.textContent = '';
+    setApprovalsFilterUI(filter);
+    renderApprovalsTable();
+  }
+
+  function closeApprovalsModal(){
+    mzjApprBackdrop.style.display='none';
+    mzjApprBackdrop.setAttribute('aria-hidden','true');
+    document.body.style.overflow='';
+  }
+
+  function setApprovalsFilterUI(filter){
+    mzjApprChips.forEach(btn=>{
+      btn.classList.toggle('active', btn.getAttribute('data-appr-filter')===filter);
+    });
+  }
+
+  function fmtBoolBadge(ok){
+    if(ok) return `<span class="mzj-appr-badge ok">موافق</span>`;
+    return `<span class="mzj-appr-badge no">بانتظار</span>`;
+  }
+
+  function renderApprovalsTable(){
+    computeTransferRequests();
+    let list = Array.isArray(transferRequests) ? transferRequests.slice() : [];
+
+    if(apprActiveFilter==='finance_pending') list = list.filter(t=>needsFinance(t));
+    if(apprActiveFilter==='admin_pending') list = list.filter(t=>needsAdmin(t));
+
+    mzjApprCount.textContent = `الإجمالي: ${list.length}`;
+
+    if(!list.length){
+      mzjApprTableBody.innerHTML = '';
+      mzjApprHint.textContent = 'ما فيه طلبات مطابقة للفلتر الحالي.';
       return;
     }
 
-    const payload = {};
-    if(stockUpdated) payload.stock = stock;
-    if(movesUpdated) payload.moves = moves;
+    mzjApprHint.textContent = '';
+    mzjApprTableBody.innerHTML = list.map((t,i)=>{
+      const vin = getMoveVin(t) || '—';
+      const id  = getMoveId(t) || '—';
+      const from = (t.from || t.fromLocation || t.source || t.current || t.place || t.location || '').toString() || '—';
+      const to   = getDestText(t) || '—';
+      const when = (t.createdAt || t.created_at || t.time || t.timestamp || t.date || '').toString() || '';
+      const s = getApprovalFromStock(vin);
+      const financeOk = isApproved(s.financeApproved || s.financeApproval);
+      const adminOk   = isApproved(s.adminApproved || s.adminApproval);
+      const fNote = (s.financeNotes || s.financeNote || '').toString();
+      const aNote = (s.adminNotes || s.adminNote || '').toString();
+
+      const financeDisabled = !canFinance();
+      const adminDisabled   = !canAdmin();
+
+      return `
+        <tr class="mzj-appr-row">
+          <td style="width:280px">
+            <div class="mzj-appr-meta">
+              <div class="vin">VIN: ${escapeHtml(vin)}</div>
+              <div class="small">رقم الطلب: ${escapeHtml(id)}</div>
+              <div class="small">${escapeHtml(from)} ⟶ ${escapeHtml(to)}</div>
+              ${when ? `<div class="small">${escapeHtml(when)}</div>` : ``}
+            </div>
+          </td>
+          <td>
+            <div class="mzj-appr-split">
+              <div class="mzj-appr-box">
+                <h4>موافقة مالية ${fmtBoolBadge(financeOk)}</h4>
+                <textarea class="mzj-appr-note" data-note-kind="finance" data-vin="${escapeAttr(vin)}" placeholder="ملاحظة الموافقة المالية...">${escapeHtml(fNote)}</textarea>
+                <div class="actions">
+                  <button class="mzj-appr-mini ok" data-appr-action="approve" data-kind="finance" data-vin="${escapeAttr(vin)}" ${financeDisabled ? 'disabled':''}>اعتماد</button>
+                  <button class="mzj-appr-mini rev" data-appr-action="revoke" data-kind="finance" data-vin="${escapeAttr(vin)}" ${financeDisabled ? 'disabled':''}>تراجع</button>
+                </div>
+              </div>
+
+              <div class="mzj-appr-box">
+                <h4>موافقة إدارية ${fmtBoolBadge(adminOk)}</h4>
+                <textarea class="mzj-appr-note" data-note-kind="admin" data-vin="${escapeAttr(vin)}" placeholder="ملاحظة الموافقة الإدارية...">${escapeHtml(aNote)}</textarea>
+                <div class="actions">
+                  <button class="mzj-appr-mini ok" data-appr-action="approve" data-kind="admin" data-vin="${escapeAttr(vin)}" ${adminDisabled ? 'disabled':''}>اعتماد</button>
+                  <button class="mzj-appr-mini rev" data-appr-action="revoke" data-kind="admin" data-vin="${escapeAttr(vin)}" ${adminDisabled ? 'disabled':''}>تراجع</button>
+                </div>
+              </div>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function getNoteValue(vin, kind){
+    const ta = document.querySelector(`textarea.mzj-appr-note[data-note-kind="${kind}"][data-vin="${CSS.escape(String(vin))}"]`);
+    return ta ? ta.value.trim() : '';
+  }
+
+  async function setApprovalForVin(vin, kind, approved){
+    if(!vin) return;
+    const noteVal = getNoteValue(vin, kind);
+    const em = (currentUser && currentUser.email) ? currentUser.email : '';
+    const now = new Date().toISOString();
+
+    let payload = {};
+    if(kind==='finance'){
+      payload.financeApproved = approved;
+      payload.financeNotes = noteVal || '';
+      payload.financeBy = em;
+      payload.financeAt = now;
+    }else{
+      payload.adminApproved = approved;
+      payload.adminNotes = noteVal || '';
+      payload.adminBy = em;
+      payload.adminAt = now;
+    }
+
+    // حفظ على car doc (cars_production) بنفس المنطق السابق للمشروع
+    await setDoc(doc(db,'cars_production', String(vin)), payload, { merge:true });
+
+    showToast(approved ? 'تم اعتماد الموافقة' : 'تم التراجع عن الموافقة');
+
+    // تحديث الكاش المحلي إن وجد
+    const idx = Array.isArray(stock) ? stock.findIndex(r => String(r.vin)===String(vin) || String(r.VIN)===String(vin)) : -1;
+    if(idx !== -1){
+      stock[idx] = { ...stock[idx], ...payload };
+    }
+    renderApprovalsTable();
+  }
+
+  // events
+  mzjApprClose.addEventListener('click', closeApprovalsModal);
+  mzjApprBackdrop.addEventListener('click', (e)=>{ if(e.target===mzjApprBackdrop) closeApprovalsModal(); });
+  mzjApprRefresh.addEventListener('click', ()=>{ renderApprovalsTable(); });
+
+  mzjApprChips.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const f = btn.getAttribute('data-appr-filter');
+      apprActiveFilter = f;
+      setApprovalsFilterUI(f);
+      renderApprovalsTable();
+    });
+  });
+
+  document.getElementById('mzjApprTable').addEventListener('click', async (e)=>{
+    const btn = e.target.closest('button[data-appr-action]');
+    if(!btn) return;
+    const action = btn.getAttribute('data-appr-action');
+    const kind = btn.getAttribute('data-kind');
+    const vin = btn.getAttribute('data-vin');
+
+    if(kind==='finance' && !canFinance()) return;
+    if(kind==='admin' && !canAdmin()) return;
 
     try{
-      btnSaveApproval.disabled = true;
-      btnSaveApproval.style.opacity = '0.7';
-      showToast('جارٍ الحفظ...');
-
-      await setDoc(STATE_REF, payload, { merge:true });
-
-      showToast('تم حفظ الموافقة' + (noteVal ? ' والملاحظة' : ''));
-      approvalBox.style.display='none';
-      approvalContext = null;
-
-      // تحديث الجدول المعروض
-      if(currentMode==='transfers'){
-        computeTransferRequests();
-        filteredTransfers = sortTransfers(transferRequests);
-        renderTransfersTable();
-      }
-      if(currentMode==='rows' && currentFilterKey==='pending'){
-        renderRowsTable();
-      }
-    }catch(e){
-      console.error(e);
-      setStatus('warn','تعذّر حفظ الموافقة، حاول مرة أخرى');
-    }finally{
-      btnSaveApproval.disabled = false;
-      btnSaveApproval.style.opacity = '1';
+      await setApprovalForVin(vin, kind, action==='approve');
+    }catch(err){
+      console.error(err);
+      showToast('تعذر حفظ الموافقة');
     }
-  }
-
-  function cancelApproval(){
-    approvalContext = null;
-    approvalStatus.value='';
-    approvalNotes.value='';
-    approvalTarget.textContent = '';
-  }
-
-  btnSaveApproval.addEventListener('click', saveApproval);
-  btnCancelApproval.addEventListener('click', cancelApproval);
+  });
 
   modalTableRowsBody.addEventListener('click', (e)=>{
     const btn = e.target.closest('button[data-approve]');
@@ -2656,28 +2872,10 @@ function openShootModal(filter='ALL'){
   }
 
   function openApprovalsTransfersModal(filterKey='all'){
-    apprFilterKey = filterKey || 'all';
-    const list = Array.isArray(transferRequests) ? transferRequests.slice() : [];
-    const needsAdmin = (t)=> !(isApproved(t.adminApproved) || isApproved(t.adminApproval));
-    const needsFinance = (t)=> !(isApproved(t.financeApproved) || isApproved(t.financeApproval));
-
-    if(apprFilterKey === 'awaiting_finance') apprBase = list.filter(t=> needsFinance(t));
-    else if(apprFilterKey === 'awaiting_admin') apprBase = list.filter(t=> needsAdmin(t));
-    else apprBase = list.slice();
-
-    apprFiltered = sortTransfers(apprBase);
-    apprModalSearch.value = '';
-    apprRender();
-
-    const canF = apprCanFinance();
-    const canA = apprCanAdmin();
-    const hintParts = [];
-    if(canF) hintParts.push('✅ لديك صلاحية الموافقة المالية');
-    if(canA) hintParts.push('✅ لديك صلاحية الموافقة الإدارية');
-    if(!canF && !canA) hintParts.push('ℹ️ لا تملك صلاحيات الموافقات (الإدارة فقط / CFO / COO)');
-    apprPermHint.textContent = hintParts.join(' — ');
-
-    apprOpen();
+    // compatibility wrapper for the approvals card
+    if(filterKey==='awaiting_finance') openApprovalsModal('finance_pending');
+    else if(filterKey==='awaiting_admin') openApprovalsModal('admin_pending');
+    else openApprovalsModal('all');
   }
 
   function apprRender(){
@@ -3246,54 +3444,7 @@ try{
         const carName  = stockRow?.car || '';
         const variant  = stockRow?.variant || '';
         const note= [stockRow?.financeNotes, stockRow?.adminNotes, t.financeNote, t.adminNote, t.note, t.message]
-          .filter(v => (v||'').toString().trim()!
-<!-- Approvals Transfers Modal -->
-<div class="appr-modal-backdrop" id="apprModalBackdrop" aria-hidden="true">
-  <div class="appr-modal" role="dialog" aria-modal="true" aria-labelledby="apprModalTitle">
-    <div class="appr-modal-hd">
-      <div class="appr-title" id="apprModalTitle">طلبات تحت التسليم</div>
-      <div class="appr-hd-row">
-        <span class="appr-badge" id="apprModalMeta">—</span>
-        <div class="appr-actions">
-          <input class="input" id="apprModalSearch" placeholder="بحث داخل الطلبات..." style="min-width:260px" />
-          <button class="btn btn-outline" id="apprBtnAwaitFinance"><i class="fa-solid fa-coins"></i> بانتظار مالية</button>
-          <button class="btn btn-outline" id="apprBtnAwaitAdmin"><i class="fa-solid fa-user-check"></i> بانتظار إدارية</button>
-          <button class="btn" id="apprBtnAll"><i class="fa-solid fa-layer-group"></i> الكل</button>
-          <button class="btn btn-danger" id="apprBtnClose"><i class="fa-solid fa-xmark"></i> إغلاق</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="appr-modal-bd">
-      <div class="appr-tableWrap">
-        <table class="appr-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>التاريخ</th>
-              <th>VIN</th>
-              <th>السيارة</th>
-              <th>البيان</th>
-              <th>من</th>
-              <th>إلى</th>
-              <th>موافقة مالية</th>
-              <th>موافقة إدارية</th>
-              <th>الحالة</th>
-            </tr>
-          </thead>
-          <tbody id="apprRowsTbody"></tbody>
-        </table>
-      </div>
-      <div class="small" id="apprPermHint" style="margin-top:10px">—</div>
-    </div>
-
-    <div class="appr-modal-ft">
-      <div class="small">ملاحظة: النقل إلى <b>تم التسليم</b> لازم يكون بعد اكتمال <b>الموافقة المالية</b> و <b>الموافقة الإدارية</b>.</div>
-    </div>
-  </div>
-</div>
-
-=='').join(' | ');
+          .filter(v => (v||'').toString().trim()!=='').join(' | ');
         const adminOk   = (isApproved(t.adminApproved) || isApproved(t.adminApproval));
         const financeOk = (isApproved(t.financeApproved) || isApproved(t.financeApproval));
         const statusTxt = (adminOk && financeOk)? 'تمت الموافقة المالية والإدارية'
@@ -3348,6 +3499,37 @@ try{
 <script src="./mzj-ui.js"></script>
 </div>
 </main>
+</div>
+
+<!-- ===== Approvals Modal (new) ===== -->
+<div class="mzj-appr-backdrop" id="mzjApprBackdrop" aria-hidden="true">
+  <div class="mzj-appr-modal" role="dialog" aria-modal="true" aria-labelledby="mzjApprTitle">
+    <div class="mzj-appr-hd">
+      <div class="mzj-appr-title">
+        <h3 id="mzjApprTitle">الموافقات (مالية / إدارية)</h3>
+        <div class="mzj-appr-sub" id="mzjApprSub">طلبات نقل إلى “تحت التسليم”</div>
+      </div>
+      <div class="mzj-appr-actions">
+        <button class="mzj-appr-btn" id="mzjApprRefresh"><i class="fa-solid fa-rotate"></i> تحديث</button>
+        <button class="mzj-appr-btn" id="mzjApprClose"><i class="fa-solid fa-xmark"></i> إغلاق</button>
+      </div>
+    </div>
+
+    <div class="mzj-appr-bd">
+      <div class="mzj-appr-filters">
+        <button class="mzj-appr-chip active" data-appr-filter="all">كل الطلبات</button>
+        <button class="mzj-appr-chip" data-appr-filter="finance_pending">بانتظار موافقة مالية</button>
+        <button class="mzj-appr-chip" data-appr-filter="admin_pending">بانتظار موافقة إدارية</button>
+        <div style="margin-inline-start:auto;font-weight:900;color:#6b7280" id="mzjApprCount">—</div>
+      </div>
+
+      <table class="mzj-appr-table" id="mzjApprTable">
+        <tbody></tbody>
+      </table>
+
+      <div class="hint" style="margin-top:8px" id="mzjApprHint"></div>
+    </div>
+  </div>
 </div>
 </body>
 </html>

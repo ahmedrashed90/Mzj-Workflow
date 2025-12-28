@@ -1543,17 +1543,27 @@ function clearErpTable() {
 
       const currentUserEmail = (auth.currentUser?.email || "").toLowerCase();
       function isStageVisible(stageNum){
-        if (currentUserEmail === "samirali19918@gmail.com"){
-          return !(stageNum === 6 || stageNum === 7);
-        }
-        if (currentUserEmail === "cfo@mzjcars.com"){
-          return stageNum === 6;
-        }
-        if (currentUserEmail === "coo@mzjcars.com"){
-          return stageNum === 7;
-        }
-        return true;
-      }
+  const email = currentUserEmail;
+
+  if (email === "cfo@mzjcars.com" || email === "coo@mzjcars.com") {
+    return true;
+  }
+
+  if (
+    email === "aldynmtwlys@gmail.com" ||
+    email === "alaasamak100@gmail.com" ||
+    email === "kamelashraf948@gmail.com"
+  ) {
+    return (stageNum === 1 || stageNum === 9 || stageNum === 10);
+  }
+
+  if (email === "samirali19918@gmail.com") {
+    return !(stageNum === 1 || stageNum === 6 || stageNum === 7 || stageNum === 9 || stageNum === 10);
+  }
+
+  return true;
+}
+
       const stagesObj = orderData.stages || {};
 
       const doneKeys = Object.keys(stagesObj).filter(k => stagesObj[k]);

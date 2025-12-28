@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 
 <html dir="rtl" lang="ar">
@@ -414,7 +415,18 @@ tr:hover{ filter: brightness(0.98); }
   <div class="group-total" id="stockTotalBig">0</div>
 </div>
 <p class="hint" style="margin:0"></p>
-</div></div><div class="cards" id="groupsGrid"></div>
+</div><div class="card" id="shootMissingCard" title="نواقص التصوير / المونتاج / الأجندة">
+  <div class="group-head">
+    <div class="group-left">
+      <h3 class="group-title"><i class="fa-solid fa-camera-retro"></i> نواقص التصوير</h3>
+      <div class="sub-metrics">
+        <span class="metric" title="عدد التركيبات التي تحتاج تصوير"><i class="fa-solid fa-camera"></i> ناقص تصوير: <b id="shootMissingInline">0</b></span>
+      </div>
+    </div>
+    <div class="group-total" id="shootMissingBig">0</div>
+  </div>
+  <p class="hint" style="margin:0">اضغط لفتح صفحة التركيبات</p>
+</div></div></div><div class="cards" id="groupsGrid"></div>
 </div>
 </div>
 <!-- Modal -->
@@ -718,6 +730,8 @@ const $ = s => document.querySelector(s);
 
   /* ===== State ===== */
   let stock=[], moves=[], models=[], variantsMap={};
+  let specMediaMap = new Map(); // key => media status
+  let unsubSpecMedia = null;
   let shootRequests=[];
   let moveRequests=[];
   let requestsDocs=[]; // docs from collection: requests
@@ -817,6 +831,7 @@ const $ = s => document.querySelector(s);
 
         await initData();
         subscribeLive();
+        subscribeSpecMedia();
         // fallback listener لمزامنة الطلبات من collection requests
         subscribeRequestsCollection();
       }catch(err){
@@ -1107,7 +1122,30 @@ $('#btnLogin').addEventListener('click', async ()=>{
     return m;
   }
 
-  // ✅ استبعاد السيارات المباعة من حساب النواقص
+  
+  // ✅ spec media (تصوير/مونتاج/أجندة) محفوظة في Firestore في مجموعة: spec_media
+  function subscribeSpecMedia(){
+    if(unsubSpecMedia) return;
+    try{
+      const colRef = collection(db, 'spec_media');
+      unsubSpecMedia = onSnapshot(colRef, (snap)=>{
+        const m = new Map();
+        snap.docs.forEach(d=>{
+          const data = d.data() || {};
+          m.set(d.id, data);
+        });
+        specMediaMap = m;
+        renderShootMissingCard();
+      }, ()=>{});
+    }catch(e){}
+  }
+
+// ✅ استبعاد السيارات المباعة من حساب النواقص
+  function isSoldLocationStr(loc){
+    const s = String(loc||'');
+    return s.includes('مباع تحت التسليم') || s.includes('مباع تم التسليم');
+  }
+
   function isSoldRow(r){
     const loc = (r && r.location) ? String(r.location) : '';
     return loc.includes('مباع تحت التسليم') || loc.includes('مباع تم التسليم');
@@ -1688,31 +1726,56 @@ function renderShootCard(gridEl){
 
   function computeStockLocationCounts(){
     const counts = new Map();
-    // initialize fixed locations
-    STOCK_FIXED_LOCATIONS.forEach(l=> counts.set(l, 0));
-    // count from live stock
+    const fixed = STOCK_FIXED_LOCATIONS.filter(l => !isSoldLocationStr(l));
+    // initialize fixed locations (بعد استبعاد مباع)
+    fixed.forEach(l=> counts.set(l, 0));
+    // count from live stock (بعد استبعاد مباع)
     (stock || []).forEach(r=>{
       const loc = (r && r.location) ? String(r.location).trim() : 'غير محدد';
       if(!loc) return;
+      if(isSoldLocationStr(loc)) return;
       counts.set(loc, (counts.get(loc) || 0) + 1);
     });
-    const extras = Array.from(counts.keys()).filter(l=> !STOCK_FIXED_LOCATIONS.includes(l));
+    const extras = Array.from(counts.keys()).filter(l=> !fixed.includes(l));
     extras.sort((a,b)=> a.localeCompare(b,'ar'));
     const ordered = [
-      ...STOCK_FIXED_LOCATIONS.filter(l=> counts.has(l)),
+      ...fixed.filter(l=> counts.has(l)),
       ...extras
     ];
     return { counts, ordered };
   }
 
   function renderStockCard(){
-    const total = (stock || []).length;
+    const total = (stock || []).filter(r=> !isSoldLocationStr(r.location)).length;
     const totalEl = document.getElementById('stockTotalInline');
     if(totalEl) totalEl.textContent = total.toLocaleString('ar-SA');
     const big = document.getElementById('stockTotalBig');
     if(big) big.textContent = total.toLocaleString('ar-SA');
   }
 
+
+
+
+  function renderShootMissingCard(){
+    // نعتبر النقص على مستوى "التركيبة" (Spec Key) وليس عدد الهياكل
+    try{
+      const rows = (stock || []).filter(r => isActualRow(r));
+      const combos = countByCombo(rows); // key => qty
+      let missingCombos = 0;
+
+      combos.forEach((qty, key)=>{
+        const media = specMediaMap.get(key) || {};
+        const shoot = String(media.shoot || '').trim();
+        if(shoot !== 'نعم') missingCombos++;
+      });
+
+      const inline = document.getElementById('shootMissingInline');
+      if(inline) inline.textContent = missingCombos.toLocaleString('ar-SA');
+
+      const big = document.getElementById('shootMissingBig');
+      if(big) big.textContent = missingCombos.toLocaleString('ar-SA');
+    }catch(e){}
+  }
 
 
   function renderGroups(){
@@ -1776,12 +1839,22 @@ function renderShootCard(gridEl){
   function renderAll(){
     renderShortagesCard();
     renderStockCard();
+    renderShootMissingCard();
 
     const stockCard = document.getElementById('stockCard');
     if(stockCard && !stockCard.dataset.bound){
       stockCard.dataset.bound = '1';
       stockCard.addEventListener('click', ()=>{
         openModalForAllStock();
+      });
+    }
+
+
+    const shootMissingCard = document.getElementById('shootMissingCard');
+    if(shootMissingCard && !shootMissingCard.dataset.bound){
+      shootMissingCard.dataset.bound = '1';
+      shootMissingCard.addEventListener('click', ()=>{
+        window.location.href = './spec-keys.html';
       });
     }
 
@@ -2213,7 +2286,7 @@ function renderShootCard(gridEl){
 
   function openModalForAllStock(){
     currentStockLocation = null;
-    currentRows = (stock || []).slice();
+    currentRows = (stock || []).filter(r=> !isSoldLocationStr(r.location));
     filteredRows = currentRows.slice();
     currentFilterKey = null;
     approvalContext = null;

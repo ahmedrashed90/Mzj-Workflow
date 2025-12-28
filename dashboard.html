@@ -2252,7 +2252,7 @@ function renderShootCard(gridEl){
   }
 
   function getMoveCar(m){
-    return (m.car || m.carName || m.vehicle || m.model || m.title || m البيان || '').toString();
+    return (m.car || m.carName || m.vehicle || m.model || m.title || m['البيان'] || m.statement || '').toString();
   }
 
   function isTransferPending(m){

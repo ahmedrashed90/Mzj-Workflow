@@ -643,9 +643,6 @@ tr:hover{ filter: brightness(0.98); }
   let currentUserRole = null;
   let currentUserEmail = null;
 
-  const CFO_EMAIL = 'cfo@mzjcars.com';
-  const COO_EMAIL = 'coo@mzjcars.com';
-
   // الأدوار المسموح لها بعمل الموافقات على طلبات النقل
   const ADMIN_APPROVAL_ROLES   = [ROLE_ADMIN]; // موافقة الإدارة
   const FINANCE_APPROVAL_ROLES = [ROLE_ADMIN]; // موافقة مالية (يمكن توسيعها لاحقًا)
@@ -815,7 +812,7 @@ const $ = s => document.querySelector(s);
         const role = await fetchUserRole(user);
     window.__mzjUserRole = role || null;
         currentUserRole = role || null;
-        currentUserEmail = (user && user.email) ? String(user.email).toLowerCase() : null;
+        currentUserEmail = (user.email || '').toLowerCase();
 
         // لو تعذّر جلب الدور أو لم يكن ضمن القائمة، لا نعمل Redirect (عشان الصفحة تفتح دائمًا)
         // ونكتفي بعرض الصفحة للمستخدم المسجّل دخول.
@@ -1541,44 +1538,42 @@ function renderShootCard(gridEl){
     });
   }
 
-  
-function renderTransferCard(gridEl){
+  function renderTransferCard(gridEl){
     const list = Array.isArray(transferRequests) ? transferRequests.slice() : [];
-    const needsAdmin   = (t)=> !(isApproved(t.adminApproved) || isApproved(t.adminApproval));
+    const needsAdmin = (t)=> !(isApproved(t.adminApproved) || isApproved(t.adminApproval));
     const needsFinance = (t)=> !(isApproved(t.financeApproved) || isApproved(t.financeApproval));
-
+    const awaitingBoth = list.filter(t => needsAdmin(t) && needsFinance(t));
+    const awaitingCount = awaitingBoth.length;
     const total = list.length;
-    const pendingAdmin   = list.filter(needsAdmin).length;
-    const pendingFinance = list.filter(needsFinance).length;
-    const pendingBoth    = list.filter(t => needsAdmin(t) && needsFinance(t)).length;
 
     const card = document.createElement('div');
     card.className = 'card group-card';
     card.innerHTML = `
-      <div class="group-head" style="align-items:flex-start">
+      <div class="group-head">
         <div class="group-left">
-          <h3 class="group-title"><i class="fa-solid fa-right-left"></i> الموافقات المالية والإدارية</h3>
-          <div class="hint" style="margin-top:6px">طلبات نقل وصلت <b>تحت التسليم</b> وتحتاج موافقات قبل الانتقال إلى <b>تم التسليم</b></div>
+          <h3 class="group-title"><i class="fa-solid fa-right-left"></i> الموافقة المالية والإدارية</h3>
+          <div class="sub-metrics" style="margin-top:10px">
+            <span class="metric shoot-metric metric-wide" data-tfilter="all">
+              <i class="fa-solid fa-truck-fast"></i>
+              طلبات الموافقات المالية و الإدارية
+            </span>
+          </div>
 
-          <div class="sub-metrics" style="margin-top:12px;gap:10px;flex-wrap:wrap">
-            <button class="btn btn-outline btn-sm" data-tfilter="finance" type="button">
-              <i class="fa-solid fa-coins"></i>
-              موافقات مالية متبقية: <b>${pendingFinance.toLocaleString('ar-SA')}</b>
-            </button>
-
-            <button class="btn btn-outline btn-sm" data-tfilter="admin" type="button">
+          <div class="sub-metrics" style="margin-top:10px">
+            <span class="metric shoot-metric" data-tfilter="awaiting">
               <i class="fa-solid fa-user-check"></i>
-              موافقات إدارية متبقية: <b>${pendingAdmin.toLocaleString('ar-SA')}</b>
-            </button>
+              موافقة إدارية:
+              <b>${awaitingCount.toLocaleString('ar-SA')}</b>
+            </span>
 
-            <button class="btn btn-soft btn-sm" data-tfilter="awaiting" type="button" title="طلبات تحتاج الموافقتين">
-              <i class="fa-solid fa-circle-exclamation"></i>
-              تحتاج الاثنين: <b>${pendingBoth.toLocaleString('ar-SA')}</b>
-            </button>
+            <span class="metric shoot-metric" data-tfilter="awaiting">
+              <i class="fa-solid fa-coins"></i>
+              موافقة مالية:
+              <b>${awaitingCount.toLocaleString('ar-SA')}</b>
+            </span>
           </div>
         </div>
-
-        <div class="group-total" title="إجمالي طلبات النقل داخل الموافقات">${total.toLocaleString('ar-SA')}</div>
+        <div class="group-total" title="إجمالي طلبات النقل">${total.toLocaleString('ar-SA')}</div>
       </div>
     `;
 
@@ -2596,280 +2591,396 @@ function openShootModal(filter='ALL'){
     });
   }
 
-  
-function openTransfersModal(filterKey='all'){
+  function openTransfersModal(filterKey='all'){
     const list = Array.isArray(transferRequests) ? transferRequests.slice() : [];
-    const needsAdmin   = (t)=> !(isApproved(t.adminApproved) || isApproved(t.adminApproval));
+    const needsAdmin = (t)=> !(isApproved(t.adminApproved) || isApproved(t.adminApproval));
     const needsFinance = (t)=> !(isApproved(t.financeApproved) || isApproved(t.financeApproval));
 
     let picked = list;
 
+    // المطلوب: زر "موافقة إدارية" و "موافقة مالية" يعرضون فقط
+    // الطلبات اللي: إداري بانتظار + مالية بانتظار
     if(filterKey==='awaiting') picked = list.filter(t => needsAdmin(t) && needsFinance(t));
-    if(filterKey==='finance')  picked = list.filter(t => needsFinance(t));
-    if(filterKey==='admin')    picked = list.filter(t => needsAdmin(t));
 
     currentTransfersBase = picked.slice();
-    filteredTransfers = picked.slice();
+    filteredTransfers = sortTransfers(picked);
 
     const title =
-      (filterKey==='finance') ? 'طلبات نقل السيارات — بانتظار موافقة مالية' :
-      (filterKey==='admin')   ? 'طلبات نقل السيارات — بانتظار موافقة إدارية' :
-      (filterKey==='awaiting')? 'طلبات نقل السيارات — بانتظار الموافقة المالية والإدارية' :
+      filterKey==='awaiting' ? 'طلبات نقل السيارات — بانتظار الموافقة الإدارية والمالية' :
       'طلبات نقل السيارات — كل الطلبات';
 
-    openModalTransfers(title);
-    renderTransfersTable();
-    setTransfersCounters();
+    openModal('transfers', title);
   }
-
-function renderTransfersTable(){
+  function renderTransfersTable(){
     modalTableTransfersBody.innerHTML = '';
-
-    const canFinance = ()=>{
-      const email = (currentUserEmail||'').toLowerCase();
-      return (currentUserRole === ROLE_ADMIN) || (email === CFO_EMAIL);
-    };
-    const canAdmin = ()=>{
-      const email = (currentUserEmail||'').toLowerCase();
-      return (currentUserRole === ROLE_ADMIN) || (email === COO_EMAIL);
-    };
-
     filteredTransfers.forEach((t,idx)=>{
       const idxInMoves = typeof t._idx === 'number' ? t._idx : -1;
-
       const date   = t.requestedAt || t.createdAt || t.date || '';
       const vin    = t.vin || t.chassis || '';
       const fromLoc= t.from || t.fromLocation || t.source || '';
       const toLoc  = t.to || t.toLocation || t.target || '';
+      const note   = t.note || t.message || '';
 
       const stockRow = (Array.isArray(stock) ? stock : []).find(r => String(r.vin||'') === String(vin||''));
-      const carName  = stockRow?.car || t.car || '—';
-      const variant  = stockRow?.variant || t.variant || '—';
+      const carName  = stockRow?.car || '—';
+      const variant  = stockRow?.variant || '—';
 
       const adminOk   = (isApproved(t.adminApproved) || isApproved(t.adminApproval));
       const financeOk = (isApproved(t.financeApproved) || isApproved(t.financeApproval));
 
-      const adminNote   = (t.adminNote || t.adminNotes || '').toString().trim();
-      const financeNote = (t.financeNote || t.financeNotes || '').toString().trim();
-      const notesText = [
-        financeNote ? `مالية: ${escapeHtml(financeNote)}` : '',
-        adminNote   ? `إدارية: ${escapeHtml(adminNote)}` : ''
-      ].filter(Boolean).join('<br>') || '—';
+      const adminStatusTxt = adminOk
+        ? (t.adminApprovedAt ? 'إداري: موافق (' + t.adminApprovedAt + ')' : 'إداري: موافق')
+        : 'إداري: بانتظار';
 
-      const statusTxt =
-        (adminOk && financeOk) ? 'تمت الموافقة المالية والإدارية' :
-        (!adminOk && !financeOk) ? 'بانتظار الموافقة المالية والإدارية' :
-        (!adminOk && financeOk) ? 'بانتظار موافقة الإدارة' :
-        'بانتظار الموافقة المالية';
+      const financeStatusTxt = financeOk
+        ? (t.financeApprovedAt ? 'مالية: موافق (' + t.financeApprovedAt + ')' : 'مالية: موافق')
+        : 'مالية: بانتظار';
 
-      const approveFinanceDisabled = (!canFinance() || financeOk || idxInMoves===-1);
-      const approveAdminDisabled   = (!canAdmin()   || adminOk   || idxInMoves===-1);
+      const statusTxt = adminStatusTxt + ' — ' + financeStatusTxt;
 
-      const tr = document.createElement('tr');
+      const canAdminApproveBtn   = ADMIN_APPROVAL_ROLES.includes(currentUserRole);
+      const canFinanceApproveBtn = FINANCE_APPROVAL_ROLES.includes(currentUserRole);
+
+      const adminDisabledAttr   = (!canAdminApproveBtn || adminOk || idxInMoves===-1) ? 'disabled' : '';
+      const financeDisabledAttr = (!canFinanceApproveBtn || financeOk || idxInMoves===-1) ? 'disabled' : '';
+
+            const notesText = [stockRow?.financeNotes, stockRow?.adminNotes, t.financeNote, t.adminNote].filter(v => (v||'').toString().trim()!=='').join(' | ') || '—';
+
+const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${idx+1}</td>
-        <td>${escapeHtml(String(date||''))}</td>
-        <td>${escapeHtml(String(vin||''))}</td>
-        <td>${escapeHtml(String(carName||''))}</td>
-        <td>${escapeHtml(String(variant||''))}</td>
-        <td>${escapeHtml(String(fromLoc||''))}</td>
-        <td>${escapeHtml(String(toLoc||''))}</td>
+        <td>${date}</td>
+        <td>${vin}</td>
+        <td>${carName}</td>
+        <td>${variant}</td>
+        <td>${fromLoc}</td>
+        <td>${toLoc}</td>
         <td style="text-align:center">${adminOk ? '✅' : '—'}</td>
         <td style="text-align:center">${financeOk ? '✅' : '—'}</td>
         <td>${notesText}</td>
         <td>${statusTxt}</td>
-        <td style="display:flex;flex-direction:column;gap:6px;min-width:170px">
-          <button class="btn btn-outline btn-xs" data-act="approve-finance" data-idx="${idxInMoves}" ${approveFinanceDisabled?'disabled':''}>
-            <i class="fa-solid fa-coins"></i> موافقة مالية
+        <td>
+          <button class="btn btn-outline btn-xs" data-transfer-view="${idxInMoves}">
+            <i class="fa-solid fa-eye"></i> تفاصيل
           </button>
-          <button class="btn btn-outline btn-xs" data-act="approve-admin" data-idx="${idxInMoves}" ${approveAdminDisabled?'disabled':''}>
-            <i class="fa-solid fa-user-check"></i> موافقة إدارية
-          </button>
-          <div style="display:flex;gap:6px;flex-wrap:wrap">
-            <button class="btn btn-danger btn-xs" data-act="rollback-finance" data-idx="${idxInMoves}" ${(!canFinance()||!financeOk||idxInMoves===-1)?'disabled':''}>
-              <i class="fa-solid fa-rotate-left"></i> تراجع مالية
-            </button>
-            <button class="btn btn-danger btn-xs" data-act="rollback-admin" data-idx="${idxInMoves}" ${(!canAdmin()||!adminOk||idxInMoves===-1)?'disabled':''}>
-              <i class="fa-solid fa-rotate-left"></i> تراجع إدارية
-            </button>
-          </div>
         </td>
       `;
-
-      // listeners
-      tr.querySelector('[data-act="approve-finance"]').addEventListener('click',(ev)=>{
-        ev.preventDefault(); ev.stopPropagation();
-        approveTransfer(idxInMoves,'finance');
-      });
-      tr.querySelector('[data-act="approve-admin"]').addEventListener('click',(ev)=>{
-        ev.preventDefault(); ev.stopPropagation();
-        approveTransfer(idxInMoves,'admin');
-      });
-      tr.querySelector('[data-act="rollback-finance"]').addEventListener('click',(ev)=>{
-        ev.preventDefault(); ev.stopPropagation();
-        rollbackTransfer(idxInMoves,'finance');
-      });
-      tr.querySelector('[data-act="rollback-admin"]').addEventListener('click',(ev)=>{
-        ev.preventDefault(); ev.stopPropagation();
-        rollbackTransfer(idxInMoves,'admin');
-      });
-
       modalTableTransfersBody.appendChild(tr);
     });
+    modalCount.textContent = `عدد طلبات النقل الظاهرة: ${filteredTransfers.length.toLocaleString('ar-SA')} من ${transferRequests.length.toLocaleString('ar-SA')}`;
   }
 
-function approveTransfer(moveIdx, kind){
-  const idx = Number(moveIdx);
-  if (isNaN(idx) || !moves || !moves[idx]) {
-    showToast('تعذّر العثور على هذا الطلب');
+  async function approveTransfer(moveIdx, kind){
+const idx = Number(moveIdx);
+if (isNaN(idx) || !moves[idx]) {
+  showToast('تعذّر العثور على هذا الطلب');
+  return;
+}
+const m = moves[idx];
+const isAdmin   = (kind === 'admin');
+const isFinance = (kind === 'finance');
+
+if (!isAdmin && !isFinance) {
+  showToast('نوع الموافقة غير معروف');
+  return;
+}
+
+// 🔐 فحص الصلاحيات بناءً على الدور الحالي
+if (isAdmin && !ADMIN_APPROVAL_ROLES.includes(currentUserRole)) {
+  showToast('ليس لديك صلاحية لإضافة موافقة الإدارة على طلبات النقل');
+  return;
+}
+if (isFinance && !FINANCE_APPROVAL_ROLES.includes(currentUserRole)) {
+  showToast('ليس لديك صلاحية لإضافة الموافقة المالية على طلبات النقل');
+  return;
+}
+
+// تحديث بيانات الطلب نفسه
+if (isAdmin) {
+  const adminOk = (isApproved(m.adminApproved) || isApproved(m.adminApproval));
+  if (adminOk) {
+    showToast('تمت موافقة الإدارة على هذا الطلب مسبقًا');
     return;
   }
-  const m = moves[idx];
-  const isAdminKind   = (kind === 'admin');
-  const isFinanceKind = (kind === 'finance');
-
-  const email = (currentUserEmail||'').toLowerCase();
-  const canFinance = (currentUserRole === ROLE_ADMIN) || (email === CFO_EMAIL);
-  const canAdmin   = (currentUserRole === ROLE_ADMIN) || (email === COO_EMAIL);
-
-  if (isAdminKind && !canAdmin) {
-    showToast('ليس لديك صلاحية للموافقة الإدارية');
+  m.adminApproved   = true;
+  m.adminApproval   = true;
+  m.adminApprovedAt = now();
+} else if (isFinance) {
+  const financeOk = (isApproved(m.financeApproved) || isApproved(m.financeApproval));
+  if (financeOk) {
+    showToast('تمت الموافقة المالية على هذا الطلب مسبقًا');
     return;
   }
-  if (isFinanceKind && !canFinance) {
-    showToast('ليس لديك صلاحية للموافقة المالية');
-    return;
+  m.financeApproved   = true;
+  m.financeApproval   = true;
+  m.financeApprovedAt = now();
+}
+
+// تحديث حالة الطلب العامة بناءً على الموافقتين
+const adminOkNow   = (isApproved(m.adminApproved) || isApproved(m.adminApproval));
+const financeOkNow = (isApproved(m.financeApproved) || isApproved(m.financeApproval));
+
+// تحديث فلاغات الموافقات على المخزون فقط (بدون تحريك السيارة)
+const stockIndex = stock.findIndex(r => String(r.vin) === String(m.vin));
+if (stockIndex !== -1) {
+  stock[stockIndex].adminApproved   = adminOkNow;
+  stock[stockIndex].adminApproval   = adminOkNow;
+  stock[stockIndex].financeApproved = financeOkNow;
+  stock[stockIndex].financeApproval = financeOkNow;
+}
+
+if (adminOkNow && financeOkNow) {
+  // تمّت الموافقة المالية والإدارية معًا
+  m.status = 'approved';
+  m.requiresAdminApproval   = false;
+  m.needsAdminApproval      = false;
+  m.requiresFinanceApproval = false;
+  m.needsFinanceApproval    = false;
+  // ⚠️ لا يوجد نقل تلقائي هنا؛ النقل النهائي يتم من صفحة الإدارة
+} else {
+  // لسه في موافقة ناقصة
+  m.status = 'awaiting_approvals';
+}
+
+moves[idx] = m;
+
+try{
+  await mzjSetDoc(STATE_REF, { moves, stock }, { merge:true });
+  computeTransferRequests();
+  filteredTransfers = sortTransfers(transferRequests);
+  renderTransfersTable();
+  showToast(isAdmin ? 'تمت موافقة الإدارة على طلب النقل' : 'تمت الموافقة المالية على طلب النقل');
+}catch(e){
+  console.error(e);
+  setStatus('warn','تعذّر حفظ الموافقة على طلب النقل');
+}
   }
 
-  if (isAdminKind) {
-    const adminOk = (isApproved(m.adminApproved) || isApproved(m.adminApproval));
-    if (adminOk) { showToast('تمت الموافقة الإدارية مسبقًا'); return; }
-    const note = prompt('اكتب ملاحظة الموافقة الإدارية (اختياري):','') || '';
-    m.adminApproved   = true;
-    m.adminApproval   = true;
-    m.adminNote       = note.trim();
-    m.adminApprovedBy = email || null;
-    m.adminApprovedAt = now();
+  
+  /* ===== Transfer approvals (Detail modal like إدارة الطلبات) ===== */
+  const approvalsDetailBackdrop = document.getElementById('approvalsDetailBackdrop');
+  const approvalsNoteOverlay    = document.getElementById('approvalsNoteOverlay');
+  const approvalsNoteText       = document.getElementById('approvalsNoteText');
+  const approvalsNoteTitle      = document.getElementById('approvalsNoteTitle');
+  const approvalsDetailTitle    = document.getElementById('approvalsDetailTitle');
+  const approvalsDetailStatus   = document.getElementById('approvalsDetailStatus');
+  const approvalsDetailIdHint   = document.getElementById('approvalsDetailIdHint');
+  const approvalsDetailPct      = document.getElementById('approvalsDetailPct');
+  const approvalsDetailBar      = document.getElementById('approvalsDetailBar');
+  const approvalsDetailInfoRow  = document.getElementById('approvalsDetailInfoRow');
+  const financeStateLine        = document.getElementById('financeStateLine');
+  const financeStateIcon        = document.getElementById('financeStateIcon');
+  const financeNoteLine         = document.getElementById('financeNoteLine');
+  const adminStateLine          = document.getElementById('adminStateLine');
+  const adminStateIcon          = document.getElementById('adminStateIcon');
+  const adminNoteLine           = document.getElementById('adminNoteLine');
+
+  const btnCloseApprovalsDetail = document.getElementById('btnCloseApprovalsDetail');
+  const btnFinanceApprove       = document.getElementById('btnFinanceApprove');
+  const btnFinanceRevert        = document.getElementById('btnFinanceRevert');
+  const btnAdminApprove         = document.getElementById('btnAdminApprove');
+  const btnAdminRevert          = document.getElementById('btnAdminRevert');
+
+  const btnCloseNote            = document.getElementById('btnCloseNote');
+  const btnCancelNote           = document.getElementById('btnCancelNote');
+  const btnSaveNote             = document.getElementById('btnSaveNote');
+
+  let currentDetailMoveIdx = null;
+  let pendingNoteAction = null; // { kind:'finance'|'admin', mode:'approve'|'revert' }
+
+  function canFinanceApprove(){
+    const email = (currentUserEmail||'').toLowerCase();
+    return email === 'cfo@mzjcars.com' || currentUserRole === ROLE_ADMIN;
+  }
+  function canAdminApprove(){
+    const email = (currentUserEmail||'').toLowerCase();
+    return email === 'coo@mzjcars.com' || currentUserRole === ROLE_ADMIN;
   }
 
-  if (isFinanceKind) {
+  function openTransferApprovalDetails(moveIdx){
+    const idx = Number(moveIdx);
+    if (isNaN(idx) || !moves[idx]) { showToast('تعذّر العثور على هذا الطلب'); return; }
+    currentDetailMoveIdx = idx;
+    renderTransferApprovalDetails();
+    approvalsDetailBackdrop.style.display='flex';
+    approvalsNoteOverlay.style.display='none';
+  }
+
+  function closeTransferApprovalDetails(){
+    approvalsDetailBackdrop.style.display='none';
+    approvalsNoteOverlay.style.display='none';
+    currentDetailMoveIdx = null;
+    pendingNoteAction = null;
+    approvalsNoteText.value = '';
+  }
+
+  function setDetailStatus(kind){
+    // kind: 'await' | 'ok'
+    const dot = approvalsDetailStatus.querySelector('.dot');
+    const txt = approvalsDetailStatus.querySelector('span:last-child');
+    dot.classList.remove('ok','warn','err');
+    if(kind==='ok'){ dot.classList.add('ok'); txt.textContent='مكتمل'; }
+    else { dot.classList.add('warn'); txt.textContent='بانتظار'; }
+  }
+
+  function renderTransferApprovalDetails(){
+    const idx = currentDetailMoveIdx;
+    if (idx == null || !moves[idx]) return;
+
+    const m = moves[idx];
+    const date   = m.requestedAt || m.createdAt || m.date || '—';
+    const vin    = m.vin || m.chassis || '—';
+    const fromLoc= m.from || m.fromLocation || m.source || '—';
+    const toLoc  = m.to || m.toLocation || m.target || '—';
+
+    const stockRow = (Array.isArray(stock) ? stock : []).find(r => String(r.vin||'') === String(vin||''));
+    const carName  = stockRow?.car || '—';
+    const variant  = stockRow?.variant || '—';
+
+    const adminOk   = (isApproved(m.adminApproved) || isApproved(m.adminApproval));
     const financeOk = (isApproved(m.financeApproved) || isApproved(m.financeApproval));
-    if (financeOk) { showToast('تمت الموافقة المالية مسبقًا'); return; }
-    const note = prompt('اكتب ملاحظة الموافقة المالية (اختياري):','') || '';
-    m.financeApproved   = true;
-    m.financeApproval   = true;
-    m.financeNote       = note.trim();
-    m.financeApprovedBy = email || null;
-    m.financeApprovedAt = now();
+
+    const pct = (adminOk ? 50 : 0) + (financeOk ? 50 : 0);
+    approvalsDetailPct.textContent = `${pct}%`;
+    approvalsDetailBar.style.width = `${pct}%`;
+
+    approvalsDetailTitle.textContent = `تفاصيل طلب النقل: ${vin}`;
+    approvalsDetailIdHint.textContent = `من: ${fromLoc}  —  إلى: ${toLoc}  •  التاريخ: ${date}`;
+
+    setDetailStatus(adminOk && financeOk ? 'ok' : 'await');
+
+    // Approval cards
+    financeStateIcon.textContent = financeOk ? '✅' : '—';
+    adminStateIcon.textContent   = adminOk ? '✅' : '—';
+
+    financeStateLine.textContent = financeOk ? `تمت الموافقة${m.financeApprovedAt ? ' — ' + m.financeApprovedAt : ''}` : 'بانتظار';
+    adminStateLine.textContent   = adminOk ? `تمت الموافقة${m.adminApprovedAt ? ' — ' + m.adminApprovedAt : ''}` : 'بانتظار';
+
+    const financeNote = (m.financeNote || stockRow?.financeNotes || '').toString().trim();
+    const adminNote   = (m.adminNote || stockRow?.adminNotes || '').toString().trim();
+    financeNoteLine.textContent = financeNote ? `ملاحظة: ${financeNote}` : '';
+    adminNoteLine.textContent   = adminNote ? `ملاحظة: ${adminNote}` : '';
+
+    // Info row
+    approvalsDetailInfoRow.innerHTML = `
+      <td>${date}</td>
+      <td>${vin}</td>
+      <td>${carName}</td>
+      <td>${variant}</td>
+      <td>${fromLoc}</td>
+      <td>${toLoc}</td>
+      <td>${(adminOk? 'إداري: ✅' : 'إداري: ⏳')} — ${(financeOk? 'مالي: ✅' : 'مالي: ⏳')}</td>
+    `;
+
+    // Permissions + buttons state
+    btnFinanceApprove.disabled = !canFinanceApprove() || financeOk;
+    btnAdminApprove.disabled   = !canAdminApprove() || adminOk;
+    btnFinanceRevert.disabled  = !canFinanceApprove() || !financeOk;
+    btnAdminRevert.disabled    = !canAdminApprove() || !adminOk;
   }
 
-  // تحديث حالة الطلب بناءً على الموافقتين
-  const adminOkNow   = (isApproved(m.adminApproved) || isApproved(m.adminApproval));
-  const financeOkNow = (isApproved(m.financeApproved) || isApproved(m.financeApproval));
-
-  if (adminOkNow && financeOkNow) {
-    m.awaitingApprovals = false;
-    m.status = 'approved';
-    m.requiresAdminApproval   = false;
-    m.requiresFinanceApproval = false;
-    m.needsAdminApproval      = false;
-    m.needsFinanceApproval    = false;
-  } else {
-    m.awaitingApprovals = true;
-    m.status = 'awaiting_approvals';
+  function openNoteDialog(title, actionObj){
+    pendingNoteAction = actionObj;
+    approvalsNoteTitle.textContent = title;
+    approvalsNoteText.value = '';
+    approvalsNoteOverlay.style.display='flex';
+    setTimeout(()=> approvalsNoteText.focus(), 50);
+  }
+  function closeNoteDialog(){
+    approvalsNoteOverlay.style.display='none';
+    approvalsNoteText.value = '';
+    pendingNoteAction = null;
   }
 
-  moves[idx] = m;
+  async function applyApprovalActionWithNote(){
+    if(!pendingNoteAction) return;
+    const idx = currentDetailMoveIdx;
+    if (idx == null || !moves[idx]) return;
 
-  // حفظ
-  (async ()=>{
+    const note = (approvalsNoteText.value||'').trim();
+    const { kind, mode } = pendingNoteAction;
+    const m = moves[idx];
+
+    const isAdmin = (kind==='admin');
+    const isFinance = (kind==='finance');
+
+    // Permission hard check
+    if(isAdmin && !canAdminApprove()){ showToast('ليس لديك صلاحية للموافقة الإدارية'); return; }
+    if(isFinance && !canFinanceApprove()){ showToast('ليس لديك صلاحية للموافقة المالية'); return; }
+
+    // Optimistic UI update
+    if(mode==='approve'){
+      if(isAdmin){ m.adminApproved = true; m.adminApproval = true; m.adminApprovedAt = now(); if(note) m.adminNote = note; }
+      if(isFinance){ m.financeApproved = true; m.financeApproval = true; m.financeApprovedAt = now(); if(note) m.financeNote = note; }
+    }else if(mode==='revert'){
+      if(isAdmin){ m.adminApproved = false; m.adminApproval = false; m.adminApprovedAt = ''; m.adminNote = note || ''; }
+      if(isFinance){ m.financeApproved = false; m.financeApproval = false; m.financeApprovedAt = ''; m.financeNote = note || ''; }
+    }
+
+    // Recompute status
+    const adminOkNow   = (isApproved(m.adminApproved) || isApproved(m.adminApproval));
+    const financeOkNow = (isApproved(m.financeApproved) || isApproved(m.financeApproval));
+    m.status = (adminOkNow && financeOkNow) ? 'approved' : 'awaiting_approvals';
+
+    // Mirror to stock (if exists)
+    const vin = m.vin || m.chassis || '';
+    const stockIndex = stock.findIndex(r => String(r.vin) === String(vin));
+    if(stockIndex !== -1){
+      stock[stockIndex].adminApproved   = adminOkNow;
+      stock[stockIndex].adminApproval   = adminOkNow;
+      stock[stockIndex].financeApproved = financeOkNow;
+      stock[stockIndex].financeApproval = financeOkNow;
+      if(isAdmin && note) stock[stockIndex].adminNotes = note;
+      if(isFinance && note) stock[stockIndex].financeNotes = note;
+      if(mode==='revert' && isAdmin && note==='') stock[stockIndex].adminNotes = '';
+      if(mode==='revert' && isFinance && note==='') stock[stockIndex].financeNotes = '';
+    }
+
+    // Render immediately
+    renderTransferApprovalDetails();
+    closeNoteDialog();
+
     try{
       await mzjSetDoc(STATE_REF, { moves, stock }, { merge:true });
-      // تحديث القوائم
       computeTransferRequests();
-      renderTransferCard(document.querySelector('.grid'));
-      // إعادة رسم المودال
-      if (modalTransfers && modalTransfers.classList.contains('show')) {
-        // حافظ على نفس الفلتر الحالي
+      // Update list quickly without reopening modal
+      if(currentMode==='transfers'){
+        filteredTransfers = sortTransfers(currentTransfersBase.length ? currentTransfersBase : (transferRequests||[]));
         renderTransfersTable();
-        setTransfersCounters();
       }
-      showToast(isAdminKind ? 'تمت موافقة الإدارة على طلب النقل' : 'تمت الموافقة المالية على طلب النقل');
+      showToast(mode==='approve' ? 'تم حفظ الموافقة' : 'تم التراجع بنجاح');
     }catch(e){
       console.error(e);
-      setStatus('warn','تعذّر حفظ الموافقة على طلب النقل');
+      setStatus('warn','تعذّر حفظ التعديل');
     }
-  })();
-}
-
-function rollbackTransfer(moveIdx, kind){
-  const idx = Number(moveIdx);
-  if (isNaN(idx) || !moves || !moves[idx]) {
-    showToast('تعذّر العثور على هذا الطلب');
-    return;
-  }
-  const m = moves[idx];
-  const isAdminKind   = (kind === 'admin');
-  const isFinanceKind = (kind === 'finance');
-
-  const email = (currentUserEmail||'').toLowerCase();
-  const canFinance = (currentUserRole === ROLE_ADMIN) || (email === CFO_EMAIL);
-  const canAdmin   = (currentUserRole === ROLE_ADMIN) || (email === COO_EMAIL);
-
-  if (isAdminKind && !canAdmin) { showToast('ليس لديك صلاحية للتراجع الإداري'); return; }
-  if (isFinanceKind && !canFinance) { showToast('ليس لديك صلاحية للتراجع المالي'); return; }
-
-  const reason = prompt('سبب التراجع (اختياري):','') || '';
-
-  if (isAdminKind) {
-    m.adminApproved   = false;
-    m.adminApproval   = false;
-    m.adminApprovedAt = null;
-    m.adminApprovedBy = email || null;
-    if (reason.trim()) m.adminNote = `تراجع: ${reason.trim()}`;
-  }
-  if (isFinanceKind) {
-    m.financeApproved   = false;
-    m.financeApproval   = false;
-    m.financeApprovedAt = null;
-    m.financeApprovedBy = email || null;
-    if (reason.trim()) m.financeNote = `تراجع: ${reason.trim()}`;
   }
 
-  // تحديث الحالة العامة
-  const adminOkNow   = (isApproved(m.adminApproved) || isApproved(m.adminApproval));
-  const financeOkNow = (isApproved(m.financeApproved) || isApproved(m.financeApproval));
+  // Close handlers
+  btnCloseApprovalsDetail?.addEventListener('click', closeTransferApprovalDetails);
+  approvalsDetailBackdrop?.addEventListener('click', (e)=>{
+    if(e.target === approvalsDetailBackdrop) closeTransferApprovalDetails();
+  });
 
-  m.awaitingApprovals = !(adminOkNow && financeOkNow);
-  m.status = (adminOkNow && financeOkNow) ? 'approved' : 'awaiting_approvals';
+  btnCloseNote?.addEventListener('click', closeNoteDialog);
+  btnCancelNote?.addEventListener('click', closeNoteDialog);
+  approvalsNoteOverlay?.addEventListener('click', (e)=>{
+    if(e.target === approvalsNoteOverlay) closeNoteDialog();
+  });
+  btnSaveNote?.addEventListener('click', applyApprovalActionWithNote);
 
-  moves[idx] = m;
-
-  (async ()=>{
-    try{
-      await mzjSetDoc(STATE_REF, { moves, stock }, { merge:true });
-      computeTransferRequests();
-      renderTransferCard(document.querySelector('.grid'));
-      if (modalTransfers && modalTransfers.classList.contains('show')) {
-        renderTransfersTable();
-        setTransfersCounters();
-      }
-      showToast(isAdminKind ? 'تم التراجع عن الموافقة الإدارية' : 'تم التراجع عن الموافقة المالية');
-    }catch(e){
-      console.error(e);
-      setStatus('warn','تعذّر حفظ التراجع');
-    }
-  })();
-}
+  // Action buttons (open note dialog)
+  btnFinanceApprove?.addEventListener('click', ()=> openNoteDialog('ملاحظة الموافقة المالية', {kind:'finance', mode:'approve'}));
+  btnFinanceRevert?.addEventListener('click', ()=> openNoteDialog('ملاحظة التراجع عن الموافقة المالية', {kind:'finance', mode:'revert'}));
+  btnAdminApprove?.addEventListener('click', ()=> openNoteDialog('ملاحظة الموافقة الإدارية', {kind:'admin', mode:'approve'}));
+  btnAdminRevert?.addEventListener('click', ()=> openNoteDialog('ملاحظة التراجع عن الموافقة الإدارية', {kind:'admin', mode:'revert'}));
 
 
-  tableTransfersWrap.addEventListener('click',(e)=>{
-    const btn = e.target.closest('button[data-transfer-idx]');
+tableTransfersWrap.addEventListener('click',(e)=>{
+    const btn = e.target.closest('button[data-transfer-view]');
     if(!btn) return;
-    const idx = btn.getAttribute('data-transfer-idx');
+    const idx = btn.getAttribute('data-transfer-view');
     if(idx==null || idx==='') return;
-    const kind = btn.getAttribute('data-transfer-kind') || 'admin';
-    openApprovalBoxForTransfer(idx, kind);
+    openTransferApprovalDetails(idx);
   });
 
   // بحث موحّد في المودال
@@ -3070,5 +3181,109 @@ function rollbackTransfer(moveIdx, kind){
 </div>
 </main>
 </div>
+
+<!-- Approvals Detail Modal (Fast + Pro) -->
+<div class="backdrop" id="approvalsDetailBackdrop" style="z-index:10000">
+  <div class="modal" style="max-width:1100px;width:96%;padding:0;overflow:hidden">
+    <div class="modal-top" style="position:sticky;top:0;z-index:5">
+      <h3 id="approvalsDetailTitle">تفاصيل طلب النقل</h3>
+      <div class="tools">
+        <span class="status-badge" id="approvalsDetailStatus"><span class="dot warn"></span><span>بانتظار</span></span>
+        <button class="btn btn-danger" id="btnCloseApprovalsDetail"><i class="fa-solid fa-xmark"></i> إغلاق</button>
+      </div>
+    </div>
+    <div class="body" style="padding:14px">
+      <div class="hint" id="approvalsDetailIdHint" style="margin:0 0 10px;color:var(--muted)"></div>
+
+      <!-- Progress -->
+      <div style="border:1px solid var(--line);border-radius:16px;background:#fff;padding:14px;margin-bottom:12px">
+        <div class="row" style="justify-content:space-between;align-items:center;margin:0 0 8px">
+          <div style="font-weight:800;color:var(--brown)">Progress عام</div>
+          <div class="hint" id="approvalsDetailPct" style="margin:0">0%</div>
+        </div>
+        <div style="height:10px;border-radius:999px;background:#f0ebe7;overflow:hidden">
+          <div id="approvalsDetailBar" style="height:100%;width:0%;background:var(--brown);border-radius:999px"></div>
+        </div>
+
+        <div class="row" style="margin-top:12px;gap:10px;flex-wrap:wrap">
+          <div class="card" style="flex:1;min-width:260px;padding:12px;border-radius:16px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+              <div>
+                <div style="font-weight:900;color:var(--brown)">1) الموافقة المالية</div>
+                <div class="hint" id="financeStateLine" style="margin-top:4px">بانتظار</div>
+              </div>
+              <div id="financeStateIcon" style="font-size:18px">—</div>
+            </div>
+            <div id="financeNoteLine" class="hint" style="margin-top:6px"></div>
+            <div class="row" style="justify-content:flex-start;margin-top:10px;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-outline" id="btnFinanceApprove"><i class="fa-solid fa-coins"></i> موافقة مالية</button>
+              <button class="btn btn-ghost" id="btnFinanceRevert"><i class="fa-solid fa-rotate-left"></i> تراجع</button>
+            </div>
+          </div>
+
+          <div class="card" style="flex:1;min-width:260px;padding:12px;border-radius:16px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+              <div>
+                <div style="font-weight:900;color:var(--brown)">2) الموافقة الإدارية</div>
+                <div class="hint" id="adminStateLine" style="margin-top:4px">بانتظار</div>
+              </div>
+              <div id="adminStateIcon" style="font-size:18px">—</div>
+            </div>
+            <div id="adminNoteLine" class="hint" style="margin-top:6px"></div>
+            <div class="row" style="justify-content:flex-start;margin-top:10px;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-outline" id="btnAdminApprove"><i class="fa-solid fa-user-check"></i> موافقة إدارية</button>
+              <button class="btn btn-ghost" id="btnAdminRevert"><i class="fa-solid fa-rotate-left"></i> تراجع</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Request info -->
+      <div class="table-wrap" style="display:block">
+        <table>
+          <thead>
+            <tr>
+              <th>التاريخ</th>
+              <th>VIN</th>
+              <th>السيارة</th>
+              <th>البيان</th>
+              <th>من مكان</th>
+              <th>إلى مكان</th>
+              <th>الحالة</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr id="approvalsDetailInfoRow"></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="hint" id="approvalsDetailFooterHint" style="margin-top:10px">
+        ملاحظة: لا يمكن نقل السيارة إلى (تم التسليم) إلا بعد اكتمال الموافقة المالية والإدارية.
+      </div>
+    </div>
+  </div>
+
+  <!-- Note dialog -->
+  <div id="approvalsNoteOverlay" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.35)">
+    <div class="modal" style="max-width:560px;width:92%;padding:0;overflow:hidden">
+      <div class="modal-top">
+        <h3 id="approvalsNoteTitle">ملاحظة</h3>
+        <div class="tools">
+          <button class="btn btn-danger" id="btnCloseNote"><i class="fa-solid fa-xmark"></i> إغلاق</button>
+        </div>
+      </div>
+      <div class="body" style="padding:14px">
+        <label style="font-size:12px;display:block;margin-bottom:6px;color:var(--muted)">اكتب ملاحظة مختصرة (اختياري)</label>
+        <textarea class="input" id="approvalsNoteText" rows="3" placeholder="مثال: تم اعتماد الطلب بعد مراجعة المستندات"></textarea>
+        <div class="row" style="justify-content:flex-end;margin-top:10px;gap:8px">
+          <button class="btn btn-ghost" id="btnCancelNote"><i class="fa-solid fa-ban"></i> إلغاء</button>
+          <button class="btn btn-primary" id="btnSaveNote"><i class="fa-solid fa-floppy-disk"></i> حفظ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

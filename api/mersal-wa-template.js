@@ -8,19 +8,29 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
 
   try {
-    const body = req.body || {};
+    let body = req.body || {};
+    // allow raw string body
+    if (typeof body === "string") {
+      try { body = JSON.parse(body); } catch { body = {}; }
+    }
 
     // ✅ اقرا كل الأسماء المحتملة اللي الصفحة ممكن تبعتها
-    const phoneRaw = body.phone;
-    const templateName = (body.template_name || body.templateName || "tracking_message").trim();
-    const templateLanguage = (body.template_language || body.templateLanguage || "ar").trim();
+    const phoneRaw = body.phone || body.customerPhone || body.to || body.mobile || body.phone_number;
+    const stageNum = body.stageNum ?? body.stage ?? null;
+    const fallbackTemplate = (Number(stageNum) === 9) ? "mzj_car_ready_delivery"
+      : (Number(stageNum) === 10) ? "mzj_delivery_completed"
+      : "tracking_message";
+    const templateName = String(body.template_name || body.templateName || fallbackTemplate).trim();
+    const templateLanguage = String(body.template_language || body.templateLanguage || "ar").trim();
 
     const params =
       (Array.isArray(body.body_params) && body.body_params) ||
       (Array.isArray(body.bodyParams) && body.bodyParams) ||
       [];
 
-    if (!phoneRaw) return res.status(400).json({ ok: false, error: "Missing phone" });
+    if (!phoneRaw || !templateName || !templateLanguage) {
+      return res.status(400).json({ ok:false, error:"Missing phone/template_name/template_language", received:{ phone: phoneRaw ?? null, template_name: templateName ?? null, template_language: templateLanguage ?? null } });
+    }
 
     // ✅ نظّف رقم الجوال (بدون + وبدون مسافات)
         let phone = String(phoneRaw || "").trim();

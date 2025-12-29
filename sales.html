@@ -10,6 +10,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -865,18 +866,32 @@
 
     
     // تنسيق رقم الجوال لصيغة سعودية 966
-    function normalizeSaudiPhone(raw) {
+        function normalizeSaudiPhone(raw) {
       if (!raw) return "";
-      let digits = String(raw).replace(/[^\d]/g, "");
 
+      let digits = String(raw).trim();
+
+      // شيل أي حاجة غير أرقام
+      digits = digits.replace(/[^\d]/g, "");
+
+      // 009665xxxxxxxx → 9665xxxxxxxx
       if (digits.startsWith("00")) {
         digits = digits.slice(2);
       }
-      if (digits.startsWith("0")) {
+
+      // 05xxxxxxxx → 9665xxxxxxxx
+      if (digits.startsWith("05")) {
         digits = "966" + digits.slice(1);
       }
-      if (!digits.startsWith("966") && digits.length === 9) {
+
+      // 5xxxxxxxx → 9665xxxxxxxx
+      if (digits.length === 9 && digits.startsWith("5")) {
         digits = "966" + digits;
+      }
+
+      // تأكيد نهائي
+      if (!digits.startsWith("9665") || digits.length !== 12) {
+        return "";
       }
 
       return digits;

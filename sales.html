@@ -8,6 +8,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -683,6 +684,9 @@
     const ERP_VINS_COLLECTION = "erp_vins";
     const TRACK_COLLECTION    = "orders";
 
+    // ✅ API base (separate project) for WhatsApp/Mersal serverless routes
+    const MZJ_TRACKING_API_BASE = "https://mzj-tracking.vercel.app";
+
     const ERP_FIELDS = [
       "CustomerName","CustomerVAT","CustomerPhone","Branch","OrderDate","DeliveryDate","SalesPerson",
       "ItemNo","ItemType","ItemCategory","ItemModel","VIN","InteriorColor","ExteriorColor","Dealer",
@@ -1048,9 +1052,9 @@
       setTimeout(()=> msgModalMsg.textContent="", 1200);
     });
 
-    async function sendWhatsAppMessage(phone, text, stageNum){
-      // Send via Mersal WhatsApp API (server-side) instead of opening WhatsApp app
-      return fetch("/api/mersal-wa", {
+    async function sendWhatsAppFreeText(phone, text, stageNum){
+      // ✅ Send via Mersal WhatsApp API (server-side in mzj-tracking project)
+      return fetch(`${MZJ_TRACKING_API_BASE}/api/mersal-wa`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1065,6 +1069,49 @@
         try { return JSON.parse(bodyText); } catch { return { ok:true, raw: bodyText }; }
       });
     }
+
+    async function sendWhatsAppTemplate(phone, templateName, templateLanguage, bodyParams, stageNum){
+      // ✅ Template-based WhatsApp message via mzj-tracking project
+      // Expects a serverless route: /api/mersal-wa-template
+      return fetch(`${MZJ_TRACKING_API_BASE}/api/mersal-wa-template`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: String(phone || "").trim(),
+          template_name: String(templateName || "").trim(),
+          template_language: String(templateLanguage || "ar").trim(),
+          body_params: Array.isArray(bodyParams) ? bodyParams : [],
+          stageNum: stageNum ?? null,
+          orderId: window.__mzj_current_order_id || ""
+        })
+      }).then(async (res)=>{
+        const bodyText = await res.text();
+        if(!res.ok) throw new Error(bodyText || ("HTTP " + res.status));
+        try { return JSON.parse(bodyText); } catch { return { ok:true, raw: bodyText }; }
+      });
+    }
+
+    function buildTrackingTemplateParams(){
+      // mapping for template tracking_message: {{1}}..{{7}}
+      const customerName = (currentCustomerName || "").trim() || "عميلنا العزيز";
+      const totalCars    = String(currentOrderCarsCount || "");
+      const subtotal     = String(currentCarsSubtotal || "");
+      const tax          = String(currentCarsTax || "");
+      const regFee       = String(currentRegFee || "");
+      const totalIncl    = String(currentGrandTotalIncl || "");
+      const trackingLink = String(currentTrackingLink || "");
+      return [customerName, totalCars, subtotal, tax, regFee, totalIncl, trackingLink];
+    }
+
+    async function sendWhatsAppMessage(phone, text, stageNum){
+      // ✅ Stage 1 uses template by default, باقي المراحل نص حر
+      if (Number(stageNum) === 1){
+        const params = buildTrackingTemplateParams();
+        return sendWhatsAppTemplate(phone, "tracking_message", "ar", params, stageNum);
+      }
+      return sendWhatsAppFreeText(phone, text, stageNum);
+    }
+
 
     if (msgModalSend) msgModalSend.addEventListener("click", async () => {
       msgModalMsg.textContent = "";

@@ -9,6 +9,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -685,7 +686,7 @@
     const TRACK_COLLECTION    = "orders";
 
     // ✅ API base (separate project) for WhatsApp/Mersal serverless routes
-    const MZJ_TRACKING_API_BASE = "https://mzj-tracking.vercel.app";
+    const MZJ_TRACKING_API_BASE = window.location.origin; // نفس الدومين (mzj-workflow)
 
     const ERP_FIELDS = [
       "CustomerName","CustomerVAT","CustomerPhone","Branch","OrderDate","DeliveryDate","SalesPerson",
@@ -745,6 +746,14 @@
     let currentItemNo       = null;
     let currentOrderRecords = [];
     let currentCustomerPhone = ""; // رقم جوال العميل
+    // بيانات نحتاجها لقالب واتساب (tracking_message)
+    let currentCustomerName = "";
+    let currentOrderCarsCount = 0;
+    let currentCarsSubtotal = "";
+    let currentCarsTax = "";
+    let currentRegFee = "";
+    let currentGrandTotalIncl = "";
+    let currentTrackingLink = "";
 
     let currentTrackData = null;
     let currentStagesObjCache = {};
@@ -921,6 +930,15 @@
           const grandTotalIncl = (carsSubtotal + carsTax) + (regFeeNum || 0);
 
           const fmt = (n) => (n || 0).toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+          // ✅ تخزين القيم للقالب (tracking_message)
+          currentCustomerName = customerName || "";
+          currentOrderCarsCount = totalCars || 0;
+          currentCarsSubtotal = fmt(carsSubtotal);
+          currentCarsTax = fmt(carsTax);
+          currentRegFee = (regFeeNum && regFeeNum > 0) ? fmt(regFeeNum) : "";
+          currentGrandTotalIncl = fmt(grandTotalIncl);
+          currentTrackingLink = trackingLink2 || "";
 
           return (
 `عميلنا العزيز / ${customerName}\n` +
@@ -1131,7 +1149,7 @@
         }
       }catch(e){
         console.error(e);
-        msgModalMsg.innerHTML = "<span class='err'>حصل خطأ أثناء الإرسال.</span>";
+        msgModalMsg.innerHTML = "<span class='err'>حصل خطأ أثناء الإرسال: " + String(e && (e.message||e)).slice(0,180) + "</span>";
       }finally{
         msgModalSend.disabled = false;
       }

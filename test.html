@@ -139,6 +139,28 @@ body{opacity:0}
   .btn-outline{background:#fff;border-color:var(--brown);color:var(--brown)}
   .btn-danger{background:var(--danger);border-color:var(--danger);color:#fff}
   .btn-xs{padding:4px 8px;font-size:11px;border-radius:999px}
+
+  /* Badges داخل أزرار الفلترة */
+  .badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 7px;border-radius:999px;background:#f3ece7;color:var(--brown);font-size:12px;font-weight:900;line-height:1;margin-inline-start:6px;border:1px solid rgba(62,36,32,.15)}
+
+  /* === Filters UI (طلبات الموافقات) === */
+  #transfersFiltersBar .tm-filter-btn,
+  .tm-card-filter-btn{
+    padding:10px 14px;
+    font-size:13px;
+    border-radius:999px;
+    border-width:1.5px;
+  }
+  #transfersFiltersBar .tm-filter-btn i,
+  .tm-card-filter-btn i{font-size:14px}
+  #transfersFiltersBar .tm-filter-btn.active,
+  .tm-card-filter-btn.active{background:var(--brown);border-color:var(--brown);color:#fff}
+  #transfersFiltersBar .tm-filter-btn.active .badge,
+  .tm-card-filter-btn.active .badge{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.25);color:#fff}
+
+  /* ترتيب أزرار الفلترة على الكارت */
+  .tm-card-filters{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+  .tm-card-filters .tm-card-filter-btn{flex:1;min-width:220px;justify-content:center}
   .input{width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
   .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 
@@ -481,13 +503,13 @@ tr:hover{ filter: brightness(0.98); }
 <div id="transfersFiltersBar" style="display:none;margin:0 0 12px">
   <div class="row" style="justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
     <div class="row" style="gap:8px;flex-wrap:wrap">
-      <button class="btn btn-xs btn-outline" type="button" data-tmfilter="all" id="tmfAll">
+      <button class="btn btn-outline tm-filter-btn" type="button" data-tmfilter="all" id="tmfAll">
         <i class="fa-solid fa-layer-group"></i> الكل <span class="badge" id="tmfAllCount">0</span>
       </button>
-      <button class="btn btn-xs btn-outline" type="button" data-tmfilter="need_finance" id="tmfFinance">
+      <button class="btn btn-outline tm-filter-btn" type="button" data-tmfilter="need_finance" id="tmfFinance">
         <i class="fa-solid fa-coins"></i> ناقص موافقة مالية <span class="badge" id="tmfFinanceCount">0</span>
       </button>
-      <button class="btn btn-xs btn-outline" type="button" data-tmfilter="need_admin" id="tmfAdmin">
+      <button class="btn btn-outline tm-filter-btn" type="button" data-tmfilter="need_admin" id="tmfAdmin">
         <i class="fa-solid fa-user-check"></i> ناقص موافقة إدارية <span class="badge" id="tmfAdminCount">0</span>
       </button>
     </div>
@@ -1561,8 +1583,8 @@ function renderShootCard(gridEl){
     const list = Array.isArray(transferRequests) ? transferRequests.slice() : [];
     const needsAdmin = (t)=> !(isApproved(t.adminApproved) || isApproved(t.adminApproval));
     const needsFinance = (t)=> !(isApproved(t.financeApproved) || isApproved(t.financeApproval));
-    const awaitingBoth = list.filter(t => needsAdmin(t) && needsFinance(t));
-    const awaitingCount = awaitingBoth.length;
+    const needAdminCount   = list.filter(t => needsAdmin(t)).length;
+    const needFinanceCount = list.filter(t => needsFinance(t)).length;
     const total = list.length;
 
     const card = document.createElement('div');
@@ -1578,18 +1600,18 @@ function renderShootCard(gridEl){
             </span>
           </div>
 
-          <div class="sub-metrics" style="margin-top:10px">
-            <span class="metric shoot-metric" data-tfilter="awaiting">
-              <i class="fa-solid fa-user-check"></i>
-              موافقة إدارية:
-              <b>${awaitingCount.toLocaleString('ar-SA')}</b>
-            </span>
-
-            <span class="metric shoot-metric" data-tfilter="awaiting">
+          <!-- فلاتر سريعة على نفس شكل فلاتر المودال -->
+          <div class="tm-card-filters">
+            <button class="btn btn-outline tm-card-filter-btn" type="button" data-tfilter="need_finance" aria-label="ناقص موافقة مالية">
               <i class="fa-solid fa-coins"></i>
-              موافقة مالية:
-              <b>${awaitingCount.toLocaleString('ar-SA')}</b>
-            </span>
+              ناقص موافقة مالية
+              <span class="badge">${needFinanceCount.toLocaleString('ar-SA')}</span>
+            </button>
+            <button class="btn btn-outline tm-card-filter-btn" type="button" data-tfilter="need_admin" aria-label="ناقص موافقة إدارية">
+              <i class="fa-solid fa-user-check"></i>
+              ناقص موافقة إدارية
+              <span class="badge">${needAdminCount.toLocaleString('ar-SA')}</span>
+            </button>
           </div>
         </div>
         <div class="group-total" title="إجمالي طلبات النقل">${total.toLocaleString('ar-SA')}</div>

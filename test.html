@@ -135,6 +135,8 @@ body{opacity:0}
   .modal .tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;cursor:pointer;font-weight:700;display:inline-flex;gap:8px;align-items:center;transition:.15s}
   .btn-primary{background:var(--beige);border-color:var(--beige);color:#fff}
+  .btn-soft{background:#fff8ef;border:1px solid var(--line);color:var(--brown);}
+  .btn-soft:hover{filter:brightness(.98)}
   .btn-ghost{background:#fff}
   .btn-outline{background:#fff;border-color:var(--brown);color:var(--brown)}
   .btn-danger{background:var(--danger);border-color:var(--danger);color:#fff}
@@ -2885,6 +2887,9 @@ try{
   const btnFinanceRevert        = document.getElementById('btnFinanceRevert');
   const btnAdminApprove         = document.getElementById('btnAdminApprove');
   const btnAdminRevert          = document.getElementById('btnAdminRevert');
+  const btnFinanceNoteEdit     = document.getElementById('btnFinanceNoteEdit');
+  const btnAdminNoteEdit       = document.getElementById('btnAdminNoteEdit');
+  const btnCancelTransferRequest = document.getElementById('btnCancelTransferRequest');
 
   const btnCloseNote            = document.getElementById('btnCloseNote');
   const btnCancelNote           = document.getElementById('btnCancelNote');
@@ -2997,10 +3002,10 @@ try{
     btnAdminRevert.disabled    = !canAdminApprove() || !adminOk;
   }
 
-  function openNoteDialog(title, actionObj){
+  function openNoteDialog(title, actionObj, initialText){
     pendingNoteAction = actionObj;
     approvalsNoteTitle.textContent = title;
-    approvalsNoteText.value = '';
+    approvalsNoteText.value = (initialText==null? '' : String(initialText));
     approvalsNoteOverlay.style.display='flex';
     setTimeout(()=> approvalsNoteText.focus(), 50);
   }
@@ -3010,37 +3015,32 @@ try{
     pendingNoteAction = null;
   }
 
-  async function applyApprovalActionWithNote(){
-    if(!pendingNoteAction) return;
+  
+  async function applyApprovalAction(kind, mode){
     const idx = currentDetailMoveIdx;
     if (idx == null || !moves[idx]) return;
-
-    const note = (approvalsNoteText.value||'').trim();
-    const { kind, mode } = pendingNoteAction;
     const m = moves[idx];
 
     const isAdmin = (kind==='admin');
     const isFinance = (kind==='finance');
 
-    // Permission hard check
     if(isAdmin && !canAdminApprove()){ showToast('ليس لديك صلاحية للموافقة الإدارية'); return; }
     if(isFinance && !canFinanceApprove()){ showToast('ليس لديك صلاحية للموافقة المالية'); return; }
 
-    // Optimistic UI update
+    // Optimistic
     if(mode==='approve'){
-      if(isAdmin){ m.adminApproved = true; m.adminApproval = true; m.adminApprovedAt = now(); if(note) m.adminNote = note; }
-      if(isFinance){ m.financeApproved = true; m.financeApproval = true; m.financeApprovedAt = now(); if(note) m.financeNote = note; }
+      if(isAdmin){ m.adminApproved = true; m.adminApproval = true; m.adminApprovedAt = now(); }
+      if(isFinance){ m.financeApproved = true; m.financeApproval = true; m.financeApprovedAt = now(); }
     }else if(mode==='revert'){
-      if(isAdmin){ m.adminApproved = false; m.adminApproval = false; m.adminApprovedAt = ''; m.adminNote = note || ''; }
-      if(isFinance){ m.financeApproved = false; m.financeApproval = false; m.financeApprovedAt = ''; m.financeNote = note || ''; }
+      if(isAdmin){ m.adminApproved = false; m.adminApproval = false; m.adminApprovedAt = ''; }
+      if(isFinance){ m.financeApproved = false; m.financeApproval = false; m.financeApprovedAt = ''; }
     }
 
-    // Recompute status
     const adminOkNow   = (isApproved(m.adminApproved) || isApproved(m.adminApproval));
     const financeOkNow = (isApproved(m.financeApproved) || isApproved(m.financeApproval));
     m.status = (adminOkNow && financeOkNow) ? 'approved' : 'awaiting_approvals';
 
-    // Mirror to stock (if exists)
+    // Mirror to stock approvals only
     const vin = m.vin || m.chassis || '';
     const stockIndex = stock.findIndex(r => String(r.vin) === String(vin));
     if(stockIndex !== -1){
@@ -3048,17 +3048,12 @@ try{
       stock[stockIndex].adminApproval   = adminOkNow;
       stock[stockIndex].financeApproved = financeOkNow;
       stock[stockIndex].financeApproval = financeOkNow;
-      if(isAdmin && note) stock[stockIndex].adminNotes = note;
-      if(isFinance && note) stock[stockIndex].financeNotes = note;
-      if(mode==='revert' && isAdmin && note==='') stock[stockIndex].adminNotes = '';
-      if(mode==='revert' && isFinance && note==='') stock[stockIndex].financeNotes = '';
     }
 
     // Render immediately
     renderTransferApprovalDetails();
-    closeNoteDialog();
 
-    // تحديث القائمة بالخارج فورًا (بدون انتظار الحفظ)
+    // Refresh lists outside immediately
     try{
       computeTransferRequests();
       if(currentMode==='transfers'){
@@ -3066,33 +3061,134 @@ try{
         const needsAdmin = (t)=> !(isApproved(t.adminApproved) || isApproved(t.adminApproval));
         const needsFinance = (t)=> !(isApproved(t.financeApproved) || isApproved(t.financeApproval));
         let picked = list;
+        if(currentTransfersFilterKey==='need_finance') picked = list.filter(t => needsFinance(t));
+        if(currentTransfersFilterKey==='need_admin') picked = list.filter(t => needsAdmin(t));
         if(currentTransfersFilterKey==='awaiting') picked = list.filter(t => needsAdmin(t) && needsFinance(t));
         currentTransfersBase = picked.slice();
         filteredTransfers = sortTransfers(picked);
         renderTransfersTable();
       }
-    }catch(_e){}
+    }catch(e){ console.error(e); }
 
+    // Persist
     try{
-      await mzjSetDoc(STATE_REF, { moves, stock }, { merge:true });
-      computeTransferRequests();
-      // تحديث جدول النقل بالخارج فورًا بنفس الفلتر الحالي
-      if(currentMode==='transfers'){
-        const list = Array.isArray(transferRequests) ? transferRequests.slice() : [];
-        const needsAdmin = (t)=> !(isApproved(t.adminApproved) || isApproved(t.adminApproval));
-        const needsFinance = (t)=> !(isApproved(t.financeApproved) || isApproved(t.financeApproval));
-        let picked = list;
-        if(currentTransfersFilterKey==='awaiting') picked = list.filter(t => needsAdmin(t) && needsFinance(t));
-        currentTransfersBase = picked.slice();
-        filteredTransfers = sortTransfers(picked);
-        renderTransfersTable();
-      }
+      await setDoc(STATE_REF, { stock, moves }, { merge:true });
       showToast(mode==='approve' ? 'تم حفظ الموافقة' : 'تم التراجع بنجاح');
     }catch(e){
       console.error(e);
       setStatus('warn','تعذّر حفظ التعديل');
     }
   }
+
+  async function saveApprovalNote(kind, note){
+    const idx = currentDetailMoveIdx;
+    if (idx == null || !moves[idx]) return;
+    const m = moves[idx];
+
+    const isAdmin = (kind==='admin');
+    const isFinance = (kind==='finance');
+
+    // Permission: note edit follows same approval permission
+    if(isAdmin && !canAdminApprove()){ showToast('ليس لديك صلاحية لتعديل الملاحظة الإدارية'); return; }
+    if(isFinance && !canFinanceApprove()){ showToast('ليس لديك صلاحية لتعديل الملاحظة المالية'); return; }
+
+    const clean = (note||'').toString().trim();
+
+    if(isAdmin){ m.adminNote = clean; m.adminNotes = clean; }
+    if(isFinance){ m.financeNote = clean; m.financeNotes = clean; }
+
+    // Mirror to stock notes only
+    const vin = m.vin || m.chassis || '';
+    const stockIndex = stock.findIndex(r => String(r.vin) === String(vin));
+    if(stockIndex !== -1){
+      if(isAdmin){ stock[stockIndex].adminNotes = clean; }
+      if(isFinance){ stock[stockIndex].financeNotes = clean; }
+    }
+
+    renderTransferApprovalDetails();
+
+    try{
+      await setDoc(STATE_REF, { stock, moves }, { merge:true });
+      showToast('تم حفظ الملاحظة');
+    }catch(e){
+      console.error(e);
+      setStatus('warn','تعذّر حفظ الملاحظة');
+    }
+  }
+
+  function deriveAvailableLocation(locStr){
+    const s = (locStr||'').toString();
+    const parts = s.split(':');
+    if(parts.length>=2){
+      const prefix = parts[0].trim();
+      return `${prefix} : المخزون المتاح`;
+    }
+    // fallback: لو مفيش ":", جرّب استبدال الحالة
+    return s.replace('مباع تحت التسليم','المخزون المتاح').replace('مباع تم التسليم','المخزون المتاح');
+  }
+
+  async function cancelTransferRequest(cancelNote){
+    const idx = currentDetailMoveIdx;
+    if (idx == null || !moves[idx]) return;
+    const m = moves[idx];
+    const vin = m.vin || m.chassis || '';
+    // Determine current location from stock if possible
+    const stockIndex = stock.findIndex(r => String(r.vin) === String(vin));
+    const currentLoc = (stockIndex!==-1 ? (stock[stockIndex].location || stock[stockIndex].currentLocation || '') : (m.to || m.toLocation || m.target || m.from || m.fromLocation || ''));
+    const newLoc = deriveAvailableLocation(currentLoc);
+
+    // Update stock location + clear approvals
+    if(stockIndex !== -1){
+      stock[stockIndex].location = newLoc;
+      stock[stockIndex].adminApproved = false; stock[stockIndex].adminApproval = false;
+      stock[stockIndex].financeApproved = false; stock[stockIndex].financeApproval = false;
+      stock[stockIndex].adminNotes = ''; stock[stockIndex].financeNotes = '';
+    }
+
+    // Update move request
+    m.status = 'cancelled';
+    m.cancelledAt = now();
+    m.cancelNote = (cancelNote||'').toString().trim();
+
+    // Clear approvals + notes on move
+    m.adminApproved = false; m.adminApproval = false; m.adminApprovedAt = '';
+    m.financeApproved = false; m.financeApproval = false; m.financeApprovedAt = '';
+    m.adminNote = ''; m.adminNotes = '';
+    m.financeNote = ''; m.financeNotes = '';
+
+    // Also set destination to available location (so it vanishes from card filters)
+    try{ m.to = newLoc; m.toLocation = newLoc; m.target = newLoc; }catch(_e){}
+
+    // Close dialogs + render
+    closeNoteDialog();
+    closeTransferApprovalDetails();
+
+    try{
+      await setDoc(STATE_REF, { stock, moves }, { merge:true });
+      computeTransferRequests();
+      renderAll();
+      showToast('تم إلغاء الطلب وإرجاع السيارة للمخزون المتاح');
+    }catch(e){
+      console.error(e);
+      setStatus('warn','تعذّر إلغاء الطلب');
+    }
+  }
+
+  async function handleNoteDialogSave(){
+    if(!pendingNoteAction) return;
+    const note = (approvalsNoteText.value||'').trim();
+    const act = pendingNoteAction.action || 'note';
+    if(act==='note'){
+      await saveApprovalNote(pendingNoteAction.kind, note);
+      closeNoteDialog();
+      return;
+    }
+    if(act==='cancel'){
+      await cancelTransferRequest(note);
+      return;
+    }
+  }
+
 
   // Close handlers
   btnCloseApprovalsDetail?.addEventListener('click', closeTransferApprovalDetails);
@@ -3105,7 +3201,7 @@ try{
   approvalsNoteOverlay?.addEventListener('click', (e)=>{
     if(e.target === approvalsNoteOverlay) closeNoteDialog();
   });
-  btnSaveNote?.addEventListener('click', applyApprovalActionWithNote);
+  btnSaveNote?.addEventListener('click', handleNoteDialogSave);
 
   // ESC يغلق مودال التفاصيل (وكذلك مودال الملاحظة إن كان مفتوح)
   document.addEventListener('keydown', (e)=>{
@@ -3125,10 +3221,30 @@ try{
   });
 
   // Action buttons (open note dialog)
-  btnFinanceApprove?.addEventListener('click', ()=> openNoteDialog('ملاحظة الموافقة المالية', {kind:'finance', mode:'approve'}));
-  btnFinanceRevert?.addEventListener('click', ()=> openNoteDialog('ملاحظة التراجع عن الموافقة المالية', {kind:'finance', mode:'revert'}));
-  btnAdminApprove?.addEventListener('click', ()=> openNoteDialog('ملاحظة الموافقة الإدارية', {kind:'admin', mode:'approve'}));
-  btnAdminRevert?.addEventListener('click', ()=> openNoteDialog('ملاحظة التراجع عن الموافقة الإدارية', {kind:'admin', mode:'revert'}));
+  btnFinanceApprove?.addEventListener('click', ()=> applyApprovalAction('finance','approve'));
+  btnFinanceRevert?.addEventListener('click', ()=> applyApprovalAction('finance','revert'));
+  btnAdminApprove?.addEventListener('click', ()=> applyApprovalAction('admin','approve'));
+  btnAdminRevert?.addEventListener('click', ()=> applyApprovalAction('admin','revert'));
+  // Note edit (separate from approvals)
+  btnFinanceNoteEdit?.addEventListener('click', ()=>{
+    const idx = currentDetailMoveIdx;
+    const m = (idx!=null && moves[idx]) ? moves[idx] : null;
+    const current = (m && (m.financeNote || m.financeNotes)) ? (m.financeNote || m.financeNotes) : '';
+    openNoteDialog('ملاحظة مالية', {action:'note', kind:'finance'}, current);
+  });
+  btnAdminNoteEdit?.addEventListener('click', ()=>{
+    const idx = currentDetailMoveIdx;
+    const m = (idx!=null && moves[idx]) ? moves[idx] : null;
+    const current = (m && (m.adminNote || m.adminNotes)) ? (m.adminNote || m.adminNotes) : '';
+    openNoteDialog('ملاحظة إدارية', {action:'note', kind:'admin'}, current);
+  });
+
+  // Cancel request
+  btnCancelTransferRequest?.addEventListener('click', ()=>{
+    if(currentDetailMoveIdx==null) return;
+    openNoteDialog('سبب إلغاء الطلب (اختياري)', {action:'cancel'}, '');
+  });
+
 
 
 tableTransfersWrap.addEventListener('click',(e)=>{
@@ -3360,6 +3476,7 @@ tableTransfersWrap.addEventListener('click',(e)=>{
       <h3 id="approvalsDetailTitle">تفاصيل طلب النقل</h3>
       <div class="tools">
         <span class="status-badge" id="approvalsDetailStatus"><span class="dot warn"></span><span>بانتظار</span></span>
+        <button class="btn btn-outline" id="btnCancelTransferRequest" title="إلغاء الطلب وإرجاع السيارة للمخزون المتاح"><i class="fa-solid fa-ban"></i> إلغاء الطلب</button>
         <button class="btn btn-danger" id="btnCloseApprovalsDetail"><i class="fa-solid fa-xmark"></i> إغلاق</button>
       </div>
     </div>
@@ -3389,6 +3506,7 @@ tableTransfersWrap.addEventListener('click',(e)=>{
             <div class="row" style="justify-content:flex-start;margin-top:10px;gap:8px;flex-wrap:wrap">
               <button class="btn btn-outline" id="btnFinanceApprove"><i class="fa-solid fa-coins"></i> موافقة مالية</button>
               <button class="btn btn-ghost" id="btnFinanceRevert"><i class="fa-solid fa-rotate-left"></i> تراجع</button>
+              <button class="btn btn-soft" id="btnFinanceNoteEdit"><i class="fa-solid fa-pen"></i> ملاحظة مالية</button>
             </div>
           </div>
 
@@ -3404,6 +3522,7 @@ tableTransfersWrap.addEventListener('click',(e)=>{
             <div class="row" style="justify-content:flex-start;margin-top:10px;gap:8px;flex-wrap:wrap">
               <button class="btn btn-outline" id="btnAdminApprove"><i class="fa-solid fa-user-check"></i> موافقة إدارية</button>
               <button class="btn btn-ghost" id="btnAdminRevert"><i class="fa-solid fa-rotate-left"></i> تراجع</button>
+              <button class="btn btn-soft" id="btnAdminNoteEdit"><i class="fa-solid fa-pen"></i> ملاحظة إدارية</button>
             </div>
           </div>
         </div>

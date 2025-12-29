@@ -476,6 +476,25 @@ tr:hover{ filter: brightness(0.98); }
   <div class="places-grid" id="stockPlacesGridModal"></div>
 </div>
 
+
+<!-- Transfers Filters Bar (داخل مودال طلبات الموافقات) -->
+<div id="transfersFiltersBar" style="display:none;margin:0 0 12px">
+  <div class="row" style="justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+    <div class="row" style="gap:8px;flex-wrap:wrap">
+      <button class="btn btn-xs btn-outline" type="button" data-tmfilter="all" id="tmfAll">
+        <i class="fa-solid fa-layer-group"></i> الكل <span class="badge" id="tmfAllCount">0</span>
+      </button>
+      <button class="btn btn-xs btn-outline" type="button" data-tmfilter="need_finance" id="tmfFinance">
+        <i class="fa-solid fa-coins"></i> ناقص موافقة مالية <span class="badge" id="tmfFinanceCount">0</span>
+      </button>
+      <button class="btn btn-xs btn-outline" type="button" data-tmfilter="need_admin" id="tmfAdmin">
+        <i class="fa-solid fa-user-check"></i> ناقص موافقة إدارية <span class="badge" id="tmfAdminCount">0</span>
+      </button>
+    </div>
+    <div class="hint" id="tmfHint" style="margin:0">فلترة سريعة حسب الموافقات الناقصة.</div>
+  </div>
+</div>
+
 <!-- تبويبات لنواقص الفروع فقط -->
 <div class="tabs2" id="shortTabs" style="display:none"></div>
 <!-- جدول السيارات (rows) -->
@@ -1905,6 +1924,7 @@ function renderShootCard(gridEl){
   let currentShoot = []; let filteredShoot = []; let currentShootFilter = 'ALL';
   let currentSales = []; let filteredSales = []; let currentSalesMode = 'total';
   let currentTransfersBase = []; // القائمة الحالية حسب فلتر الموافقات
+  let currentTransfersFilterKey = 'all'; // all | awaiting
 
   function openModal(mode, title){
     currentMode = mode;
@@ -1927,6 +1947,9 @@ function renderShootCard(gridEl){
     tableSalesWrap.style.display='none';
     const stockPlacesPanel = document.getElementById('stockPlacesPanel');
     if(stockPlacesPanel) stockPlacesPanel.style.display='none';
+
+    const transfersFiltersBar = document.getElementById('transfersFiltersBar');
+    if(transfersFiltersBar) transfersFiltersBar.style.display='none';
 
     // إظهار القسم المطلوب
     if(mode==='rows'){
@@ -1968,6 +1991,8 @@ function renderShootCard(gridEl){
   }
   function closeModal(){
     backdrop.style.display='none';
+    const transfersFiltersBar = document.getElementById('transfersFiltersBar');
+    if(transfersFiltersBar) transfersFiltersBar.style.display='none';
     currentRows=[]; filteredRows=[];
     shortDataByKey.clear(); shortFiltered=[];
     currentShoot=[]; filteredShoot=[];
@@ -2591,26 +2616,82 @@ function openShootModal(filter='ALL'){
     });
   }
 
-  function openTransfersModal(filterKey='all'){
+  
+  function applyTransfersFilter(filterKey){
+    currentTransfersFilterKey = (filterKey || 'all');
+
     const list = Array.isArray(transferRequests) ? transferRequests.slice() : [];
     const needsAdmin = (t)=> !(isApproved(t.adminApproved) || isApproved(t.adminApproval));
     const needsFinance = (t)=> !(isApproved(t.financeApproved) || isApproved(t.financeApproval));
 
     let picked = list;
-
-    // المطلوب: زر "موافقة إدارية" و "موافقة مالية" يعرضون فقط
-    // الطلبات اللي: إداري بانتظار + مالية بانتظار
-    if(filterKey==='awaiting') picked = list.filter(t => needsAdmin(t) && needsFinance(t));
+    if(currentTransfersFilterKey === 'need_finance'){
+      picked = list.filter(t => needsFinance(t));
+    }else if(currentTransfersFilterKey === 'need_admin'){
+      picked = list.filter(t => needsAdmin(t));
+    }else if(currentTransfersFilterKey === 'awaiting' || currentTransfersFilterKey === 'need_both'){
+      picked = list.filter(t => needsAdmin(t) && needsFinance(t));
+      currentTransfersFilterKey = 'need_both';
+    }else{
+      picked = list.slice();
+    }
 
     currentTransfersBase = picked.slice();
     filteredTransfers = sortTransfers(picked);
-
-    const title =
-      filterKey==='awaiting' ? 'طلبات نقل السيارات — بانتظار الموافقة الإدارية والمالية' :
-      'طلبات نقل السيارات — كل الطلبات';
-
-    openModal('transfers', title);
   }
+
+  function updateTransfersFiltersBar(){
+    const bar = document.getElementById('transfersFiltersBar');
+    if(!bar) return;
+
+    const list = Array.isArray(transferRequests) ? transferRequests.slice() : [];
+    const needsAdmin = (t)=> !(isApproved(t.adminApproved) || isApproved(t.adminApproval));
+    const needsFinance = (t)=> !(isApproved(t.financeApproved) || isApproved(t.financeApproval));
+
+    const allCount = list.length;
+    const financeCount = list.filter(t => needsFinance(t)).length;
+    const adminCount = list.filter(t => needsAdmin(t)).length;
+
+    const allEl = document.getElementById('tmfAllCount');
+    const finEl = document.getElementById('tmfFinanceCount');
+    const admEl = document.getElementById('tmfAdminCount');
+    if(allEl) allEl.textContent = allCount.toLocaleString('ar-SA');
+    if(finEl) finEl.textContent = financeCount.toLocaleString('ar-SA');
+    if(admEl) admEl.textContent = adminCount.toLocaleString('ar-SA');
+
+    // Active button styling
+    const key = currentTransfersFilterKey || 'all';
+    ['tmfAll','tmfFinance','tmfAdmin'].forEach(id=>{
+      const b = document.getElementById(id);
+      if(!b) return;
+      b.classList.remove('btn-primary');
+      b.classList.add('btn-outline');
+    });
+    const activeId =
+      key==='need_finance' ? 'tmfFinance' :
+      key==='need_admin' ? 'tmfAdmin' :
+      'tmfAll';
+    const activeBtn = document.getElementById(activeId);
+    if(activeBtn){
+      activeBtn.classList.remove('btn-outline');
+      activeBtn.classList.add('btn-primary');
+    }
+  }
+
+  function openTransfersModal(filterKey='all'){
+    // فتح مودال "طلبات الموافقات" مع فلاتر داخلية (مالية/إدارية)
+    applyTransfersFilter(filterKey);
+
+    const title = 'طلبات نقل السيارات — بانتظار الموافقة الإدارية والمالية';
+    openModal('transfers', title);
+
+    const bar = document.getElementById('transfersFiltersBar');
+    if(bar){
+      bar.style.display = 'block';
+      updateTransfersFiltersBar();
+    }
+  }
+
   function renderTransfersTable(){
     modalTableTransfersBody.innerHTML = '';
     filteredTransfers.forEach((t,idx)=>{
@@ -2759,6 +2840,8 @@ try{
   
   /* ===== Transfer approvals (Detail modal like إدارة الطلبات) ===== */
   const approvalsDetailBackdrop = document.getElementById('approvalsDetailBackdrop');
+  const mainBackdropForApprovals = document.getElementById('backdrop');
+  let wasMainBackdropOpen = false;
   const approvalsNoteOverlay    = document.getElementById('approvalsNoteOverlay');
   const approvalsNoteText       = document.getElementById('approvalsNoteText');
   const approvalsNoteTitle      = document.getElementById('approvalsNoteTitle');
@@ -2801,6 +2884,13 @@ try{
     const idx = Number(moveIdx);
     if (isNaN(idx) || !moves[idx]) { showToast('تعذّر العثور على هذا الطلب'); return; }
     currentDetailMoveIdx = idx;
+
+    // أخفِ مودال القائمة الأساسي (عشان مايبقاش فيه مودالين فوق بعض)
+    wasMainBackdropOpen = (mainBackdropForApprovals && mainBackdropForApprovals.style.display === 'flex');
+    if(mainBackdropForApprovals && wasMainBackdropOpen){
+      mainBackdropForApprovals.style.display = 'none';
+    }
+
     renderTransferApprovalDetails();
     approvalsDetailBackdrop.style.display='flex';
     approvalsNoteOverlay.style.display='none';
@@ -2812,6 +2902,12 @@ try{
     currentDetailMoveIdx = null;
     pendingNoteAction = null;
     approvalsNoteText.value = '';
+
+    // رجّع مودال القائمة الأساسي لو كان مفتوح
+    if(mainBackdropForApprovals && wasMainBackdropOpen){
+      mainBackdropForApprovals.style.display = 'flex';
+    }
+    wasMainBackdropOpen = false;
   }
 
   function setDetailStatus(kind){
@@ -2940,12 +3036,33 @@ try{
     renderTransferApprovalDetails();
     closeNoteDialog();
 
+    // تحديث القائمة بالخارج فورًا (بدون انتظار الحفظ)
+    try{
+      computeTransferRequests();
+      if(currentMode==='transfers'){
+        const list = Array.isArray(transferRequests) ? transferRequests.slice() : [];
+        const needsAdmin = (t)=> !(isApproved(t.adminApproved) || isApproved(t.adminApproval));
+        const needsFinance = (t)=> !(isApproved(t.financeApproved) || isApproved(t.financeApproval));
+        let picked = list;
+        if(currentTransfersFilterKey==='awaiting') picked = list.filter(t => needsAdmin(t) && needsFinance(t));
+        currentTransfersBase = picked.slice();
+        filteredTransfers = sortTransfers(picked);
+        renderTransfersTable();
+      }
+    }catch(_e){}
+
     try{
       await mzjSetDoc(STATE_REF, { moves, stock }, { merge:true });
       computeTransferRequests();
-      // Update list quickly without reopening modal
+      // تحديث جدول النقل بالخارج فورًا بنفس الفلتر الحالي
       if(currentMode==='transfers'){
-        filteredTransfers = sortTransfers(currentTransfersBase.length ? currentTransfersBase : (transferRequests||[]));
+        const list = Array.isArray(transferRequests) ? transferRequests.slice() : [];
+        const needsAdmin = (t)=> !(isApproved(t.adminApproved) || isApproved(t.adminApproval));
+        const needsFinance = (t)=> !(isApproved(t.financeApproved) || isApproved(t.financeApproval));
+        let picked = list;
+        if(currentTransfersFilterKey==='awaiting') picked = list.filter(t => needsAdmin(t) && needsFinance(t));
+        currentTransfersBase = picked.slice();
+        filteredTransfers = sortTransfers(picked);
         renderTransfersTable();
       }
       showToast(mode==='approve' ? 'تم حفظ الموافقة' : 'تم التراجع بنجاح');
@@ -2968,6 +3085,23 @@ try{
   });
   btnSaveNote?.addEventListener('click', applyApprovalActionWithNote);
 
+  // ESC يغلق مودال التفاصيل (وكذلك مودال الملاحظة إن كان مفتوح)
+  document.addEventListener('keydown', (e)=>{
+    if(e.key !== 'Escape') return;
+    // لو مودال الملاحظة مفتوح اقفله الأول
+    if(approvalsNoteOverlay && approvalsNoteOverlay.style.display==='flex'){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      closeNoteDialog();
+      return;
+    }
+    if(approvalsDetailBackdrop && approvalsDetailBackdrop.style.display==='flex'){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      closeTransferApprovalDetails();
+    }
+  });
+
   // Action buttons (open note dialog)
   btnFinanceApprove?.addEventListener('click', ()=> openNoteDialog('ملاحظة الموافقة المالية', {kind:'finance', mode:'approve'}));
   btnFinanceRevert?.addEventListener('click', ()=> openNoteDialog('ملاحظة التراجع عن الموافقة المالية', {kind:'finance', mode:'revert'}));
@@ -2984,6 +3118,21 @@ tableTransfersWrap.addEventListener('click',(e)=>{
   });
 
   // بحث موحّد في المودال
+
+  // Transfers inner filters (مالية/إدارية) داخل مودال الموافقات
+  const transfersFiltersBarEl = document.getElementById('transfersFiltersBar');
+  if(transfersFiltersBarEl){
+    transfersFiltersBarEl.addEventListener('click', (e)=>{
+      const btn = e.target.closest('[data-tmfilter]');
+      if(!btn) return;
+      const key = btn.getAttribute('data-tmfilter') || 'all';
+      // إعادة تطبيق الفلتر بدون إعادة فتح مودال
+      applyTransfersFilter(key);
+      updateTransfersFiltersBar();
+      renderTransfersTable();
+    });
+  }
+
   modalSearch.addEventListener('input', ()=>{
     const q = (modalSearch.value||'').trim().toLowerCase();
     if(currentMode==='rows' || currentMode==='stock'){

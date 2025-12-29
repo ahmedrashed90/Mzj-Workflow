@@ -7,6 +7,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -1379,7 +1380,7 @@ try{
   }
 }
 
-function rowSourcePlace(r){ return r.location || r.fromLocation || ""; }
+function rowSourcePlace(r){ return r.fromLocation || r.location || ""; }
 function rowDestPlace(r){
   if(r.kind==="shoot") return r.shootPlace || "";
   return r.toLocation || "";
@@ -1665,6 +1666,7 @@ function collectRows(){
 
     rows.push({
       vin, kind, car, variant, extColor, intColor, modelYear,
+      fromLocation: location,
       location,
       shootPlace: kind==='shoot' ? place : "",
       toLocation: kind==='move' ? place : "",

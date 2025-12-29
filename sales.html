@@ -1551,18 +1551,18 @@ function clearErpTable() {
           return true;
         }
 
-        // ✅ محددين: فقط 1 و 9 و 10
+        // ✅ محددين: فقط 1 و 2 و 9 و 10
         if (
           email === "aldynmtwlys@gmail.com" ||
           email === "alaasamak100@gmail.com" ||
           email === "kamelashraf948@gmail.com"
         ){
-          return (stageNum === 1 || stageNum === 9 || stageNum === 10);
+          return (stageNum === 1 || stageNum === 2 || stageNum === 9 || stageNum === 10);
         }
 
-        // ✅ Samir: اخفاء 1 و 6 و 7 و 9 و 10
+        // ✅ Samir: اخفاء 1 و 2 و 6 و 7 و 9 و 10
         if (email === "samirali19918@gmail.com"){
-          return !(stageNum === 1 || stageNum === 6 || stageNum === 7 || stageNum === 9 || stageNum === 10);
+          return !(stageNum === 1 || stageNum === 2 || stageNum === 6 || stageNum === 7 || stageNum === 9 || stageNum === 10);
         }
 
         // default

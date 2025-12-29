@@ -1,6 +1,7 @@
 
 
 
+
 <!DOCTYPE html>
 
 <html dir="rtl" lang="ar">
@@ -17,8 +18,8 @@
 html{background:#fff8ef}
 body{opacity:0}
 
-/* ===== Approvals Modal (new) ===== */
-.mzj-modal-backdrop{
+/* ===== Approvals Modal (new) — styled like إدارة الطلبات modal ===== */
+#approvalsModalBackdrop.modal-backdrop{
   position:fixed;
   inset:0;
   background:rgba(0,0,0,.35);
@@ -27,7 +28,7 @@ body{opacity:0}
   justify-content:center;
   z-index:1200;
 }
-.mzj-modal{
+#approvalsModalBackdrop .modal{
   width:min(1100px,100%);
   max-height:92vh;
   overflow:auto;
@@ -36,22 +37,23 @@ body{opacity:0}
   border:1px solid #ead9cc;
   box-shadow:0 20px 60px rgba(0,0,0,.25);
 }
-.mzj-modal-hd{
+#approvalsModalBackdrop .modal-hd,
+#approvalsModalBackdrop .modal-ft{
   padding:14px;
   border-bottom:1px solid #ead9cc;
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:10px;
 }
-.mzj-modal-bd{padding:16px}
-.mzj-modal-title{
+#approvalsModalBackdrop .modal-ft{
+  border-top:1px solid #ead9cc;
+  background:#faf6f2;
+}
+#approvalsModalBackdrop .modal-bd{padding:16px}
+
+#approvalsModalBackdrop .title{
   font-weight:900;
   color:#3e2420;
   font-size:18px;
 }
-.mzj-modal-hd-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
-.mzj-badge{
+#approvalsModalBackdrop .badge{
   display:inline-flex;
   align-items:center;
   gap:6px;
@@ -63,6 +65,44 @@ body{opacity:0}
   font-weight:800;
   font-size:12px;
 }
+#approvalsModalBackdrop .hr{
+  height:1px;
+  background:#ead9cc;
+  margin:12px 0;
+}
+#approvalsModalBackdrop .ft-grid{
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0,1fr));
+  gap:10px;
+}
+@media (max-width:920px){
+  #approvalsModalBackdrop .ft-grid{grid-template-columns:repeat(2, minmax(0,1fr))}
+}
+@media (max-width:520px){
+  #approvalsModalBackdrop .ft-grid{grid-template-columns:1fr}
+}
+
+/* Make action buttons match the modal style */
+#approvalsModalBackdrop .btn{
+  border:1px solid #ead9cc;
+  background:#fff;
+  border-radius:12px;
+  padding:10px 12px;
+  cursor:pointer;
+  font-weight:800;
+  display:inline-flex;
+  gap:8px;
+  align-items:center;
+  transition:.15s;
+}
+#approvalsModalBackdrop .btn:hover{transform:translateY(-1px)}
+#approvalsModalBackdrop .btn.primary{
+  background:#3e2420;
+  border-color:#3e2420;
+  color:#fff;
+}
+#approvalsModalBackdrop .btn[disabled]{opacity:.55;cursor:not-allowed;transform:none}
+
 
 </style>
 <meta charset="utf-8"/>
@@ -647,8 +687,8 @@ tr:hover{ filter: brightness(0.98); }
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-  import {getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, getDocs, limit, orderBy, addDoc, serverTimestamp} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, getDocs, limit, orderBy, addDoc, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
   /* ===== Firebase ===== */
   const firebaseConfig = {
@@ -1638,11 +1678,11 @@ function renderShootCard(gridEl){
     });
 
     // أزرار الفلترة داخل الكارت
-    card.querySelectorAll('[data-tfilter]').forEach(btn=>{
+    card.querySelectorAll('[data-afilter]').forEach(btn=>{
       btn.addEventListener('click', (ev)=>{
         ev.stopPropagation();
-        const f = btn.getAttribute('data-tfilter') || 'all';
-        openTransfersModal(f);
+        const f = btn.getAttribute('data-afilter') || 'all';
+        openApprovalsModal(f);
       });
     });
 
@@ -1950,6 +1990,8 @@ function renderShootCard(gridEl){
   const approvalsPermHint = document.getElementById('approvalsPermHint');
   const btnCloseApprovalsModal = document.getElementById('btnCloseApprovalsModal');
 
+  const btnApprovalsRefresh = document.getElementById('btnApprovalsRefresh');
+
   function openApprovalsUI(){
     approvalsBackdrop.style.display = 'flex';
     approvalsBackdrop.setAttribute('aria-hidden','false');
@@ -1961,6 +2003,8 @@ function renderShootCard(gridEl){
   btnCloseApprovalsModal?.addEventListener('click', closeApprovalsUI);
   approvalsBackdrop?.addEventListener('click', (e)=>{ if(e.target === approvalsBackdrop) closeApprovalsUI(); });
   document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeApprovalsUI(); });
+
+  btnApprovalsRefresh?.addEventListener('click', (e)=>{ e.preventDefault(); openApprovalsModal(approvalsFilterKey || 'all'); });
 
   let approvalsFilterKey = 'all';
   let currentApprovalsList = [];
@@ -2046,12 +2090,12 @@ function renderShootCard(gridEl){
       const fCan = canFinanceApprove();
 
       const adminAction = adminOk
-        ? `<button class="btn btn-ghost" data-ap-action="revoke" data-ap-kind="admin" data-ap-idx="${moveIdx}" ${aCan ? '' : 'disabled'}>تراجع إداري</button>`
-        : `<button class="btn btn-primary" data-ap-action="approve" data-ap-kind="admin" data-ap-idx="${moveIdx}" ${aCan ? '' : 'disabled'}>موافقة إدارية</button>`;
+        ? `<button class="btn" data-ap-action="revoke" data-ap-kind="admin" data-ap-idx="${moveIdx}" ${aCan ? '' : 'disabled'}>تراجع إداري</button>`
+        : `<button class="btn primary" data-ap-action="approve" data-ap-kind="admin" data-ap-idx="${moveIdx}" ${aCan ? '' : 'disabled'}>موافقة إدارية</button>`;
 
       const financeAction = financeOk
-        ? `<button class="btn btn-ghost" data-ap-action="revoke" data-ap-kind="finance" data-ap-idx="${moveIdx}" ${fCan ? '' : 'disabled'}>تراجع مالي</button>`
-        : `<button class="btn btn-primary" data-ap-action="approve" data-ap-kind="finance" data-ap-idx="${moveIdx}" ${fCan ? '' : 'disabled'}>موافقة مالية</button>`;
+        ? `<button class="btn" data-ap-action="revoke" data-ap-kind="finance" data-ap-idx="${moveIdx}" ${fCan ? '' : 'disabled'}>تراجع مالي</button>`
+        : `<button class="btn primary" data-ap-action="approve" data-ap-kind="finance" data-ap-idx="${moveIdx}" ${fCan ? '' : 'disabled'}>موافقة مالية</button>`;
 
       const adminStatus = adminOk ? '✅ موافق' : '⏳ بانتظار';
       const financeStatus = financeOk ? '✅ موافق' : '⏳ بانتظار';
@@ -3268,27 +3312,35 @@ try{
 </div>
 
 <!-- Approvals Modal (Financial + Administrative) -->
-<div class="mzj-modal-backdrop" id="approvalsModalBackdrop" aria-hidden="true">
-  <div class="mzj-modal" role="dialog" aria-modal="true">
+<div class="modal-backdrop" id="approvalsModalBackdrop" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true">
 
-    <div class="mzj-modal-hd">
-      <div class="mzj-modal-title" id="approvalsModalTitle">طلبات الموافقات</div>
-      <div class="mzj-modal-hd-row">
-        <span class="mzj-badge" id="approvalsModalMeta">—</span>
-        <button class="btn" id="btnCloseApprovalsModal"><i class="fa-solid fa-xmark"></i> إغلاق</button>
+    <!-- Header -->
+    <div class="modal-hd">
+      <div class="title" id="approvalsModalTitle">طلبات نقل السيارات — الموافقات</div>
+      <div class="row">
+        <span class="badge" id="approvalsModalMeta">—</span>
+        <button class="btn" id="btnCloseApprovalsModal">
+          <i class="fa-solid fa-xmark"></i> إغلاق
+        </button>
       </div>
     </div>
 
-    <div class="mzj-modal-bd">
-      <div class="row" style="gap:10px;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <!-- Body -->
+    <div class="modal-bd">
+
+      <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:10px">
         <div class="small" id="approvalsCount">—</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-ghost" data-afilter="all"><i class="fa-solid fa-layer-group"></i> الكل</button>
-          <button class="btn btn-ghost" data-afilter="pending_admin"><i class="fa-solid fa-user-check"></i> باقي الموافقة الإدارية</button>
-          <button class="btn btn-ghost" data-afilter="pending_finance"><i class="fa-solid fa-coins"></i> باقي الموافقة المالية</button>
+        <div class="row" style="justify-content:flex-end">
+          <button class="btn" data-afilter="all"><i class="fa-solid fa-layer-group"></i> الكل</button>
+          <button class="btn" data-afilter="pending_admin"><i class="fa-solid fa-user-check"></i> باقي الموافقة الإدارية</button>
+          <button class="btn" data-afilter="pending_finance"><i class="fa-solid fa-coins"></i> باقي الموافقة المالية</button>
         </div>
       </div>
 
+      <div class="hr"></div>
+
+      <!-- Table -->
       <div class="tableWrap">
         <table class="table">
           <thead>
@@ -3311,6 +3363,16 @@ try{
       </div>
 
       <div class="small" id="approvalsPermHint">—</div>
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-ft">
+      <div class="ft-grid">
+        <button class="btn" id="btnApprovalsRefresh"><i class="fa-solid fa-rotate"></i> تحديث</button>
+        <button class="btn" data-afilter="pending_admin"><i class="fa-solid fa-user-check"></i> فلتر الإداري</button>
+        <button class="btn" data-afilter="pending_finance"><i class="fa-solid fa-coins"></i> فلتر المالي</button>
+        <button class="btn primary" data-afilter="all"><i class="fa-solid fa-layer-group"></i> عرض الكل</button>
+      </div>
     </div>
 
   </div>

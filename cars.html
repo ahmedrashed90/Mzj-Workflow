@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -296,7 +297,12 @@ html{background:#faf7f3}body{opacity:0;transition:opacity .12s ease}
         <h1 class="page-title">كل السيارات</h1>
         <p class="page-desc">عرض وإدارة السيارات.</p>
       </div>
-    </section>
+    <div class="pagehead-right" style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-info" id="btnExport">
+          <i class="fa-regular fa-file-excel"></i> تصدير Excel
+        </button>
+      </div>
+</section>
 
     <div class="legacy legacy-cars">
 
@@ -403,10 +409,7 @@ html{background:#faf7f3}body{opacity:0;transition:opacity .12s ease}
         <h3 class="title">
           <i class="fa-solid fa-table-list"></i> نتيجة التجميع حسب الفلتر
         </h3>
-        <button class="btn btn-info" id="btnExport">
-          <i class="fa-regular fa-file-excel"></i> تصدير Excel (حسب الفلتر)
-        </button>
-      </header>
+</header>
 
       <div class="summary-row">
         <div class="summary-left">

@@ -1138,25 +1138,12 @@
     }
 
     async function sendWhatsAppMessage(phone, text, stageNum){
-      // ✅ Stage 1/9/10 = قوالب واتساب (Templates) — باقي المراحل نص حر
-      const st = Number(stageNum);
-
-      if (st === 1){
+      // ✅ Stage 1 uses template by default, باقي المراحل نص حر
+      if (Number(stageNum) === 1){
         const params = buildTrackingTemplateParams();
-        return sendWhatsAppTemplate(phone, "tracking_message", "ar", params, st);
+        return sendWhatsAppTemplate(phone, "tracking_message", "ar", params, stageNum);
       }
-
-      if (st === 9){
-        // قالب: السيارة جاهزة للتسليم
-        return sendWhatsAppTemplate(phone, "mzj_car_ready_delivery", "ar", [], st);
-      }
-
-      if (st === 10){
-        // قالب: تم التسليم
-        return sendWhatsAppTemplate(phone, "mzj_delivery_completed", "ar", [], st);
-      }
-
-      return sendWhatsAppFreeText(phone, text, st);
+      return sendWhatsAppFreeText(phone, text, stageNum);
     }
 
 
@@ -2371,7 +2358,7 @@ ordersListCache = rows;
     });
 
     // زر إنشاء حساب جديد (للمشرف فقط)
-    signupBtn.addEventListener("click", async () => {
+    if (signupBtn) if (signupBtn) signupBtn.addEventListener("click", async () => {
       authMsg.textContent = "";
       const emailVal = (email.value || "").trim();
       const passVal  = (password.value || "").trim();

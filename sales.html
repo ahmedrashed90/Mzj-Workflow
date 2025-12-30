@@ -751,7 +751,7 @@
     let currentItemNo       = null;
     let currentOrderRecords = [];
     let currentCustomerPhone = ""; // رقم جوال العميل
-    // بيانات نحتاجها لقالب واتساب (tracking_message)
+    // بيانات نحتاجها لقالب واتساب (123)
     let currentCustomerName = "";
     let currentOrderCarsCount = 0;
     let currentCarsSubtotal = "";
@@ -950,7 +950,7 @@
 
           const fmt = (n) => (n || 0).toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-          // ✅ تخزين القيم للقالب (tracking_message)
+          // ✅ تخزين القيم للقالب (123)
           currentCustomerName = customerName || "";
           currentOrderCarsCount = totalCars || 0;
           currentCarsSubtotal = fmt(carsSubtotal);
@@ -1129,7 +1129,7 @@
     }
 
     function buildTrackingTemplateParams(){
-      // mapping for template tracking_message: {{1}}..{{7}}
+      // mapping for template 123: {{1}}..{{7}}
       const customerName = (currentCustomerName || "").trim() || "عميلنا العزيز";
       const totalCars    = String(currentOrderCarsCount || "");
       const subtotal     = String(currentCarsSubtotal || "");
@@ -1146,7 +1146,7 @@
 
       if (st === 1){
         const params = buildTrackingTemplateParams();
-        return sendWhatsAppTemplate(phone, "m1", "ar", params, st);
+        return sendWhatsAppTemplate(phone, "123", "ar", params, st);
       }
 
       if (st === 9){
@@ -1164,7 +1164,7 @@
 
     // ===== WhatsApp Once-Only Guard (Stages 1,9,10) =====
     // يمنع تكرار إرسال واتساب لنفس الطلب/الهيكل/المرحلة حتى مع تعدد اليوزرات
-    function isOnceStage(n){ return false; }
+    function isOnceStage(n){ return (n === 1 || n === 9 || n === 10); }
 
     async function waBeginOnce(stageNum){
       const st = Number(stageNum);

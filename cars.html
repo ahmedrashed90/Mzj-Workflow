@@ -715,14 +715,19 @@ html{background:#faf7f3}body{opacity:0;transition:opacity .12s ease}
     }
   }
 
-  // حالات غير مطلوبة (بيع/وكالة)
-function isExcludedVariant(varnt){
-  if(!varnt) return false;
-  // أي مباع تحت التسليم أو مباع تم التسليم مهما كان الفرع أو الوكالة
-  if(varnt.includes('مباع تحت التسليم')) return true;
-  if(varnt.includes('مباع تم التسليم')) return true;
-  // أي شيء تابع للوكالة
-  if(varnt.startsWith('الوكالة')) return true;
+  // حالات غير مطلوبة (بيع/وكالة) — فحص شامل على كل حقول السجل (بما فيها مكان السيارة)
+function isExcludedRecord(rec){
+  if(!rec) return false;
+  const vals = Object.values(rec);
+  for(const v of vals){
+    if(typeof v !== 'string') continue;
+    const s = v.trim();
+    // أي مباع تحت التسليم أو مباع تم التسليم مهما كان الفرع/المكان
+    if(s.includes('مباع تحت التسليم')) return true;
+    if(s.includes('مباع تم التسليم')) return true;
+    // أي شيء تابع للوكالة (مثل: الوكالة : المخزون المتاح ...)
+    if(s.startsWith('الوكالة')) return true;
+  }
   return false;
 }
 
@@ -747,7 +752,7 @@ function applyFilterAndRender(){
       if(filters.variant && varnt !== filters.variant) return false;
       if(filters.model && model !== filters.model) return false;
 
-      if (isExcludedVariant(varnt)) return false;
+      if (isExcludedRecord(r)) return false;
       return true;
     });
 

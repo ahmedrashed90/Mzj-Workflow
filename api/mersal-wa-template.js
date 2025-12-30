@@ -47,7 +47,7 @@ export default async function handler(req, res) {
 
     const fallbackTemplate = (Number(stageNum) === 9) ? "mzj_car_ready_delivery"
       : (Number(stageNum) === 10) ? "mzj_delivery_completed"
-      : "tracking_message";
+      : "m1";
 
     const templateName = String(body.template_name || body.templateName || fallbackTemplate).trim();
     const templateLanguage = String(body.template_language || body.templateLanguage || "ar").trim();

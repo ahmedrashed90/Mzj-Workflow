@@ -1,4 +1,17 @@
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -1125,12 +1138,26 @@
     }
 
     async function sendWhatsAppMessage(phone, text, stageNum){
-      // ✅ Stage 1 uses template by default, باقي المراحل نص حر
-      if (Number(stageNum) === 1){
-        const params = buildTrackingTemplateParams();
-        return sendWhatsAppTemplate(phone, "tracking_message", "ar", params, stageNum);
+      // ✅ Templates for steps 1 / 9 / 10 (once-only enforced at API)
+      const s = Number(stageNum);
+
+      if (s === 1){
+        const params = buildTrackingTemplateParams(); // {{1}}..{{7}}
+        // Step 1 template name changed to m1
+        return sendWhatsAppTemplate(phone, "m1", "ar", params, s);
       }
-      return sendWhatsAppFreeText(phone, text, stageNum);
+
+      if (s === 9){
+        // No variables provided for this template → send empty params (adjust later if template has vars)
+        return sendWhatsAppTemplate(phone, "mzj_car_ready_delivery", "ar", [], s);
+      }
+
+      if (s === 10){
+        return sendWhatsAppTemplate(phone, "mzj_delivery_completed", "ar", [], s);
+      }
+
+      // باقي المراحل: نص حر
+      return sendWhatsAppFreeText(phone, text, s);
     }
 
 

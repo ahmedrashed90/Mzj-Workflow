@@ -293,16 +293,21 @@ html{background:#faf7f3}body{opacity:0;transition:opacity .12s ease}
 
   <main class="mzj-content">
     <section class="mzj-pagehead">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+    <div>
+      <h1 class="page-title">كل السيارات</h1>
+      <p class="page-desc">عرض وإدارة السيارات.</p>
+    </div>
+    <button class="btn btn-info" id="btnExport">
+      <i class="fa-regular fa-file-excel"></i> تصدير Excel
+    </button>
+  </div>
+
       <div class="pagehead-left">
         <h1 class="page-title">كل السيارات</h1>
         <p class="page-desc">عرض وإدارة السيارات.</p>
       </div>
-    <div class="pagehead-right" style="display:flex;gap:8px;align-items:center">
-        <button class="btn btn-info" id="btnExport">
-          <i class="fa-regular fa-file-excel"></i> تصدير Excel
-        </button>
-      </div>
-</section>
+    </section>
 
     <div class="legacy legacy-cars">
 
@@ -409,7 +414,10 @@ html{background:#faf7f3}body{opacity:0;transition:opacity .12s ease}
         <h3 class="title">
           <i class="fa-solid fa-table-list"></i> نتيجة التجميع حسب الفلتر
         </h3>
-</header>
+        <button class="btn btn-info" id="btnExport">
+          <i class="fa-regular fa-file-excel"></i> تصدير Excel (حسب الفلتر)
+        </button>
+      </header>
 
       <div class="summary-row">
         <div class="summary-left">
@@ -707,7 +715,13 @@ html{background:#faf7f3}body{opacity:0;transition:opacity .12s ease}
     }
   }
 
-  function applyFilterAndRender(){
+  const EXCLUDED_VARIANTS = [
+  'مباع تحت التسليم',
+  'مباع تم التسليم',
+  'الوكالة'
+];
+
+function applyFilterAndRender(){
     if(!Array.isArray(stock) || stock.length===0){
       resultsBody.innerHTML = `
         <tr>
@@ -727,6 +741,8 @@ html{background:#faf7f3}body{opacity:0;transition:opacity .12s ease}
       if(filters.car && car !== filters.car) return false;
       if(filters.variant && varnt !== filters.variant) return false;
       if(filters.model && model !== filters.model) return false;
+
+      if (EXCLUDED_VARIANTS.includes(varnt)) return false;
       return true;
     });
 

@@ -13,6 +13,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -661,6 +662,7 @@
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
     import {
       getFirestore,
+      runTransaction,
       doc,
       getDoc,
       setDoc,
@@ -1159,7 +1161,6 @@
 
       return sendWhatsAppFreeText(phone, text, st);
     }
-
 
     if (msgModalSend) msgModalSend.addEventListener("click", async () => {
       msgModalMsg.textContent = "";
@@ -2372,7 +2373,8 @@ ordersListCache = rows;
     });
 
     // زر إنشاء حساب جديد (للمشرف فقط)
-    signupBtn.addEventListener("click", async () => {
+
+    if (signupBtn) signupBtn.addEventListener("click", async () => {
       authMsg.textContent = "";
       const emailVal = (email.value || "").trim();
       const passVal  = (password.value || "").trim();

@@ -1129,25 +1129,17 @@
     }
 
     function buildTrackingTemplateParams(){
-  const customerName = (currentCustomerName || "عميلنا العزيز").trim();
-  const totalCars    = String(currentOrderCarsCount || "0");
-  const subtotal     = String(currentCarsSubtotal || "0.00");
-  const tax          = String(currentCarsTax || "0.00");
-  const regFee       = String(currentRegFee || "0.00"); // ⚠️ مهم
-  const totalIncl    = String(currentGrandTotalIncl || "0.00");
-  const trackingLink = String(currentTrackingLink || "—");
+      // mapping for template 123: {{1}}..{{7}} (كلها لازم تكون نصوص غير فاضية)
+      const customerName = (currentCustomerName || "عميلنا العزيز").trim();
+      const totalCars    = String(currentOrderCarsCount || "0");
+      const subtotal     = String(currentCarsSubtotal || "0.00");
+      const tax          = String(currentCarsTax || "0.00");
+      const regFee       = String(currentRegFee || "0.00"); // مهم: لا تتركها فاضية
+      const totalIncl    = String(currentGrandTotalIncl || "0.00");
+      const trackingLink = String(currentTrackingLink || "—");
 
-  return [
-    customerName,
-    totalCars,
-    subtotal,
-    tax,
-    regFee,
-    totalIncl,
-    trackingLink
-  ];
-}
-
+      return [customerName, totalCars, subtotal, tax, regFee, totalIncl, trackingLink];
+    }
 
     async function sendWhatsAppMessage(phone, text, stageNum){
       // ✅ Stage 1/9/10 = قوالب واتساب (Templates) — باقي المراحل نص حر

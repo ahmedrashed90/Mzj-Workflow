@@ -13,7 +13,6 @@
 
 
 
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -662,7 +661,6 @@
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
     import {
       getFirestore,
-      runTransaction,
       doc,
       getDoc,
       setDoc,
@@ -751,7 +749,7 @@
     let currentItemNo       = null;
     let currentOrderRecords = [];
     let currentCustomerPhone = ""; // رقم جوال العميل
-    // بيانات نحتاجها لقالب واتساب (123)
+    // بيانات نحتاجها لقالب واتساب (tracking_message)
     let currentCustomerName = "";
     let currentOrderCarsCount = 0;
     let currentCarsSubtotal = "";
@@ -950,7 +948,7 @@
 
           const fmt = (n) => (n || 0).toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-          // ✅ تخزين القيم للقالب (123)
+          // ✅ تخزين القيم للقالب (tracking_message)
           currentCustomerName = customerName || "";
           currentOrderCarsCount = totalCars || 0;
           currentCarsSubtotal = fmt(carsSubtotal);
@@ -1129,7 +1127,7 @@
     }
 
     function buildTrackingTemplateParams(){
-      // mapping for template 123: {{1}}..{{7}}
+      // mapping for template tracking_message: {{1}}..{{7}}
       const customerName = (currentCustomerName || "").trim() || "عميلنا العزيز";
       const totalCars    = String(currentOrderCarsCount || "");
       const subtotal     = String(currentCarsSubtotal || "");
@@ -1162,102 +1160,6 @@
       return sendWhatsAppFreeText(phone, text, st);
     }
 
-    // ===== WhatsApp Once-Only Guard (Stages 1,9,10) =====
-    // يمنع تكرار إرسال واتساب لنفس الطلب/الهيكل/المرحلة حتى مع تعدد اليوزرات
-    function isOnceStage(n){ return (n === 1 || n === 9 || n === 10); }
-
-    async function waBeginOnce(stageNum){
-      const st = Number(stageNum);
-      if (!isOnceStage(st)) return { ok: true };
-
-      if (!currentOrderId || !currentItemNo) return { ok: false, reason: "no_order" };
-
-      const baseId = currentOrderId;
-      const docId  = baseId + "_" + currentItemNo;
-      const orderRef = doc(db, TRACK_COLLECTION, docId);
-
-      const key = "s" + st;
-      const email = (auth.currentUser?.email || "").toLowerCase();
-      const nowMs = Date.now();
-      const TTL_MS = 2 * 60 * 1000; // 2 minutes lock while sending
-
-      return runTransaction(db, async (tx) => {
-        const snap = await tx.get(orderRef);
-        const data = snap.exists() ? (snap.data() || {}) : {};
-
-        const sentMap = data.waSent || {};
-        if (sentMap && sentMap[key]) {
-          return { ok: false, reason: "sent", by: (data.waSentBy||{})[key] || "" };
-        }
-
-        const pendingMap = data.waPending || {};
-        const pend = pendingMap ? pendingMap[key] : null;
-        if (pend && pend.at && (nowMs - Number(pend.at)) < TTL_MS) {
-          return { ok: false, reason: "pending", by: pend.by || "" };
-        }
-
-        // set pending (merge-safe)
-        const newPending = Object.assign({}, pendingMap, {
-          [key]: { at: nowMs, by: email, vin: (currentVin || ""), orderId: baseId }
-        });
-
-        tx.set(orderRef, { waPending: newPending }, { merge: true });
-        return { ok: true };
-      });
-    }
-
-    async function waCommitOnce(stageNum){
-      const st = Number(stageNum);
-      if (!isOnceStage(st)) return;
-
-      const baseId = currentOrderId;
-      const docId  = baseId + "_" + currentItemNo;
-      const orderRef = doc(db, TRACK_COLLECTION, docId);
-
-      const key = "s" + st;
-      const email = (auth.currentUser?.email || "").toLowerCase();
-
-      await runTransaction(db, async (tx) => {
-        const snap = await tx.get(orderRef);
-        const data = snap.exists() ? (snap.data() || {}) : {};
-
-        const sentMap = data.waSent || {};
-        if (sentMap && sentMap[key]) {
-          // already committed by another user
-          tx.update(orderRef, { [`waPending.${key}`]: deleteField() });
-          return;
-        }
-
-        const newSent = Object.assign({}, sentMap, { [key]: serverTimestamp() });
-        const newSentBy = Object.assign({}, (data.waSentBy || {}), { [key]: email });
-
-        tx.set(orderRef, { waSent: newSent, waSentBy: newSentBy }, { merge: true });
-        tx.update(orderRef, { [`waPending.${key}`]: deleteField() });
-      });
-    }
-
-    async function waRollbackOnce(stageNum){
-      const st = Number(stageNum);
-      if (!isOnceStage(st)) return;
-
-      if (!currentOrderId || !currentItemNo) return;
-
-      const baseId = currentOrderId;
-      const docId  = baseId + "_" + currentItemNo;
-      const orderRef = doc(db, TRACK_COLLECTION, docId);
-
-      const key = "s" + st;
-
-      try{
-        await runTransaction(db, async (tx) => {
-          tx.update(orderRef, { [`waPending.${key}`]: deleteField() });
-        });
-      }catch(e){
-        // لو doc مش موجود/أو صلاحيات، تجاهل (أفضل من تعطيل الصفحة)
-        console.warn("waRollbackOnce failed", e);
-      }
-    }
-
 
     if (msgModalSend) msgModalSend.addEventListener("click", async () => {
       msgModalMsg.textContent = "";
@@ -1268,29 +1170,8 @@
 
       try{
         if (modalCtx.channel === "whatsapp") {
-          // ✅ Once-only guard for stages 1 / 9 / 10 (across multiple users)
-          const gate = await waBeginOnce(modalCtx.stageNum);
-          if (!gate || gate.ok === false){
-            const reason = gate?.reason || "blocked";
-            const by = (gate?.by || "").trim();
-            if (reason === "sent"){
-              msgModalMsg.innerHTML = "<span class='err'>تم إرسال واتساب لهذه المرحلة من قبل" + (by ? (" بواسطة: " + by) : "") + ".</span>";
-            } else if (reason === "pending"){
-              msgModalMsg.innerHTML = "<span class='err'>يوجد إرسال جارٍ الآن لنفس المرحلة" + (by ? (" بواسطة: " + by) : "") + ". انتظر دقيقة ثم جرّب لو لزم.</span>";
-            } else {
-              msgModalMsg.innerHTML = "<span class='err'>تعذر الإرسال حالياً (لا يوجد طلب/هيكل محدد).</span>";
-            }
-            return;
-          }
-
-          try{
-            await sendWhatsAppMessage(phone, msg, modalCtx.stageNum);
-            await waCommitOnce(modalCtx.stageNum);
-            msgModalMsg.innerHTML = "<span class='ok'>تم إرسال الرسالة من الرقم الموحد عبر واتساب API.</span>";
-          }catch(err){
-            await waRollbackOnce(modalCtx.stageNum);
-            throw err;
-          }
+          await sendWhatsAppMessage(phone, msg, modalCtx.stageNum);
+          msgModalMsg.innerHTML = "<span class='ok'>تم إرسال الرسالة من الرقم الموحد عبر واتساب API.</span>";
         } else {
           await sendStcSmsForStage(modalCtx.stageNum, modalCtx.stageLabel, msg);
           // sendStcSmsForStage writes to stageMsg; mirror here too:
@@ -2491,8 +2372,7 @@ ordersListCache = rows;
     });
 
     // زر إنشاء حساب جديد (للمشرف فقط)
-
-    if (signupBtn) signupBtn.addEventListener("click", async () => {
+    signupBtn.addEventListener("click", async () => {
       authMsg.textContent = "";
       const emailVal = (email.value || "").trim();
       const passVal  = (password.value || "").trim();

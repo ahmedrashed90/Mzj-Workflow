@@ -948,7 +948,7 @@
 
           const grandTotalIncl = (carsSubtotal + carsTax) + (regFeeNum || 0);
 
-          const fmt = (n) => (n || 0).toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          const fmt = (n) => (n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
           // ✅ تخزين القيم للقالب (tracking_message)
           currentCustomerName = customerName || "";
@@ -957,7 +957,7 @@
           currentCarsTax = fmt(carsTax);
           currentRegFee = (regFeeNum && regFeeNum > 0) ? fmt(regFeeNum) : "";
           currentGrandTotalIncl = fmt(grandTotalIncl);
-          currentTrackingLink = trackingLink2 || "";
+          currentTrackingLink = trackingLink2 || "https://mzj-tracking.vercel.app/Test-Track.html";
 
           return (
 `عميلنا العزيز / ${customerName}\n` +
@@ -1136,7 +1136,7 @@
       const tax          = String(currentCarsTax || "0.00");
       const regFee       = String(currentRegFee || "0.00"); // مهم: لا تتركها فاضية
       const totalIncl    = String(currentGrandTotalIncl || "0.00");
-      const trackingLink = String(currentTrackingLink || "—");
+      const trackingLink = String(currentTrackingLink || "https://mzj-tracking.vercel.app/Test-Track.html");
 
       return [customerName, totalCars, subtotal, tax, regFee, totalIncl, trackingLink];
     }
@@ -1290,7 +1290,7 @@
       const lineTotalNum = (base !== null ? (base + (tax || 0)) : null);
 
       const amountStr = (lineTotalNum !== null)
-        ? lineTotalNum.toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ر.س"
+        ? lineTotalNum.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ر.س"
         : "";
 
       text =

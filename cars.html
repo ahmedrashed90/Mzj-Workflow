@@ -715,11 +715,16 @@ html{background:#faf7f3}body{opacity:0;transition:opacity .12s ease}
     }
   }
 
-  const EXCLUDED_VARIANTS = [
-  'مباع تحت التسليم',
-  'مباع تم التسليم',
-  'الوكالة'
-];
+  // حالات غير مطلوبة (بيع/وكالة)
+function isExcludedVariant(varnt){
+  if(!varnt) return false;
+  // أي مباع تحت التسليم أو مباع تم التسليم مهما كان الفرع أو الوكالة
+  if(varnt.includes('مباع تحت التسليم')) return true;
+  if(varnt.includes('مباع تم التسليم')) return true;
+  // أي شيء تابع للوكالة
+  if(varnt.startsWith('الوكالة')) return true;
+  return false;
+}
 
 function applyFilterAndRender(){
     if(!Array.isArray(stock) || stock.length===0){
@@ -742,7 +747,7 @@ function applyFilterAndRender(){
       if(filters.variant && varnt !== filters.variant) return false;
       if(filters.model && model !== filters.model) return false;
 
-      if (EXCLUDED_VARIANTS.includes(varnt)) return false;
+      if (isExcludedVariant(varnt)) return false;
       return true;
     });
 

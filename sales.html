@@ -660,7 +660,6 @@
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
     import {
       getFirestore,
-      runTransaction,
       doc,
       getDoc,
       setDoc,
@@ -672,7 +671,8 @@
       where,
       getDocs,
       limit,
-      writeBatch
+      writeBatch,
+      runTransaction
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -1139,122 +1139,26 @@
     }
 
     async function sendWhatsAppMessage(phone, text, stageNum){
-      const sn = Number(stageNum);
-      // ✅ Templates: Step 1 (m1) with params, Step 9/10 templates بدون params
-      if (sn === 1){
+      const s = Number(stageNum);
+
+      // ✅ Templates for steps 1 / 9 / 10
+      if (s === 1){
         const params = buildTrackingTemplateParams();
-        return sendWhatsAppTemplate(phone, "m1", "ar", params, sn);
+        return sendWhatsAppTemplate(phone, "m1", "ar", params, s);
       }
-      if (sn === 9){
-        return sendWhatsAppTemplate(phone, "mzj_car_ready_delivery", "ar", [], sn);
+      if (s === 9){
+        return sendWhatsAppTemplate(phone, "mzj_car_ready_delivery", "ar", [], s);
       }
-      if (sn === 10){
-        return sendWhatsAppTemplate(phone, "mzj_delivery_completed", "ar", [], sn);
+      if (s === 10){
+        return sendWhatsAppTemplate(phone, "mzj_delivery_completed", "ar", [], s);
       }
-      // باقي المراحل: نص حر (لو احتجته لاحقاً)
-      return sendWhatsAppFreeText(phone, text, sn);
-    }
 
-ync function sendWhatsAppMessage(phone, text, stageNum){
-      // ✅ Stage 1 uses template by default, باقي المراحل نص حر
-      if (Number(stageNum) === 1){
-        const params = buildTrackingTemplateParams();
-        return sendWhatsAppTemplate(phone, "m1", "ar", params, stageNum);
-      }
-      return sendWhatsAppFreeText(phone, text, stageNum);
+      // باقي المراحل: نص حر
+      return sendWhatsAppFreeText(phone, text, s);
     }
 
 
-    
-    // ===== WhatsApp Once-Only Guard (cross-users via Firestore Transaction) =====
-    function waLockRefFor(stageNum){
-      if (!currentOrderId || !currentItemNo) return null;
-      const baseId = currentOrderId;
-      const docId  = baseId + "_" + currentItemNo;
-      // نخزن القفل داخل نفس وثيقة الطلب في حقل wa_once لضمان العمل بين كل اليوزرات
-      return doc(db, TRACK_COLLECTION, docId);
-    }
-
-    async function acquireWaOnceLock(stageNum){
-      const sn = Number(stageNum);
-      if (![1,9,10].includes(sn)) return { ok:true, skipped:true };
-
-      const ref = waLockRefFor(sn);
-      if (!ref) return { ok:false, error:"no-order" };
-
-      const key = "s" + sn;
-      const now = Date.now();
-      const me  = (auth.currentUser?.email || "").toLowerCase();
-
-      return runTransaction(db, async (tx) => {
-        const snap = await tx.get(ref);
-        const data = snap.exists() ? (snap.data() || {}) : {};
-        const waOnce = data.wa_once || {};
-        const existing = waOnce[key] || null;
-
-        // existing shape: { status:"sent"|"pending", at:Timestamp, by:string, expiresAt:number }
-        const status = existing?.status || null;
-        const expiresAt = existing?.expiresAt || 0;
-
-        // لو اتبعتت قبل كده
-        if (status === "sent") {
-          return { ok:false, code:"ALREADY_SENT", existing };
-        }
-
-        // لو في Pending ولسه ما انتهتش المهلة (120 ثانية)
-        if (status === "pending" && expiresAt && expiresAt > now) {
-          return { ok:false, code:"PENDING", existing };
-        }
-
-        // قفل جديد / إعادة قفل بعد انتهاء المهلة
-        const newLock = {
-          status: "pending",
-          by: me,
-          at: serverTimestamp(),
-          expiresAt: now + 120000
-        };
-
-        tx.set(ref, { wa_once: { [key]: newLock } }, { merge:true });
-        return { ok:true, code:"LOCKED", lock:newLock };
-      });
-    }
-
-    async function finalizeWaOnce(stageNum, ok, extra={}){
-      const sn = Number(stageNum);
-      if (![1,9,10].includes(sn)) return;
-
-      const ref = waLockRefFor(sn);
-      if (!ref) return;
-
-      const key = "s" + sn;
-      const now = Date.now();
-      const me  = (auth.currentUser?.email || "").toLowerCase();
-
-      // نجاح: نختم sent
-      if (ok){
-        const sentObj = {
-          status: "sent",
-          by: me,
-          at: serverTimestamp(),
-          sentAtMs: now,
-          ...extra
-        };
-        await setDoc(ref, { wa_once: { [key]: sentObj } }, { merge:true });
-        return;
-      }
-
-      // فشل: نفك القفل (نخليه failed عشان نسمح بإعادة الإرسال)
-      const failedObj = {
-        status: "failed",
-        by: me,
-        at: serverTimestamp(),
-        failedAtMs: now,
-        ...extra
-      };
-      await setDoc(ref, { wa_once: { [key]: failedObj } }, { merge:true });
-    }
-
-if (msgModalSend) msgModalSend.addEventListener("click", async () => {
+    if (msgModalSend) msgModalSend.addEventListener("click", async () => {
       msgModalMsg.textContent = "";
       msgModalSend.disabled = true;
 
@@ -1263,25 +1167,8 @@ if (msgModalSend) msgModalSend.addEventListener("click", async () => {
 
       try{
         if (modalCtx.channel === "whatsapp") {
-          // ✅ once-only guard for steps 1/9/10 across all users
-          const guard = await acquireWaOnceLock(modalCtx.stageNum);
-          if (!guard.ok){
-            const reason = guard.code === "ALREADY_SENT" ? "تم إرسال هذه الرسالة مسبقاً لنفس الطلب/الهيكل." :
-                           guard.code === "PENDING" ? "فيه عملية إرسال شغالة الآن… جرّب بعد ثواني." :
-                           "تعذر تنفيذ حماية الإرسال.";
-            msgModalMsg.innerHTML = "<span class='err'>" + reason + "</span>";
-            msgModalSend.disabled = false;
-            return;
-          }
-
-          try{
-            const resp = await sendWhatsAppMessage(phone, msg, modalCtx.stageNum);
-            await finalizeWaOnce(modalCtx.stageNum, true, { api_ok:true, api_resp: resp?.ok ?? true });
-            msgModalMsg.innerHTML = "<span class='ok'>تم إرسال الرسالة من الرقم الموحد عبر واتساب API.</span>";
-          }catch(err){
-            await finalizeWaOnce(modalCtx.stageNum, false, { api_ok:false });
-            throw err;
-          }
+          await withWaOnceLock(modalCtx.stageNum, () => sendWhatsAppMessage(phone, msg, modalCtx.stageNum));
+          msgModalMsg.innerHTML = "<span class='ok'>تم إرسال الرسالة من الرقم الموحد عبر واتساب API.</span>";
         } else {
           await sendStcSmsForStage(modalCtx.stageNum, modalCtx.stageLabel, msg);
           // sendStcSmsForStage writes to stageMsg; mirror here too:
@@ -1486,6 +1373,82 @@ if (msgModalSend) msgModalSend.addEventListener("click", async () => {
       "<span class='err'>تعذر إرسال رسالة SMS، تأكد من إعدادات STC أو تواصل مع المسؤول التقني.</span>";
   }
 }
+
+
+    // ===== WhatsApp "Send once" guard (cross-users) for steps 1 / 9 / 10 =====
+    async function withWaOnceLock(stageNum, sendFn){
+      const s = Number(stageNum);
+      if (!(s === 1 || s === 9 || s === 10)) {
+        return sendFn();
+      }
+
+      if (!currentOrderId || !currentItemNo) {
+        throw new Error("افتح الطلب واختر رقم الهيكل (VIN) أولاً.");
+      }
+
+      const baseId = String(currentOrderId || "").trim();
+      const itemNo = Number(currentItemNo || 1) || 1;
+      const docId  = baseId + "_" + itemNo;
+      const lockRef = doc(db, TRACK_COLLECTION, docId, "wa_once", "s" + s);
+
+      const now = Date.now();
+      const expiresAt = now + 120000; // 2 minutes anti-double-send
+
+      // Transaction: prevent duplicate across multiple users/tabs
+      await runTransaction(db, async (tx) => {
+        const snap = await tx.get(lockRef);
+        if (snap.exists()) {
+          const d = snap.data() || {};
+          if (d.status === "sent") {
+            throw new Error("تم إرسال واتساب لهذه الخطوة مسبقًا (منع التكرار).");
+          }
+          if (d.status === "sending" && typeof d.expiresAt === "number" && d.expiresAt > now) {
+            throw new Error("يوجد إرسال جارٍ الآن لهذه الخطوة. حاول بعد قليل.");
+          }
+        }
+
+        tx.set(lockRef, {
+          status: "sending",
+          by: (auth.currentUser?.email || ""),
+          at: serverTimestamp(),
+          expiresAt
+        }, { merge: true });
+      });
+
+      try{
+        const res = await sendFn();
+
+        // store minimal response meta
+        const meta = (() => {
+          try{
+            if (res && typeof res === "object") {
+              return {
+                ok: !!res.ok || true,
+                id: res.id || res.messageId || res.msg_id || res.request_id || ""
+              };
+            }
+          }catch(e){}
+          return { ok:true };
+        })();
+
+        await setDoc(lockRef, {
+          status: "sent",
+          sentAt: serverTimestamp(),
+          response: meta,
+          expiresAt: 0
+        }, { merge: true });
+
+        return res;
+      }catch(e){
+        await setDoc(lockRef, {
+          status: "failed",
+          failedAt: serverTimestamp(),
+          error: String(e && (e.message || e)),
+          expiresAt: 0
+        }, { merge: true });
+        throw e;
+      }
+    }
 
 
 function clearErpTable() {

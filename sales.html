@@ -948,7 +948,7 @@
 
           const grandTotalIncl = (carsSubtotal + carsTax) + (regFeeNum || 0);
 
-          const fmt = (n) => (n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          const fmt = (n) => (n || 0).toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
           // ✅ تخزين القيم للقالب (tracking_message)
           currentCustomerName = customerName || "";
@@ -957,7 +957,7 @@
           currentCarsTax = fmt(carsTax);
           currentRegFee = (regFeeNum && regFeeNum > 0) ? fmt(regFeeNum) : "";
           currentGrandTotalIncl = fmt(grandTotalIncl);
-          currentTrackingLink = trackingLink2 || "https://mzj-tracking.vercel.app/Test-Track.html";
+          currentTrackingLink = trackingLink2 || "";
 
           return (
 `عميلنا العزيز / ${customerName}\n` +
@@ -1129,15 +1129,14 @@
     }
 
     function buildTrackingTemplateParams(){
-      // mapping for template 123: {{1}}..{{7}} (كلها لازم تكون نصوص غير فاضية)
-      const customerName = (currentCustomerName || "عميلنا العزيز").trim();
-      const totalCars    = String(currentOrderCarsCount || "0");
-      const subtotal     = String(currentCarsSubtotal || "0.00");
-      const tax          = String(currentCarsTax || "0.00");
-      const regFee       = String(currentRegFee || "0.00"); // مهم: لا تتركها فاضية
-      const totalIncl    = String(currentGrandTotalIncl || "0.00");
-      const trackingLink = String(currentTrackingLink || "https://mzj-tracking.vercel.app/Test-Track.html");
-
+      // mapping for template tracking_message: {{1}}..{{7}}
+      const customerName = (currentCustomerName || "").trim() || "عميلنا العزيز";
+      const totalCars    = String(currentOrderCarsCount || "");
+      const subtotal     = String(currentCarsSubtotal || "");
+      const tax          = String(currentCarsTax || "");
+      const regFee       = String(currentRegFee || "");
+      const totalIncl    = String(currentGrandTotalIncl || "");
+      const trackingLink = String(currentTrackingLink || "");
       return [customerName, totalCars, subtotal, tax, regFee, totalIncl, trackingLink];
     }
 
@@ -1147,7 +1146,7 @@
 
       if (st === 1){
         const params = buildTrackingTemplateParams();
-        return sendWhatsAppTemplate(phone, "123", "ar", params, st);
+        return sendWhatsAppTemplate(phone, "mzj_order_registered_v1", "ar", params, st);
       }
 
       if (st === 9){
@@ -1163,6 +1162,103 @@
       return sendWhatsAppFreeText(phone, text, st);
     }
 
+    // ===== WhatsApp Once-Only Guard (Stages 1,9,10) =====
+    // يمنع تكرار إرسال واتساب لنفس الطلب/الهيكل/المرحلة حتى مع تعدد اليوزرات
+    function isOnceStage(n){ return (n === 1 || n === 9 || n === 10); }
+
+    async function waBeginOnce(stageNum){
+      const st = Number(stageNum);
+      if (!isOnceStage(st)) return { ok: true };
+
+      if (!currentOrderId || !currentItemNo) return { ok: false, reason: "no_order" };
+
+      const baseId = currentOrderId;
+      const docId  = baseId + "_" + currentItemNo;
+      const orderRef = doc(db, TRACK_COLLECTION, docId);
+
+      const key = "s" + st;
+      const email = (auth.currentUser?.email || "").toLowerCase();
+      const nowMs = Date.now();
+      const TTL_MS = 2 * 60 * 1000; // 2 minutes lock while sending
+
+      return runTransaction(db, async (tx) => {
+        const snap = await tx.get(orderRef);
+        const data = snap.exists() ? (snap.data() || {}) : {};
+
+        const sentMap = data.waSent || {};
+        if (sentMap && sentMap[key]) {
+          return { ok: false, reason: "sent", by: (data.waSentBy||{})[key] || "" };
+        }
+
+        const pendingMap = data.waPending || {};
+        const pend = pendingMap ? pendingMap[key] : null;
+        if (pend && pend.at && (nowMs - Number(pend.at)) < TTL_MS) {
+          return { ok: false, reason: "pending", by: pend.by || "" };
+        }
+
+        // set pending (merge-safe)
+        const newPending = Object.assign({}, pendingMap, {
+          [key]: { at: nowMs, by: email, vin: (currentVin || ""), orderId: baseId }
+        });
+
+        tx.set(orderRef, { waPending: newPending }, { merge: true });
+        return { ok: true };
+      });
+    }
+
+    async function waCommitOnce(stageNum){
+      const st = Number(stageNum);
+      if (!isOnceStage(st)) return;
+
+      const baseId = currentOrderId;
+      const docId  = baseId + "_" + currentItemNo;
+      const orderRef = doc(db, TRACK_COLLECTION, docId);
+
+      const key = "s" + st;
+      const email = (auth.currentUser?.email || "").toLowerCase();
+
+      await runTransaction(db, async (tx) => {
+        const snap = await tx.get(orderRef);
+        const data = snap.exists() ? (snap.data() || {}) : {};
+
+        const sentMap = data.waSent || {};
+        if (sentMap && sentMap[key]) {
+          // already committed by another user
+          tx.update(orderRef, { [`waPending.${key}`]: deleteField() });
+          return;
+        }
+
+        const newSent = Object.assign({}, sentMap, { [key]: serverTimestamp() });
+        const newSentBy = Object.assign({}, (data.waSentBy || {}), { [key]: email });
+
+        tx.set(orderRef, { waSent: newSent, waSentBy: newSentBy }, { merge: true });
+        tx.update(orderRef, { [`waPending.${key}`]: deleteField() });
+      });
+    }
+
+    async function waRollbackOnce(stageNum){
+      const st = Number(stageNum);
+      if (!isOnceStage(st)) return;
+
+      if (!currentOrderId || !currentItemNo) return;
+
+      const baseId = currentOrderId;
+      const docId  = baseId + "_" + currentItemNo;
+      const orderRef = doc(db, TRACK_COLLECTION, docId);
+
+      const key = "s" + st;
+
+      try{
+        await runTransaction(db, async (tx) => {
+          tx.update(orderRef, { [`waPending.${key}`]: deleteField() });
+        });
+      }catch(e){
+        // لو doc مش موجود/أو صلاحيات، تجاهل (أفضل من تعطيل الصفحة)
+        console.warn("waRollbackOnce failed", e);
+      }
+    }
+
+
     if (msgModalSend) msgModalSend.addEventListener("click", async () => {
       msgModalMsg.textContent = "";
       msgModalSend.disabled = true;
@@ -1172,6 +1268,7 @@
 
       try{
         if (modalCtx.channel === "whatsapp") {
+          // ✅ إرسال واتساب (بدون حماية تكرار)
           await sendWhatsAppMessage(phone, msg, modalCtx.stageNum);
           msgModalMsg.innerHTML = "<span class='ok'>تم إرسال الرسالة من الرقم الموحد عبر واتساب API.</span>";
         } else {
@@ -1290,7 +1387,7 @@
       const lineTotalNum = (base !== null ? (base + (tax || 0)) : null);
 
       const amountStr = (lineTotalNum !== null)
-        ? lineTotalNum.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ر.س"
+        ? lineTotalNum.toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ر.س"
         : "";
 
       text =

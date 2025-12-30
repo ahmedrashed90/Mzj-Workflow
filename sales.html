@@ -1,17 +1,4 @@
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -671,8 +658,7 @@
       where,
       getDocs,
       limit,
-      writeBatch,
-      runTransaction
+      writeBatch
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -1139,22 +1125,12 @@
     }
 
     async function sendWhatsAppMessage(phone, text, stageNum){
-      const s = Number(stageNum);
-
-      // ✅ Templates for steps 1 / 9 / 10
-      if (s === 1){
+      // ✅ Stage 1 uses template by default, باقي المراحل نص حر
+      if (Number(stageNum) === 1){
         const params = buildTrackingTemplateParams();
-        return sendWhatsAppTemplate(phone, "m1", "ar", params, s);
+        return sendWhatsAppTemplate(phone, "tracking_message", "ar", params, stageNum);
       }
-      if (s === 9){
-        return sendWhatsAppTemplate(phone, "mzj_car_ready_delivery", "ar", [], s);
-      }
-      if (s === 10){
-        return sendWhatsAppTemplate(phone, "mzj_delivery_completed", "ar", [], s);
-      }
-
-      // باقي المراحل: نص حر
-      return sendWhatsAppFreeText(phone, text, s);
+      return sendWhatsAppFreeText(phone, text, stageNum);
     }
 
 
@@ -1167,7 +1143,7 @@
 
       try{
         if (modalCtx.channel === "whatsapp") {
-          await withWaOnceLock(modalCtx.stageNum, () => sendWhatsAppMessage(phone, msg, modalCtx.stageNum));
+          await sendWhatsAppMessage(phone, msg, modalCtx.stageNum);
           msgModalMsg.innerHTML = "<span class='ok'>تم إرسال الرسالة من الرقم الموحد عبر واتساب API.</span>";
         } else {
           await sendStcSmsForStage(modalCtx.stageNum, modalCtx.stageLabel, msg);
@@ -1373,82 +1349,6 @@
       "<span class='err'>تعذر إرسال رسالة SMS، تأكد من إعدادات STC أو تواصل مع المسؤول التقني.</span>";
   }
 }
-
-
-    // ===== WhatsApp "Send once" guard (cross-users) for steps 1 / 9 / 10 =====
-    async function withWaOnceLock(stageNum, sendFn){
-      const s = Number(stageNum);
-      if (!(s === 1 || s === 9 || s === 10)) {
-        return sendFn();
-      }
-
-      if (!currentOrderId || !currentItemNo) {
-        throw new Error("افتح الطلب واختر رقم الهيكل (VIN) أولاً.");
-      }
-
-      const baseId = String(currentOrderId || "").trim();
-      const itemNo = Number(currentItemNo || 1) || 1;
-      const docId  = baseId + "_" + itemNo;
-      const lockRef = doc(db, TRACK_COLLECTION, docId, "wa_once", "s" + s);
-
-      const now = Date.now();
-      const expiresAt = now + 120000; // 2 minutes anti-double-send
-
-      // Transaction: prevent duplicate across multiple users/tabs
-      await runTransaction(db, async (tx) => {
-        const snap = await tx.get(lockRef);
-        if (snap.exists()) {
-          const d = snap.data() || {};
-          if (d.status === "sent") {
-            throw new Error("تم إرسال واتساب لهذه الخطوة مسبقًا (منع التكرار).");
-          }
-          if (d.status === "sending" && typeof d.expiresAt === "number" && d.expiresAt > now) {
-            throw new Error("يوجد إرسال جارٍ الآن لهذه الخطوة. حاول بعد قليل.");
-          }
-        }
-
-        tx.set(lockRef, {
-          status: "sending",
-          by: (auth.currentUser?.email || ""),
-          at: serverTimestamp(),
-          expiresAt
-        }, { merge: true });
-      });
-
-      try{
-        const res = await sendFn();
-
-        // store minimal response meta
-        const meta = (() => {
-          try{
-            if (res && typeof res === "object") {
-              return {
-                ok: !!res.ok || true,
-                id: res.id || res.messageId || res.msg_id || res.request_id || ""
-              };
-            }
-          }catch(e){}
-          return { ok:true };
-        })();
-
-        await setDoc(lockRef, {
-          status: "sent",
-          sentAt: serverTimestamp(),
-          response: meta,
-          expiresAt: 0
-        }, { merge: true });
-
-        return res;
-      }catch(e){
-        await setDoc(lockRef, {
-          status: "failed",
-          failedAt: serverTimestamp(),
-          error: String(e && (e.message || e)),
-          expiresAt: 0
-        }, { merge: true });
-        throw e;
-      }
-    }
 
 
 function clearErpTable() {
@@ -2445,7 +2345,7 @@ ordersListCache = rows;
     });
 
     // زر إنشاء حساب جديد (للمشرف فقط)
-    if (signupBtn) signupBtn.addEventListener("click", async () => {
+    signupBtn.addEventListener("click", async () => {
       authMsg.textContent = "";
       const emailVal = (email.value || "").trim();
       const passVal  = (password.value || "").trim();

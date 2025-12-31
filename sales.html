@@ -13,7 +13,6 @@
 
 
 
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -1134,34 +1133,28 @@
     const MERSAL_DIRECT_TOKEN_STEP1 = "N47Nm9eP20Ppctd3RmM6EBiM5b7dAaoljMHVJyns16b42721";
 
     async function sendWhatsAppTemplateDirectStep1(phone, bodyParams){
-      // ✅ Step 1 ONLY: send EXACTLY like "send temp bay ajax.html" (form-encoded nested fields)
-      const p = new URLSearchParams();
-      const cleanPhone = String(phone || "").trim();
-
-      p.set("template_name", "tracking_message");
-      p.set("template_language", "ar");
-      p.set("token", MERSAL_DIRECT_TOKEN_STEP1);
-      p.set("phone", cleanPhone);
-
-      // components[0] = body
-      p.set("components[0][type]", "body");
-
-      const vals = Array.isArray(bodyParams) ? bodyParams : [];
-      for (let i = 0; i < vals.length; i++){
-        p.set(`components[0][parameters][${i}][type]`, "text");
-        p.set(`components[0][parameters][${i}][text]`, String(vals[i] ?? ""));
-      }
-
-      const res = await fetch("https://w-mersal.com/api/wpbox/sendtemplatemessage", {
+      return fetch("https://w-mersal.com/api/wpbox/sendtemplatemessage", {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
-        body: p.toString()
-      });
-
-      const bodyText = await res.text();
-      if (!res.ok) throw new Error(bodyText || ("HTTP " + res.status));
-      try { return JSON.parse(bodyText); } catch { return { ok:true, raw: bodyText }; }
-    } catch { return ({ ok:true, raw: bodyText }); }
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          token: MERSAL_DIRECT_TOKEN_STEP1,
+          phone: String(phone || "").trim(),
+          template_name: "tracking_message",
+          template_language: "ar",
+          components: [
+            {
+              type: "body",
+              parameters: (Array.isArray(bodyParams) ? bodyParams : []).map(v => ({
+                type: "text",
+                text: String(v ?? "")
+              }))
+            }
+          ]
+        })
+      }).then(async (res)=>{
+        const bodyText = await res.text();
+        if(!res.ok) throw new Error(bodyText || ("HTTP " + res.status));
+        try { return JSON.parse(bodyText); } catch { return ({ ok:true, raw: bodyText }); }
       });
     }
 function buildTrackingTemplateParams(){

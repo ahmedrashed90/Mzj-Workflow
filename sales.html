@@ -12,6 +12,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -688,8 +689,7 @@
     const TRACK_COLLECTION    = "orders";
 
     // ✅ API base (separate project) for WhatsApp/Mersal serverless routes
-const MZJ_TRACKING_API_BASE = window.location.origin;
- // نفس الدومين (mzj-workflow)
+    const MZJ_TRACKING_API_BASE = window.location.origin; // نفس الدومين (mzj-workflow)
 
     const ERP_FIELDS = [
       "CustomerName","CustomerVAT","CustomerPhone","Branch","OrderDate","DeliveryDate","SalesPerson",
@@ -1126,7 +1126,38 @@ const MZJ_TRACKING_API_BASE = window.location.origin;
       });
     }
 
-    function buildTrackingTemplateParams(){
+    
+
+    // Direct send for Step 1 ONLY (same logic as send temp bay ajax.html)
+    // NOTE: Token is embedded client-side by request.
+    const MERSAL_DIRECT_TOKEN_STEP1 = "N47Nm9eP20Ppctd3RmM6EBiM5b7dAaoljMHVJyns16b42721";
+
+    async function sendWhatsAppTemplateDirectStep1(phone, bodyParams){
+      return fetch("https://w-mersal.com/api/wpbox/sendtemplatemessage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          token: MERSAL_DIRECT_TOKEN_STEP1,
+          phone: String(phone || "").trim(),
+          template_name: "tracking_message",
+          template_language: "ar",
+          components: [
+            {
+              type: "body",
+              parameters: (Array.isArray(bodyParams) ? bodyParams : []).map(v => ({
+                type: "text",
+                text: String(v ?? "")
+              }))
+            }
+          ]
+        })
+      }).then(async (res)=>{
+        const bodyText = await res.text();
+        if(!res.ok) throw new Error(bodyText || ("HTTP " + res.status));
+        try { return JSON.parse(bodyText); } catch { return ({ ok:true, raw: bodyText }); }
+      });
+    }
+function buildTrackingTemplateParams(){
       // mapping for template tracking_message: {{1}}..{{7}}
       const customerName = (currentCustomerName || "").trim() || "عميلنا العزيز";
       const totalCars    = String(currentOrderCarsCount || "");
@@ -1144,7 +1175,8 @@ const MZJ_TRACKING_API_BASE = window.location.origin;
 
       if (st === 1){
         const params = buildTrackingTemplateParams();
-        return sendWhatsAppTemplate(phone, "tracking_message", "ar", params, st);
+        // Step 1 uses direct Mersal send (to fix delivery)
+        return sendWhatsAppTemplateDirectStep1(phone, params);
       }
 
       if (st === 9){

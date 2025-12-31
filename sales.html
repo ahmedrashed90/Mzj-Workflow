@@ -1158,15 +1158,26 @@
       });
     }
 function buildTrackingTemplateParams(){
-      // mapping for template tracking_message: {{1}}..{{7}}
-      const customerName = (currentCustomerName || "").trim() || "عميلنا العزيز";
-      const totalCars    = String(currentOrderCarsCount || "");
-      const subtotal     = String(currentCarsSubtotal || "");
-      const tax          = String(currentCarsTax || "");
-      const regFee       = String(currentRegFee || "");
-      const totalIncl    = String(currentGrandTotalIncl || "");
-      const trackingLink = String(currentTrackingLink || "");
-      return [customerName, totalCars, subtotal, tax, regFee, totalIncl, trackingLink];
+  // mapping for template tracking_message: {{1}}..{{7}}
+  const customerName = (currentCustomerName || "").trim() || "عميلنا العزيز";
+  const totalCars    = String(currentOrderCarsCount || "0");
+  const subtotal     = String(currentCarsSubtotal || "0");
+  const tax          = String(currentCarsTax || "0");
+  const regFee       = String(currentRegFee || "0");          // ✅ هنا الحل
+  const totalIncl    = String(currentGrandTotalIncl || "0");
+  const trackingLink = String(currentTrackingLink || "https://mzj-tracking.vercel.app/");
+
+  return [
+    customerName,
+    totalCars,
+    subtotal,
+    tax,
+    regFee,        // هتبقى "0" مش فاضية
+    totalIncl,
+    trackingLink
+  ];
+}
+
     }
 
     async function sendWhatsAppMessage(phone, text, stageNum){

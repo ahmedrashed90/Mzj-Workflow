@@ -13,6 +13,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -953,7 +954,7 @@
           currentOrderCarsCount = totalCars || 0;
           currentCarsSubtotal = fmt(carsSubtotal);
           currentCarsTax = fmt(carsTax);
-          currentRegFee = (regFeeNum && regFeeNum > 0) ? fmt(regFeeNum) : "";
+          currentRegFee = fmt(regFeeNum || 0);
           currentGrandTotalIncl = fmt(grandTotalIncl);
           currentTrackingLink = trackingLink2 || "";
 
@@ -1157,27 +1158,30 @@
         try { return JSON.parse(bodyText); } catch { return ({ ok:true, raw: bodyText }); }
       });
     }
-function buildTrackingTemplateParams(){
-  // mapping for template tracking_message: {{1}}..{{7}}
-  const customerName = (currentCustomerName || "").trim() || "عميلنا العزيز";
-  const totalCars    = String(currentOrderCarsCount || "0");
-  const subtotal     = String(currentCarsSubtotal || "0");
-  const tax          = String(currentCarsTax || "0");
-  const regFee       = String(currentRegFee || "0");          // ✅ هنا الحل
-  const totalIncl    = String(currentGrandTotalIncl || "0");
-  const trackingLink = String(currentTrackingLink || "https://mzj-tracking.vercel.app/");
+function toEnglishDigits(str) {
+      return String(str)
+        .replace(/[٠-٩]/g, d => "0123456789"["٠١٢٣٤٥٦٧٨٩".indexOf(d)])
+        .replace(/[٬]/g, ",")
+        .replace(/[٫]/g, ".")
+        .replace(/\u00A0/g, " ");
+    }
+    function safeParam(v, fallback = "0"){
+      const s = (v === null || v === undefined) ? "" : String(v);
+      const cleaned = toEnglishDigits(s).trim();
+      return cleaned ? cleaned : fallback;
+    }
 
-  return [
-    customerName,
-    totalCars,
-    subtotal,
-    tax,
-    regFee,        // هتبقى "0" مش فاضية
-    totalIncl,
-    trackingLink
-  ];
-}
+    function buildTrackingTemplateParams(){
+      // mapping for template tracking_message: {{1}}..{{7}}
+      const customerName = safeParam((currentCustomerName || "").trim(), "عميلنا العزيز");
+      const totalCars    = safeParam(currentOrderCarsCount, "0");
+      const subtotal     = safeParam(currentCarsSubtotal, "0");
+      const tax          = safeParam(currentCarsTax, "0");
+      const regFee       = safeParam(currentRegFee, "0"); // ✅ ممنوع يبقى فاضي
+      const totalIncl    = safeParam(currentGrandTotalIncl, "0");
+      const trackingLink = safeParam(currentTrackingLink, "https://mzj-tracking.vercel.app/");
 
+      return [customerName, totalCars, subtotal, tax, regFee, totalIncl, trackingLink];
     }
 
     async function sendWhatsAppMessage(phone, text, stageNum){
@@ -2415,7 +2419,7 @@ ordersListCache = rows;
     });
 
     // زر إنشاء حساب جديد (للمشرف فقط)
-    signupBtn.addEventListener("click", async () => {
+    if (signupBtn) signupBtn.addEventListener("click", async () => {
       authMsg.textContent = "";
       const emailVal = (email.value || "").trim();
       const passVal  = (password.value || "").trim();

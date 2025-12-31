@@ -13,6 +13,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -1142,26 +1143,32 @@
           template_name: "tracking_message",
           template_language: "ar",
           components: [
-  {
-    type: "body",
-    parameters: bodyParams.map(v => ({
-      type: "text",
-      text: String(v ?? "")
-    }))
-  },
-  {
-    type: "button",
-    sub_type: "url",
-    index: "0",
-    parameters: [
-      {
-        type: "text",
-        text: bodyParams[6] // رابط التتبع
-      }
-    ]
-  }
-]
-
+            {
+              type: "body",
+              parameters: (Array.isArray(bodyParams) ? bodyParams : []).map(v => ({
+                type: "text",
+                text: String(v ?? "")
+              }))
+            },
+            {
+              type: "button",
+              sub_type: "url",
+              index: "0",
+              parameters: [
+                {
+                  type: "text",
+                  text: String((Array.isArray(bodyParams) ? bodyParams : [])[6] ?? "")
+                }
+              ]
+            }
+          ]
+        })
+      }).then(async (res)=>{
+        const bodyText = await res.text();
+        if(!res.ok) throw new Error(bodyText || ("HTTP " + res.status));
+        try { return JSON.parse(bodyText); } catch { return ({ ok:true, raw: bodyText }); }
+      });
+    }
 function buildTrackingTemplateParams(){
       // mapping for template tracking_message: {{1}}..{{7}}
       const customerName = (currentCustomerName || "").trim() || "عميلنا العزيز";

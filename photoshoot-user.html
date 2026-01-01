@@ -2086,6 +2086,27 @@ btnEditReq.addEventListener('click', async ()=>{
   batch.set(reqRef, { updatedAt: now }, { merge:true });
   await batch.commit();
 
+  // ✅ لو تعديل الوجهة لطلبات النقل (move) حدّث المخزون فورًا
+  try{
+    const moveUpdates = [];
+    selects.forEach(sel=>{
+      const rowId = sel.dataset.rowId;
+      const kind  = sel.dataset.kind;
+      if(kind !== "move") return;
+      const rowObj = openRows.find(r=> String(r.__id||r.vin||"") === String(rowId));
+      const vin = rowObj ? (rowObj.vin||rowObj.__id||"") : rowId;
+      const toLocation = sel.value;
+      if(vin && toLocation){
+        moveUpdates.push({ kind:"move", vin, toLocation });
+      }
+    });
+    if(moveUpdates.length){
+      await updateStockLocationsAfterMoveFinish(moveUpdates);
+    }
+  }catch(e){
+    console.warn("admin edit -> stock update skipped", e);
+  }
+
   await logAction("تعديل الطلب", `تم تعديل وجهات الطلب #${openRequestId} بواسطة ${myName()}`);
 
   editMode=false;

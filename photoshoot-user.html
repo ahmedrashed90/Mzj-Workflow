@@ -1862,9 +1862,11 @@ function renderProgress(){
   const canFinish = (p.total>0 && p.s3===p.total) && (isAdmin() || isCreator(openRequestDoc)) && !(openRequestDoc&&openRequestDoc.finishedAt);
   btnStep4.disabled = !canFinish;
 
-  const anyAction = openRows.some(r=>r.steps?.received?.at||r.steps?.sent?.at||r.steps?.carReceived?.at) || (openRequestDoc&&openRequestDoc.finishedAt);
-  const canEdit = !anyAction && (isAdmin() || isCreator(openRequestDoc));
-  btnEditReq.disabled = !canEdit;
+  // ✅ زر تعديل الطلب: ظاهر للإدارة فقط، ومسموح حتى لو الطلب مكتمل/منتهي
+  if(btnEditReq){
+    btnEditReq.style.display = isAdmin() ? 'inline-flex' : 'none';
+    btnEditReq.disabled = !isAdmin();
+  }
   btnEditReq.innerHTML = editMode ? '<i class="fa-solid fa-floppy-disk"></i>حفظ تعديل الطلب' : '<i class="fa-solid fa-pen-to-square"></i>تعديل الطلب';
 
   permHint.textContent = `صلاحيتك: ${isAdmin()?"الادارة":(isIdari()?"اداري":"—")} — الإداري يعمل فقط على الأماكن المرتبطة بحسابه.`;
@@ -2053,19 +2055,19 @@ btnRefreshModal.addEventListener('click', ()=>{ renderRowsTable(); renderProgres
 btnEditReq.addEventListener('click', async ()=>{
   if(!openRequestId) return;
 
+  // الإدارة فقط
+  if(!isAdmin()){
+    alert('غير مصرح لك بتعديل الطلب.');
+    return;
+  }
+
   if(!editMode){
     editMode=true;
     renderRowsTable(); renderProgress();
     return;
   }
 
-  const anyAction = openRows.some(r=>r.steps?.received?.at||r.steps?.sent?.at||r.steps?.carReceived?.at) || (openRequestDoc&&openRequestDoc.finishedAt);
-  if(anyAction){
-    alert("لا يمكن تعديل الطلب بعد بدء أي إجراء.");
-    editMode=false;
-    renderRowsTable(); renderProgress();
-    return;
-  }
+  // ✅ يسمح بالتعديل حتى لو الطلب بدأ/انتهى (حسب طلب حسام)
 
   const selects = rowsTbody.querySelectorAll('select[data-row-id]');
   const reqRef = db.collection("requests").doc(String(openRequestId));

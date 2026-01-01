@@ -9,6 +9,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -1372,6 +1373,19 @@ try{
     rowsSnap.forEach(d=>batch.delete(d.ref));
     batch.delete(reqRef);
     await batch.commit();
+
+  // ✅ تحديث المخزون فورًا عند المرحلة 3 لطلبات النقل (Move)
+  // صفحة المخزون تقرأ من mzj_admin_state/v1.stock، لذلك نحدّثه هنا مباشرة
+  if(stepNo===3){
+    const moveRows = targets.filter(r => (r.kind||'') === 'move');
+    if(moveRows.length){
+      try{
+        await updateStockLocationsAfterMoveFinish(moveRows);
+      }catch(err){
+        console.warn('update stock after step3 failed', err);
+      }
+    }
+  }
 
     // remove from mzj_admin_state/v1 maps
     try{ await deleteRequestFromState(id, (req && req.kind) ? req.kind : 'shoot'); }catch(e){}

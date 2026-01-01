@@ -8,6 +8,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -1141,6 +1142,10 @@ async function deleteRequestFromState(requestId, kind){
   const ADMIN_APPROVAL_ROLES   = [ROLE_ADMIN]; // موافقة الإدارة
   const FINANCE_APPROVAL_ROLES = [ROLE_ADMIN]; // موافقة مالية (يمكن توسيعها لاحقًا)
 
+  // ✅ صلاحية عمليات إضافية لطلبات النقل (Super Move)
+  const MOVE_SUPER_EMAILS = ['coo@mzjcars.com'];
+  function isMoveSuper(){ return MOVE_SUPER_EMAILS.includes(myEmail()); }
+
   // الصفحات المسموح بها لكل تصنيف
   const ROLE_PAGES = {
     [ROLE_ADMIN] : 'ALL', // الإدارة تشوف كل الصفحات
@@ -1793,7 +1798,8 @@ function canDoStep(row, stepNo){
   // - تصوير: "استلام السيارة المطلوبة للتصوير" = مسؤول الوجهة (مكان التصوير) فقط
   if(stepNo===3){
     if((row.kind||'') === 'move'){
-      return isCreator(openRequestDoc); // منشئ الطلب
+      // ✅ طلب نقل: منشئ الطلب أو Super Move (مثل COO) فقط
+      return isCreator(openRequestDoc) || isMoveSuper(); // منشئ الطلب / COO
     }
     return includesLoc(dst); // تصوير
   }
@@ -1999,7 +2005,7 @@ async function finishRequest(){
     alert("لا يمكن الإنهاء قبل اكتمال “تم استلام السيارة” لكل VIN.");
     return;
   }
-  if(!(isAdmin() || isCreator(openRequestDoc))){
+  if(!(isAdmin() || isCreator(openRequestDoc) || isMoveSuper())){
     alert("ليس لديك صلاحية لإنهاء الطلب.");
     return;
   }

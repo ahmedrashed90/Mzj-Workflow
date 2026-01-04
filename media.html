@@ -539,7 +539,7 @@ th.col-year, td.col-year {
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
   import {
     getFirestore, doc, getDoc, onSnapshot,
-    collection, getDocs, query, where, documentId,
+    collection, getDocs, query, where, documentId, orderBy, limit,
     setDoc, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
@@ -715,7 +715,9 @@ th.col-year, td.col-year {
   let stock = [];
   let specs = []; // grouped specs
   let mediaMap = new Map(); // docId -> media
-  let currentUserEmail = '';
+  
+  let shootDoneSet = new Set(); // docIds marked done via finished shoot requests (fallback)
+let currentUserEmail = '';
 
   const filters = { q:'', car:'', variant:'', ext:'', intr:'', year:'', shoot:'', edit:'', specsReel:'', inAgenda:'', agendaMonth:'', agendaYear:'' };
 
@@ -841,8 +843,37 @@ th.col-year, td.col-year {
     }
   }
 
-  function getMedia(docId){
-    return mediaMap.get(docId) || {...DEFAULT_MEDIA};
+  
+  function wireShootDoneFallback(){
+    try{
+      const REQ_COL = collection(db, "requests");
+      // نراقب آخر 200 طلب تصوير (مكتمل/غير مكتمل) ونبني Set للتركيبات اللي اتسجلت كتم تصويرها داخل الطلب
+      const q = query(REQ_COL, where("kind","==","shoot"), orderBy("updatedAt","desc"), limit(200));
+      onSnapshot(q, async (snap)=>{
+        const next = new Set();
+        snap.forEach(docSnap=>{
+          const d = docSnap.data() || {};
+          if(!d || !d.finishedAt) return; // نعتبر فقط المكتمل
+          const arr = Array.isArray(d.shootDoneDocIds) ? d.shootDoneDocIds : [];
+          arr.forEach(id=>{ if(id) next.add(String(id)); });
+        });
+        shootDoneSet = next;
+        render();
+      }, (err)=>{
+        console.warn("wireShootDoneFallback snapshot error", err);
+      });
+    }catch(e){
+      console.warn("wireShootDoneFallback failed", e);
+    }
+  }
+
+function getMedia(docId){
+    const base = mediaMap.get(docId) || {...DEFAULT_MEDIA};
+    // fallback: لو ماقدرنا نكتب على media_specs لأي سبب، نعتبرها تم تصويرها لو موجودة داخل طلب تصوير مكتمل
+    if((base.shoot || 'لا') !== 'نعم' && shootDoneSet && shootDoneSet.has(String(docId))){
+      return { ...base, shoot: 'نعم', shootDate: base.shootDate || '' };
+    }
+    return base;
   }
 
   async function saveMedia(docId, patch){
@@ -1180,6 +1211,8 @@ th.col-year, td.col-year {
 
       // preload media for all specs (once)
       await fetchMediaForDocIds(specs.map(x=> x.docId));
+      // fallback: راقب طلبات التصوير المكتملة لتحديث (ناقص تصوير) حتى لو media_specs ما اتحدثت
+      wireShootDoneFallback();
       tb.dataset.wired = '0'; // re-wire after first render
       render();
 

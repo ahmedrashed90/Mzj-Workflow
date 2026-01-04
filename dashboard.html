@@ -1,11 +1,3 @@
-
-
-
-
-
-
-
-
 <!DOCTYPE html>
 
 <html dir="rtl" lang="ar">
@@ -1946,7 +1938,7 @@ function renderShootCard(gridEl){
       shootMissingCard.dataset.bound = '1';
       shootMissingCard.addEventListener('click', ()=>{
         try{
-          const rows = (Array.isArray(stock) ? stock : []).filter(r => isActualRow(r));
+          const rows = (Array.isArray(stock) ? stock : []).filter(r => isActualRow(r) && !String(r?.location || '').includes('الوكالة'));
 
           function mzjClean(v){
             return String(v ?? '')

@@ -629,7 +629,12 @@ th.col-year, td.col-year {
     return (keyNorm || '').replaceAll('/', '_').slice(0, 900);
   }
 
-  const SOLD_STATES = ['مباع تحت التسليم', 'مباع تم التسليم'];
+  const SOLD_STATES = [
+  'مباع تحت التسليم',
+  'مباع تم التسليم',
+  'الوكالة'
+];
+
 
   function isSoldRow(rec){
     const placeRaw = clean(rec.place || rec.location || rec['المكان'] || '');

@@ -3,6 +3,7 @@
 
 
 
+
 <!DOCTYPE html>
 
 <html dir="rtl" lang="ar">
@@ -1175,7 +1176,7 @@ $('#btnLogin').addEventListener('click', async ()=>{
   function subscribeSpecMedia(){
     if(unsubSpecMedia) return;
     try{
-      const colRef = collection(db, 'spec_media');
+      const colRef = collection(db, 'media_specs');
       unsubSpecMedia = onSnapshot(colRef, (snap)=>{
         const m = new Map();
         snap.docs.forEach(d=>{
@@ -1807,22 +1808,55 @@ function renderShootCard(gridEl){
   function renderShootMissingCard(){
     // نعتبر النقص على مستوى "التركيبة" (Spec Key) وليس عدد الهياكل
     try{
-      const rows = (stock || []).filter(r => isActualRow(r));
-      const combos = countByCombo(rows); // key => qty
-      let missingCombos = 0;
+      const rows = (Array.isArray(stock) ? stock : []).filter(r => isActualRow(r));
 
-      combos.forEach((qty, key)=>{
-        const media = specMediaMap.get(key) || {};
-        const shoot = String(media.shoot || '').trim();
-        if(shoot !== 'نعم') missingCombos++;
+      function mzjClean(v){
+        return String(v ?? '')
+          .replace(/[\u200E\u200F\u202A-\u202E\u2066-\u2069]/g,'')
+          .replace(/\s+/g,' ')
+          .trim();
+      }
+      function mzjNormArabicBasic(s){
+        return mzjClean(s)
+          .replace(/[أإآ]/g,'ا')
+          .replace(/ة/g,'ه')
+          .replace(/\s*\|\s*/g,'|')
+          .toLowerCase();
+      }
+      function mzjDocIdFromKeyNorm(keyNorm){
+        return (keyNorm || '').replace(/\//g,'_').slice(0, 900);
+      }
+
+      const seen = new Set();
+      let missing = 0;
+
+      rows.forEach((r)=>{
+        const parts = [
+          mzjClean(r.car),
+          mzjClean(r.variant),
+          mzjClean(r.extColor),
+          mzjClean(r.intColor),
+          mzjClean(r.modelYear)
+        ].map(p => p || '-');
+        const humanKey = parts.join(' | ');
+        const keyNorm  = mzjNormArabicBasic(humanKey);
+        const docId    = mzjDocIdFromKeyNorm(keyNorm);
+        if(!docId || seen.has(docId)) return;
+        seen.add(docId);
+
+        const media = specMediaMap.get(docId) || {};
+        const shoot = String(media.shoot || 'لا').trim();
+        if(shoot !== 'نعم') missing++;
       });
 
       const inline = document.getElementById('shootMissingInline');
-      if(inline) inline.textContent = missingCombos.toLocaleString('ar-SA');
+      if(inline) inline.textContent = missing.toLocaleString('ar-SA');
 
       const big = document.getElementById('shootMissingBig');
-      if(big) big.textContent = missingCombos.toLocaleString('ar-SA');
-    }catch(e){}
+      if(big) big.textContent = missing.toLocaleString('ar-SA');
+    }catch(e){
+      console.error('renderShootMissingCard error', e);
+    }
   }
 
 
@@ -1902,11 +1936,70 @@ function renderShootCard(gridEl){
     if(shootMissingCard && !shootMissingCard.dataset.bound){
       shootMissingCard.dataset.bound = '1';
       shootMissingCard.addEventListener('click', ()=>{
-        window.location.href = './media.html';
+        try{
+          const rows = (Array.isArray(stock) ? stock : []).filter(r => isActualRow(r));
+
+          function mzjClean(v){
+            return String(v ?? '')
+              .replace(/[\u200E\u200F\u202A-\u202E\u2066-\u2069]/g,'')
+              .replace(/\s+/g,' ')
+              .trim();
+          }
+          function mzjNormArabicBasic(s){
+            return mzjClean(s)
+              .replace(/[أإآ]/g,'ا')
+              .replace(/ة/g,'ه')
+              .replace(/\s*\|\s*/g,'|')
+              .toLowerCase();
+          }
+          function mzjDocIdFromKeyNorm(keyNorm){
+            return (keyNorm || '').replace(/\//g,'_').slice(0, 900);
+          }
+
+          const missingRows = [];
+          const seen = new Set();
+
+          rows.forEach((r)=>{
+            const parts = [
+              mzjClean(r.car),
+              mzjClean(r.variant),
+              mzjClean(r.extColor),
+              mzjClean(r.intColor),
+              mzjClean(r.modelYear)
+            ].map(p => p || '-');
+            const humanKey = parts.join(' | ');
+            const keyNorm  = mzjNormArabicBasic(humanKey);
+            const docId    = mzjDocIdFromKeyNorm(keyNorm);
+            if(!docId) return;
+
+            const media = specMediaMap.get(docId) || {};
+            const shoot = String(media.shoot || 'لا').trim();
+            if(shoot !== 'نعم'){
+              missingRows.push(r);
+            }
+          });
+
+          if(!missingRows.length){
+            if(typeof showToast === 'function'){
+              showToast('لا توجد سيارات ناقصة تصوير ضمن المعروض');
+            }
+            return;
+          }
+
+          currentRows = missingRows;
+          filteredRows = missingRows.slice();
+          currentFilterKey = null;
+          approvalContext = null;
+
+          openModal('rows', 'السيارات الناقصة تصوير (ضمن المعروض)');
+        }catch(err){
+          console.error('shootMissingCard click error', err);
+        }
       });
     }
 
     renderGroups();
+
   }
 
   /* ===== Modal: rows + shortages (branches) + shoot + transfers ===== */

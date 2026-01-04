@@ -1,17 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -2144,10 +2130,46 @@ async function finishRequest(){
   try{ await updateStockLocationsAfterMoveFinish(openRows); }catch(e){ console.error(e); }
 
   // ✅ ربط طلب التصوير بـ (نواقص التصوير) في media.html
-  // عند الإنهاء: علّم التركيبات الخاصة بصفوف التصوير كـ (تم تصويره)
-  try{ await markShootRowsDoneInMediaSpecs(openRows); }catch(e){ console.warn('markShootRowsDoneInMediaSpecs failed', e); }
+  // عند الإنهاء: نحاول نعلّم التركيبات داخل media_specs كـ (تم تصويره)
+  // + كحل احتياطي: نسجل docIds داخل الطلب نفسه عشان media.html يقدر يعتبرها (تم تصويره) حتى لو قواعد Firestore منعت الكتابة على media_specs.
+  let shootDocIds = [];
+  try{
+    shootDocIds = (openRows||[])
+      .filter(r => (r.kind||'') === 'shoot')
+      .map(r=>{
+        const keyHuman = buildSpecKey(r);
+        const keyNorm  = normArabicBasic(keyHuman);
+        return docIdFromKeyNorm(keyNorm);
+      })
+      .filter(Boolean);
+  }catch(e){ shootDocIds = []; }
 
-  await logAction("تم الانتهاء", `تم إنهاء الطلب #${openRequestId} بواسطة ${myName()}`);
+  let mediaSpecsUpdated = false;
+  try{
+    await markShootRowsDoneInMediaSpecs(openRows);
+    mediaSpecsUpdated = true;
+  }catch(e){
+    console.warn('markShootRowsDoneInMediaSpecs failed', e);
+  }
+
+  // سجلّها على الطلب دائمًا (Merge) — خفيف وما يأثر على أي منطق تاني
+  try{
+    await reqRef.set({
+      shootDoneDocIds: Array.from(new Set(shootDocIds)),
+      shootDoneAt: firebase.firestore.FieldValue.serverTimestamp(),
+      shootDoneViaMediaSpecs: mediaSpecsUpdated ? 'yes' : 'no'
+    }, { merge:true });
+  }catch(e){
+    console.warn('save shootDoneDocIds failed', e);
+  }
+
+  // لو فشل تحديث media_specs، نطلع تنبيه واضح بدل ما الموضوع يبان إنه اشتغل
+  if(!mediaSpecsUpdated){
+    try{ showAlert('err', 'تم إنهاء الطلب ✅ لكن لم نستطع تحديث حالة التصوير في صفحة الميديا (صلاحيات/قواعد). تم تسجيل التحديث داخل الطلب كحل احتياطي.'); }catch(e){}
+  }
+
+
+await logAction("تم الانتهاء", `تم إنهاء الطلب #${openRequestId} بواسطة ${myName()}`);
 }
 
 btnStep1.addEventListener('click', ()=>applyStep(1));

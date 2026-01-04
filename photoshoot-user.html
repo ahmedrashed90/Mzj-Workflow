@@ -11,6 +11,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -1278,6 +1279,69 @@ function showAlert(type, text){
 function normalizeVin(v){
   return String(v||"").trim().toUpperCase().replace(/\s+/g,'');
 }
+
+// ===== Media Specs Key Helpers (for media.html نقص التصوير) =====
+function cleanStr(v){
+  return String(v ?? '')
+    .replace(/[\u200E\u200F\u202A-\u202E\u2066-\u2069]/g,'')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+function normArabicBasic(s){
+  return cleanStr(s)
+    .replace(/[أإآ]/g,'ا')
+    .replace(/ة/g,'ه')
+    .replace(/\s*\|\s*/g,'|')
+    .toLowerCase();
+}
+function buildSpecKey(rec){
+  const parts = [
+    cleanStr(rec.car),
+    cleanStr(rec.variant),
+    cleanStr(rec.extColor),
+    cleanStr(rec.intColor),
+    cleanStr(rec.modelYear)
+  ].map(p => p || '-');
+  return parts.join(' | ');
+}
+function docIdFromKeyNorm(keyNorm){
+  // Firestore doc id must not contain "/"
+  return (keyNorm || '').replaceAll('/', '_').slice(0, 900);
+}
+function todayISO(){
+  try{
+    const d = new Date();
+    // Saudi date (YYYY-MM-DD) based on local browser time; acceptable for shootDate
+    return d.toISOString().slice(0,10);
+  }catch(e){ return ''; }
+}
+async function markShootRowsDoneInMediaSpecs(rows){
+  // rows: request rows (subcollection docs)
+  const shootRows = (rows||[]).filter(r => (r.kind||'') === 'shoot');
+  if(!shootRows.length) return;
+
+  const batch = db.batch();
+  const now = firebase.firestore.FieldValue.serverTimestamp();
+  const dateStr = todayISO();
+
+  shootRows.forEach(r=>{
+    const keyHuman = buildSpecKey(r);
+    const keyNorm  = normArabicBasic(keyHuman);
+    const docId    = docIdFromKeyNorm(keyNorm);
+    if(!docId) return;
+
+    const ref = db.collection('media_specs').doc(docId);
+    // لا نمسح أي حقول أخرى — Merge فقط
+    batch.set(ref, {
+      shoot: 'نعم',
+      shootDate: dateStr,
+      updatedAt: now,
+      updatedBy: myEmail() || ''
+    }, { merge:true });
+  });
+
+  await batch.commit();
+}
 function myEmail(){ return currentUser ? (currentUser.email||"") : ""; }
 function myUid(){ return currentUser ? (currentUser.uid||"") : ""; }
 function myName(){ return (userProfile && userProfile.name) ? userProfile.name : (currentUser ? (currentUser.displayName||currentUser.email||"") : ""); }
@@ -2078,6 +2142,11 @@ async function finishRequest(){
   // ✅ ثبّت المكان النهائي للسيارة داخل stock (mzj_admin_state/v1)
   // سواء كان الطلب نقل أو تصوير — المكان النهائي = الوجهة المختارة في الطلب
   try{ await updateStockLocationsAfterMoveFinish(openRows); }catch(e){ console.error(e); }
+
+  // ✅ ربط طلب التصوير بـ (نواقص التصوير) في media.html
+  // عند الإنهاء: علّم التركيبات الخاصة بصفوف التصوير كـ (تم تصويره)
+  try{ await markShootRowsDoneInMediaSpecs(openRows); }catch(e){ console.warn('markShootRowsDoneInMediaSpecs failed', e); }
+
   await logAction("تم الانتهاء", `تم إنهاء الطلب #${openRequestId} بواسطة ${myName()}`);
 }
 

@@ -2,6 +2,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
@@ -897,6 +898,12 @@
       if (goingUnderDeliveryRow) {
         const stamp = now();
 
+        // ✅ لو السيارة واخدة موافقة مالية + إدارية قبل كدة
+        // ساعتها نسمح بالنقل لأي مكان (حتى تحت التسليم) بدون إنشاء "طلب موافقات" جديد في الداش بورد
+        const adminOk   = rec.adminApproved === true;
+        const financeOk = rec.financeApproved === true;
+        const approvalsDone = adminOk && financeOk;
+
         // 1) ننقل السيارة فعليًا إلى مباع تحت التسليم
         rec.location = toVal;
         if ('place' in rec) {
@@ -917,37 +924,51 @@
           to: toVal,
           id: rec.id,
           ...moveMeta,
-          status: (moveMeta.status || 'under_delivery'),
-          message: moveMeta.message || 'تم نقل السيارة إلى مباع تحت التسليم بانتظار الموافقات لنقلها إلى مباع تم التسليم'
+          status: approvalsDone ? 'under_delivery_approved' : 'under_delivery',
+          message: approvalsDone
+            ? 'تم نقل السيارة إلى مباع تحت التسليم (الموافقات كانت مكتملة مسبقًا — بدون إنشاء طلب جديد)'
+            : 'تم نقل السيارة إلى مباع تحت التسليم بانتظار الموافقات لنقلها إلى مباع تم التسليم'
         });
 
-        // 2) ننشئ طلب نقل إلى "مباع تم التسليم" في نفس الفرع لصفحة الداش بورد
-        const targetDelivered = toVal.replace('مباع تحت التسليم', 'مباع تم التسليم');
+        // 2) ننشئ طلب نقل إلى "مباع تم التسليم" في نفس الفرع لصفحة الداش بورد (مرة واحدة فقط)
+        //   - لو الموافقات مكتملة بالفعل => لا نُنشئ طلب جديد
+        //   - لو في طلب Pending قديم لنفس VIN => لا نُكرّر الطلب
+        if (!approvalsDone) {
+          const targetDelivered = toVal.replace('مباع تحت التسليم', 'مباع تم التسليم');
 
-        moves.push({
-          when: stamp,
-          date: onlyDate(stamp),
-          vin: rec.vin || '',
-          car: rec.car || '',
-          from: toVal,
-          to: targetDelivered,
-          id: rec.id,
-          adminApproved: false,
-          adminApproval: false,
-          financeApproved: false,
-          financeApproval: false,
-          requiresAdminApproval: true,
-          needsAdminApproval: true,
-          requiresFinanceApproval: true,
-          needsFinanceApproval: true,
-          status: 'pending',
-          message: 'طلب نقل إلى مباع تم التسليم من نفس الفرع (بانتظار موافقة الإدارة والمالية)'
-        });
+          const hasPending = moves.some(m =>
+            normalizeVin(m.vin || '') === norm &&
+            (m.status === 'pending' || m.needsAdminApproval || m.needsFinanceApproval || m.requiresAdminApproval || m.requiresFinanceApproval) &&
+            (m.to || '') === targetDelivered
+          );
+
+          if (!hasPending) {
+            moves.push({
+              when: stamp,
+              date: onlyDate(stamp),
+              vin: rec.vin || '',
+              car: rec.car || '',
+              from: toVal,
+              to: targetDelivered,
+              id: rec.id,
+              adminApproved: false,
+              adminApproval: false,
+              financeApproved: false,
+              financeApproval: false,
+              requiresAdminApproval: true,
+              needsAdminApproval: true,
+              requiresFinanceApproval: true,
+              needsFinanceApproval: true,
+              status: 'pending',
+              message: 'طلب نقل إلى مباع تم التسليم من نفس الفرع (بانتظار موافقة الإدارة والمالية)'
+            });
+          }
+        }
 
         continue;
       }
 
-      // 🚗 منطق خاص بـ "مباع تم التسليم" (مسموح من أي مكان طالما الموافقات مكتملة على السيارة)
+// 🚗 منطق خاص بـ "مباع تم التسليم" (مسموح من أي مكان طالما الموافقات مكتملة على السيارة)
 if (goingDeliveredRow) {
   const stamp = now();
 

@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
@@ -175,6 +176,7 @@
             <div class="row" style="gap:8px">
               <input id="quickSearch" placeholder="بحث سريع (VIN / سيارة / من / إلى)" style="min-width:320px"/>
               <button class="btn btn-ghost" id="btnClearSearch"><i class="fa-solid fa-minus"></i> مسح</button>
+              <button class="btn btn-ghost" id="btnExportExcel"><i class="fa-solid fa-file-excel"></i> تصدير Excel</button>
             </div>
           </div>
             <div class="stock-bar" id="stockPlaceBar" style="display:none;margin-top:10px">
@@ -301,7 +303,7 @@
   const connDot=$('#connDot'), connText=$('#connText');
 
   const movesFromDate=$('#movesFromDate'), movesToDate=$('#movesToDate'), btnClearDate=$('#btnClearDate');
-  const quickSearch=$('#quickSearch'), btnClearSearch=$('#btnClearSearch');
+  const quickSearch=$('#quickSearch'), btnClearSearch=$('#btnClearSearch'), btnExportExcel=$('#btnExportExcel');
   const movesTableBody = document.querySelector('#movesTable tbody');
   const stockPlaceBar = $('#stockPlaceBar');
   const stockDot = $('#stockDot');
@@ -445,6 +447,54 @@
   btnClearDate.addEventListener('click', ()=>{movesFromDate.value=''; movesToDate.value=''; renderMoves();});
   quickSearch.addEventListener('input', ()=> renderMoves());
   btnClearSearch.addEventListener('click', ()=>{ quickSearch.value=''; renderMoves(); });
+
+  /* ===== Export CSV (Excel) ===== */
+  btnExportExcel?.addEventListener('click', ()=>{
+    try{
+      let rows = moves.slice();
+      rows = filterMovesByDate(rows);
+      rows = filterBySearch(rows);
+      rows.sort((a,b)=> (moveTs(b) - moveTs(a)) || ((b.__idx||0) - (a.__idx||0)));
+
+      if(!rows.length){
+        showToast('لا توجد بيانات للتصدير','info');
+        return;
+      }
+
+      let csv='\uFEFF'; // BOM لدعم العربية
+      csv += ['#','التاريخ','رقم الهيكل','السيارة','من','إلى','المكان الحالي (المخزون)','ID'].join(',')+'\n';
+
+      rows.forEach((m,i)=>{
+        const line = [
+          i+1,
+          (m.date || onlyDate(m.when||'')) || '',
+          m.vin || '',
+          m.car || '',
+          m.from || '',
+          m.to || '',
+          getStockPlace(m.vin) || '',
+          m.id || ''
+        ].map(v => '"'+String(v).replace(/"/g,'""')+'"').join(',');
+        csv += line + '\n';
+      });
+
+      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `moves_${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast('تم تصدير الملف ✅','ok');
+    }catch(err){
+      console.error(err);
+      showToast('تعذّر التصدير','err');
+    }
+  });
+
 
   document.addEventListener('click',(e)=>{
     const pill = e.target.closest('.copyable');

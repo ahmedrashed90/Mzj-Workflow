@@ -4,6 +4,7 @@
 
 
 
+
 <!DOCTYPE html>
 
 <html dir="rtl" lang="ar">
@@ -119,6 +120,7 @@ body{opacity:0}
   .modal-top{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:10}
   .modal-top h3{margin:0;color:var(--brown)}
   .modal-top .tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .modal-top .tools .input{width:auto;flex:0 0 auto}
 
   .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.38);display:none;align-items:center;justify-content:center;z-index:9999}
   .modal{
@@ -463,7 +465,11 @@ tr:hover{ filter: brightness(0.98); }
 <div class="modal-top">
 <h3 id="modalTitle">عرض</h3>
 <div class="tools">
-<input class="input" id="modalSearch" placeholder="بحث..." style="min-width:280px"/>
+<input class="input" id="modalSearch" placeholder="بحث..." style="min-width:220px"/>
+<select class="input" id="shootFilterCar" style="min-width:150px;display:none"></select>
+<select class="input" id="shootFilterExt" style="min-width:130px;display:none"></select>
+<select class="input" id="shootFilterInt" style="min-width:130px;display:none"></select>
+<select class="input" id="shootFilterYear" style="min-width:110px;display:none"></select>
 <button class="btn" id="btnExportGroup"><i class="fa-regular fa-file-excel"></i> تصدير Excel</button>
 <button class="btn btn-danger" id="btnCloseModal"><i class="fa-solid fa-xmark"></i> إغلاق</button>
 </div>
@@ -784,6 +790,8 @@ const $ = s => document.querySelector(s);
   let moveRequests=[];
   let requestsDocs=[]; // docs from collection: requests
   let currentFilterKey = null;
+  let shootMissingSourceRows = [];
+
   // ✅ Live collection fallback: requests (لو صفحة إدارة الطلبات بتكتب هنا)
   let unsubRequestsCol = null;
   function subscribeRequestsCollection(){
@@ -1974,7 +1982,8 @@ function renderShootCard(gridEl){
 
             const media = specMediaMap.get(docId) || {};
             const shoot = String(media.shoot || 'لا').trim();
-            if(shoot !== 'نعم'){
+            if(shoot !== 'نعم' && !seen.has(docId)){
+              seen.add(docId);
               missingRows.push(r);
             }
           });
@@ -1986,9 +1995,10 @@ function renderShootCard(gridEl){
             return;
           }
 
+          shootMissingSourceRows = missingRows.slice();
           currentRows = missingRows;
           filteredRows = missingRows.slice();
-          currentFilterKey = null;
+          currentFilterKey = 'shoot_missing';
           approvalContext = null;
 
           openModal('rows', 'السيارات الناقصة تصوير (ضمن المعروض)');
@@ -2104,6 +2114,28 @@ function renderShootCard(gridEl){
       approvalContext = null;
     }
 
+    // إظهار/إخفاء فلاتر نواقص التصوير بحسب الحالة
+    const fc = document.getElementById('shootFilterCar');
+    const fe = document.getElementById('shootFilterExt');
+    const fi = document.getElementById('shootFilterInt');
+    const fy = document.getElementById('shootFilterYear');
+    const showShootFilters = (mode === 'rows' && currentFilterKey === 'shoot_missing');
+
+    if(fc && fe && fi && fy){
+      if(showShootFilters){
+        fc.style.display = '';
+        fe.style.display = '';
+        fi.style.display = '';
+        fy.style.display = '';
+        setupShootMissingFilters();
+      }else{
+        fc.style.display = 'none'; fc.value = '';
+        fe.style.display = 'none'; fe.value = '';
+        fi.style.display = 'none'; fi.value = '';
+        fy.style.display = 'none'; fy.value = '';
+      }
+    }
+
     renderModal();
     backdrop.style.display='flex';
   }
@@ -2115,10 +2147,24 @@ function renderShootCard(gridEl){
     shortDataByKey.clear(); shortFiltered=[];
     currentShoot=[]; filteredShoot=[];
     currentFilterKey=null;
+    shootMissingSourceRows = [];
+
+    const fc = document.getElementById('shootFilterCar');
+    const fe = document.getElementById('shootFilterExt');
+    const fi = document.getElementById('shootFilterInt');
+    const fy = document.getElementById('shootFilterYear');
+    [fc,fe,fi,fy].forEach(el=>{
+      if(el){
+        el.value = '';
+        el.style.display = 'none';
+      }
+    });
+
     if(shootDetailsBox) shootDetailsBox.style.display='none';
     approvalBox.style.display='none';
     approvalContext = null;
   }
+
   btnCloseModal.addEventListener('click', closeModal);
 
   // إغلاق المودال بزر ESC
@@ -3365,9 +3411,103 @@ tableTransfersWrap.addEventListener('click',(e)=>{
     });
   }
 
-  modalSearch.addEventListener('input', ()=>{
+  
+  // ===== فلاتر نواقص التصوير (السيارات الناقصة تصوير ضمن المعروض) =====
+  function setupShootMissingFilters(){
+    const base = Array.isArray(shootMissingSourceRows) ? shootMissingSourceRows : [];
+    const fc = document.getElementById('shootFilterCar');
+    const fe = document.getElementById('shootFilterExt');
+    const fi = document.getElementById('shootFilterInt');
+    const fy = document.getElementById('shootFilterYear');
+    if(!fc || !fe || !fi || !fy) return;
+
+    const cars = new Set();
+    const exts = new Set();
+    const ints = new Set();
+    const years = new Set();
+
+    base.forEach(r=>{
+      if(r.car) cars.add(String(r.car).trim());
+      if(r.extColor) exts.add(String(r.extColor).trim());
+      if(r.intColor) ints.add(String(r.intColor).trim());
+      if(r.modelYear) years.add(String(r.modelYear).trim());
+    });
+
+    function fillSelect(sel, values, labelAll){
+      sel.innerHTML = '';
+      const optAll = document.createElement('option');
+      optAll.value = '';
+      optAll.textContent = labelAll;
+      sel.appendChild(optAll);
+      Array.from(values).sort((a,b)=> a.localeCompare(b,'ar')).forEach(v=>{
+        const o = document.createElement('option');
+        o.value = v;
+        o.textContent = v;
+        sel.appendChild(o);
+      });
+    }
+
+    fillSelect(fc, cars, 'كل السيارات');
+    fillSelect(fe, exts, 'كل الألوان الخارجية');
+    fillSelect(fi, ints, 'كل الألوان الداخلية');
+    fillSelect(fy, years, 'كل الموديلات');
+
+    fc.value = '';
+    fe.value = '';
+    fi.value = '';
+    fy.value = '';
+
+    applyShootMissingFilters();
+  }
+
+  function applyShootMissingFilters(){
+    if(currentMode !== 'rows' || currentFilterKey !== 'shoot_missing'){
+      // fallback عادي لو اتناديت في حالة مختلفة
+      filteredRows = currentRows.slice();
+      return renderModal();
+    }
+    const base = Array.isArray(shootMissingSourceRows) ? shootMissingSourceRows : [];
+
+    const fc = document.getElementById('shootFilterCar');
+    const fe = document.getElementById('shootFilterExt');
+    const fi = document.getElementById('shootFilterInt');
+    const fy = document.getElementById('shootFilterYear');
+
+    const carVal = fc ? fc.value.trim() : '';
+    const extVal = fe ? fe.value.trim() : '';
+    const intVal = fi ? fi.value.trim() : '';
+    const yearVal = fy ? fy.value.trim() : '';
+
+    const q = (modalSearch.value||'').trim().toLowerCase();
+
+    let result = base.filter(r=>{
+      if(carVal && String(r.car||'').trim() !== carVal) return false;
+      if(extVal && String(r.extColor||'').trim() !== extVal) return false;
+      if(intVal && String(r.intColor||'').trim() !== intVal) return false;
+      if(yearVal && String(r.modelYear||'').trim() !== yearVal) return false;
+
+      if(q){
+        const hay = [
+          r.car,r.variant,r.dealer,r.extColor,r.intColor,r.modelYear,r.plate,
+          r.location,r.batchName,r.vin,r.notes,r.adminNotes,r.financeNotes,
+          String(r.adminApproved), String(r.financeApproved)
+        ].join(' ').toLowerCase();
+        if(!hay.includes(q)) return false;
+      }
+      return true;
+    });
+
+    currentRows = base;
+    filteredRows = result;
+    renderModal();
+  }
+
+modalSearch.addEventListener('input', ()=>{
     const q = (modalSearch.value||'').trim().toLowerCase();
     if(currentMode==='rows' || currentMode==='stock'){
+      if(currentMode==='rows' && currentFilterKey === 'shoot_missing'){
+        return applyShootMissingFilters();
+      }
       if(!q){ filteredRows = currentRows.slice(); return renderModal(); }
       filteredRows = currentRows.filter(r=>{
         const hay=[r.car,r.variant,r.dealer,r.extColor,r.intColor,r.modelYear,r.plate,r.location,r.batchName,r.vin,r.notes,
@@ -3425,6 +3565,18 @@ tableTransfersWrap.addEventListener('click',(e)=>{
     }
     renderModal();
   });
+  // تغيّر أي فلتر من فلاتر نواقص التصوير يعيد تطبيق الفلترة
+  ['shootFilterCar','shootFilterExt','shootFilterInt','shootFilterYear'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el){
+      el.addEventListener('change', ()=>{
+        if(currentMode==='rows' && currentFilterKey === 'shoot_missing'){
+          applyShootMissingFilters();
+        }
+      });
+    }
+  });
+
 
   // تصدير Excel حسب الوضع
   document.getElementById('btnExportGroup').addEventListener('click', ()=>{

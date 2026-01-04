@@ -10,6 +10,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -1387,6 +1388,20 @@ try{
     }
   }
 
+
+  // ✅ تحديث المخزون فورًا عند المرحلة 3 لطلبات النقل (Move)
+  // صفحة المخزون تقرأ من mzj_admin_state/v1.stock، لذلك نحدّثه هنا مباشرة
+  if(stepNo===3){
+    const moveRows = targets.filter(r => (r.kind||'') === 'move');
+    if(moveRows.length){
+      try{
+        await updateStockLocationsAfterMoveFinish(moveRows);
+      }catch(err){
+        console.warn('update stock after step3 failed', err);
+      }
+    }
+  }
+
     // remove from mzj_admin_state/v1 maps
     try{ await deleteRequestFromState(id, (req && req.kind) ? req.kind : 'shoot'); }catch(e){}
 
@@ -1980,14 +1995,29 @@ async function updateStockLocationsAfterMoveFinish(rows){
   if(!rows || !rows.length) return;
   const stateRef = db.collection("mzj_admin_state").doc("v1");
 
+  // ⚠️ ملاحظة: لا نغيّر normalizeVin العامة عشان ما نكسر أي منطق تاني.
+  // هنا فقط بنعمل مطابقة VIN مرنة ضد مشكلة الأصفار (مثال: 008562 vs 8562).
+  const normSimple = (v)=>String(v||"").trim().toUpperCase().replace(/\s+/g,'');
+  const stripZeros = (s)=>normSimple(s).replace(/^0+/, '');
+  const vinMatch = (a,b)=>{
+    const A = normSimple(a), B = normSimple(b);
+    if(!A || !B) return false;
+    if(A===B) return true;
+    const A2 = stripZeros(A), B2 = stripZeros(B);
+    if(!A2 || !B2) return false;
+    return (A2===B2) || A.endsWith(B2) || B.endsWith(A2);
+  };
+
   await db.runTransaction(async (tx)=>{
     const snap = await tx.get(stateRef);
     const data = snap.exists ? (snap.data()||{}) : {};
     const arr = Array.isArray(data.stock) ? data.stock.slice() : [];
 
+    // VIN (مرن) -> location
     const byVin = new Map();
     rows.forEach(r=>{
-      const v = normalizeVin(r.vin || r.__id || "");
+      const vRaw = r.vin || r.__id || "";
+      const v = normSimple(vRaw);
       if(!v) return;
       // آخر مكان فعلي بعد النقل = الوجهة (toLocation) أو location
       const newLoc = r.location || rowDestPlace(r) || r.toLocation || "";
@@ -1999,14 +2029,20 @@ async function updateStockLocationsAfterMoveFinish(rows){
     let changed = false;
     for(let i=0;i<arr.length;i++){
       const rec = arr[i] || {};
-      const v = normalizeVin(rec.vin || "");
-      if(!v) continue;
-      if(byVin.has(v)){
-        const newLoc = byVin.get(v);
-        if(rec.location !== newLoc){
-          arr[i] = { ...rec, location: newLoc };
-          changed = true;
-        }
+      const recVin = rec.vin || "";
+      if(!recVin) continue;
+
+      // دور على تطابق VIN (بما فيها الأصفار)
+      let matchedKey = null;
+      for(const k of byVin.keys()){
+        if(vinMatch(recVin, k)){ matchedKey = k; break; }
+      }
+      if(!matchedKey) continue;
+
+      const newLoc = byVin.get(matchedKey);
+      if(rec.location !== newLoc){
+        arr[i] = { ...rec, location: newLoc };
+        changed = true;
       }
     }
     if(changed){

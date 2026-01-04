@@ -5,6 +5,7 @@
 
 
 
+
 <!DOCTYPE html>
 
 <html dir="rtl" lang="ar">
@@ -1816,7 +1817,7 @@ function renderShootCard(gridEl){
   function renderShootMissingCard(){
     // نعتبر النقص على مستوى "التركيبة" (Spec Key) وليس عدد الهياكل
     try{
-      const rows = (Array.isArray(stock) ? stock : []).filter(r => isActualRow(r));
+      const rows = (Array.isArray(stock) ? stock : []).filter(r => isActualRow(r) && !String(r?.location || '').includes('الوكالة'));
 
       function mzjClean(v){
         return String(v ?? '')

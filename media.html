@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl" data-theme="light">
 <head>
@@ -337,7 +336,7 @@ th.col-year, td.col-year {
         <a class="side-link tab" href="./sales.html"><i class="fa-solid fa-handshake"></i><span>تتبع المبيعات</span></a>
         <a class="side-link tab" href="./dashboard.html"><i class="fa-solid fa-gauge"></i><span>الداش بورد</span></a>
         <a class="side-link tab" href="./inventory.html"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
-        <a class="side-link tab" href="./vt.html"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
+        <a class="side-link tab" href="./vt.html"><i classfa-solid fa-right-left></i><span>نقل السيارات</span></a>
         <a class="side-link tab" href="./photoshoot-user.html"><i class="fa-solid fa-camera"></i><span>إدارة الطلبات</span></a>
         <a class="side-link tab" href="./cars.html"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
         <a class="side-link tab" href="./admin.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
@@ -408,7 +407,7 @@ th.col-year, td.col-year {
           </div>
         </div>
 
-                <!-- Filters -->
+        <!-- Filters -->
         <div class="card">
           <h3><i class="fa-solid fa-filter" style="color:var(--beige)"></i> الفلاتر</h3>
 
@@ -630,6 +629,14 @@ th.col-year, td.col-year {
     return (keyNorm || '').replaceAll('/', '_').slice(0, 900);
   }
 
+  const SOLD_STATES = ['مباع تحت التسليم', 'مباع تم التسليم'];
+
+  function isSoldRow(rec){
+    const placeRaw = clean(rec.place || rec.location || rec['المكان'] || '');
+    if(!placeRaw) return false;
+    return SOLD_STATES.some(st => placeRaw.includes(st));
+  }
+
   const DEFAULT_MEDIA = {
     shoot: 'لا',
     edit: 'لا',
@@ -709,6 +716,9 @@ th.col-year, td.col-year {
   function computeSpecsFromStock(rows){
     const map = new Map();
     for(const r of rows){
+
+      if (isSoldRow(r)) continue;
+
       const keyHuman = buildSpecKey(r);
       const keyNorm  = normArabicBasic(keyHuman);
       const docId    = docIdFromKeyNorm(keyNorm);
@@ -862,8 +872,10 @@ th.col-year, td.col-year {
   function render(){
     const filtered = applyFilters(specs);
 
+    const totalFromSpecs = specs.reduce((sum, s)=> sum + (Number(s.count)||0), 0);
+
     uniqueCountEl.textContent  = (specs.length||0).toLocaleString('ar-SA');
-    stockCountEl.textContent   = (stock.length||0).toLocaleString('ar-SA');
+    stockCountEl.textContent   = (totalFromSpecs||0).toLocaleString('ar-SA');
     visibleCountEl.textContent = (filtered.length||0).toLocaleString('ar-SA');
     rowsBadgeEl.textContent    = `${filtered.length} صف`;
 

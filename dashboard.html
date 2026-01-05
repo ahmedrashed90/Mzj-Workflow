@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 
 <html dir="rtl" lang="ar">
@@ -439,6 +440,17 @@ tr:hover{ filter: brightness(0.98); }
   <div class="group-total" id="stockTotalBig">0</div>
 </div>
 <p class="hint" style="margin:0"></p>
+<div class="chips" id="stockTopChips" style="margin-top:10px">
+  <span class="chip" data-stock-top="agency" title="الإجمالي الفعلي للوكالة">
+    <i class="fa-solid fa-building"></i> الوكالة: <b id="stockAgencyTotal">0</b>
+  </span>
+  <span class="chip" data-stock-top="forsale" title="الإجمالي الفعلي لكل الفروع بدون الوكالة">
+    <i class="fa-solid fa-tags"></i> المتاح للبيع: <b id="stockForSaleTotal">0</b>
+  </span>
+  <span class="chip" data-stock-top="notes" title="إجمالي سيارات بها ملاحظات (كل الفروع والوكالة)">
+    <i class="fa-solid fa-triangle-exclamation"></i> سيارات بها ملاحظات: <b id="stockNotesTotal">0</b>
+  </span>
+</div>
 </div></div></div><div class="cards" id="groupsGrid"></div>
 </div>
 </div>
@@ -1779,11 +1791,26 @@ function renderShootCard(gridEl){
   }
 
   function renderStockCard(){
-    const total = (stock || []).filter(r=> !isSoldLocationStr(r.location)).length;
+    const live = (stock || []).filter(r=> !isSoldLocationStr(r.location));
+    const total = live.length;
+
     const totalEl = document.getElementById('stockTotalInline');
     if(totalEl) totalEl.textContent = total.toLocaleString('ar-SA');
     const big = document.getElementById('stockTotalBig');
     if(big) big.textContent = total.toLocaleString('ar-SA');
+
+    // ✅ أزرار كارت المخزون (Top Chips)
+    const isAgency = (r)=> String((r && r.location) ? r.location : '').trim().startsWith('الوكالة :');
+    const agencyTotal = live.filter(isAgency).length;
+    const forSaleTotal = live.filter(r=> !isAgency(r)).length;
+    const notesTotal = live.filter(r => (typeof hasAnyCarNotes==='function' && hasAnyCarNotes(r)) || String((r && r.location) ? r.location : '').includes('سيارات بها ملاحظات')).length;
+
+    const agEl = document.getElementById('stockAgencyTotal');
+    if(agEl) agEl.textContent = agencyTotal.toLocaleString('ar-SA');
+    const fsEl = document.getElementById('stockForSaleTotal');
+    if(fsEl) fsEl.textContent = forSaleTotal.toLocaleString('ar-SA');
+    const ntEl = document.getElementById('stockNotesTotal');
+    if(ntEl) ntEl.textContent = notesTotal.toLocaleString('ar-SA');
   }
       function mzjNormArabicBasic(s){
         return mzjClean(s)
@@ -1860,9 +1887,24 @@ function renderShootCard(gridEl){
 const stockCard = document.getElementById('stockCard');
     if(stockCard && !stockCard.dataset.bound){
       stockCard.dataset.bound = '1';
-      stockCard.addEventListener('click', ()=>{
+
+      // فتح المودال الأساسي عند الضغط على الكارت (ما عدا أزرار الكارت)
+      stockCard.addEventListener('click', (ev)=>{
+        if(ev && ev.target && ev.target.closest && ev.target.closest('[data-stock-top]')) return;
         openModalForAllStock();
       });
+
+      // أزرار كارت المخزون
+      const chips = document.getElementById('stockTopChips');
+      if(chips && !chips.dataset.bound){
+        chips.dataset.bound = '1';
+        chips.addEventListener('click', (e)=>{
+          const chip = e.target.closest('[data-stock-top]');
+          if(!chip) return;
+          e.stopPropagation();
+          openModalForStockTop(chip.getAttribute('data-stock-top'));
+        });
+      }
     }
 
     renderGroups();
@@ -2299,7 +2341,35 @@ const stockCard = document.getElementById('stockCard');
     });
   }
 
-  function openModalForAllStock(){
+  
+function openModalForStockTop(kind){
+    const live = (stock || []).filter(r=> !isSoldLocationStr(r.location));
+    const isAgency = (r)=> String((r && r.location) ? r.location : '').trim().startsWith('الوكالة :');
+
+    let title = 'المخزون';
+    if(kind==='agency'){
+      currentRows = live.filter(isAgency);
+      title = 'المخزون — الوكالة (الإجمالي الفعلي)';
+    }else if(kind==='forsale'){
+      currentRows = live.filter(r=> !isAgency(r));
+      title = 'المخزون — المتاح للبيع (بدون الوكالة)';
+    }else if(kind==='notes'){
+      currentRows = live.filter(r => (typeof hasAnyCarNotes==='function' && hasAnyCarNotes(r)) || String((r && r.location) ? r.location : '').includes('سيارات بها ملاحظات'));
+      title = 'المخزون — سيارات بها ملاحظات';
+    }else{
+      currentRows = live.slice();
+      title = 'المخزون';
+    }
+
+    filteredRows = currentRows.slice();
+    currentFilterKey = null;
+    approvalContext = null;
+
+    // نفتح مودال "rows" (بدون لوحة الأماكن) حتى يكون العرض واضح
+    openModal('rows', title);
+  }
+
+function openModalForAllStock(){
     currentStockLocation = null;
     currentRows = (stock || []).filter(r=> !isSoldLocationStr(r.location));
     filteredRows = currentRows.slice();

@@ -1,6 +1,5 @@
 
 
-
 <!DOCTYPE html>
 
 <html dir="rtl" lang="ar">
@@ -644,7 +643,7 @@ tr:hover{ filter: brightness(0.98); }
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-  import {getFirestore, doc, getDoc, setDoc, onSnapshot as _onSnapshot, collection, query, getDocs, limit, orderBy, addDoc, serverTimestamp} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  import {getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, getDocs, limit, orderBy, addDoc, serverTimestamp} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
   /* ===== Firebase ===== */
   const firebaseConfig = {
@@ -658,24 +657,6 @@ tr:hover{ filter: brightness(0.98); }
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db   = getFirestore(app);
-
-// ============================
-// ✅ Dashboard Reads Optimization
-// - نحول Realtime (onSnapshot) إلى قراءة واحدة فقط عبر getDocs
-// - ونعمل تحديث تلقائي كل ساعة
-// ============================
-
-// Wrapper يحول أي onSnapshot موجود في الكود إلى One-shot getDocs (بدون Listener)
-function onSnapshot(q, cb, onErr){
-  getDocs(q).then(snap => cb(snap)).catch(err => {
-    console.error(err);
-    if (typeof onErr === "function") onErr(err);
-  });
-  // Return no-op unsubscribe to keep existing code safe
-  return () => {};
-}
-
-const DASH_REFRESH_MS = 60 * 60 * 1000;
   const STATE_REF = doc(db, "mzj_admin_state", "v1");
   // Firebase لمشروع نظام التتبع / إدارة المبيعات (mzj-tracking)
   const trackingConfig = {
@@ -3567,5 +3548,3 @@ tableTransfersWrap.addEventListener('click',(e)=>{
 
 </body>
 </html>
-
-<script>setInterval(()=>{ if(window.loadDashboard) loadDashboard(true); }, 60*60*1000);</script>

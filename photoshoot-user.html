@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -2030,6 +2031,19 @@ async function applyStep(stepNo){
 
   batch.set(reqRef, { updatedAt: now }, { merge:true });
   await batch.commit();
+
+  // ✅ تحديث المخزون فورًا عند المرحلة 3 لطلبات النقل (Move)
+  if(stepNo===3){
+    try{
+      const moveRows = targets.filter(r => (r.kind||'') === 'move');
+      if(moveRows.length){
+        await updateStockLocationsAfterMoveFinish(moveRows);
+      }
+    }catch(err){
+      console.warn('update stock after step3 failed', err);
+    }
+  }
+
     await logAction("تحديث مرحلة طلب", `تم تحديث المرحلة ${stepNo} في الطلب (${(openRequestDoc&&openRequestDoc.kind)||""}) | عدد السيارات: ${targets.length} | الطلب #${openRequestId}`);
 
 

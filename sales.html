@@ -14,6 +14,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -562,6 +563,17 @@
         تفاصيل الطلب من نظام المبيعات (ERP)
       </h3>
       <div id="erpMeta" class="muted" style="margin-bottom:6px;"></div>
+      <!-- Archive actions -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0 2px;">
+        <button id="archiveOrderBtn" class="btn-outline" type="button" style="font-size:12px;">
+          <i class="fa-solid fa-box-archive"></i> أرشفة الطلب
+        </button>
+        <button id="unarchiveOrderBtn" class="btn-outline" type="button" style="font-size:12px;display:none;">
+          <i class="fa-solid fa-rotate-left"></i> إلغاء الأرشفة
+        </button>
+        <span id="archiveHint" class="muted" style="font-size:12px;"></span>
+      </div>
+
 
       <!-- اختيار رقم الهيكل لو الطلب فيه أكثر من VIN -->
       <div id="vinPickerBox" class="vin-box">
@@ -667,6 +679,7 @@
       setDoc,
       updateDoc,
       deleteField,
+      deleteDoc,
       serverTimestamp,
       collection,
       query,
@@ -688,6 +701,7 @@
     const ERP_COLLECTION      = "erp_orders";
     const ERP_VINS_COLLECTION = "erp_vins";
     const TRACK_COLLECTION    = "orders";
+    const ARCHIVE_COLLECTION  = "sales_archives";
 
     // ✅ API base (separate project) for WhatsApp/Mersal serverless routes
     const MZJ_TRACKING_API_BASE = window.location.origin; // نفس الدومين (mzj-workflow)
@@ -720,6 +734,9 @@
     let ordersListCache = [];
     let ordersReadSet = new Set();
 
+    let archiveSet = new Set();
+    let archiveLoaded = false;
+
 
     const email      = document.getElementById("email");
     const password   = document.getElementById("password");
@@ -736,6 +753,10 @@
     const erpMetaEl    = document.getElementById("erpMeta");
     const erpBody      = document.getElementById("erpBody");
     const erpTotals    = document.getElementById("erpTotals");
+    const archiveOrderBtn = document.getElementById("archiveOrderBtn");
+    const unarchiveOrderBtn = document.getElementById("unarchiveOrderBtn");
+    const archiveHint = document.getElementById("archiveHint");
+
 
     const vinPickerBox = document.getElementById("vinPickerBox");
     const vinPicker    = document.getElementById("vinPicker");
@@ -2120,6 +2141,7 @@ function clearErpTable() {
           (erpRecords.length === 1 ? (getFieldFlex("VIN", firstRec) || "") : "");
 
         fillErpTable(erpRecords, preferredVin);
+        await refreshArchiveUI();
 
         stagesCard.style.display = "";
         ordersListCard.style.display = ordersListCard.style.display;
@@ -2147,6 +2169,7 @@ function clearErpTable() {
       clearErpTable();
       erpCard.style.display = "none";
       buildStagesUI({ });
+      refreshArchiveUI();
     };
 
     vinPicker.addEventListener("change", () => {
@@ -2171,10 +2194,116 @@ function clearErpTable() {
         localStorage.setItem("mzj_read_orders", JSON.stringify(Array.from(ordersReadSet)));
       }catch(e){}
     }
+
+    // ---- أرشفة الطلبات (لتخفيف قائمة "كل الطلبات") ----
+    async function loadArchiveSet(force=false){
+      try{
+        if (archiveLoaded && !force) return archiveSet;
+        archiveSet = new Set();
+        // ✅ قراءة واحدة فقط (محدودة) لكل الأرشيف
+        const snap = await getDocs(query(collection(db, ARCHIVE_COLLECTION), limit(1000)));
+        snap.forEach(ds => {
+          const id = ds.id;
+          if (id) archiveSet.add(String(id));
+        });
+        archiveLoaded = true;
+        return archiveSet;
+      }catch(e){
+        console.warn("archive load failed", e);
+        archiveLoaded = true;
+        return archiveSet;
+      }
+    }
+
+    async function refreshArchiveUI(){
+      if (!archiveOrderBtn || !unarchiveOrderBtn || !archiveHint) return;
+      archiveHint.textContent = "";
+      if (!currentOrderId){
+        archiveOrderBtn.style.display = "none";
+        unarchiveOrderBtn.style.display = "none";
+        return;
+      }
+      archiveOrderBtn.style.display = "inline-flex";
+      unarchiveOrderBtn.style.display = "none";
+
+      try{
+        // نستخدم الكاش لو متاح
+        if (!archiveLoaded) await loadArchiveSet();
+        const isArchived = archiveSet.has(String(currentOrderId));
+        if (isArchived){
+          archiveOrderBtn.style.display = "none";
+          unarchiveOrderBtn.style.display = "inline-flex";
+          archiveHint.textContent = "هذا الطلب مؤرشف ولن يظهر في (كل الطلبات).";
+        } else {
+          archiveOrderBtn.style.display = "inline-flex";
+          unarchiveOrderBtn.style.display = "none";
+          archiveHint.textContent = "";
+        }
+      }catch(e){}
+    }
+
+    async function archiveCurrentOrder(){
+      if (!currentOrderId) return;
+      const ord = String(currentOrderId);
+      const ok = confirm("تأكيد: أرشفة الطلب " + ord + " ؟\nسيختفي من تبويب (كل الطلبات) فقط.");
+      if (!ok) return;
+
+      try{
+        const ref = doc(db, ARCHIVE_COLLECTION, ord);
+        await setDoc(ref, {
+          orderNo: ord,
+          archivedAt: serverTimestamp(),
+          archivedBy: (auth.currentUser?.email || "")
+        }, { merge:true });
+
+        archiveSet.add(ord);
+        archiveLoaded = true;
+        await refreshArchiveUI();
+
+        // لو المستخدم فاتح تبويب كل الطلبات، حدث القائمة فوراً
+        if (ordersListCard && ordersListCard.style.display !== "none"){
+          renderOrdersList(ordersSearchInput ? ordersSearchInput.value : "");
+        }
+        alert("تمت أرشفة الطلب.");
+      }catch(e){
+        console.error(e);
+        alert("تعذر أرشفة الطلب. حاول مرة أخرى.");
+      }
+    }
+
+    async function unarchiveCurrentOrder(){
+      if (!currentOrderId) return;
+      const ord = String(currentOrderId);
+      const ok = confirm("تأكيد: إلغاء أرشفة الطلب " + ord + " ؟");
+      if (!ok) return;
+
+      try{
+        const ref = doc(db, ARCHIVE_COLLECTION, ord);
+        await deleteDoc(ref);
+
+        archiveSet.delete(ord);
+        archiveLoaded = true;
+        await refreshArchiveUI();
+
+        // تحديث القائمة لو مفتوحة
+        if (ordersListCard && ordersListCard.style.display !== "none"){
+          await loadOrdersList();
+        }
+        alert("تم إلغاء الأرشفة.");
+      }catch(e){
+        console.error(e);
+        alert("تعذر إلغاء الأرشفة. حاول مرة أخرى.");
+      }
+    }
+
+    if (archiveOrderBtn) archiveOrderBtn.addEventListener("click", archiveCurrentOrder);
+    if (unarchiveOrderBtn) unarchiveOrderBtn.addEventListener("click", unarchiveCurrentOrder);
+
     function renderOrdersList(filterText=""){
       const q = String(filterText||"").trim().toLowerCase();
       const rows = Array.isArray(ordersListCache) ? ordersListCache : [];
-      const filtered = !q ? rows : rows.filter(r => {
+      const baseRows = rows.filter(r => !archiveSet.has(String(r.orderNo||"")));
+      const filtered = !q ? baseRows : baseRows.filter(r => {
         const hay = [
           r.orderNo, r.customerName, r.customerPhone, r.branch, r.vinVal, r.vinRaw
         ].filter(Boolean).join(" ").toLowerCase();
@@ -2207,6 +2336,7 @@ function clearErpTable() {
     async function loadOrdersList() {
       ordersListBody.innerHTML = "<tr><td class='muted' colspan='5'>جاري تحميل الطلبات...</td></tr>";
       try {
+        await loadArchiveSet();
         // ✅ نقرأ آخر 200 سجل من erp_orders (قد يكون في تكرار لأن كل سيارة سجل)
         const q = query(collection(db, ERP_COLLECTION), limit(200));
         const snap = await getDocs(q);
@@ -2384,6 +2514,7 @@ ordersListCache = rows;
           stagesCard.style.display = "none";
         }
         ordersListCard.style.display = "none";
+        refreshArchiveUI();
       } else {
         // لا يوجد مستخدم
         whoami.textContent = "";
@@ -2395,6 +2526,7 @@ ordersListCache = rows;
         erpCard.style.display      = "none";
         stagesCard.style.display   = "none";
         ordersListCard.style.display = "none";
+        refreshArchiveUI();
       }
     });
 

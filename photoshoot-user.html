@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -2033,9 +2034,12 @@ async function applyStep(stepNo){
   await batch.commit();
 
   // ✅ تحديث المخزون فورًا عند المرحلة 3 لطلبات النقل (Move)
+  // نمرّر للـ stock الوجهة كـ location مباشرة (قبل ما الـ onSnapshot يحدّث openRows)
   if(stepNo===3){
     try{
-      const moveRows = targets.filter(r => (r.kind||'') === 'move');
+      const moveRows = targets
+        .filter(r => (r.kind||'') === 'move')
+        .map(r => ({ ...r, location: rowDestPlace(r) || r.toLocation || '' }));
       if(moveRows.length){
         await updateStockLocationsAfterMoveFinish(moveRows);
       }
@@ -2084,7 +2088,8 @@ async function updateStockLocationsAfterMoveFinish(rows){
       const v = normSimple(vRaw);
       if(!v) return;
       // آخر مكان فعلي بعد النقل = الوجهة (toLocation) أو location
-      const newLoc = r.location || rowDestPlace(r) || r.toLocation || "";
+      // ✅ الوجهة هي المصدر النهائي (نضمن عدم استخدام location القديم قبل تحديث الـ snapshot)
+      const newLoc = rowDestPlace(r) || r.toLocation || r.location || "";
       if(newLoc) byVin.set(v, newLoc);
     });
 
@@ -2138,10 +2143,8 @@ async function finishRequest(){
     status: "مكتملة",
     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
   }, { merge:true });
-
-  // ✅ ثبّت المكان النهائي للسيارة داخل stock (mzj_admin_state/v1)
-  // سواء كان الطلب نقل أو تصوير — المكان النهائي = الوجهة المختارة في الطلب
-  try{ await updateStockLocationsAfterMoveFinish(openRows); }catch(e){ console.error(e); }
+  // ✅ ملاحظة: تثبيت المخزون يتم في الخطوة رقم 3 فقط.
+  // الخطوة رقم 4 (تم الانتهاء) تنهي الطلب ولا تغيّر المخزون.
 
   // ✅ ربط طلب التصوير بـ (نواقص التصوير) في media.html
   // عند الإنهاء: نحاول نعلّم التركيبات داخل media_specs كـ (تم تصويره)

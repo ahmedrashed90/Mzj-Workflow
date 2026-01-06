@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 
 <html dir="rtl" lang="ar">
@@ -2030,6 +2031,131 @@ const stockCard = document.getElementById('stockCard');
   }
 
   btnCloseModal.addEventListener('click', closeModal);
+
+  /* ===== Modal Search (live filter) ===== */
+  function __normDigits(str){
+    return String(str||'')
+      .replace(/[٠-٩]/g, d => String('0123456789'.charAt('٠١٢٣٤٥٦٧٨٩'.indexOf(d))))
+      .replace(/[۰-۹]/g, d => String('0123456789'.charAt('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))));
+  }
+  function __normText(str){
+    return __normDigits(str)
+      .toLowerCase()
+      .replace(/\s+/g,' ')
+      .trim();
+  }
+  function __includes(hay, needle){
+    if(!needle) return true;
+    return __normText(hay).includes(needle);
+  }
+
+
+  function applyModalSearch(){
+    const qRaw = (modalSearch && modalSearch.value) ? modalSearch.value : '';
+    const q = __normText(qRaw);
+
+    if(currentMode==='rows' || currentMode==='stock'){
+      if(!q){
+        filteredRows = currentRows.slice();
+      }else{
+        filteredRows = currentRows.filter(r=>{
+          const notesAll = [r?.notes, r?.adminNotes, r?.financeNotes, (r?.admin && r.admin.notes)].filter(v=> (v||'').toString().trim()!=='').join(' | ');
+          const hay = [
+            r?.car, r?.variant, r?.dealer,
+            r?.extColor, r?.intColor, r?.modelYear,
+            r?.plate, r?.location, r?.batchName,
+            r?.vin, notesAll
+          ].filter(Boolean).join(' | ');
+          return __includes(hay, q);
+        });
+      }
+      renderRowsTable();
+      return;
+    }
+
+    if(currentMode==='shortagesBranches'){
+      const base = (shortDataByKey.get(shortActiveKey)||[]);
+      if(!q){
+        shortFiltered = base.slice();
+      }else{
+        shortFiltered = base.filter(s=>{
+          const hay = [s?.car, s?.variant, s?.intColor, s?.extColor, s?.modelYear, s?.countBranch, s?.countGlobal].filter(v=>v!==undefined && v!==null).join(' | ');
+          return __includes(hay, q);
+        });
+      }
+      renderShortTable();
+      return;
+    }
+
+    if(currentMode==='shoot'){
+      if(!q){
+        filteredShoot = currentShoot.slice();
+      }else{
+        filteredShoot = currentShoot.filter(s=>{
+          const hay = [
+            s?.id, s?.requestId, s?.vin, s?.chassis,
+            s?.car, s?.variant, s?.branch, s?.location,
+            s?.status, s?.notes, s?.createdBy, s?.assignedTo,
+            s?.createdAt, s?.requestedAt
+          ].filter(Boolean).join(' | ');
+          return __includes(hay, q);
+        });
+      }
+      renderShootTable();
+      return;
+    }
+
+    if(currentMode==='transfers'){
+      const base = Array.isArray(currentTransfersBase) ? currentTransfersBase.slice() : [];
+      let picked = base;
+      if(q){
+        picked = base.filter(t=>{
+          const hay = [
+            t?.vin, t?.chassis,
+            t?.from, t?.fromLocation, t?.source,
+            t?.to, t?.toLocation, t?.target,
+            t?.note, t?.message,
+            t?.requestedAt, t?.createdAt, t?.date,
+            t?.adminNote, t?.financeNote
+          ].filter(Boolean).join(' | ');
+          return __includes(hay, q);
+        });
+      }
+      filteredTransfers = sortTransfers(picked);
+      renderTransfersTable();
+      return;
+    }
+
+    if(currentMode==='sales'){
+      if(!q){
+        filteredSales = currentSales.slice();
+      }else{
+        filteredSales = currentSales.filter(o=>{
+          const hay = [
+            o?.orderName, o?.name, o?.so,
+            o?.customer, o?.customerName,
+            o?.phone, o?.mobile,
+            o?.vin, o?.chassis,
+            o?.branch, o?.sourceBranch,
+            o?.status, o?.stage,
+            o?.total, o?.grandTotal,
+            o?.createdAt, o?.date
+          ].filter(Boolean).join(' | ');
+          return __includes(hay, q);
+        });
+      }
+      renderSalesTable();
+      return;
+    }
+  }
+
+  // تشغيل البحث أثناء الكتابة + Enter
+  if(modalSearch && !modalSearch.dataset.bound){
+    modalSearch.dataset.bound = '1';
+    modalSearch.addEventListener('input', applyModalSearch);
+    modalSearch.addEventListener('keyup', (e)=>{ if(e.key==='Enter') applyModalSearch(); });
+  }
+
 
   // إغلاق المودال بزر ESC
   document.addEventListener('keydown', (e)=>{

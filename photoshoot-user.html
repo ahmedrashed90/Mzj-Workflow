@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -1478,16 +1477,9 @@ function setProfileBadges(){
 }
 
 function showPage(page){
-  pageOrders.style.display   = (page==='orders') ? 'block' : 'none';
-  pageCars.style.display     = (page==='cars') ? 'block' : 'none';
+  pageOrders.style.display = (page==='orders') ? 'block' : 'none';
+  pageCars.style.display = (page==='cars') ? 'block' : 'none';
   pageActivity.style.display = (page==='activity') ? 'block' : 'none';
-
-  // ✅ تقليل الـ Reads: Activity Log نفعّله فقط لما صفحة Activity تكون مفتوحة.
-  if(page==='activity'){
-    watchActivity();
-  }else{
-    if(unsubActivity){unsubActivity();unsubActivity=null;}
-  }
 }
 
 document.querySelectorAll('.dashboard-tab').forEach(tab=>{
@@ -1524,25 +1516,12 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape' && modalBackdrop.s
    Stock (Auto-fill source)
 ======================= */
 function watchAdminState(){
-  // ✅ تقليل الـ Reads: ما نعملش onSnapshot على mzj_admin_state/v1 لأنه بيتحدث كتير.
-  // هنحمّل الـ stock عند الحاجة فقط (VIN Lookup) وبـ caching بسيط.
   if(unsubState){unsubState();unsubState=null;}
-}
-
-let stockLoadedAt = 0;
-const STOCK_CACHE_MS = 5 * 60 * 1000; // 5 دقائق
-async function ensureStockLoaded(force=false){
-  try{
-    const now = Date.now();
-    if(!force && stock.length && (now - stockLoadedAt) < STOCK_CACHE_MS) return;
-    const snap = await db.collection("mzj_admin_state").doc("v1").get();
+  unsubState = db.collection("mzj_admin_state").doc("v1").onSnapshot(snap=>{
     const data = snap.exists ? (snap.data()||{}) : {};
     stock = Array.isArray(data.stock) ? data.stock : [];
-    stockLoadedAt = now;
     stockCount.textContent = "stock: " + stock.length;
-  }catch(e){
-    console.error(e);
-  }
+  });
 }
 
 function updatePlaceHeader(){
@@ -2269,31 +2248,29 @@ async function openRequest(requestId){
 
   const reqRef = db.collection("requests").doc(String(requestId));
 
-  // ✅ تقليل الـ Reads: بدل onSnapshot (Realtime) نستخدم get() مرة واحدة عند فتح المودال.
   if(unsubOpenReq){unsubOpenReq();unsubOpenReq=null;}
   if(unsubOpenRows){unsubOpenRows();unsubOpenRows=null;}
 
-  try{
-    const snap = await reqRef.get();
+  unsubOpenReq = reqRef.onSnapshot(snap=>{
     if(!snap.exists) return;
     openRequestDoc = snap.data() || {};
     modalTitle.textContent = `تفاصيل الطلب #${requestId}`;
-    modalMeta.textContent  = `${kindLabel(openRequestDoc.kind)} — ${statusLabel(openRequestDoc)}`;
-  }catch(e){ console.error(e); return; }
+    modalMeta.textContent = `${kindLabel(openRequestDoc.kind)} — ${statusLabel(openRequestDoc)}`;
+    renderProgress();
+  });
 
-  try{
-    const snapRows = await reqRef.collection("rows").get();
-    openRows = [];
-    snapRows.forEach(doc=>{
+  unsubOpenRows = reqRef.collection("rows").onSnapshot(snap=>{
+    openRows=[];
+    snap.forEach(doc=>{
       const d = doc.data() || {};
       d.__id = doc.id;
       openRows.push(d);
     });
     openRows.sort((a,b)=>String(a.vin||a.__id).localeCompare(String(b.vin||b.__id)));
     renderRowsTable();
-  }catch(e){ console.error(e); }
+    renderProgress();
+  });
 
-  renderProgress();
   openModal();
 }
 
@@ -2369,58 +2346,23 @@ function renderDone(all){
   });
 }
 
-let requestsCache = [];
-
-function applyListRenders(){
-  renderManage(requestsCache);
-  renderDone(requestsCache);
-}
-
 function watchRequests(){
   if(unsubRequests){unsubRequests();unsubRequests=null;}
   if(unsubDone){unsubDone();unsubDone=null;}
 
-  // ✅ تقليل الـ Reads: بدل متابعة كل Collection بدون حدود
-  // نجيب أحدث 300 طلب فقط (الأحدث هي اللي تهم في الشغل اليومي).
-  const q = db.collection("requests")
-    .orderBy("updatedAt","desc")
-    .limit(300);
-
-  unsubRequests = q.onSnapshot(snap=>{
+  unsubRequests = db.collection("requests").onSnapshot(snap=>{
     const all=[];
     snap.forEach(doc=>{
       const d=doc.data()||{};
       d.__id=doc.id;
       all.push(d);
     });
-    requestsCache = all;
-    applyListRenders();
+    renderManage(all);
+    renderDone(all);
   });
 }
-
-filterKind.addEventListener('change', applyListRenders);
-searchBox.addEventListener('input', ()=>{
-  // debounce بسيط لتقليل إعادة الرسم
-  clearTimeout(window.__reqSearchT);
-  window.__reqSearchT = setTimeout(applyListRenders, 120);
-});
-
-
-// ✅ تقليل الـ Reads: لو التبويب مش ظاهر، نقفل الـ listeners ونرجع نشغلها لما يرجع.
-document.addEventListener("visibilitychange", ()=>{
-  try{
-    if(document.hidden){
-      if(unsubRequests){unsubRequests();unsubRequests=null;}
-      if(unsubActivity){unsubActivity();unsubActivity=null;}
-    }else{
-      if(currentUser && !unsubRequests) watchRequests();
-      // Activity listener هيتفعل من showPage لو المستخدم فاتح صفحة Activity
-      if(pageActivity && pageActivity.style.display==="block"){
-        watchActivity();
-      }
-    }
-  }catch(e){ console.error(e); }
-});
+filterKind.addEventListener('change', ()=>{ /* list re-rendered by snapshot; use cached? */ });
+searchBox.addEventListener('input', ()=>{ /* list re-rendered by snapshot; use cached? */ });
 
 /* =======================
    Activity Log (Admin only)
@@ -2452,11 +2394,10 @@ function watchActivity(){
 /* =======================
    Cars lookup (stock)
 ======================= */
-btnLookup.addEventListener('click', async ()=>{
+btnLookup.addEventListener('click', ()=>{
   const v = normalizeVin(vinLookup.value);
   vinLookup.value = v;
   if(!v) return;
-  await ensureStockLoaded(false);
   const rec = stock.find(r=>normalizeVin(r.vin)===v);
   lookupRes.style.display='block';
   if(rec){
@@ -2536,7 +2477,7 @@ document.body.classList.add(isAdmin() ? 'is-admin' : 'not-admin');
 
   watchAdminState();
   watchRequests();
-  // Activity سيتم تشغيله فقط عند فتح تبويب Activity لتقليل الـ Reads.
+  watchActivity();
 });
 </script>
 

@@ -16,6 +16,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -2256,6 +2257,47 @@ function clearErpTable() {
           archivedAt: serverTimestamp(),
           archivedBy: (auth.currentUser?.email || "")
         }, { merge:true });
+
+        // ✅ Mark public tracking status as archived (so customer sees: الطلب منتهي)
+        // We don't add any extra reads; we rely on currentOrderRecords already loaded from ERP.
+        try{
+          const batch2 = writeBatch(db);
+          const recs = Array.isArray(currentOrderRecords) ? currentOrderRecords : [];
+          if (recs.length){
+            recs.forEach((r, idx) => {
+              const itemNoRaw = getFieldFlex("ItemNo", r);
+              const itemNo = (() => {
+                const n = parseInt(itemNoRaw, 10);
+                return (!isNaN(n) && n > 0) ? n : (idx + 1);
+              })();
+
+              const docId2 = ord + "_" + itemNo;
+              const publicRef2 = doc(db, TRACK_COLLECTION, docId2, "public", "status");
+              batch2.set(publicRef2, {
+                archived: true,
+                archivedAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+              }, { merge: true });
+
+              // mark main track doc too (harmless)
+              const trackRef2 = doc(db, TRACK_COLLECTION, docId2);
+              batch2.set(trackRef2, {
+                archived: true,
+                archivedAt: serverTimestamp()
+              }, { merge: true });
+            });
+            await batch2.commit();
+          } else if (currentItemNo){
+            const docId2 = ord + "_" + currentItemNo;
+            const publicRef2 = doc(db, TRACK_COLLECTION, docId2, "public", "status");
+            await setDoc(publicRef2, { archived:true, archivedAt: serverTimestamp(), updatedAt: serverTimestamp() }, { merge:true });
+            const trackRef2 = doc(db, TRACK_COLLECTION, docId2);
+            await setDoc(trackRef2, { archived:true, archivedAt: serverTimestamp() }, { merge:true });
+          }
+        }catch(e2){
+          console.warn("Failed to mark tracking as archived:", e2);
+        }
+
 
         archiveSet.add(ord);
         archiveLoaded = true;

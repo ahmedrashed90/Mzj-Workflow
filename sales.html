@@ -15,6 +15,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -563,18 +564,6 @@
         تفاصيل الطلب من نظام المبيعات (ERP)
       </h3>
       <div id="erpMeta" class="muted" style="margin-bottom:6px;"></div>
-      <!-- Archive actions -->
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0 2px;">
-        <button id="archiveOrderBtn" class="btn-outline" type="button" style="font-size:12px;">
-          <i class="fa-solid fa-box-archive"></i> أرشفة الطلب
-        </button>
-        <button id="unarchiveOrderBtn" class="btn-outline" type="button" style="font-size:12px;display:none;">
-          <i class="fa-solid fa-rotate-left"></i> إلغاء الأرشفة
-        </button>
-        <span id="archiveHint" class="muted" style="font-size:12px;"></span>
-      </div>
-
-
       <!-- اختيار رقم الهيكل لو الطلب فيه أكثر من VIN -->
       <div id="vinPickerBox" class="vin-box">
         <div class="vin-box-header">
@@ -659,6 +648,18 @@
         اضغط على <strong>تم الانتهاء</strong> أمام أي مرحلة ليتم ختمها وتحديث صفحة تتبع العميل تلقائياً.  
         بعد ختم جميع المراحل لهذا الهيكل لا يمكن تعديلها مرة أخرى.
       </div>
+      <!-- Archive actions -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-start;width:100%;margin:10px 0 0;">
+        <button id="archiveOrderBtn" class="btn-outline" type="button" style="font-size:12px;">
+          <i class="fa-solid fa-box-archive"></i> أرشفة الطلب
+        </button>
+        <button id="unarchiveOrderBtn" class="btn-outline" type="button" style="font-size:12px;display:none;">
+          <i class="fa-solid fa-rotate-left"></i> إلغاء الأرشفة
+        </button>
+        <span id="archiveHint" class="muted" style="font-size:12px;"></span>
+      </div>
+
+      
       <div class="muted" id="stageMsg" style="margin-top:6px;"></div>
     </div>
   </div>

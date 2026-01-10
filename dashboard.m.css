@@ -442,3 +442,39 @@ html, body{ max-width:100%; overflow-x:hidden; background:var(--mzj-cream); }
     text-align: right;
   }
 }
+/* ================================
+   FORCE RTL + RIGHT ALIGN (Modal Data)
+   ================================ */
+@media (max-width: 768px){
+
+  /* المودال كله */
+  .mzj-modal,
+  .modal,
+  dialog,
+  .popup{
+    direction: rtl !important;
+    text-align: right !important;
+  }
+
+  /* grid table container */
+  .mzj-modal-gridtable,
+  .mzj-modal-gridtable *{
+    direction: rtl !important;
+    text-align: right !important;
+  }
+
+  /* القيم نفسها */
+  .mzj-val,
+  .mzj-cell,
+  .mzj-h{
+    text-align: right !important;
+  }
+
+  /* لو فيه inputs أو textareas */
+  .mzj-modal input,
+  .mzj-modal textarea,
+  .mzj-modal select{
+    direction: rtl !important;
+    text-align: right !important;
+  }
+}

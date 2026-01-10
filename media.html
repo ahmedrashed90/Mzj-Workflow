@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl" data-theme="light">
 <head>
@@ -497,6 +498,7 @@ th.col-year, td.col-year {
               <thead>
                 <tr>
                   <th>م</th>
+                  <th>رقم الهيكل</th>
                   <th class='col-car'>السيارة</th>
                   <th class='col-variant'>البيان</th>
                   <th class='col-ext'>اللون الخارجي</th>
@@ -741,6 +743,7 @@ let currentUserEmail = '';
           key: keyHuman,
           keyNorm,
           docId,
+          vin: clean(r.vin || r.VIN || r['رقم_الهيكل'] || r['رقم الهيكل'] || r.chassis || r.Chassis || ''),
           count: 1
         });
       }else{
@@ -929,6 +932,7 @@ function getMedia(docId){
 
       tr.innerHTML = `
         <td>${idx+1}</td>
+        <td>${s.vin ? s.vin : '—'}</td>
         <td class='col-car'>${s.car||''}</td>
         <td class='col-variant'>${s.variant||''}</td>
         <td class='col-ext'>${s.extColor||''}</td>

@@ -1,135 +1,89 @@
-/* dashboard.m.css — Mobile UI for dashboard.m.html (MZJ Workspace) */
-
-:root{
-  --mzj-brown:#3e2420;
-  --mzj-beige:#bc8f74;
-  --mzj-cream:#fff8ef;
-  --mzj-border:rgba(62,36,32,.14);
-  --mzj-shadow:0 10px 28px rgba(0,0,0,.08);
-}
-
-html, body{
-  max-width:100%;
-  overflow-x:hidden;
-  background:var(--mzj-cream);
-}
-
-/* ================================
-   الكروت بدون هوامش
-   ================================ */
-.cards,
-.cards-grid{
-  margin:0 !important;
-  padding:0 !important;
-  gap:0 !important;
-}
-
-.card,
-.card-item,
-.short-card{
-  margin:0 !important;
-  border-radius:12px;
-}
-
-/* ================================
-   Sidebar fix
-   ================================ */
-@media (max-width:900px){
-  .mzj-sidebar{
-    position:fixed !important;
-    top:0;
-    right:0;
-    height:100vh;
-    width:280px;
-    transform:translateX(110%);
-    transition:.25s ease;
-    background:#fff;
-    z-index:80;
-    border-left:1px solid var(--mzj-border);
+/* media.m.js — Mobile helpers for media.m.html
+   ✅ Sidebar drawer toggle (robust)
+   ✅ Table -> mobile vertical grid (3 cells per row) with labels from thead
+   ⚠️ لا يغيّر منطق الداتا
+*/
+(function(){
+  function onReady(fn){
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+    else fn();
   }
-  .mzj-sidebar.open{ transform:translateX(0); }
+  function isMobile(){ return window.matchMedia && window.matchMedia('(max-width: 900px)').matches; }
+  function clean(s){ return (s||'').replace(/\s+/g,' ').trim(); }
 
-  #mzjSidebarOverlay{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.35);
-    opacity:0;
-    pointer-events:none;
-    transition:.2s;
-    z-index:70;
+  function setupSidebar(){
+    const sidebar =
+      document.getElementById('mzjSidebar') ||
+      document.querySelector('.mzj-sidebar') ||
+      document.querySelector('aside.mzj-sidebar');
+
+    // ✅ IMPORTANT: لا نستخدم selector عام زي button.icon-btn عشان ما نعطل أزرار الفلاتر
+    const btn =
+      document.getElementById('mzjSidebarBtn') ||
+      document.querySelector('[data-mzj-sidebar-btn]') ||
+      document.querySelector('.mzjSidebarBtn') ||
+      document.querySelector('button[aria-controls="mzjSidebar"]');
+
+    const backdrop = document.getElementById('mzjBackdrop');
+
+    if(!sidebar || !btn || !backdrop) return;
+
+    const openClass = 'open';
+    const showClass = 'show';
+
+    function open(){
+      sidebar.classList.add(openClass);
+      backdrop.classList.add(showClass);
+    }
+    function close(){
+      sidebar.classList.remove(openClass);
+      backdrop.classList.remove(showClass);
+    }
+    function toggle(){
+      sidebar.classList.contains(openClass) ? close() : open();
+    }
+
+    // capture to beat stopPropagation from other scripts
+    btn.addEventListener('click', function(e){ e.preventDefault(); toggle(); }, true);
+    backdrop.addEventListener('click', close);
+    document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') close(); });
+
+    sidebar.addEventListener('click', (e)=>{
+      const a = e.target.closest('a');
+      if(a) close();
+    });
   }
-  #mzjSidebarOverlay.show{
-    opacity:1;
-    pointer-events:auto;
+
+
+  function labelTable(table){
+    if(!table) return;
+    const thead = table.querySelector('thead');
+    const tbody = table.querySelector('tbody');
+    if(!thead || !tbody) return;
+
+    const headers = Array.from(thead.querySelectorAll('th')).map(th => clean(th.textContent));
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+    rows.forEach(tr=>{
+      const tds = Array.from(tr.querySelectorAll('td'));
+      tds.forEach((td,i)=> td.setAttribute('data-label', headers[i] || `عمود ${i+1}`));
+    });
+
+    table.classList.add('mzj-mobile-table');
   }
-}
 
-/* ================================
-   مودال = جدول عادي (إلغاء الكروت)
-   ================================ */
-#backdrop table{
-  display:table !important;
-  width:100% !important;
-  border-collapse:collapse !important;
-}
+  function applyTables(){
+    if(!isMobile()) return;
+    // Only main data table(s)
+    const tables = document.querySelectorAll('#specTable, .table-wrap table, main table');
+    tables.forEach(labelTable);
+  }
 
-#backdrop table thead{
-  display:table-header-group !important;
-}
+  onReady(function(){
+    setupSidebar();
+    applyTables();
 
-#backdrop table tbody,
-#backdrop table tr,
-#backdrop table td{
-  display:table-row-group !important;
-}
-
-#backdrop table tr{
-  background:#fff;
-}
-
-#backdrop table td{
-  padding:8px 10px;
-  border-bottom:1px solid var(--mzj-border);
-  font-size:14px;
-}
-
-#backdrop table td::before{
-  content:none !important;
-}
-/* ================================
-   FIX MODAL TABLE – NO CARDS
-   ================================ */
-#backdrop table,
-#backdrop table tbody,
-#backdrop table tr,
-#backdrop table td {
-  display: table !important;
-  width: 100% !important;
-}
-
-#backdrop table thead{
-  display: table-header-group !important;
-}
-
-#backdrop table tr{
-  border: none !important;
-}
-
-#backdrop table td{
-  border-bottom: 1px solid #e5e5e5 !important;
-  padding: 8px 10px !important;
-}
-
-#backdrop table td::before{
-  content: none !important;
-}
-/* ================================
-   SIDEBAR MOBILE FIX
-   ================================ */
-.mzj-sidebar{
-  z-index: 999 !important;
-}
-
-#mzjSidebarOverlay{
-  z-index: 998 !important;
-}
+    const obs = new MutationObserver(()=> applyTables());
+    obs.observe(document.body, {childList:true, subtree:true});
+  });
+})();

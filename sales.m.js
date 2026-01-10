@@ -1,48 +1,46 @@
-/* sales.m.js - Mobile behavior only (no business logic changes) */
+/* sales.m.js - Mobile behavior only (no business logic changes)
+   - Sidebar off-canvas toggle (matches باقي صفحات المشروع)
+   - Uses existing: #mzjSidebarBtn, #mzjSidebar, #mzjBackdrop
+*/
 (function(){
-  function qs(sel, root=document){ return root.querySelector(sel); }
-  function qsa(sel, root=document){ return Array.from(root.querySelectorAll(sel)); }
-
-  function ensureOverlay(){
-    let ov = qs('.mzj-overlay');
-    if(!ov){
-      ov = document.createElement('div');
-      ov.className = 'mzj-overlay';
-      document.body.appendChild(ov);
-    }
-    return ov;
+  function ready(fn){
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+    else fn();
   }
 
   function setupSidebar(){
     const btn = document.getElementById('mzjSidebarBtn');
-    const sidebar = qs('.mzj-sidebar');
-    if(!btn || !sidebar) return;
+    const sidebar = document.getElementById('mzjSidebar') || document.querySelector('.mzj-sidebar');
+    const backdrop = document.getElementById('mzjBackdrop');
 
-    const overlay = ensureOverlay();
+    if(!btn || !sidebar || !backdrop) return;
 
-    function open(){
-      document.body.classList.add('mzj-sidebar-open');
+    const open = () => {
+      sidebar.classList.add('open');
+      backdrop.classList.add('show');
+      document.body.classList.add('mzj-sidebar-open'); // keep for any legacy styles
       btn.setAttribute('aria-expanded','true');
-    }
-    function close(){
+    };
+
+    const close = () => {
+      sidebar.classList.remove('open');
+      backdrop.classList.remove('show');
       document.body.classList.remove('mzj-sidebar-open');
       btn.setAttribute('aria-expanded','false');
-    }
-    function toggle(){
-      document.body.classList.contains('mzj-sidebar-open') ? close() : open();
-    }
+    };
 
-    btn.addEventListener('click', function(e){
+    btn.addEventListener('click', (e)=>{
       e.preventDefault();
       e.stopPropagation();
-      toggle();
+      sidebar.classList.contains('open') ? close() : open();
     });
 
-    overlay.addEventListener('click', close);
+    backdrop.addEventListener('click', close);
 
     // close when clicking a sidebar link (mobile)
-    qsa('a', sidebar).forEach(a=>{
-      a.addEventListener('click', ()=> close(), {passive:true});
+    sidebar.addEventListener('click', (e)=>{
+      const a = e.target.closest('a');
+      if(a) close();
     });
 
     // close on ESC
@@ -51,10 +49,5 @@
     });
   }
 
-  // Run after DOM ready
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', setupSidebar);
-  } else {
-    setupSidebar();
-  }
+  ready(setupSidebar);
 })();

@@ -1,0 +1,83 @@
+/* sales.m.css - Mobile tweaks only (keeps original PC design intact) */
+
+/* --- Off-canvas sidebar for mobile --- */
+@media (max-width: 900px) {
+  .mzj-layout{
+    grid-template-columns: 1fr !important;
+  }
+
+  /* make content full-width */
+  .mzj-content{
+    padding: 12px !important;
+  }
+
+  /* sidebar as drawer */
+  .mzj-sidebar{
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    right: -86vw !important;
+    width: 86vw !important;
+    max-width: 340px !important;
+    z-index: 1002 !important;
+    transition: right .22s ease !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    border-left: 1px solid rgba(0,0,0,.08) !important;
+  }
+
+  body.mzj-sidebar-open .mzj-sidebar{
+    right: 0 !important;
+  }
+
+  /* overlay */
+  .mzj-overlay{
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1001;
+    background: rgba(0,0,0,.35);
+  }
+  body.mzj-sidebar-open .mzj-overlay{ display:block; }
+
+  /* tighter header */
+  .mzj-topbar{
+    padding: 10px 12px !important;
+  }
+  .mzj-topbar .brand-title{
+    font-size: 16px !important;
+    line-height: 1.2 !important;
+  }
+}
+
+/* --- Tables: avoid broken Arabic letters, allow smooth horizontal scroll --- */
+@media (max-width: 900px) {
+  .table-wrap,
+  .tableWrap,
+  .tbl-wrap,
+  .tblWrap,
+  .mzj-table-wrap{
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    border-radius: 14px !important;
+  }
+
+  table{
+    width: max-content !important;
+    min-width: 680px !important;
+    border-collapse: collapse !important;
+  }
+
+  th, td{
+    white-space: nowrap !important;       /* prevents letters stacking */
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+  }
+
+  /* reduce side gaps inside legacy cards */
+  .legacy-sales .card,
+  .legacy-sales .panel,
+  .legacy-sales .box{
+    margin: 0 !important;
+  }
+}

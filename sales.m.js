@@ -1,6 +1,5 @@
-/* sales.m.js - Mobile behavior only (no business logic changes)
-   - Sidebar off-canvas toggle (matches باقي صفحات المشروع)
-   - Uses existing: #mzjSidebarBtn, #mzjSidebar, #mzjBackdrop
+/* sales.m.js — Mobile behavior only (no business logic changes)
+   - Sidebar drawer toggle (matches other pages)
 */
 (function(){
   function ready(fn){
@@ -10,44 +9,44 @@
 
   function setupSidebar(){
     const btn = document.getElementById('mzjSidebarBtn');
-    const sidebar = document.getElementById('mzjSidebar') || document.querySelector('.mzj-sidebar');
-    const backdrop = document.getElementById('mzjBackdrop');
+    const sidebar = document.getElementById('mzjSidebar');
+    if(!btn || !sidebar) return;
 
-    if(!btn || !sidebar || !backdrop) return;
+    let overlay = document.getElementById('mzjSidebarOverlay');
+    if(!overlay){
+      overlay = document.createElement('div');
+      overlay.id = 'mzjSidebarOverlay';
+      document.body.appendChild(overlay);
+    }
 
     const open = () => {
       sidebar.classList.add('open');
-      backdrop.classList.add('show');
-      document.body.classList.add('mzj-sidebar-open'); // keep for any legacy styles
-      btn.setAttribute('aria-expanded','true');
+      overlay.classList.add('show');
+      document.body.classList.add('mzj-lock');
     };
 
     const close = () => {
       sidebar.classList.remove('open');
-      backdrop.classList.remove('show');
-      document.body.classList.remove('mzj-sidebar-open');
-      btn.setAttribute('aria-expanded','false');
+      overlay.classList.remove('show');
+      document.body.classList.remove('mzj-lock');
     };
 
     btn.addEventListener('click', (e)=>{
       e.preventDefault();
-      e.stopPropagation();
       sidebar.classList.contains('open') ? close() : open();
     });
 
-    backdrop.addEventListener('click', close);
+    overlay.addEventListener('click', close);
 
-    // close when clicking a sidebar link (mobile)
+    document.addEventListener('keydown', (e)=>{
+      if(e.key === 'Escape') close();
+    });
+
     sidebar.addEventListener('click', (e)=>{
       const a = e.target.closest('a');
       if(a) close();
     });
-
-    // close on ESC
-    document.addEventListener('keydown', (e)=>{
-      if(e.key === 'Escape') close();
-    });
   }
 
   ready(setupSidebar);
-})();
+})(); 

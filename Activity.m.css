@@ -1,0 +1,59 @@
+/* Activity.m.css */
+/* Styles specific to Activity mobile page only */
+
+.activity-cards {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.activity-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 12px;
+  border: 1px solid #eee;
+}
+
+.activity-row {
+  font-size: 14px;
+  margin-bottom: 6px;
+  line-height: 1.6;
+}
+
+.activity-row span {
+  font-weight: 600;
+  margin-left: 6px;
+}
+
+.activity-meta {
+  font-size: 12px;
+  color: #777;
+  margin-top: 6px;
+}
+
+.loading {
+  text-align: center;
+  font-size: 14px;
+  color: #777;
+  padding: 20px 0;
+}
+
+/* Topbar small adjustments for mobile */
+.mzj-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 2000;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+}
+
+.mzj-topbar .brand-title {
+  font-size: 14px;
+  font-weight: 700;
+}

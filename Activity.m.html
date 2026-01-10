@@ -1,0 +1,47 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>MZJ | سجل النشاط (موبايل)</title>
+
+  <link rel="icon" type="image/x-icon" href="assets/favicon.png">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
+
+  <!-- Desktop UI (unchanged) -->
+  <link rel="stylesheet" href="./mzj-ui.css"/>
+
+  <!-- Mobile page-specific styles -->
+  <link rel="stylesheet" href="./Activity.m.css"/>
+</head>
+
+<body class="mzj">
+
+  <!-- Mobile Topbar -->
+  <div class="mzj-topbar">
+    <button id="mzjSidebarBtn" class="icon-btn">☰</button>
+    <div class="brand-title">سجل النشاط</div>
+  </div>
+
+  <!-- Sidebar -->
+  <aside id="mzjSidebar" class="mzj-sidebar"></aside>
+  <div id="mzjBackdrop" class="mzj-backdrop"></div>
+
+  <!-- Content -->
+  <main class="mzj-content">
+    <section class="activity-cards" id="activityCards">
+      <div class="loading">جارِ التحميل…</div>
+    </section>
+  </main>
+
+  <!-- Base UI JS -->
+  <script src="./mzj-ui.js"></script>
+
+  <!-- Mobile page JS -->
+  <script type="module" src="./Activity.m.js"></script>
+
+</body>
+</html>

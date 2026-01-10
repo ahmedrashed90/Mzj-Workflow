@@ -243,3 +243,90 @@
 
   document.addEventListener("DOMContentLoaded", ()=> scan());
 })();
+
+
+
+/* ================================
+   Mobile: Render modal table as 3x4 grid-table (Excel-like)
+   المطلوب: 12 عمود -> 4 صفوف (كل صف 3)
+   ================================ */
+(function(){
+  const isMobile = () => window.matchMedia && window.matchMedia("(max-width: 768px)").matches;
+  const clean = (s)=> (s||"").replace(/\s+/g," ").trim();
+
+  function buildGridFromTable(table){
+    if(!isMobile() || !table) return;
+    const thead = table.querySelector("thead");
+    const tbody = table.querySelector("tbody");
+    if(!thead || !tbody) return;
+
+    const headers = Array.from(thead.querySelectorAll("th")).map(th=>clean(th.textContent));
+    const tr = tbody.querySelector("tr");
+    if(!tr) return;
+
+    const tds = Array.from(tr.querySelectorAll("td"));
+    if(!tds.length) return;
+
+    // remove existing gridtables for this modal
+    const modal = table.closest(".mzj-modal, .modal, dialog[open], .popup") || document;
+    modal.querySelectorAll(".mzj-modal-gridtable").forEach(el=>el.remove());
+
+    const gridTable = document.createElement("div");
+    gridTable.className = "mzj-modal-gridtable";
+
+    // We assume 12 columns; but will work with any count by chunking 3
+    const chunk = 3;
+    for(let i=0; i<tds.length; i+=chunk){
+      const row = document.createElement("div");
+      row.className = "mzj-r";
+
+      for(let j=0; j<chunk; j++){
+        const idx = i+j;
+        if(idx >= tds.length) break;
+
+        const cell = document.createElement("div");
+        cell.className = "mzj-cell";
+
+        const h = document.createElement("div");
+        h.className = "mzj-h";
+        h.textContent = headers[idx] || `عمود ${idx+1}`;
+
+        const v = document.createElement("div");
+        v.className = "mzj-val";
+        v.textContent = clean(tds[idx].textContent) || "—";
+
+        cell.appendChild(h);
+        cell.appendChild(v);
+        row.appendChild(cell);
+      }
+
+      gridTable.appendChild(row);
+    }
+
+    // mark table as source and hide via CSS
+    table.classList.add("mzj-mobile-grid-src");
+
+    // insert gridtable right after table
+    const wrap = table.closest(".table-wrap") || table.parentElement;
+    if(wrap && wrap.parentElement){
+      wrap.parentElement.insertBefore(gridTable, wrap.nextSibling);
+    }else{
+      table.insertAdjacentElement("afterend", gridTable);
+    }
+  }
+
+  function scan(){
+    if(!isMobile()) return;
+    // Only inside open/visible modals
+    const modals = document.querySelectorAll(".mzj-modal, .modal, dialog[open], .popup");
+    modals.forEach(m=>{
+      const table = m.querySelector("table");
+      if(table) buildGridFromTable(table);
+    });
+  }
+
+  const obs = new MutationObserver(()=> scan());
+  obs.observe(document.documentElement, {childList:true, subtree:true});
+
+  document.addEventListener("DOMContentLoaded", ()=> scan());
+})();

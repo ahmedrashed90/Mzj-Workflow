@@ -166,7 +166,7 @@
     });
 
     // Hide table only on mobile
-    table.style.display = "none";
+    /* table hidden disabled (keep table) */
   }
 
   function scanAllModalTables(){
@@ -193,4 +193,53 @@
 
   // Initial scan
   document.addEventListener("DOMContentLoaded", ()=> scanAllModalTables());
+})();
+
+
+
+/* ================================
+   Mobile: Modal table -> 3 columns per row (no cards)
+   ================================ */
+(function(){
+  const isMobile = () => window.matchMedia && window.matchMedia("(max-width: 768px)").matches;
+  const clean = (s)=> (s||"").replace(/\s+/g," ").trim();
+
+  function removeGeneratedCards(root){
+    root.querySelectorAll(".mzj-detail-cards").forEach(el => el.remove());
+  }
+
+  function applyLabels(table){
+    if(!isMobile() || !table) return;
+    const ths = Array.from(table.querySelectorAll("thead th")).map(th => clean(th.textContent));
+    const rows = Array.from(table.querySelectorAll("tbody tr"));
+    if(!rows.length || !ths.length) return;
+
+    rows.forEach(tr => {
+      const tds = Array.from(tr.querySelectorAll("td"));
+      tds.forEach((td,i)=>{
+        td.setAttribute("data-label", ths[i] || `عمود ${i+1}`);
+        td.classList.remove("mzj-full");
+      });
+
+      // make "الملاحظات" full width if exists
+      const notesIndex = ths.findIndex(h => /الملاحظات|ملاحظات/i.test(h));
+      if(notesIndex >= 0 && tds[notesIndex]){
+        tds[notesIndex].classList.add("mzj-full");
+      }
+    });
+  }
+
+  function scan(){
+    if(!isMobile()) return;
+    const modals = document.querySelectorAll(".mzj-modal, .modal, dialog[open], .popup");
+    modals.forEach(m => {
+      removeGeneratedCards(m);
+      m.querySelectorAll("table").forEach(applyLabels);
+    });
+  }
+
+  const obs = new MutationObserver(()=> scan());
+  obs.observe(document.documentElement, {childList:true, subtree:true});
+
+  document.addEventListener("DOMContentLoaded", ()=> scan());
 })();

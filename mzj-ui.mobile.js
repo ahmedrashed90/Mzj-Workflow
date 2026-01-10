@@ -226,15 +226,13 @@
       edit.type = 'button';
       edit.className = 'btn btn-ghost';
       edit.textContent = 'تعديل ✎';
-      edit.dataset.rowId = rowId;
-      edit.dataset.action = 'edit';
+      edit.setAttribute('data-edit', String(rowId));
 
       const del = document.createElement('button');
       del.type = 'button';
       del.className = 'btn btn-danger';
       del.textContent = 'حذف 🗑';
-      del.dataset.rowId = rowId;
-      del.dataset.action = 'del';
+      del.setAttribute('data-del', String(rowId));
 
       actions.appendChild(edit);
       actions.appendChild(del);
@@ -247,26 +245,7 @@
     // hide original table visually but keep in DOM for logic
     table.style.display = 'none';
     wrap.appendChild(cards);
-
-    // bind actions once (delegated)
-    if(!wrap.dataset.carsBound){
-      wrap.dataset.carsBound = '1';
-      wrap.addEventListener('click', (e)=>{
-        const btn = e.target && e.target.closest && e.target.closest('.mzj-cars-cards [data-action]');
-        if(!btn) return;
-        e.preventDefault(); e.stopPropagation();
-
-        const rowId = btn.getAttribute('data-rowId') || btn.dataset.rowId;
-        const action = btn.getAttribute('data-action') || btn.dataset.action;
-        if(!rowId) return;
-
-        if(action === 'edit'){
-          openCarsEditModal(table, rowId);
-        }else if(action === 'del'){
-          triggerCarsOriginal(table, rowId, 'del');
-        }
-      }, true);
-    }
+    // actions handled globally (cards -> original table buttons)
   }
 
   function triggerCarsOriginal(table, rowId, type){
@@ -448,7 +427,35 @@
     mo.observe(app, {subtree:true, childList:true, attributes:true, attributeFilter:['style','class']});
   }
 
-  onReady(()=>{
+  
+  // ===== FIX: cars cards buttons route to original table buttons (no CSS changes) =====
+  document.addEventListener('click', function(e){
+    const btn = e.target && e.target.closest && e.target.closest('.mzj-cars-cards button[data-edit], .mzj-cars-cards button[data-del]');
+    if(!btn) return;
+    // prevent the page's original delegated handler from running on the card button (it expects closest('tr'))
+    e.preventDefault();
+    e.stopPropagation();
+
+    const editId = btn.getAttribute('data-edit');
+    const delId  = btn.getAttribute('data-del');
+    const id = editId || delId;
+    if(!id) return;
+
+    const table = document.getElementById('carsTable');
+    if(!table) return;
+
+    // find the *original* button inside the hidden table row and click it
+    const selector = editId
+      ? `button[data-edit="${id}"]`
+      : `button[data-del="${id}"]`;
+
+    const originalBtn = table.querySelector(selector);
+    if(originalBtn){
+      originalBtn.click();
+    }
+  }, true);
+
+onReady(()=>{
     if(!isMobile()) return;
     setupSidebar();
     observeAppForLogin();

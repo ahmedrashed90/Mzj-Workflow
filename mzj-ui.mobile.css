@@ -11,24 +11,79 @@
   html,body{overflow-x:hidden}
   body{background:var(--cream)}
 
-  /* ====== Sidebar: يفتح/يقفل من زر أعلى اليمين (موجود بالفعل id=mzjSidebarBtn) ====== */
-  /* نعتمد على كلاس body.mzj-sidebar-open */
+  /* ====== Topbar: موبايل (سطر واحد) ====== */
+  .topbar,
+  .mzj-topbar{
+    position:sticky;
+    top:0;
+    z-index:2500;
+    height:52px;
+    padding:0 10px;
+    background:#fff;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+
+  /* نخفي الزحمة على الموبايل (لو موجودة) */
+  .topbar .actions,
+  .topbar .user-info,
+  .topbar .date,
+  .topbar .extras,
+  .mzj-topbar .brand-sub,
+  .mzj-topbar .mzj-chip,
+  .mzj-topbar .btn-ghost{
+    display:none !important;
+  }
+
+  .topbar .page-title,
+  .mzj-topbar .brand-title{
+    font-size:13px;
+    font-weight:700;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    max-width:62vw;
+  }
+
+  .mzj-mobile-menu-btn,
+  #mzjSidebarBtn{
+    width:36px;
+    height:36px;
+    border-radius:10px;
+    border:1px solid #ddd;
+    background:#fff;
+    font-size:18px;
+    display:grid;
+    place-items:center;
+  }
+
+  /* ====== Sidebar: Drawer ضيق ====== */
+  .sidebar,
   .mzj-sidebar{
     position:fixed !important;
     top:0; right:0;
     height:100vh;
-    width:min(86vw, 320px);
+    width:260px;
+    max-width:80vw;
     transform:translateX(110%);
     transition:transform .22s ease;
     z-index:3000;
     overflow:auto;
+    background:#fff;
     border-left:1px solid var(--line);
+    box-shadow:-8px 0 24px rgba(0,0,0,.15);
+    padding:12px 10px;
   }
+  body.mzj-sidebar-open .sidebar,
   body.mzj-sidebar-open .mzj-sidebar{transform:translateX(0)}
+
   .mzj-backdrop{
     position:fixed !important;
     inset:0;
-    background:rgba(0,0,0,.35);
+    background:rgba(0,0,0,.38);
     opacity:0;
     pointer-events:none;
     transition:opacity .2s ease;
@@ -40,110 +95,87 @@
   }
 
   /* ====== محتوى الصفحة: مساحات أقل ====== */
-  .mzj-content{padding:0 !important}
-  .container{padding:0 10px 22px !important; margin:12px auto !important; max-width:100% !important}
+  #app .container{padding:0 10px 18px !important; margin:10px auto !important; max-width:100% !important}
   .card{padding:12px !important; border-radius:var(--m-radius) !important}
-  .card-header{gap:8px !important}
-
-  /* ====== التابات الداخلية: نخفيها ونستبدلها Dropdown بالـ JS ====== */
-  .inner-tabs{display:none !important}
-  .mzj-mobile-tabbar{
-    display:flex;
-    gap:10px;
-    align-items:center;
-    margin:0 0 12px 0;
-  }
-  .mzj-mobile-tabbar label{
-    margin:0;
-    font-weight:900;
-    color:var(--brown);
-    font-size:13px;
-    white-space:nowrap;
-  }
-  .mzj-mobile-tabbar select{
-    height:44px;
-    border-radius:14px;
-    font-weight:800;
-    border:1px solid var(--line);
-    background:#fff;
-  }
-
-  /* ====== الحقول: جريد أنعم ====== */
-  .grid-4{grid-template-columns:1fr 1fr !important}
-  .grid-3{grid-template-columns:1fr 1fr !important}
-  .grid-2{grid-template-columns:1fr !important}
-  @media (max-width: 420px){
-    .grid-4,.grid-3{grid-template-columns:1fr !important}
-  }
-
-  /* ====== الأزرار: سطرين بدل تزاحم ====== */
   .row{gap:8px !important}
+
+  /* ====== Inner Tabs -> Dropdown ====== */
+  .inner-tabs{display:none !important}
+  .inner-tabs-select{
+    display:block !important;
+    width:100%;
+    padding:12px 12px;
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:#fff;
+    font-size:14px;
+    margin:0 0 10px 0;
+  }
+
+  /* ====== Buttons ====== */
   .btn{border-radius:14px !important}
-  .btn.btn-ghost, .btn.btn-outline{padding:10px 12px !important}
+  .btn, button{font-size:14px !important}
+  .btn-group{gap:8px !important; flex-wrap:wrap}
 
-  /* ====== الجداول: نخفي الجدول ونستخدم Cards Grid (3 أعمدة/صف) ====== */
-  .table-wrap{
-    border:0 !important;
-    border-radius:0 !important;
-    background:transparent !important;
-    overflow:visible !important;
-    padding:0 !important;
-  }
-  .table-wrap table{display:none !important}
+  /* ====== جداول: نلغي الهوامش ونحسن المساحة ====== */
+  .table-wrap{padding:0 !important; margin:0 !important; border:none !important}
+  table{margin:0 !important}
+  th,td{padding:8px 8px !important}
 
-  .mzj-mobile-table{
+  /* ====== Cards Grid (3 أعمدة في كل صف) ====== */
+  .mzj-table-cards{
     display:grid;
+    grid-template-columns:1fr;
     gap:10px;
-    margin-top:10px;
   }
-  .mzj-mobile-row{
+  .mzj-row-card{
     background:#fff;
     border:1px solid var(--line);
     border-radius:16px;
-    box-shadow:0 10px 24px rgba(0,0,0,.05);
     padding:10px;
   }
-  .mzj-mobile-row-grid{
+  .mzj-row-card:active{transform:scale(.995)}
+  .mzj-row-grid{
     display:grid;
-    grid-template-columns:repeat(3, 1fr);
+    grid-template-columns:repeat(3, minmax(0, 1fr)); /* ✅ 3 أعمدة */
     gap:8px;
   }
-  @media (max-width: 420px){
-    .mzj-mobile-row-grid{grid-template-columns:repeat(2, 1fr)}
-  }
-
-  .mzj-mobile-cell{
-    border:1px solid #f1f5f9;
-    background:#fff;
+  .mzj-cell{
+    border:1px solid #f0f0f0;
     border-radius:12px;
-    padding:8px 8px;
-    min-height:48px;
+    padding:8px;
+    min-width:0;
   }
-  .mzj-mobile-label{
+  .mzj-cell .mzj-k{
     font-size:11px;
-    color:var(--muted);
-    font-weight:900;
+    opacity:.75;
     margin-bottom:4px;
-    line-height:1.2;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
   }
-  .mzj-mobile-value{
+  .mzj-cell .mzj-v{
     font-size:13px;
-    font-weight:800;
-    color:var(--text);
-    word-break:break-word;
-    line-height:1.35;
+    font-weight:600;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
   }
-
-  /* أكشنز: صف كامل تحت */
-  .mzj-mobile-actions{
+  .mzj-row-actions{
     margin-top:10px;
     display:flex;
     gap:8px;
     flex-wrap:wrap;
   }
-  .mzj-mobile-actions .btn{flex:1 1 auto; justify-content:center}
+  .mzj-row-actions .btn{
+    flex:1;
+    min-width:120px;
+  }
 
-  /* تقليل padding في thead/th/td لو ظهر في أي مكان */
-  th,td{padding:8px !important}
-
+  /* شاشات أصغر: نخليها 2 أعمدة */
+  @media (max-width: 420px){
+    .mzj-row-grid{grid-template-columns:repeat(2, minmax(0, 1fr));}
+    .topbar .page-title,
+    .mzj-topbar .brand-title{max-width:55vw;}
+  }
 }

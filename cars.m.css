@@ -1,8 +1,118 @@
-/* cars.m.css — Mobile overrides for تقرير السيارات only */
-@media (max-width: 768px){
-  .container{padding:0 10px !important}
-  .filter-grid{grid-template-columns:1fr !important}
-  .btn{width:100%}
-  .table-wrap{overflow:hidden}
-  table{min-width:0}
+/* cars.m.css — Mobile UI for cars.m.html (Admin.m style)
+   ⚠️ لا يتم تعديل mzj-ui.css أو أي صفحة PC
+*/
+
+:root{ --m-sidebar-w:260px; }
+
+@media (max-width:768px){
+
+  /* Topbar: سطر واحد */
+  header.mzj-topbar{
+    position: sticky;
+    top: 0;
+    z-index: 2500;
+    height: 52px;
+    padding: 0 10px;
+  }
+  header.mzj-topbar .topbar-center{ display:none !important; }
+  header.mzj-topbar .brand-sub{ display:none !important; }
+  header.mzj-topbar .brand-title{
+    font-size: 13px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 62vw;
+  }
+  header.mzj-topbar .icon-btn{ width:36px; height:36px; border-radius:12px; }
+
+  /* Sidebar drawer */
+  #mzjSidebar.mzj-sidebar{
+    position: fixed !important;
+    top: 0; right: 0;
+    height: 100vh;
+    width: var(--m-sidebar-w);
+    max-width: 82vw;
+    transform: translateX(110%);
+    transition: transform .22s ease;
+    z-index: 3000;
+    overflow-y: auto;
+    background: #fff;
+    box-shadow: -10px 0 28px rgba(0,0,0,.14);
+    border-left: 1px solid rgba(0,0,0,.08);
+  }
+  body.mzj-sidebar-open #mzjSidebar.mzj-sidebar{ transform: translateX(0); }
+
+  #mzjBackdrop.mzj-backdrop{
+    position: fixed !important;
+    inset: 0;
+    background: rgba(0,0,0,.38);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s ease;
+    z-index: 2900;
+  }
+  body.mzj-sidebar-open #mzjBackdrop.mzj-backdrop{
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Page head spacing */
+  main.mzj-content{ padding: 0 !important; }
+  .container{ padding: 0 10px 24px !important; margin: 12px auto !important; max-width: 100% !important; }
+  .mzj-pagehead{ margin: 0 0 10px 0 !important; padding: 10px 0 !important; }
+  .mzj-pagehead .page-title{ font-size: 16px !important; margin: 0 0 2px 0 !important; }
+  .mzj-pagehead .page-desc{ font-size: 12px !important; margin: 0 !important; opacity: .8; }
+  .mzj-pagehead .pagehead-right{ width: 100% !important; }
+  #btnExport{ width: 100% !important; justify-content: center !important; }
+
+  /* Filters & grids */
+  .filter-grid{ grid-template-columns: 1fr !important; gap:10px !important; }
+  input, select{ font-size:16px !important; } /* يمنع زووم iOS */
+
+  /* Tables -> cards */
+  .table-wrap{ padding:0 !important; margin:0 !important; border:none !important; }
+  table{ display:none !important; }
+
+  .cars-cards{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    margin-top: 12px;
+  }
+  .car-card{
+    background:#fff;
+    border:1px solid #eee;
+    border-radius:16px;
+    padding:12px;
+  }
+  .car-grid{
+    display:grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap:8px;
+  }
+  .car-cell{
+    border:1px solid #f0f0f0;
+    border-radius:12px;
+    padding:8px;
+    min-width:0;
+  }
+  .car-k{
+    font-size:11px;
+    opacity:.75;
+    margin-bottom:4px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .car-v{
+    font-size:13px;
+    font-weight:800;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  @media (max-width:420px){
+    .car-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
 }

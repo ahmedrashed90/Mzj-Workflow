@@ -358,3 +358,63 @@ html, body{ max-width:100%; overflow-x:hidden; background:var(--mzj-cream); }
     }
   }
 }
+
+
+
+/* ================================
+   Modal grid-table (3 columns x 4 rows) — Excel-like
+   ================================ */
+@media (max-width: 768px){
+  /* Hide original table on mobile (we will render a grid-table right after it) */
+  .mzj-modal table.mzj-mobile-grid-src,
+  .modal table.mzj-mobile-grid-src,
+  dialog table.mzj-mobile-grid-src,
+  .popup table.mzj-mobile-grid-src{
+    display:none !important;
+  }
+
+  .mzj-modal-gridtable{
+    margin: 12px 12px 14px;
+    border: 1px solid rgba(0,0,0,.10);
+    border-radius: 14px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .mzj-modal-gridtable .mzj-r{
+    display:grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .mzj-modal-gridtable .mzj-cell{
+    padding: 10px 10px 12px;
+    border-left: 1px solid rgba(0,0,0,.08);
+    border-top: 1px solid rgba(0,0,0,.08);
+    min-width: 0;
+  }
+  /* first row no top border */
+  .mzj-modal-gridtable .mzj-r:first-child .mzj-cell{ border-top: none; }
+  /* last column no left border (rtl) */
+  .mzj-modal-gridtable .mzj-cell:last-child{ border-left: none; }
+
+  .mzj-modal-gridtable .mzj-h{
+    font-size: 11px;
+    opacity: .75;
+    margin: 0 0 6px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mzj-modal-gridtable .mzj-val{
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.35;
+    word-break: break-word;
+  }
+
+  /* Small screens -> 2 columns, still keeps order */
+  @media (max-width: 420px){
+    .mzj-modal-gridtable .mzj-r{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+}

@@ -1,299 +1,199 @@
-/* MZJ Mobile JS — Admin page only
-   - Sidebar toggle (existing button #mzjSidebarBtn)
-   - Inner Tabs -> dropdown list
-   - "تعديل السيارات" table (#carsTable) -> cards grid (3 columns per row)
-     + click card / buttons triggers original edit/delete so logic stays intact
+/* MZJ Mobile UI — Admin page controller
+   - Sidebar toggle (زر أعلى اليمين)
+   - Inner tabs -> dropdown
+   - Tables -> 3-columns-per-row card grid (with actions preserved)
 */
+(function(){
+  const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
 
-(function () {
-  const isMobile = () => window.matchMedia("(max-width: 768px)").matches;
-
-  function ensureBackdrop() {
-    let bd = document.querySelector(".mzj-backdrop");
-    if (!bd) {
-      bd = document.createElement("div");
-      bd.className = "mzj-backdrop";
-      document.body.appendChild(bd);
-    }
-    bd.addEventListener("click", () => document.body.classList.remove("mzj-sidebar-open"));
+  function onReady(fn){
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+    else fn();
   }
 
-  function setupSidebarToggle() {
-    const btn = document.getElementById("mzjSidebarBtn");
-    if (!btn) return;
-    btn.addEventListener("click", () => {
-      document.body.classList.toggle("mzj-sidebar-open");
-    });
-  }
+  function setupSidebar(){
+    const btn = document.getElementById('mzjSidebarBtn');
+    const backdrop = document.getElementById('mzjBackdrop');
+    if(!btn || !backdrop) return;
 
-  function setupInnerTabsDropdown() {
-    const tabsWrap = document.querySelector(".inner-tabs");
-    if (!tabsWrap) return;
+    const open = ()=> document.body.classList.add('mzj-sidebar-open');
+    const close = ()=> document.body.classList.remove('mzj-sidebar-open');
+    const toggle = ()=> document.body.classList.toggle('mzj-sidebar-open');
 
-    const tabButtons = Array.from(tabsWrap.querySelectorAll(".inner-tab[data-target]"));
-    if (!tabButtons.length) return;
+    btn.addEventListener('click', (e)=>{ e.preventDefault(); toggle(); });
+    backdrop.addEventListener('click', close);
 
-    // create dropdown
-    let select = document.querySelector(".inner-tabs-select");
-    if (!select) {
-      select = document.createElement("select");
-      select.className = "inner-tabs-select";
-      tabsWrap.parentElement.insertBefore(select, tabsWrap);
-    }
-
-    select.innerHTML = "";
-    tabButtons.forEach((b) => {
-      const opt = document.createElement("option");
-      opt.value = b.getAttribute("data-target");
-      opt.textContent = b.textContent.trim();
-      select.appendChild(opt);
+    document.addEventListener('keydown', (e)=>{
+      if(e.key === 'Escape') close();
     });
 
-    const activeBtn = tabButtons.find(b => b.classList.contains("active")) || tabButtons[0];
-    select.value = activeBtn.getAttribute("data-target");
-
-    select.addEventListener("change", () => {
-      const target = select.value;
-      const btn = tabButtons.find(b => b.getAttribute("data-target") === target);
-      if (btn) btn.click();
-    });
+    // اقفل عند تغيير الاتجاه/تغيير الحجم
+    window.addEventListener('resize', ()=>{ if(!isMobile()) close(); });
   }
 
+  function setupInnerTabsDropdown(){
+    const app = document.getElementById('app');
+    if(!app) return;
 
+    const tabs = Array.from(app.querySelectorAll('.inner-tab'));
+    const panels = Array.from(app.querySelectorAll('.inner-tab-panel'));
+    if(!tabs.length || !panels.length) return;
 
-  // ====== Simple tables -> cards (for tracking + activity log) ======
-  function debounce(fn, wait=120){
-    let t; 
-    return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), wait); };
-  }
+    // لو اتعمل قبل كده، ما نكررش
+    if(app.querySelector('.mzj-mobile-tabbar')) return;
 
-  function buildSimpleCards(table){
-    if (!table) return;
+    const bar = document.createElement('div');
+    bar.className = 'mzj-mobile-tabbar';
+    bar.innerHTML = `
+      <label for="mzjMobileTabSelect">اختر القسم</label>
+      <select id="mzjMobileTabSelect" aria-label="اختر القسم"></select>
+    `;
 
-    const tbody = table.querySelector("tbody");
-    if (!tbody) return;
-
-    const wrap = table.closest(".table-wrap") || table.parentElement;
-    if (!wrap) return;
-
-    // headers
-    const headers = Array.from(table.querySelectorAll("thead th")).map(th => th.textContent.trim());
-    const rows = Array.from(tbody.querySelectorAll("tr"));
-    if (!rows.length) {
-      // لو مفيش داتا: امسح الكروت لو موجودة وخلي الجدول مخفي زي ما هو
-      const old = wrap.querySelector(".mzj-table-cards");
-      if (old) old.remove();
-      return;
-    }
-
-    // remove old cards
-    const old = wrap.querySelector(".mzj-table-cards");
-    if (old) old.remove();
-
-    const cardsWrap = document.createElement("div");
-    cardsWrap.className = "mzj-table-cards";
-
-    rows.forEach((tr) => {
-      const tds = Array.from(tr.querySelectorAll("td"));
-      if (!tds.length) return;
-
-      const card = document.createElement("div");
-      card.className = "mzj-row-card";
-
-      const grid = document.createElement("div");
-      grid.className = "mzj-row-grid";
-
-      tds.forEach((td, i) => {
-        const cell = document.createElement("div");
-        cell.className = "mzj-cell";
-
-        const k = document.createElement("div");
-        k.className = "mzj-k";
-        k.textContent = headers[i] || `عمود ${i+1}`;
-
-        const v = document.createElement("div");
-        v.className = "mzj-v";
-        v.textContent = (td.textContent || '').trim() || "—";
-
-        cell.appendChild(k);
-        cell.appendChild(v);
-        grid.appendChild(cell);
-      });
-
-      card.appendChild(grid);
-      cardsWrap.appendChild(card);
+    const sel = bar.querySelector('select');
+    tabs.forEach(t=>{
+      const opt = document.createElement('option');
+      opt.value = t.getAttribute('data-target') || '';
+      opt.textContent = (t.textContent || '').trim();
+      if(t.classList.contains('active')) opt.selected = true;
+      sel.appendChild(opt);
     });
 
-    // hide original table but keep it in DOM for logic
-    table.style.display = "none";
-    wrap.appendChild(cardsWrap);
+    // نحطّه قبل أول panel
+    const firstPanel = panels[0];
+    firstPanel.parentNode.insertBefore(bar, firstPanel);
+
+    const activate = (targetId)=>{
+      tabs.forEach(b=> b.classList.remove('active'));
+      panels.forEach(p=> p.classList.remove('active'));
+      const tab = tabs.find(x => x.getAttribute('data-target') === targetId);
+      const panel = document.getElementById(targetId);
+      if(tab) tab.classList.add('active');
+      if(panel) panel.classList.add('active');
+    };
+
+    sel.addEventListener('change', ()=> activate(sel.value));
   }
 
-  function observeTableForCards(table){
-    if (!table || table.dataset.mzjObserved) return;
-    table.dataset.mzjObserved = "1";
-
-    const rerender = debounce(() => buildSimpleCards(table), 150);
-
-    // Observe tbody if exists
-    const tbody = table.querySelector("tbody");
-    if (tbody) {
-      const obs = new MutationObserver(rerender);
-      obs.observe(tbody, { childList: true, subtree: true, characterData: true });
-      // first render try
-      buildSimpleCards(table);
-      return;
-    }
-
-    // If tbody not ready, observe table until it appears
-    const obs2 = new MutationObserver(() => {
-      const tb = table.querySelector("tbody");
-      if (tb) {
-        obs2.disconnect();
-        observeTableForCards(table);
-      }
-    });
-    obs2.observe(table, { childList: true, subtree: true });
+  function textOf(el){
+    return (el && (el.textContent || '')).trim();
   }
 
-  function getCarsTable() {
-    return document.getElementById("carsTable");
-  }
+  function buildMobileTableFrom(table){
+    // avoid duplicate
+    if(!table || table.dataset.mobileBuilt === '1') return;
+    table.dataset.mobileBuilt = '1';
 
-  function triggerOriginal(table, rowId, type) {
-    if (!table || !rowId) return;
-    const selector = type === "del" ? `[data-del="${rowId}"]` : `[data-edit="${rowId}"]`;
-    const btn = table.querySelector(selector);
-    if (btn) btn.click();
-  }
+    const wrap = table.closest('.table-wrap');
+    if(!wrap) return;
 
-  function rebuildCarsCards() {
-    const table = getCarsTable();
-    if (!table) return;
+    const theadTh = Array.from(table.querySelectorAll('thead th')).map(th=> textOf(th));
+    const rows = Array.from(table.querySelectorAll('tbody tr'));
 
-    const tbody = table.querySelector("tbody");
-    if (!tbody) return;
+    const mobile = document.createElement('div');
+    mobile.className = 'mzj-mobile-table';
 
-    // container target
-    const wrap = table.closest(".table-wrap") || table.parentElement;
-    if (!wrap) return;
+    rows.forEach((tr)=>{
+      const tds = Array.from(tr.querySelectorAll('td'));
+      if(!tds.length) return;
 
-    // remove old cards
-    const old = wrap.querySelector(".mzj-table-cards");
-    if (old) old.remove();
+      // detect actions column: last td often has buttons
+      const actionsTd = tds[tds.length - 1];
+      const actionsHasButtons = !!actionsTd.querySelector('button');
 
-    const headers = Array.from(table.querySelectorAll("thead th")).map(th => th.textContent.trim());
-    const rows = Array.from(tbody.querySelectorAll("tr"));
-    if (!rows.length) return;
+      const rowCard = document.createElement('div');
+      rowCard.className = 'mzj-mobile-row';
 
-    const cardsWrap = document.createElement("div");
-    cardsWrap.className = "mzj-table-cards";
+      const grid = document.createElement('div');
+      grid.className = 'mzj-mobile-row-grid';
 
-    rows.forEach((tr) => {
-      const editBtn = tr.querySelector("[data-edit]");
-      const delBtn  = tr.querySelector("[data-del]");
-      const rowId = editBtn ? editBtn.getAttribute("data-edit") : (delBtn ? delBtn.getAttribute("data-del") : "");
+      // cells except actions
+      const cellsCount = actionsHasButtons ? (tds.length - 1) : tds.length;
 
-      const tds = Array.from(tr.querySelectorAll("td"));
-      if (!tds.length) return;
-
-      const card = document.createElement("div");
-      card.className = "mzj-row-card";
-      if (rowId) card.dataset.rowId = rowId;
-
-      // click on card = edit
-      card.addEventListener("click", (e) => {
-        // avoid double triggering when clicking action buttons
-        const target = e.target;
-        if (target && (target.closest(".mzj-row-actions"))) return;
-        triggerOriginal(table, rowId, "edit");
-      });
-
-      const grid = document.createElement("div");
-      grid.className = "mzj-row-grid";
-
-      // last column is actions — skip it
-      const maxCols = Math.max(0, tds.length - 1);
-
-      for (let i = 0; i < maxCols; i++) {
+      for(let i=0;i<cellsCount;i++){
+        const label = theadTh[i] || `حقل ${i+1}`;
         const td = tds[i];
-        const text = (td.textContent || "").trim();
-
-        const cell = document.createElement("div");
-        cell.className = "mzj-cell";
-
-        const k = document.createElement("div");
-        k.className = "mzj-k";
-        k.textContent = headers[i] || `عمود ${i + 1}`;
-
-        const v = document.createElement("div");
-        v.className = "mzj-v";
-        v.textContent = text || "—";
-
-        cell.appendChild(k);
-        cell.appendChild(v);
+        const valueText = textOf(td);
+        const cell = document.createElement('div');
+        cell.className = 'mzj-mobile-cell';
+        cell.innerHTML = `
+          <div class="mzj-mobile-label"></div>
+          <div class="mzj-mobile-value"></div>
+        `;
+        cell.querySelector('.mzj-mobile-label').textContent = label;
+        // Preserve copyable spans if exist (VIN/Plate)
+        const copyable = td.querySelector('.copyable');
+        if(copyable){
+          const span = copyable.cloneNode(true);
+          const valWrap = cell.querySelector('.mzj-mobile-value');
+          valWrap.innerHTML = '';
+          valWrap.appendChild(span);
+        }else{
+          cell.querySelector('.mzj-mobile-value').textContent = valueText || '—';
+        }
         grid.appendChild(cell);
       }
 
-      const actions = document.createElement("div");
-      actions.className = "mzj-row-actions";
+      rowCard.appendChild(grid);
 
-      const edit = document.createElement("button");
-      edit.type = "button";
-      edit.className = "btn btn-ghost";
-      edit.textContent = "تعديل ✎";
-      edit.addEventListener("click", (e) => {
-        e.stopPropagation();
-        triggerOriginal(table, rowId, "edit");
-      });
+      if(actionsHasButtons){
+        const actions = document.createElement('div');
+        actions.className = 'mzj-mobile-actions';
+        // clone buttons (same dataset attributes: data-edit/data-del/... so existing listeners still work via event delegation)
+        Array.from(actionsTd.querySelectorAll('button')).forEach(btn=>{
+          const b = btn.cloneNode(true);
+          actions.appendChild(b);
+        });
+        rowCard.appendChild(actions);
+      }
 
-      const del = document.createElement("button");
-      del.type = "button";
-      del.className = "btn btn-danger";
-      del.textContent = "حذف 🗑";
-      del.addEventListener("click", (e) => {
-        e.stopPropagation();
-        triggerOriginal(table, rowId, "del");
-      });
-
-      actions.appendChild(edit);
-      actions.appendChild(del);
-
-      card.appendChild(grid);
-      card.appendChild(actions);
-      cardsWrap.appendChild(card);
+      mobile.appendChild(rowCard);
     });
 
-    // hide original table (keep it for logic)
-    table.style.display = "none";
-    wrap.appendChild(cardsWrap);
+    // insert after table in wrap
+    wrap.appendChild(mobile);
   }
 
-  function observeCarsTable() {
-    const table = getCarsTable();
-    if (!table) return;
-    const tbody = table.querySelector("tbody");
-    if (!tbody) return;
+  function setupTablesToCards(){
+    // Only inside #app (بعد تسجيل الدخول)
+    const app = document.getElementById('app');
+    if(!app) return;
 
-    // initial build (in case rows already present)
-    rebuildCarsCards();
+    const tables = Array.from(app.querySelectorAll('.table-wrap table'));
+    tables.forEach(buildMobileTableFrom);
+  }
 
-    const obs = new MutationObserver(() => {
-      // rebuild when rows change (renderTable() clears/append rows)
-      rebuildCarsCards();
+  function observeAppForLogin(){
+    const app = document.getElementById('app');
+    if(!app) return;
+
+    // initial
+    if(isMobile()){
+      setupInnerTabsDropdown();
+    // (Mobile) تبويب تتبّع رقم الهيكل: خلي الإدخال مريح للكتابة
+    const tv=document.getElementById('trackVin');
+    if(tv){
+      tv.setAttribute('autocomplete','off');
+      tv.setAttribute('autocapitalize','off');
+      tv.setAttribute('spellcheck','false');
+    }
+
+      setupTablesToCards();
+    }
+
+    // watch for display changes / inner content
+    const mo = new MutationObserver(()=>{
+      if(!isMobile()) return;
+      setupInnerTabsDropdown();
+      setupTablesToCards();
     });
-    obs.observe(tbody, { childList: true, subtree: true });
+
+    mo.observe(app, {subtree:true, childList:true, attributes:true, attributeFilter:['style','class']});
   }
 
-  function init() {
-    if (!isMobile()) return;
-    ensureBackdrop();
-    setupSidebarToggle();
-    setupInnerTabsDropdown();
-    observeTableForCards(document.getElementById("trackTable"));
-    observeTableForCards(document.getElementById("movesTable"));
-    observeCarsTable();
-  }
+  onReady(()=>{
+    if(!isMobile()) return;
+    setupSidebar();
+    observeAppForLogin();
+  });
 
-  document.addEventListener("DOMContentLoaded", init);
 })();

@@ -164,15 +164,128 @@
     if (!table || !rowId) return;
     const selector = type === "del" ? `[data-del="${rowId}"]` : `[data-edit="${rowId}"]`;
     const btn = table.querySelector(selector);
-    if (!btn) return;
-
-    // NOTE: في بعض الموبايلات/المتصفحات، btn.click() على عناصر داخل جدول مخفي
-    // ممكن ماينفّذش Event delegation صح. فبنطلق MouseEvent يدويًا.
-    const ev = new MouseEvent('click', { bubbles: true, cancelable: true, view: window });
-    btn.dispatchEvent(ev);
+    if (btn) btn.click();
   }
 
-  function rebuildCarsCards() {
+  
+  // ===== Inline edit modal for "تعديل السيارات" cards (mobile) =====
+  function ensureCarsEditModal() {
+    let modal = document.getElementById("mzjCarsEditModal");
+    if (modal) return modal;
+
+    modal = document.createElement("div");
+    modal.id = "mzjCarsEditModal";
+    modal.style.cssText = "position:fixed;inset:0;z-index:4000;display:none;align-items:flex-end;justify-content:center;";
+
+    modal.innerHTML = `
+      <div class="mzj-modal-backdrop" style="position:absolute;inset:0;background:rgba(0,0,0,.38)"></div>
+      <div class="mzj-modal-sheet" style="position:relative;width:100%;max-width:720px;background:#fff;border-radius:16px 16px 0 0;max-height:92vh;overflow:auto;padding:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px">
+          <div style="font-weight:800;font-size:14px">تعديل السيارة</div>
+          <button type="button" id="mzjCarsEditClose" class="btn btn-ghost" style="width:auto">إغلاق</button>
+        </div>
+        <div id="mzjCarsEditForm" style="display:grid;grid-template-columns:1fr;gap:10px"></div>
+        <div style="display:flex;gap:10px;margin-top:12px">
+          <button type="button" id="mzjCarsEditSave" class="btn btn-primary" style="flex:1">حفظ</button>
+          <button type="button" id="mzjCarsEditCancel" class="btn btn-ghost" style="flex:1">إلغاء</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    const close = () => { modal.style.display = "none"; modal.dataset.rowId = ""; };
+    modal.querySelector(".mzj-modal-backdrop").addEventListener("click", close);
+    modal.querySelector("#mzjCarsEditClose").addEventListener("click", close);
+
+    modal.querySelector("#mzjCarsEditCancel").addEventListener("click", () => {
+      const rowId = modal.dataset.rowId;
+      const table = getCarsTable();
+      if (table && rowId) {
+        const btn = table.querySelector(`[data-cancel-inline="${rowId}"]`);
+        if (btn) btn.dispatchEvent(new MouseEvent("click", { bubbles:true, cancelable:true, view:window }));
+      }
+      close();
+    });
+
+    return modal;
+  }
+
+  function openCarsInlineEditModal(table, rowId) {
+    if (!table || !rowId) return;
+
+    // trigger original inline edit on hidden table row (creates inputs + save/cancel buttons)
+    triggerOriginal(table, rowId, "edit");
+
+    const tr = table.querySelector(`button[data-edit="${rowId}"]`)?.closest("tr");
+    if (!tr) return;
+
+    const modal = ensureCarsEditModal();
+    modal.dataset.rowId = String(rowId);
+
+    const form = modal.querySelector("#mzjCarsEditForm");
+    form.innerHTML = "";
+
+    const headers = Array.from(table.querySelectorAll("thead th")).map(th => (th.textContent || "").trim());
+
+    const fields = [
+      { sel: ".edit-car", label: headers[0] || "السيارة" },
+      { sel: ".edit-variant", label: headers[1] || "الفئة" },
+      { sel: ".edit-dealer", label: headers[2] || "المعرض" },
+      { sel: ".edit-extColor", label: headers[3] || "اللون الخارجي" },
+      { sel: ".edit-intColor", label: headers[4] || "اللون الداخلي" },
+      { sel: ".edit-modelYear", label: headers[5] || "الموديل" },
+      { sel: ".edit-plate", label: headers[6] || "اللوحة" },
+      { sel: ".edit-location", label: headers[7] || "المكان" },
+      { sel: ".edit-batchName", label: headers[8] || "اسم الدفعة" },
+      { sel: ".edit-vin", label: headers[9] || "رقم الهيكل" },
+      { sel: ".edit-notes", label: headers[10] || "الملاحظات" }
+    ];
+
+    fields.forEach((f) => {
+      const el = tr.querySelector(f.sel);
+      if (!el) return;
+
+      const wrap = document.createElement("div");
+      wrap.style.cssText = "display:flex;flex-direction:column;gap:6px";
+
+      const lab = document.createElement("div");
+      lab.textContent = f.label;
+      lab.style.cssText = "font-size:12px;font-weight:700;opacity:.8";
+      wrap.appendChild(lab);
+
+      const control = el.cloneNode(true);
+      control.style.width = "100%";
+      control.style.fontSize = "16px";
+      control.dataset.bindSel = f.sel;
+      if (control.tagName === "TEXTAREA") control.style.minHeight = "70px";
+      wrap.appendChild(control);
+
+      form.appendChild(wrap);
+    });
+
+    modal.querySelector("#mzjCarsEditSave").onclick = () => {
+      const rowId2 = modal.dataset.rowId;
+      const tr2 = table.querySelector(`button[data-edit="${rowId2}"]`)?.closest("tr");
+      if (!tr2) { modal.style.display = "none"; return; }
+
+      form.querySelectorAll("[data-bind-sel]").forEach((control) => {
+        const sel = control.dataset.bindSel;
+        const orig = tr2.querySelector(sel);
+        if (!orig) return;
+        orig.value = control.value;
+        orig.dispatchEvent(new Event("input", { bubbles:true }));
+        orig.dispatchEvent(new Event("change", { bubbles:true }));
+      });
+
+      const saveBtn = table.querySelector(`[data-save-inline="${rowId2}"]`);
+      if (saveBtn) saveBtn.dispatchEvent(new MouseEvent("click", { bubbles:true, cancelable:true, view:window }));
+      modal.style.display = "none";
+    };
+
+    modal.style.display = "flex";
+  }
+
+function rebuildCarsCards() {
     const table = getCarsTable();
     if (!table) return;
 
@@ -211,7 +324,7 @@
         // avoid double triggering when clicking action buttons
         const target = e.target;
         if (target && (target.closest(".mzj-row-actions"))) return;
-        triggerOriginal(table, rowId, "edit");
+        openCarsInlineEditModal(table, rowId);
       });
 
       const grid = document.createElement("div");
@@ -249,7 +362,7 @@
       edit.textContent = "تعديل ✎";
       edit.addEventListener("click", (e) => {
         e.stopPropagation();
-        triggerOriginal(table, rowId, "edit");
+        openCarsInlineEditModal(table, rowId);
       });
 
       const del = document.createElement("button");

@@ -675,8 +675,8 @@ body.auth-checking #loginCard{display:none !important;}
     border-color:#fed7aa;background:#fff7ed;color:#9a3412;
   }
 </style>
-  <link rel="stylesheet" href="./mzj-ui.css"
-  <link rel="stylesheet" href="./photoshoot-user.m.css"> />
+  <link rel="stylesheet" href="./mzj-ui.css" />
+  <link rel="stylesheet" href="./mzj-ui.mobile.css" />
 
 <style>
   /* ===== Photoshoot Safe Refactor v4 ===== */
@@ -770,15 +770,15 @@ body.auth-checking #loginCard{display:none !important;}
       <div class="side-section">
         <div class="side-title">العمليات</div>
         <nav class="side-nav">
-          <a class="side-link tab" href="./sales.m.html"><i class="fa-solid fa-handshake"></i><span>تتبع المبيعات</span></a>
-        <a class="side-link tab" href="./dashboard.m.html"><i class="fa-solid fa-gauge"></i><span>الداش بورد</span></a>
-        <a class="side-link tab" href="./inventory.m.html"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
-        <a class="side-link tab" href="./vt.m.html"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
-        <a class="side-link tab active" href="./photoshoot-user.m.html"><i class="fa-solid fa-camera"></i><span>إدارة الطلبات</span></a>
-        <a class="side-link tab" href="./cars.m.html"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
-        <a class="side-link tab" href="./admin.m.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
-        <a class="side-link tab" href="./Activity.m.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل النشاط</span></a>
-        <a class="side-link tab" href="./act.m.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل الحركات</span></a>
+          <a class="side-link tab" href="./sales.html"><i class="fa-solid fa-handshake"></i><span>تتبع المبيعات</span></a>
+        <a class="side-link tab" href="./dashboard.html"><i class="fa-solid fa-gauge"></i><span>الداش بورد</span></a>
+        <a class="side-link tab" href="./inventory.html"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
+        <a class="side-link tab" href="./vt.html"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
+        <a class="side-link tab active" href="./photoshoot-user.html"><i class="fa-solid fa-camera"></i><span>إدارة الطلبات</span></a>
+        <a class="side-link tab" href="./cars.html"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
+        <a class="side-link tab" href="./admin.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
+        <a class="side-link tab" href="./Activity.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل النشاط</span></a>
+        <a class="side-link tab" href="./act.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل الحركات</span></a>
         </nav>
       </div>
     </aside>
@@ -800,12 +800,12 @@ body.auth-checking #loginCard{display:none !important;}
 <div class="dashboard-topbar">
   <div class="dashboard-tabs">
     
-    <a class="tab" href="inventory.m.html">المخزون</a>
-    <a class="tab" href="dashboard.m.html">الداش بورد</a>
-    <a class="tab" href="vt.m.html">نقل السيارات</a>
-    <a class="tab active" href="photoshoot-user.m.html">إدارة الطلبات</a>
-    <a class="tab" href="cars.m.html">كل السيارات</a>
-    <a class="tab" href="Activity.m.html">سجل النشاط</a>
+    <a class="tab" href="inventory.html">المخزون</a>
+    <a class="tab" href="dashboard.html">الداش بورد</a>
+    <a class="tab" href="vt.html">نقل السيارات</a>
+    <a class="tab active" href="photoshoot-user.html">إدارة الطلبات</a>
+    <a class="tab" href="cars.html">كل السيارات</a>
+    <a class="tab" href="Activity.html">سجل النشاط</a>
   </div>
 </div>
 
@@ -1143,8 +1143,8 @@ async function deleteRequestFromState(requestId, kind){
   const ROLE_PAGES = {
     [ROLE_ADMIN] : 'ALL', // الإدارة تشوف كل الصفحات
     // الإداري: يشوف فقط الداشبورد + نقل السيارات + إدارة الطلبات + كل السيارات + المبيعات
-    [ROLE_IDARI] : ['dashboard.m.html','vt.m.html','photoshoot-user.m.html','cars.m.html','inventory.m.html','act.m.html'],
-    [ROLE_BRANCH]: ['dashboard.m.html']
+    [ROLE_IDARI] : ['dashboard.html','vt.html','photoshoot-user.html','cars.html','inventory.html','act.html'],
+    [ROLE_BRANCH]: ['dashboard.html']
   };
 
   function applyRolePermissions(){
@@ -1173,7 +1173,7 @@ async function deleteRequestFromState(requestId, kind){
       const allowed = (ROLE_PAGES[currentUserRole]||[]).map(x=>x.toLowerCase());
       if(currentPage && !allowed.includes(currentPage)){
         alert('غير مصرح لك بدخول هذه الصفحة');
-        window.location.href = allowed[0] || 'dashboard.m.html';
+        window.location.href = allowed[0] || 'dashboard.html';
       }
     }
   }
@@ -2501,11 +2501,179 @@ document.body.classList.add(isAdmin() ? 'is-admin' : 'not-admin');
 </script>
 
   <script src="./mzj-ui.js"></script>
+  <script src="./mzj-ui.mobile.js"></script>
+<script>
+/* Photoshoot Mobile Tables — keep all columns but display as cards on small screens
+   - Leaves original tables in DOM (hidden) so existing logic & button handlers keep working.
+   - Converts these tables:
+     1) Manage table  (#ordersTable)
+     2) Done table    (#doneTable)
+     3) Activity log  (#activityTable)
+     4) Modal rows    (#modalRowsTable)
+*/
+(function(){
+  const isMobile = ()=> window.matchMedia("(max-width: 768px)").matches;
+
+  function debounce(fn, wait=160){
+    let t;
+    return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), wait); };
+  }
+
+  function buildCardsFromTable(table){
+    if(!table) return;
+    const tbody = table.querySelector("tbody");
+    if(!tbody) return;
+
+    const wrap = table.closest(".tableWrap") || table.parentElement;
+    if(!wrap) return;
+
+    const tableId = table.id || "";
+    const old = wrap.querySelector('.mzj-table-cards[data-for="'+tableId+'"]');
+    if(old) old.remove();
+
+    const headers = Array.from(table.querySelectorAll("thead th")).map(th => (th.textContent||"").trim());
+    const rows = Array.from(tbody.querySelectorAll("tr"));
+    if(!rows.length){
+      table.style.display = "";
+      return;
+    }
+
+    const cardsWrap = document.createElement("div");
+    cardsWrap.className = "mzj-table-cards";
+    cardsWrap.dataset.for = tableId;
+
+    rows.forEach((tr)=>{
+      const tds = Array.from(tr.querySelectorAll("td"));
+      if(!tds.length) return;
+
+      // Actions TD heuristic: last td that contains a button/link
+      let actionsTdIndex = -1;
+      for(let i=tds.length-1;i>=0;i--){
+        if(tds[i].querySelector("button,a,[role='button']")){ actionsTdIndex=i; break; }
+      }
+
+      const card = document.createElement("div");
+      card.className = "mzj-row-card";
+
+      const grid = document.createElement("div");
+      grid.className = "mzj-row-grid";
+
+      tds.forEach((td, i)=>{
+        if(i === actionsTdIndex) return;
+
+        const cell = document.createElement("div");
+        cell.className = "mzj-cell";
+
+        const k = document.createElement("div");
+        k.className = "mzj-k";
+        k.textContent = headers[i] || `عمود ${i+1}`;
+
+        const v = document.createElement("div");
+        v.className = "mzj-v";
+        v.textContent = (td.textContent || "").trim() || "—";
+
+        cell.appendChild(k);
+        cell.appendChild(v);
+        grid.appendChild(cell);
+      });
+
+      card.appendChild(grid);
+
+      // Clone actions as-is (keep original handlers by delegating clicks back to original buttons)
+      if(actionsTdIndex >= 0){
+        const actionsWrap = document.createElement("div");
+        actionsWrap.className = "mzj-row-actions";
+
+        const originals = Array.from(tds[actionsTdIndex].querySelectorAll("button,a,[role='button']"));
+        originals.forEach((orig)=>{
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "btn";
+          btn.textContent = (orig.textContent || "").trim() || "إجراء";
+          // keep style intent if possible
+          if(orig.classList.contains("danger") || orig.classList.contains("btn-danger")) btn.classList.add("btn-danger");
+          if(orig.classList.contains("primary") || orig.classList.contains("btn-primary")) btn.classList.add("btn-primary");
+
+          btn.addEventListener("click", (e)=>{
+            e.stopPropagation();
+            orig.click(); // triggers original handler
+          });
+          actionsWrap.appendChild(btn);
+        });
+
+        card.appendChild(actionsWrap);
+      }
+
+      cardsWrap.appendChild(card);
+    });
+
+    table.style.display = "none";
+    wrap.appendChild(cardsWrap);
+  }
+
+  function observeTable(table){
+    if(!table || table.dataset.mzjObserved) return;
+    table.dataset.mzjObserved = "1";
+
+    const rerender = debounce(()=> buildCardsFromTable(table), 180);
+    const tbody = table.querySelector("tbody");
+    if(!tbody) return;
+
+    const obs = new MutationObserver(rerender);
+    obs.observe(tbody, { childList:true, subtree:true, characterData:true });
+
+    // initial
+    buildCardsFromTable(table);
+  }
+
+  function init(){
+    if(!isMobile()) return;
+
+    // Add IDs to existing tables (without touching logic)
+    const ordersTable = document.querySelector('#inner-manage .tableWrap table.table');
+    if(ordersTable && !ordersTable.id) ordersTable.id = "ordersTable";
+
+    const doneTable = document.querySelector('#inner-done .tableWrap table.table');
+    if(doneTable && !doneTable.id) doneTable.id = "doneTable";
+
+    const activityTable = document.querySelector('#page-activity .tableWrap table.table');
+    if(activityTable && !activityTable.id) activityTable.id = "activityTable";
+
+    const modalTable = document.querySelector('#modalBackdrop .tableWrap table.table');
+    if(modalTable && !modalTable.id) modalTable.id = "modalRowsTable";
+
+    observeTable(ordersTable);
+    observeTable(doneTable);
+    observeTable(activityTable);
+    observeTable(modalTable);
+
+    // When switching inner tabs, re-render for visible table
+    document.querySelectorAll('.inner-tab').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        setTimeout(()=>{
+          buildCardsFromTable(ordersTable);
+          buildCardsFromTable(doneTable);
+        }, 60);
+      });
+    });
+
+    // When modal opens, wait a tick then render
+    const modal = document.getElementById('modalBackdrop');
+    if(modal){
+      const obsModal = new MutationObserver(()=>{ 
+        if(modal.style.display === 'flex'){ setTimeout(()=>buildCardsFromTable(modalTable), 80); }
+      });
+      obsModal.observe(modal, { attributes:true, attributeFilter:['style'] });
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+})();
+</script>
 
       </div>
     </main>
   </div>
 
-  <script src="./photoshoot-user.m.js"></script>
 </body>
 </html>

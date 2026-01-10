@@ -1,0 +1,477 @@
+
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <link rel="icon" type="image/x-icon" href="assets/favicon.png">
+<link rel="prefetch" href="admin.m.html">
+<link rel="prefetch" href="inventory.m.html">
+<link rel="prefetch" href="dashboard.m.html">
+<link rel="prefetch" href="photoshoot.m.html">
+
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style id="noFlash">
+#authGate{display:none!important}
+html{background:#faf7f3}body{opacity:0;transition:opacity .12s ease}
+</style>
+<meta name="color-scheme" content="light">
+<title>MZJ تقرير السيارات (موبايل)</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+
+<style>
+  :root{
+    --brown:#3e2420; --beige:#bc8f74; --bg:#faf7f3; --card:#fff; --line:#e7e5e4;
+    --text:#1f2937; --muted:#6b7280; --ok:#16a34a; --danger:#ef4444; --info:#0ea5e9; --warn:#f59e0b;
+    --radius:12px; --shadow:0 10px 24px rgba(0,0,0,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:"Tajawal",system-ui,Arial;
+  }
+
+  /* Topbar */
+  .topbar{position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid var(--line)}
+  .topbar-inner{
+    max-width:1240px;
+    margin:auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+  }
+  .brand{display:flex;align-items:center;gap:10px}
+  .logo{
+    width:34px;height:34px;border-radius:10px;
+    background:linear-gradient(135deg,var(--brown),#271713);
+    display:grid;place-items:center;color:#fff;
+    font-weight:900;
+  }
+  .brand h1{margin:0;font-size:17px;color:var(--brown)}
+  .brand small{color:var(--muted);font-size:12px;display:block}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap}
+  .tab{
+    font-size:12px;
+    padding:6px 10px;
+    border:1px solid var(--line);
+    border-radius:999px;
+    background:#fff;
+    color:inherit;
+    text-decoration:none;
+    font-weight:800;
+  }
+  .tab.active{background:var(--brown);border-color:var(--brown);color:#fff}
+  .status-badge{
+    display:inline-flex;gap:8px;align-items:center;
+    border:1px solid var(--line);border-radius:10px;
+    padding:5px 8px;font-size:12px;background:#fff;
+  }
+  .dot{width:8px;height:8px;border-radius:999px;background:var(--warn)}
+  .dot.ok{background:var(--ok)} .dot.err{background:var(--danger)}
+
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+  /* Layout & cards */
+  .container{
+    max-width:1240px;
+    margin:14px auto;
+    padding:0 12px;
+    display:grid;
+    gap:12px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:12px;
+  }
+  .card header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:8px;
+  }
+  .title{
+    margin:0;
+    font-size:15px;
+    color:var(--brown);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .hint{color:var(--muted);font-size:12px}
+
+  /* Buttons */
+  .btn{
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:9px;
+    padding:7px 10px;
+    cursor:pointer;
+    font-weight:800;
+    font-size:13px;
+    display:inline-flex;
+    gap:6px;
+    align-items:center;
+    transition:.12s;
+  }
+  .btn:hover{transform:translateY(-1px)}
+  .btn:active{transform:translateY(0)}
+  .btn-primary{background:var(--brown);border-color:var(--brown);color:#fff}
+  .btn-success{background:var(--ok);border-color:var(--ok);color:#fff}
+  .btn-info{background:var(--info);border-color:var(--info);color:#fff}
+
+  input,select,textarea{
+    width:100%;
+    padding:8px 9px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:#fff;
+    font-size:14px;
+    font-family:inherit;
+  }
+
+  /* Summary badges */
+  .summary-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:6px;
+  }
+  .summary-left{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .badge-total{
+    display:inline-flex;align-items:center;gap:8px;
+    border-radius:999px;
+    padding:5px 10px;
+    background:#fff8ef;
+    border:1px solid #f1d0bd;
+    font-size:13px;
+    color:var(--brown);
+  }
+  .badge-total span.num{
+    background:var(--brown);color:#fff;
+    border-radius:999px;padding:2px 9px;
+    min-width:28px;text-align:center;
+    font-size:12px;
+  }
+
+  /* Filters grid */
+  .filter-grid{
+    display:grid;
+    grid-template-columns:1.4fr 1.4fr 1fr auto;
+    gap:8px;
+    align-items:flex-end;
+  }
+  @media(max-width:900px){.filter-grid{grid-template-columns:1fr 1fr}}
+  @media(max-width:620px){.filter-grid{grid-template-columns:1fr}}
+  .form-group{display:flex;flex-direction:column;gap:4px;font-size:13px}
+  .label{font-weight:700;color:var(--brown);display:flex;gap:6px;align-items:center}
+  .label span.icon{
+    width:18px;height:18px;border-radius:999px;
+    background:rgba(188,143,116,.18);
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;
+  }
+
+  /* Table */
+  .table-wrap{
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:auto;
+    background:#fff;
+  }
+  table{
+    border-collapse:separate;
+    border-spacing:0;
+    width:100%;
+    min-width:520px;
+  }
+  th,td{
+    border-bottom:1px solid var(--line);
+    padding:8px 10px;
+    font-size:13px;
+    text-align:right;
+    white-space:nowrap;
+  }
+  thead th{
+    background:#f9fafb;
+    font-weight:700;
+    color:var(--brown);
+    position:sticky;
+    top:0;
+    z-index:1;
+  }
+  tbody tr:nth-child(odd){background:#fff}
+  tbody tr:nth-child(even){background:#fffdfb}
+  tbody tr:last-child td{border-bottom:none}
+  .empty-row{text-align:center;color:var(--muted);padding:14px 8px;font-size:13px}
+  .chip{
+    display:inline-block;
+    background:#f9fafb;
+    border-radius:999px;
+    border:1px solid #e5e7eb;
+    padding:2px 8px;
+    font-size:12px;
+  }
+
+  /* Toast (لو حبيت تستخدمه بعدين) */
+  .toast{
+    position:fixed;
+    bottom:16px;
+    right:16px;
+    background:#111827;
+    color:#fff;
+    padding:8px 12px;
+    border-radius:10px;
+    display:none;
+    font-size:13px;
+    z-index:60;
+  }
+</style>
+  <link rel="stylesheet" href="./mzj-ui.css" />
+<link rel="stylesheet" href="./cars.m.css" />
+
+<style>
+  .legacy-cars .topbar,
+  .legacy-cars .header,
+  .legacy-cars header:not(.mzj-topbar){display:none !important;}
+</style>
+
+</head>
+<body class="mzj">
+<header class="mzj-topbar">
+  <div class="topbar-left">
+    <button class="icon-btn" id="mzjSidebarBtn" aria-label="القائمة"><i class="fa-solid fa-bars"></i></button>
+    <div class="brand">
+      <div class="brand-mark">MZJ</div>
+      <div class="brand-text">
+        <div class="brand-title">محمد بن ذعار العجمي للسيارات</div>
+        <div class="brand-sub">Workspace</div>
+      </div>
+    </div>
+  </div>
+  <div class="topbar-center">
+    <div class="mzj-breadcrumb">
+      <span class="crumb">الرئيسية</span>
+      <i class="fa-solid fa-chevron-left"></i>
+      <span class="crumb current">كل السيارات</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="mzj-chip"><i class="fa-regular fa-clock"></i><span id="mzjNow">—</span></div>
+    <button id="btnSignOut" class="btn btn-ghost" style="display:none"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</button>
+  </div>
+</header>
+
+<div class="mzj-shell" id="mzjShell">
+  <aside class="mzj-sidebar" id="mzjSidebar">
+    <div class="side-section">
+      <div class="side-title">القائمة</div>
+      <nav class="side-nav">
+        <a class="side-link tab" href="./sales.m.html"><i class="fa-solid fa-handshake"></i><span>تتبع المبيعات</span></a>
+        <a class="side-link tab" href="./dashboard.m.html"><i class="fa-solid fa-gauge"></i><span>الداش بورد</span></a>
+        <a class="side-link tab" href="./inventory.m.html"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
+        <a class="side-link tab" href="./vt.m.html"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
+        <a class="side-link tab" href="./photoshoot-user.m.html"><i class="fa-solid fa-camera"></i><span>إدارة الطلبات</span></a>
+        <a class="side-link tab active" href="./cars.m.html"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
+        <a class="side-link tab" href="./admin.m.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
+        <a class="side-link tab" href="./Activity.m.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل النشاط</span></a>
+        <a class="side-link tab" href="./act.m.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل الحركات</span></a>
+
+      </nav>
+    </div>
+  </aside>
+
+  <div class="mzj-backdrop" id="mzjBackdrop"></div>
+
+  <main class="mzj-content">
+    <section class="mzj-pagehead">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+    <div>
+      <h1 class="page-title">كل السيارات</h1>
+      <p class="page-desc">عرض وإدارة السيارات.</p>
+    </div>
+    <button class="btn btn-info" id="btnExport">
+      <i class="fa-regular fa-file-excel"></i> تصدير Excel
+    </button>
+  </div>
+
+      <div class="pagehead-left">
+        <h1 class="page-title">كل السيارات</h1>
+        <p class="page-desc">عرض وإدارة السيارات.</p>
+      </div>
+    </section>
+
+    <div class="legacy legacy-cars">
+
+
+<!-- Topbar -->
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="logo">MZJ</div>
+      <div>
+        <h1>تقرير السيارات</h1>
+        <small>مجموعة محمد بن ذعار العجمي للسيارات</small>
+      </div>
+    </div>
+    <div class="tabs">
+      <a class="tab" href="admin.m.html">الإدارة</a>
+      <a class="tab" href="inventory.m.html">المخزون</a>
+      <a class="tab" href="dashboard.m.html">الداش بورد</a>
+      <a class="tab" href="vt.m.html">نقل السيارات</a>
+      <a class="tab" href="photoshoot-user.m.html">إدارة الطلبات</a>
+      <a class="tab active" href="cars.m.html">كل السيارات</a>
+      <a class="tab" href="Activity.m.html">سجل النشاط</a>
+    </div>
+    <div class="row">
+      <div class="status-badge">
+        <span id="connDot" class="dot"></span>
+        <span id="connText">جارِ الاتصال…</span>
+      </div>
+      <button id="btnSignOut" class="btn" style="display:none">
+        <i class="fa-solid fa-right-from-bracket"></i> خروج
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Auth Gate -->
+<div id="authGate" style="min-height:60vh;display:grid;place-items:center;padding:20px;display:none">
+  <div class="card" style="max-width:420px;width:96%">
+    <h2 class="title" style="margin-bottom:8px">
+      <i class="fa-solid fa-user-lock"></i> تسجيل الدخول
+    </h2>
+    <label>البريد الإلكتروني</label>
+    <input id="email" type="email" placeholder="you@example.com"/>
+    <label style="margin-top:8px">كلمة المرور</label>
+    <input id="password" type="password" placeholder="••••••••"/>
+    <div class="row" style="margin-top:8px">
+      <button class="btn btn-primary" id="btnLogin">تسجيل الدخول</button>
+      <button class="btn" id="btnSignup">إنشاء حساب</button>
+    </div>
+    <p class="hint" id="authHint" style="margin-top:8px"></p>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app" style="display:none">
+  <div class="container">
+
+    <!-- فلاتر -->
+    <div class="card">
+      <header>
+        <h3 class="title">
+          <i class="fa-solid fa-filter"></i> فلتر حسب السيارة / البيان / الموديل
+        </h3>
+      </header>
+      <div class="filter-grid" style="margin-top:6px">
+        <div class="form-group">
+          <label class="label">
+            <span class="icon"><i class="fa-solid fa-car-side"></i></span> السيارة
+          </label>
+          <select id="carFilter">
+            <option value="">كل السيارات</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="label">
+            <span class="icon"><i class="fa-solid fa-file-lines"></i></span> البيان
+          </label>
+          <select id="variantFilter">
+            <option value="">كل البيانات</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="label">
+            <span class="icon"><i class="fa-solid fa-calendar"></i></span> الموديل
+          </label>
+          <select id="modelFilter">
+            <option value="">كل الموديلات</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <button class="btn btn-primary" id="btnApply" style="width:100%;justify-content:center">
+            <i class="fa-solid fa-magnifying-glass"></i> تطبيق الفلتر
+          </button>
+        </div>
+      </div>
+      <p class="hint" style="margin-top:6px">
+        اختر سيارة + بيان + موديل (أو أي جزء منهم)، وسيتم تجميع كل السجلات المطابقة في جدول واحد مع إجمالي العدد.
+      </p>
+    </div>
+
+    <!-- نتيجة التجميع -->
+    <div class="card">
+      <header>
+        <h3 class="title">
+          <i class="fa-solid fa-table-list"></i> نتيجة التجميع حسب الفلتر
+        </h3>
+        <button class="btn btn-info" id="btnExport">
+          <i class="fa-regular fa-file-excel"></i> تصدير Excel (حسب الفلتر)
+        </button>
+      </header>
+
+      <div class="summary-row">
+        <div class="summary-left">
+          <div class="badge-total">
+            <span>إجمالي العدد في نتيجة البحث</span>
+            <span class="num" id="grandTotal">0</span>
+          </div>
+          <div class="badge-total">
+            <span>عدد الصفوف بعد التجميع</span>
+            <span class="num" id="groupsCount">0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>السيارة</th>
+              <th>البيان</th>
+              <th>الموديل</th>
+              <th>إجمالي العدد</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody">
+            <tr>
+              <td colspan="5" class="empty-row">جاري تحميل البيانات من قاعدة Firebase…</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast" class="toast">تم</div>
+
+<!-- XLSX -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<script type="module" src="./cars.m.js"></script>
+  <script src="./mzj-ui.js"></script>
+
+    </div>
+  </main>
+</div>
+</body>
+</html>
+
+
+
+
+
+

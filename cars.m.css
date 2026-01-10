@@ -1,0 +1,8 @@
+/* cars.m.css — Mobile overrides for تقرير السيارات only */
+@media (max-width: 768px){
+  .container{padding:0 10px !important}
+  .filter-grid{grid-template-columns:1fr !important}
+  .btn{width:100%}
+  .table-wrap{overflow:hidden}
+  table{min-width:0}
+}

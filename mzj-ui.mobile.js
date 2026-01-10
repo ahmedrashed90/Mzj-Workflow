@@ -8,6 +8,43 @@
 (function () {
   const isMobile = () => window.matchMedia("(max-width: 768px)").matches;
 
+  // ===== Delegated handler for cars cards (edit/delete) =====
+  function __mzjCarsDelegatedHandler(e){
+    const btn = e.target && e.target.closest && e.target.closest("[data-mzj-cars-action]");
+    if(!btn) return;
+
+    // Stop card click and prevent any default
+    e.preventDefault();
+    e.stopPropagation();
+
+    const action = btn.dataset.mzjCarsAction;
+    const rowId = btn.dataset.rowId;
+    const tableId = btn.dataset.tableId || "carsTable";
+    const table = document.getElementById(tableId);
+
+    if(!table || !rowId) return;
+
+    if(action === "edit"){
+      // Open our modal (built from inline editors created by original logic)
+      try{
+        openCarsInlineEditModal(table, rowId);
+      }catch(err){
+        console.error("Cars edit failed:", err);
+        // Fallback: trigger original edit
+        triggerOriginal(table, rowId, "edit");
+      }
+    }else if(action === "del"){
+      try{
+        triggerOriginal(table, rowId, "del");
+      }catch(err){
+        console.error("Cars delete failed:", err);
+      }
+    }
+  }
+
+  // capture=true so it works even if other handlers stop propagation
+  document.addEventListener("click", __mzjCarsDelegatedHandler, true);
+
   function ensureBackdrop() {
     let bd = document.querySelector(".mzj-backdrop");
     if (!bd) {
@@ -161,10 +198,14 @@
   }
 
   function triggerOriginal(table, rowId, type) {
-    if (!table || !rowId) return;
+    if (!table || !rowId) return false;
     const selector = type === "del" ? `[data-del="${rowId}"]` : `[data-edit="${rowId}"]`;
     const btn = table.querySelector(selector);
-    if (btn) btn.click();
+    if (!btn) return false;
+
+    // Use a real MouseEvent so document-level delegation in the main module catches it reliably
+    btn.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+    return true;
   }
 
   
@@ -360,19 +401,18 @@ function rebuildCarsCards() {
       edit.type = "button";
       edit.className = "btn btn-ghost";
       edit.textContent = "تعديل ✎";
-      edit.addEventListener("click", (e) => {
-        e.stopPropagation();
-        openCarsInlineEditModal(table, rowId);
-      });
+      // Use delegated click handler (more reliable with dynamic rendering)
+      edit.dataset.mzjCarsAction = "edit";
+      edit.dataset.rowId = String(rowId || "");
+      edit.dataset.tableId = table.id || "carsTable";
 
       const del = document.createElement("button");
       del.type = "button";
       del.className = "btn btn-danger";
       del.textContent = "حذف 🗑";
-      del.addEventListener("click", (e) => {
-        e.stopPropagation();
-        triggerOriginal(table, rowId, "del");
-      });
+      del.dataset.mzjCarsAction = "del";
+      del.dataset.rowId = String(rowId || "");
+      del.dataset.tableId = table.id || "carsTable";
 
       actions.appendChild(edit);
       actions.appendChild(del);
@@ -401,6 +441,23 @@ function rebuildCarsCards() {
       rebuildCarsCards();
     });
     obs.observe(tbody, { childList: true, subtree: true });
+  }
+
+
+  function __mzjObserveCarsTable(){
+    const table = getCarsTable();
+    if(!table) return;
+    const tbody = table.querySelector("tbody");
+    if(!tbody) return;
+
+    const rebuild = () => {
+      try { convertCarsTableToCards(); } catch(e) { /* ignore */ }
+    };
+
+    const obs = new MutationObserver(() => rebuild());
+    obs.observe(tbody, { childList:true, subtree:true });
+    // initial
+    rebuild();
   }
 
   function init() {

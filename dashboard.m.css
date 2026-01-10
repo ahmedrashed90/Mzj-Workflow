@@ -96,3 +96,40 @@ html, body{
 #backdrop table td::before{
   content:none !important;
 }
+/* ================================
+   FIX MODAL TABLE – NO CARDS
+   ================================ */
+#backdrop table,
+#backdrop table tbody,
+#backdrop table tr,
+#backdrop table td {
+  display: table !important;
+  width: 100% !important;
+}
+
+#backdrop table thead{
+  display: table-header-group !important;
+}
+
+#backdrop table tr{
+  border: none !important;
+}
+
+#backdrop table td{
+  border-bottom: 1px solid #e5e5e5 !important;
+  padding: 8px 10px !important;
+}
+
+#backdrop table td::before{
+  content: none !important;
+}
+/* ================================
+   SIDEBAR MOBILE FIX
+   ================================ */
+.mzj-sidebar{
+  z-index: 999 !important;
+}
+
+#mzjSidebarOverlay{
+  z-index: 998 !important;
+}

@@ -1,7 +1,8 @@
 /* MZJ Mobile JS — Admin page only
    - Sidebar toggle (existing button #mzjSidebarBtn)
-   - Tabs -> dropdown
-   - Tables -> card grid (3 columns per row)
+   - Inner Tabs -> dropdown list
+   - "تعديل السيارات" table (#carsTable) -> cards grid (3 columns per row)
+     + click card / buttons triggers original edit/delete so logic stays intact
 */
 
 (function () {
@@ -25,49 +26,66 @@
     });
   }
 
-  function setupTabsDropdown() {
-    const tabs = document.querySelector(".mzj-tabs");
-    if (!tabs) return;
+  function setupInnerTabsDropdown() {
+    const tabsWrap = document.querySelector(".inner-tabs");
+    if (!tabsWrap) return;
 
-    const tabButtons = Array.from(tabs.querySelectorAll("[data-tab]"));
+    const tabButtons = Array.from(tabsWrap.querySelectorAll(".inner-tab[data-target]"));
     if (!tabButtons.length) return;
 
-    // Hide tabs on mobile via CSS, but create dropdown
-    let select = document.querySelector(".mzj-tabs-select");
+    // create dropdown
+    let select = document.querySelector(".inner-tabs-select");
     if (!select) {
       select = document.createElement("select");
-      select.className = "mzj-tabs-select";
-      tabs.parentElement.insertBefore(select, tabs);
+      select.className = "inner-tabs-select";
+      tabsWrap.parentElement.insertBefore(select, tabsWrap);
     }
 
     select.innerHTML = "";
     tabButtons.forEach((b) => {
       const opt = document.createElement("option");
-      opt.value = b.getAttribute("data-tab");
+      opt.value = b.getAttribute("data-target");
       opt.textContent = b.textContent.trim();
       select.appendChild(opt);
     });
 
-    // find active tab
     const activeBtn = tabButtons.find(b => b.classList.contains("active")) || tabButtons[0];
-    select.value = activeBtn.getAttribute("data-tab");
+    select.value = activeBtn.getAttribute("data-target");
 
     select.addEventListener("change", () => {
       const target = select.value;
-      const btn = tabButtons.find(b => b.getAttribute("data-tab") === target);
+      const btn = tabButtons.find(b => b.getAttribute("data-target") === target);
       if (btn) btn.click();
     });
   }
 
-  function tableToCards(table) {
-    const thead = table.querySelector("thead");
+  function getCarsTable() {
+    return document.getElementById("carsTable");
+  }
+
+  function triggerOriginal(table, rowId, type) {
+    if (!table || !rowId) return;
+    const selector = type === "del" ? `[data-del="${rowId}"]` : `[data-edit="${rowId}"]`;
+    const btn = table.querySelector(selector);
+    if (btn) btn.click();
+  }
+
+  function rebuildCarsCards() {
+    const table = getCarsTable();
+    if (!table) return;
+
     const tbody = table.querySelector("tbody");
     if (!tbody) return;
 
-    const headers = thead
-      ? Array.from(thead.querySelectorAll("th")).map(th => th.textContent.trim())
-      : [];
+    // container target
+    const wrap = table.closest(".table-wrap") || table.parentElement;
+    if (!wrap) return;
 
+    // remove old cards
+    const old = wrap.querySelector(".mzj-table-cards");
+    if (old) old.remove();
+
+    const headers = Array.from(table.querySelectorAll("thead th")).map(th => th.textContent.trim());
     const rows = Array.from(tbody.querySelectorAll("tr"));
     if (!rows.length) return;
 
@@ -75,30 +93,34 @@
     cardsWrap.className = "mzj-table-cards";
 
     rows.forEach((tr) => {
+      const editBtn = tr.querySelector("[data-edit]");
+      const delBtn  = tr.querySelector("[data-del]");
+      const rowId = editBtn ? editBtn.getAttribute("data-edit") : (delBtn ? delBtn.getAttribute("data-del") : "");
+
       const tds = Array.from(tr.querySelectorAll("td"));
       if (!tds.length) return;
 
-      // Create card
       const card = document.createElement("div");
       card.className = "mzj-row-card";
+      if (rowId) card.dataset.rowId = rowId;
+
+      // click on card = edit
+      card.addEventListener("click", (e) => {
+        // avoid double triggering when clicking action buttons
+        const target = e.target;
+        if (target && (target.closest(".mzj-row-actions"))) return;
+        triggerOriginal(table, rowId, "edit");
+      });
 
       const grid = document.createElement("div");
       grid.className = "mzj-row-grid";
 
-      // If there are action buttons/inputs, keep them as actions
-      const actions = document.createElement("div");
-      actions.className = "mzj-row-actions";
+      // last column is actions — skip it
+      const maxCols = Math.max(0, tds.length - 1);
 
-      tds.forEach((td, i) => {
-        const hasBtn = td.querySelector("button, a, input, select, textarea");
-        const text = td.textContent.trim();
-
-        // If cell contains controls (edit/delete), move to actions
-        if (hasBtn && (td.querySelector("button") || td.querySelector("a"))) {
-          const clones = Array.from(td.querySelectorAll("button, a")).map(el => el.cloneNode(true));
-          clones.forEach(c => actions.appendChild(c));
-          return;
-        }
+      for (let i = 0; i < maxCols; i++) {
+        const td = tds[i];
+        const text = (td.textContent || "").trim();
 
         const cell = document.createElement("div");
         cell.className = "mzj-cell";
@@ -114,42 +136,64 @@
         cell.appendChild(k);
         cell.appendChild(v);
         grid.appendChild(cell);
-      });
-
-      card.appendChild(grid);
-
-      // Only append actions if there are any
-      if (actions.children.length) {
-        card.appendChild(actions);
       }
 
+      const actions = document.createElement("div");
+      actions.className = "mzj-row-actions";
+
+      const edit = document.createElement("button");
+      edit.type = "button";
+      edit.className = "btn btn-ghost";
+      edit.textContent = "تعديل ✎";
+      edit.addEventListener("click", (e) => {
+        e.stopPropagation();
+        triggerOriginal(table, rowId, "edit");
+      });
+
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "btn btn-danger";
+      del.textContent = "حذف 🗑";
+      del.addEventListener("click", (e) => {
+        e.stopPropagation();
+        triggerOriginal(table, rowId, "del");
+      });
+
+      actions.appendChild(edit);
+      actions.appendChild(del);
+
+      card.appendChild(grid);
+      card.appendChild(actions);
       cardsWrap.appendChild(card);
     });
 
-    // Replace table wrapper content
-    const wrap = table.closest(".table-wrap") || table.parentElement;
-    if (!wrap) return;
-
-    // Keep original table hidden (so listeners depending on it won't break)
+    // hide original table (keep it for logic)
     table.style.display = "none";
     wrap.appendChild(cardsWrap);
   }
 
-  function setupTables() {
-    document.querySelectorAll("table").forEach((t) => {
-      // avoid double conversion
-      const wrap = t.closest(".table-wrap") || t.parentElement;
-      if (wrap && wrap.querySelector(".mzj-table-cards")) return;
-      tableToCards(t);
+  function observeCarsTable() {
+    const table = getCarsTable();
+    if (!table) return;
+    const tbody = table.querySelector("tbody");
+    if (!tbody) return;
+
+    // initial build (in case rows already present)
+    rebuildCarsCards();
+
+    const obs = new MutationObserver(() => {
+      // rebuild when rows change (renderTable() clears/append rows)
+      rebuildCarsCards();
     });
+    obs.observe(tbody, { childList: true, subtree: true });
   }
 
   function init() {
     if (!isMobile()) return;
     ensureBackdrop();
     setupSidebarToggle();
-    setupTabsDropdown();
-    setupTables();
+    setupInnerTabsDropdown();
+    observeCarsTable();
   }
 
   document.addEventListener("DOMContentLoaded", init);

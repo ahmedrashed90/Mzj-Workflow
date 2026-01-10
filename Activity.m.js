@@ -1,10 +1,34 @@
 // Activity.m.js
-// Mobile-only logic for Activity page (cards view)
+// Mobile-only logic for Activity page (cards view + sidebar toggle)
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import { getFirestore, collection, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
+// ===== Sidebar toggle (لا يعتمد على أي JS خارجي) =====
+function setupMobileSidebar(){
+  const btn = document.getElementById("mzjSidebarBtn");
+  const backdrop = document.getElementById("mzjBackdrop");
+  const openClass = "mzj-sidebar-open";
+
+  if (btn){
+    btn.addEventListener("click", () => {
+      document.body.classList.toggle(openClass);
+    });
+  }
+  if (backdrop){
+    backdrop.addEventListener("click", () => {
+      document.body.classList.remove(openClass);
+    });
+  }
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") document.body.classList.remove(openClass);
+  });
+}
+
+setupMobileSidebar();
+
+// ===== Firebase (نفس الكونفيج) =====
 const firebaseConfig = {
   apiKey: "AIzaSyC614bGqnYf4Q-weTNemzWENTpa8DjGeHw",
   authDomain: "mzj-agenda.firebaseapp.com",

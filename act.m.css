@@ -1,0 +1,114 @@
+/* act.m.css — Mobile overrides for سجل الحركات فقط */
+/* الهدف: موبايل ثابت بدون لمس نسخة الـ PC */
+
+@media (max-width: 768px){
+
+  /* Topbar: سطر واحد */
+  .mzj-topbar{
+    height: 52px !important;
+    padding: 0 12px !important;
+  }
+  .mzj-topbar .topbar-center,
+  .mzj-topbar .topbar-right .mzj-chip,
+  .mzj-topbar .topbar-right #btnSignOut{
+    display:none !important;
+  }
+  .mzj-topbar .brand-title{
+    font-size: 13px !important;
+    line-height: 1.2;
+  }
+  .mzj-topbar .brand-sub{ display:none !important; }
+
+  /* Sidebar drawer */
+  #mzjSidebar.mzj-sidebar{
+    position: fixed !important;
+    top: 0; right: 0;
+    height: 100vh;
+    width: 260px;
+    max-width: 82vw;
+    transform: translateX(110%);
+    transition: transform .22s ease;
+    z-index: 3000;
+    overflow-y: auto;
+    background: #fff;
+    box-shadow: -10px 0 28px rgba(0,0,0,.14);
+    border-left: 1px solid rgba(0,0,0,.08);
+  }
+  body.mzj-sidebar-open #mzjSidebar.mzj-sidebar{ transform: translateX(0); }
+
+  #mzjBackdrop.mzj-backdrop{
+    position: fixed !important;
+    inset: 0;
+    background: rgba(0,0,0,.38);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s ease;
+    z-index: 2900;
+  }
+  body.mzj-sidebar-open #mzjBackdrop.mzj-backdrop{
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* App container spacing */
+  .container{ padding: 0 10px 28px !important; margin: 12px auto !important; }
+  .card{ padding: 12px !important; }
+  .card-header{ gap: 10px !important; }
+
+  /* Filters: stack vertically */
+  .row{ flex-direction: column !important; align-items: stretch !important; }
+  .row > *{ width: 100% !important; }
+  #movesFromDate, #movesToDate{ min-width: 100% !important; width: 100% !important; }
+  #quickSearch{ min-width: 100% !important; width: 100% !important; font-size: 16px !important; } /* يمنع تكبير iOS */
+  .btn{ width: 100% !important; justify-content: center !important; }
+
+  /* Hide table on mobile and show cards */
+  .table-wrap{ border: none !important; border-radius: 0 !important; }
+  #movesTable{ display:none !important; }
+
+  /* Cards container injected by JS */
+  .moves-cards{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    margin-top: 10px;
+  }
+  .move-card{
+    background:#fff;
+    border:1px solid #eee;
+    border-radius:16px;
+    padding:12px;
+  }
+  .move-grid{
+    display:grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap:8px;
+  }
+  .move-cell{
+    border:1px solid #f0f0f0;
+    border-radius:12px;
+    padding:8px;
+    min-width:0;
+  }
+  .move-k{
+    font-size:11px;
+    opacity:.75;
+    margin-bottom:4px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .move-v{
+    font-size:13px;
+    font-weight:800;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .move-v.copyable{ text-decoration: underline dotted; }
+
+  /* Small screens: 2 columns */
+  @media (max-width: 420px){
+    .move-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+}

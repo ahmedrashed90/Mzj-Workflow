@@ -24,13 +24,15 @@
   }
 
   function applyMobileTables(){
+    // OPTION A: Only Create-Order table as Form Grid
     if(!(window.matchMedia && window.matchMedia('(max-width:900px)').matches)) return;
 
     // استهدف جدول "إنشاء طلب" + أي جدول داخل المحتوى
-    const candidates = document.querySelectorAll(
-      '#createOrderTable, #orderTable, #requestTable, .create-order table, .order-create table, main table, .container table'
-    );
-    candidates.forEach(labelTable);
+    const createTable = document.querySelector("#inner-create table");
+    if(createTable){
+      labelTable(createTable);
+      createTable.classList.add("mzj-formgrid");
+    }
   }
 
 

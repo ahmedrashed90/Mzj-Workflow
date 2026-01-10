@@ -1,9 +1,5 @@
 /* dashboard.m.css — Mobile UI for dashboard.m.html (MZJ Workspace)
-   ✅ Topbar موبايل
-   ✅ Sidebar Drawer (فتح/قفل) + Overlay
-   ✅ كروت بدون هوامش
-   ✅ مودال: جدول بيانات يتحول GridTable (3 أعمدة × 4 صفوف) بشكل Excel
-   ⚠️ الملف ده فقط للموبايل — لا يلمس نسخة الـ PC
+   الهدف: Topbar موبايل + Sidebar اوف-كانفاس + كروت بدون هوامش + تحويل جداول المودال إلى كروت
 */
 
 :root{
@@ -14,11 +10,13 @@
   --mzj-shadow:0 10px 28px rgba(0,0,0,.08);
 }
 
+/* امنع أي سكرول أفقي مزعج */
 html, body{ max-width:100%; overflow-x:hidden; background:var(--mzj-cream); }
 
+/* ===== Mobile Shell ===== */
 @media (max-width: 900px){
 
-  /* ===== Topbar ===== */
+  /* topbar */
   header.mzj-topbar{
     position: sticky; top: 0; z-index: 50;
     padding: 10px 12px !important;
@@ -41,37 +39,30 @@ html, body{ max-width:100%; overflow-x:hidden; background:var(--mzj-cream); }
     font-weight:800;
     letter-spacing:.5px;
   }
-  header.mzj-topbar .brand-title{
-    font-size:16px !important; line-height:1.15;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-    max-width: 62vw;
-  }
+  header.mzj-topbar .brand-title{ font-size:16px !important; line-height:1.15; }
   header.mzj-topbar .brand-sub{ font-size:12px !important; opacity:.75; }
   header.mzj-topbar .topbar-center,
   header.mzj-topbar .topbar-right,
   header.mzj-topbar .mzj-breadcrumb{ display:none !important; }
 
-  /* زر السايدبار */
-  #mzjSidebarBtn.icon-btn,
-  .mzjSidebarBtn,
-  [data-mzj-sidebar-btn]{
+  #mzjSidebarBtn.icon-btn{
     width:44px; height:44px;
     border-radius: 14px;
     border: 1px solid var(--mzj-border);
     background:#fff;
-    display:grid; place-items:center;
   }
 
-  /* ===== Shell single column ===== */
+  /* shell becomes single column */
   .mzj-shell{ display:block !important; }
   main.mzj-main{ padding: 12px !important; }
   .container{ padding: 0 !important; }
 
-  /* ===== Cards: بدون هوامش ===== */
+  /* cards: بدون هوامش خارجية */
   .cards{ margin:0 !important; gap:10px !important; }
-  .card, .short-card{ margin:0 !important; }
+  .card{ margin:0 !important; }
+  .short-card{ margin:0 !important; }
 
-  /* ===== Sidebar Drawer ===== */
+  /* Sidebar off-canvas */
   .mzj-sidebar{
     position: fixed !important;
     top: 0; right: 0;
@@ -89,7 +80,7 @@ html, body{ max-width:100%; overflow-x:hidden; background:var(--mzj-cream); }
   }
   .mzj-sidebar.open{ transform: translateX(0); }
 
-  /* Overlay */
+  /* overlay */
   #mzjSidebarOverlay{
     position: fixed;
     inset: 0;
@@ -104,40 +95,295 @@ html, body{ max-width:100%; overflow-x:hidden; background:var(--mzj-cream); }
     pointer-events: auto;
   }
 
-  /* ===== Groups / chips (اختياري) ===== */
+  /* داخل الجروب */
   .group-head{
     padding: 12px !important;
     border-radius: 16px !important;
   }
   .group-title{ font-size:16px !important; }
   .group-total{ font-size:22px !important; min-width:58px !important; }
+
+  /* chips */
   .chips{ gap:8px !important; }
   .chip{ margin:0 !important; }
 
-  /* ===== Modal width ===== */
-  #backdrop .modal,
-  .mzj-modal .modal,
-  .modal{
+  /* ===== Modal tables -> cards ===== */
+  #backdrop .modal{
     width: min(720px, calc(100vw - 18px)) !important;
     margin: 8px auto !important;
     border-radius: 18px !important;
   }
 
-  /* ===== Excel-like GridTable inside modal ===== */
+  /* اخفي الجدول بالشكل التقليدي وحوله لكروت */
+  #backdrop table{ width:100% !important; }
+  #backdrop table thead{ display:none !important; }
+  #backdrop table,
+  #backdrop table tbody,
+  #backdrop table tr,
+  #backdrop table td{
+    display:block !important;
+    width:100% !important;
+  }
+
+  #backdrop table tr{
+    background:#fff;
+    border: 1px solid var(--mzj-border);
+    border-radius: 14px;
+    padding: 10px 12px;
+    margin: 10px 0;
+  }
+
+  #backdrop table td{
+    display:flex !important;
+    justify-content:space-between;
+    gap: 14px;
+    padding: 8px 0;
+    border-bottom: 1px dashed rgba(62,36,32,.14);
+    font-size: 14px;
+  }
+  #backdrop table td:last-child{ border-bottom:none; padding-bottom:2px; }
+  #backdrop table td::before{
+    content: attr(data-label);
+    font-weight: 800;
+    color: var(--mzj-brown);
+    opacity: .92;
+    flex: 0 0 44%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* buttons inside modals */
+  #backdrop .btn{ border-radius:14px !important; }
+}
+
+
+
+/* ================================
+   Professional modal data styling
+   ================================ */
+@media (max-width: 768px){
+
+  /* Make dashboard cards edge-to-edge */
+  .cards-grid{ gap: 8px !important; }
+  .card-item{ margin: 0 !important; }
+  .card-item, .card{
+    border-radius: 16px !important;
+  }
+
+  /* Modal container tweaks */
+  .modal, .mzj-modal, .dialog, .popup{
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modal-content, .mzj-modal-content, .dialog-content, .popup-content{
+    border-radius: 18px !important;
+  }
+
+  /* Hide original modal table, show our cards */
+  .mzj-modal .table-wrap,
+  .modal .table-wrap{
+    padding: 0 !important;
+    border: none !important;
+  }
+
+  .mzj-modal table,
+  .modal table{
+    border-radius: 0 !important;
+  }
+
+  /* Generated cards wrapper */
+  .mzj-detail-cards{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 12px 14px;
+  }
+
+  .mzj-detail-card{
+    background: #fff;
+    border: 1px solid rgba(0,0,0,.07);
+    border-radius: 16px;
+    padding: 12px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.05);
+  }
+
+  /* Grid of fields inside a single record */
+  .mzj-detail-grid{
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .mzj-field{
+    border: 1px solid rgba(0,0,0,.06);
+    border-radius: 14px;
+    padding: 10px;
+    min-width: 0;
+    background: #fff;
+  }
+
+  .mzj-k{
+    font-size: 11px;
+    opacity: .75;
+    margin: 0 0 6px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mzj-v{
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.35;
+    word-break: break-word;
+  }
+
+  /* Copyable values (VIN, phone, etc.) */
+  .mzj-v.copyable{
+    text-decoration: underline dotted;
+    cursor: pointer;
+  }
+
+  /* Long text gets full width */
+  .mzj-field.full{
+    grid-column: 1 / -1;
+  }
+
+  /* Small screens: 1 column */
+  @media (max-width: 420px){
+    .mzj-detail-grid{ grid-template-columns: 1fr; }
+  }
+}
+
+
+
+/* ================================
+   Modal table (12 columns) -> vertical grid (3 columns per row)
+   المطلوب: جدول لكن مرتب بالطول
+   ================================ */
+@media (max-width: 768px){
+
+  /* Hide any previously generated cards (if exist) */
+  .mzj-detail-cards{ display:none !important; }
+
+  /* Show modal tables */
+  .mzj-modal table,
+  .modal table,
+  dialog table,
+  .popup table{
+    display: block !important;
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+
+  /* Hide thead on mobile (we will show labels per cell) */
+  .mzj-modal table thead,
+  .modal table thead,
+  dialog table thead,
+  .popup table thead{
+    display: none !important;
+  }
+
+  /* Turn each record row into a 3-column grid */
+  .mzj-modal table tbody tr,
+  .modal table tbody tr,
+  dialog table tbody tr,
+  .popup table tbody tr{
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    padding: 12px !important;
+    margin: 0 0 12px 0 !important;
+    background: #fff !important;
+    border: 1px solid rgba(0,0,0,.07) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 6px 18px rgba(0,0,0,.05) !important;
+  }
+
+  /* Each cell becomes a mini block with label + value */
+  .mzj-modal table tbody td,
+  .modal table tbody td,
+  dialog table tbody td,
+  .popup table tbody td{
+    display: block !important;
+    border: 1px solid rgba(0,0,0,.06) !important;
+    border-radius: 14px !important;
+    padding: 10px !important;
+    background: #fff !important;
+    min-width: 0 !important;
+  }
+
+  .mzj-modal table tbody td::before,
+  .modal table tbody td::before,
+  dialog table tbody td::before,
+  .popup table tbody td::before{
+    content: attr(data-label);
+    display: block;
+    font-size: 11px;
+    opacity: .75;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Value styling */
+  .mzj-modal table tbody td,
+  .modal table tbody td,
+  dialog table tbody td,
+  .popup table tbody td{
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    line-height: 1.35 !important;
+    word-break: break-word !important;
+  }
+
+  /* Full-width for last cell in each 3-group when needed (like الملاحظات) */
+  .mzj-modal table tbody td.mzj-full,
+  .modal table tbody td.mzj-full,
+  dialog table tbody td.mzj-full,
+  .popup table tbody td.mzj-full{
+    grid-column: 1 / -1 !important;
+  }
+
+  /* Small screens: 2 columns */
+  @media (max-width: 420px){
+    .mzj-modal table tbody tr,
+    .modal table tbody tr,
+    dialog table tbody tr,
+    .popup table tbody tr{
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+  }
+}
+
+
+
+/* ================================
+   Modal grid-table (3 columns x 4 rows) — Excel-like
+   ================================ */
+@media (max-width: 768px){
+  /* Hide original table on mobile (we will render a grid-table right after it) */
+  .mzj-modal table.mzj-mobile-grid-src,
+  .modal table.mzj-mobile-grid-src,
+  dialog table.mzj-mobile-grid-src,
+  .popup table.mzj-mobile-grid-src{
+    display:none !important;
+  }
+
   .mzj-modal-gridtable{
     margin: 12px 12px 14px;
     border: 1px solid rgba(0,0,0,.10);
     border-radius: 14px;
     overflow: hidden;
     background: #fff;
-    direction: rtl !important;
-    text-align: right !important;
   }
 
   .mzj-modal-gridtable .mzj-r{
     display:grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    direction: rtl !important;
   }
 
   .mzj-modal-gridtable .mzj-cell{
@@ -145,9 +391,10 @@ html, body{ max-width:100%; overflow-x:hidden; background:var(--mzj-cream); }
     border-left: 1px solid rgba(0,0,0,.08);
     border-top: 1px solid rgba(0,0,0,.08);
     min-width: 0;
-    text-align: right !important;
   }
+  /* first row no top border */
   .mzj-modal-gridtable .mzj-r:first-child .mzj-cell{ border-top: none; }
+  /* last column no left border (rtl) */
   .mzj-modal-gridtable .mzj-cell:last-child{ border-left: none; }
 
   .mzj-modal-gridtable .mzj-h{
@@ -157,7 +404,6 @@ html, body{ max-width:100%; overflow-x:hidden; background:var(--mzj-cream); }
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    text-align: right !important;
   }
 
   .mzj-modal-gridtable .mzj-val{
@@ -165,13 +411,70 @@ html, body{ max-width:100%; overflow-x:hidden; background:var(--mzj-cream); }
     font-weight: 800;
     line-height: 1.35;
     word-break: break-word;
+  }
+
+  /* Small screens -> 2 columns, still keeps order */
+  @media (max-width: 420px){
+    .mzj-modal-gridtable .mzj-r{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+}
+
+
+
+/* ================================
+   RTL alignment for modal grid-table
+   ================================ */
+@media (max-width: 768px){
+  .mzj-modal-gridtable{
+    direction: rtl;
+    text-align: right;
+  }
+  .mzj-modal-gridtable .mzj-r{
+    direction: rtl;
+  }
+  .mzj-modal-gridtable .mzj-cell{
+    text-align: right;
+  }
+  .mzj-modal-gridtable .mzj-h{
+    text-align: right;
+  }
+  .mzj-modal-gridtable .mzj-val{
+    text-align: right;
+  }
+}
+/* ================================
+   FORCE RTL + RIGHT ALIGN (Modal Data)
+   ================================ */
+@media (max-width: 768px){
+
+  /* المودال كله */
+  .mzj-modal,
+  .modal,
+  dialog,
+  .popup{
+    direction: rtl !important;
     text-align: right !important;
   }
 
-  /* source tables hidden on mobile when transformed */
-  table.mzj-mobile-grid-src{ display:none !important; }
+  /* grid table container */
+  .mzj-modal-gridtable,
+  .mzj-modal-gridtable *{
+    direction: rtl !important;
+    text-align: right !important;
+  }
 
-  @media (max-width: 420px){
-    .mzj-modal-gridtable .mzj-r{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* القيم نفسها */
+  .mzj-val,
+  .mzj-cell,
+  .mzj-h{
+    text-align: right !important;
+  }
+
+  /* لو فيه inputs أو textareas */
+  .mzj-modal input,
+  .mzj-modal textarea,
+  .mzj-modal select{
+    direction: rtl !important;
+    text-align: right !important;
   }
 }

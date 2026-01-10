@@ -1,0 +1,133 @@
+/* inventory.m.css — Mobile overrides for inventory.m.html
+   ✅ Drawer Sidebar + Compact Topbar
+   ✅ Tables: 3 cells per row (vertical) with labels
+   ⚠️ لا يغيّر أي منطق/داتا
+*/
+
+:root{
+  --mzj-brown: rgb(62,36,32);
+  --mzj-beige: rgb(188,143,116);
+  --mzj-cream: #fff8ef;
+  --mzj-border: rgba(62,36,32,.14);
+  --mzj-shadow: 0 10px 28px rgba(0,0,0,.10);
+}
+
+html,body{max-width:100%; overflow-x:hidden; background:var(--mzj-cream);}
+
+@media (max-width: 900px){
+
+  /* فك أي جريد ديسكتوب يحجز عمود */
+  .mzj-shell{ display:block !important; }
+  .mzj-shell > main,
+  .mzj-content,
+  main.mzj-main{ width:100% !important; margin:0 !important; padding: 12px !important; }
+  .container{ max-width:100% !important; padding:0 !important; }
+
+  /* Topbar compact */
+  header.mzj-topbar{
+    position: sticky; top:0; z-index: 60;
+    padding: 10px 12px !important;
+    background: rgba(255,248,239,.92);
+    border-bottom: 1px solid var(--mzj-border);
+    backdrop-filter: blur(10px);
+  }
+  header.mzj-topbar .topbar-center,
+  header.mzj-topbar .topbar-right,
+  header.mzj-topbar .mzj-breadcrumb{ display:none !important; }
+  header.mzj-topbar .brand-title{
+    font-size: 16px !important;
+    white-space: nowrap; overflow:hidden; text-overflow: ellipsis;
+    max-width: 62vw;
+  }
+
+  /* Sidebar drawer */
+  .mzj-sidebar,
+  #mzjSidebar{
+    position: fixed !important;
+    top:0; right:0;
+    height:100vh;
+    width: 280px;
+    max-width: 86vw;
+    transform: translateX(110%);
+    transition: transform .22s ease;
+    z-index: 80;
+    background:#fff;
+    border-left: 1px solid var(--mzj-border);
+    box-shadow: var(--mzj-shadow);
+    overflow:auto;
+    padding-bottom: 24px;
+  }
+  .mzj-sidebar.open,
+  #mzjSidebar.open{ transform: translateX(0); }
+
+  /* Overlay (created by JS if missing) */
+  #mzjSidebarOverlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.35);
+    z-index: 70;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s ease;
+  }
+  #mzjSidebarOverlay.show{
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Inputs: منع زووم iOS */
+  input, select, textarea{ font-size:16px !important; }
+
+  /* Reduce card/table paddings */
+  .card, .short-card{ margin:0 !important; border-radius: 16px !important; }
+  .cards{ margin:0 !important; gap:10px !important; }
+
+  /* ===== Mobile table style (3 per row) ===== */
+  table.mzj-mobile-table{
+    width:100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    display:block !important;
+  }
+  table.mzj-mobile-table thead{ display:none !important; }
+  table.mzj-mobile-table tbody{ display:block !important; }
+  table.mzj-mobile-table tbody tr{
+    display:grid !important;
+    grid-template-columns: repeat(3, minmax(0,1fr)) !important;
+    gap: 10px !important;
+    padding: 12px !important;
+    margin: 0 0 12px 0 !important;
+    background:#fff !important;
+    border: 1px solid rgba(0,0,0,.08) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 6px 18px rgba(0,0,0,.05) !important;
+  }
+  table.mzj-mobile-table tbody td{
+    display:block !important;
+    background:#fff !important;
+    border: 1px solid rgba(0,0,0,.06) !important;
+    border-radius: 14px !important;
+    padding: 10px !important;
+    min-width:0 !important;
+    direction: rtl !important;
+    text-align: right !important;
+    font-weight: 800 !important;
+    line-height: 1.35 !important;
+    word-break: break-word !important;
+  }
+  table.mzj-mobile-table tbody td::before{
+    content: attr(data-label);
+    display:block;
+    font-size: 11px;
+    opacity: .75;
+    margin-bottom: 6px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow:hidden;
+    text-overflow: ellipsis;
+  }
+
+  @media (max-width: 420px){
+    table.mzj-mobile-table tbody tr{ grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+  }
+}

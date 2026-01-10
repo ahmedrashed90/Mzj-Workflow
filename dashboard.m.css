@@ -1,0 +1,158 @@
+/* dashboard.m.css — Mobile UI for dashboard.m.html (MZJ Workspace)
+   الهدف: Topbar موبايل + Sidebar اوف-كانفاس + كروت بدون هوامش + تحويل جداول المودال إلى كروت
+*/
+
+:root{
+  --mzj-brown:#3e2420;
+  --mzj-beige:#bc8f74;
+  --mzj-cream:#fff8ef;
+  --mzj-border:rgba(62,36,32,.14);
+  --mzj-shadow:0 10px 28px rgba(0,0,0,.08);
+}
+
+/* امنع أي سكرول أفقي مزعج */
+html, body{ max-width:100%; overflow-x:hidden; background:var(--mzj-cream); }
+
+/* ===== Mobile Shell ===== */
+@media (max-width: 900px){
+
+  /* topbar */
+  header.mzj-topbar{
+    position: sticky; top: 0; z-index: 50;
+    padding: 10px 12px !important;
+    border-bottom: 1px solid var(--mzj-border);
+    background: rgba(255,248,239,.92);
+    backdrop-filter: blur(10px);
+  }
+  header.mzj-topbar .topbar-left{
+    width:100%;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:10px;
+  }
+  header.mzj-topbar .brand{ display:flex; align-items:center; gap:10px; }
+  header.mzj-topbar .brand-mark{
+    width:44px; height:44px; min-width:44px;
+    border-radius: 14px;
+    display:grid; place-items:center;
+    background: var(--mzj-brown);
+    color:#fff;
+    font-weight:800;
+    letter-spacing:.5px;
+  }
+  header.mzj-topbar .brand-title{ font-size:16px !important; line-height:1.15; }
+  header.mzj-topbar .brand-sub{ font-size:12px !important; opacity:.75; }
+  header.mzj-topbar .topbar-center,
+  header.mzj-topbar .topbar-right,
+  header.mzj-topbar .mzj-breadcrumb{ display:none !important; }
+
+  #mzjSidebarBtn.icon-btn{
+    width:44px; height:44px;
+    border-radius: 14px;
+    border: 1px solid var(--mzj-border);
+    background:#fff;
+  }
+
+  /* shell becomes single column */
+  .mzj-shell{ display:block !important; }
+  main.mzj-main{ padding: 12px !important; }
+  .container{ padding: 0 !important; }
+
+  /* cards: بدون هوامش خارجية */
+  .cards{ margin:0 !important; gap:10px !important; }
+  .card{ margin:0 !important; }
+  .short-card{ margin:0 !important; }
+
+  /* Sidebar off-canvas */
+  .mzj-sidebar{
+    position: fixed !important;
+    top: 0; right: 0;
+    height: 100vh;
+    width: 280px;
+    max-width: 86vw;
+    transform: translateX(110%);
+    transition: transform .22s ease;
+    z-index: 80;
+    box-shadow: var(--mzj-shadow);
+    border-left: 1px solid var(--mzj-border);
+    background:#fff;
+    overflow:auto;
+    padding-bottom: 24px;
+  }
+  .mzj-sidebar.open{ transform: translateX(0); }
+
+  /* overlay */
+  #mzjSidebarOverlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.35);
+    z-index: 70;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s ease;
+  }
+  #mzjSidebarOverlay.show{
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* داخل الجروب */
+  .group-head{
+    padding: 12px !important;
+    border-radius: 16px !important;
+  }
+  .group-title{ font-size:16px !important; }
+  .group-total{ font-size:22px !important; min-width:58px !important; }
+
+  /* chips */
+  .chips{ gap:8px !important; }
+  .chip{ margin:0 !important; }
+
+  /* ===== Modal tables -> cards ===== */
+  #backdrop .modal{
+    width: min(720px, calc(100vw - 18px)) !important;
+    margin: 8px auto !important;
+    border-radius: 18px !important;
+  }
+
+  /* اخفي الجدول بالشكل التقليدي وحوله لكروت */
+  #backdrop table{ width:100% !important; }
+  #backdrop table thead{ display:none !important; }
+  #backdrop table,
+  #backdrop table tbody,
+  #backdrop table tr,
+  #backdrop table td{
+    display:block !important;
+    width:100% !important;
+  }
+
+  #backdrop table tr{
+    background:#fff;
+    border: 1px solid var(--mzj-border);
+    border-radius: 14px;
+    padding: 10px 12px;
+    margin: 10px 0;
+  }
+
+  #backdrop table td{
+    display:flex !important;
+    justify-content:space-between;
+    gap: 14px;
+    padding: 8px 0;
+    border-bottom: 1px dashed rgba(62,36,32,.14);
+    font-size: 14px;
+  }
+  #backdrop table td:last-child{ border-bottom:none; padding-bottom:2px; }
+  #backdrop table td::before{
+    content: attr(data-label);
+    font-weight: 800;
+    color: var(--mzj-brown);
+    opacity: .92;
+    flex: 0 0 44%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* buttons inside modals */
+  #backdrop .btn{ border-radius:14px !important; }
+}

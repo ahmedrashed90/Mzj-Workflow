@@ -15,18 +15,14 @@
     const sidebar =
       document.getElementById('mzjSidebar') ||
       document.querySelector('.mzj-sidebar') ||
-      document.querySelector('aside.mzj-sidebar') ||
-      document.querySelector('aside');
+      document.querySelector('aside.mzj-sidebar');
 
+    // ✅ IMPORTANT: لا نستخدم selector عام زي button.icon-btn عشان ما نعطل أزرار الفلاتر
     const btn =
       document.getElementById('mzjSidebarBtn') ||
       document.querySelector('[data-mzj-sidebar-btn]') ||
       document.querySelector('.mzjSidebarBtn') ||
-      document.querySelector('button#sidebarToggle') ||
-      document.querySelector('button.icon-btn') ||
-      document.querySelector('button[aria-controls="mzjSidebar"]') ||
-      document.querySelector('button[aria-label*="menu" i]') ||
-      document.querySelector('button[aria-label*="sidebar" i]');
+      document.querySelector('button[aria-controls="mzjSidebar"]');
 
     const backdrop = document.getElementById('mzjBackdrop');
 
@@ -57,6 +53,7 @@
       if(a) close();
     });
   }
+
 
   function labelTable(table){
     if(!table) return;

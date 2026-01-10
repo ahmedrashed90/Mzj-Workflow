@@ -14,15 +14,65 @@
     const sidebar = document.getElementById('mzjSidebar');
     if(!btn || !sidebar) return;
 
-    let overlay = document.getElementById('mzjSidebarOverlay');
+    // استخدم الـ backdrop الموجود في الصفحة لو موجود (mzjBackdrop)
+    let overlay = document.getElementById('mzjBackdrop') || document.getElementById('mzjSidebarOverlay');
     if(!overlay){
       overlay = document.createElement('div');
       overlay.id = 'mzjSidebarOverlay';
       document.body.appendChild(overlay);
     }
 
-    const open = () => { sidebar.classList.add('open'); overlay.classList.add('show'); };
-    const close = () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); };
+    // ضمان ستايل أساسي حتى لو CSS الميديا كويري ما اتطبق
+    const ensureInlineMobileStyles = () => {
+      const isMobile = window.matchMedia && window.matchMedia('(max-width: 1200px)').matches;
+      if(!isMobile) return;
+
+      // sidebar panel
+      sidebar.style.position = 'fixed';
+      sidebar.style.top = '0';
+      sidebar.style.right = '0';
+      sidebar.style.left = 'auto';
+      sidebar.style.height = '100vh';
+      sidebar.style.width = '280px';
+      sidebar.style.maxWidth = '86vw';
+      sidebar.style.background = '#fff';
+      sidebar.style.zIndex = '1100';
+      sidebar.style.boxShadow = '0 10px 28px rgba(0,0,0,.08)';
+      sidebar.style.borderLeft = '1px solid rgba(62,36,32,.14)';
+      sidebar.style.overflow = 'auto';
+
+      // overlay
+      overlay.style.position = 'fixed';
+      overlay.style.inset = '0';
+      overlay.style.background = 'rgba(0,0,0,.35)';
+      overlay.style.zIndex = '1090';
+      overlay.style.opacity = overlay.classList.contains('show') ? '1' : '0';
+      overlay.style.pointerEvents = overlay.classList.contains('show') ? 'auto' : 'none';
+      overlay.style.transition = 'opacity .18s ease';
+    };
+
+    const syncOverlayInline = () => {
+      overlay.style.opacity = overlay.classList.contains('show') ? '1' : '0';
+      overlay.style.pointerEvents = overlay.classList.contains('show') ? 'auto' : 'none';
+    };
+
+    // حافظ على ستايل الموبايل مع تغيّر المقاس/الدوران
+    window.addEventListener('resize', ensureInlineMobileStyles);
+    window.addEventListener('orientationchange', ensureInlineMobileStyles);
+
+    const open = () => {
+      ensureInlineMobileStyles();
+      sidebar.classList.add('open');
+      overlay.classList.add('show');
+      document.body.classList.add('mzj-sidebar-open');
+      syncOverlayInline();
+    };
+    const close = () => {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('show');
+      document.body.classList.remove('mzj-sidebar-open');
+      syncOverlayInline();
+    };
 
 
 // ✅ Fix: بعض الأجهزة بتفقد click على الزر بسبب عناصر فوقه، فبنضيف listener capturing على الصفحة
@@ -53,6 +103,9 @@ if(!window.__mzjSidebarBound){
     btn.addEventListener('click', (e)=>{ e.preventDefault(); sidebar.classList.contains('open') ? close() : open(); });
     overlay.addEventListener('click', (e)=>{ e.preventDefault(); close(); }, true);
     document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') close(); });
+
+    window.addEventListener('resize', ensureInlineMobileStyles);
+    ensureInlineMobileStyles();
 
     // close when clicking a link inside sidebar
     sidebar.addEventListener('click', (e)=>{

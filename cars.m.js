@@ -1,4 +1,92 @@
-// cars.m.js — Mobile wrapper (no logic changes)
+// cars.m.js — Mobile enhancements (Admin.m style) + original logic unchanged
+function __mzjIsMobile(){ return window.matchMedia && window.matchMedia("(max-width: 768px)").matches; }
+
+function __mzjSetupSidebar(){
+  const btn = document.getElementById("mzjSidebarBtn");
+  const backdrop = document.getElementById("mzjBackdrop");
+  const cls = "mzj-sidebar-open";
+  if(btn){
+    btn.addEventListener("click", ()=> document.body.classList.toggle(cls));
+  }
+  if(backdrop){
+    backdrop.addEventListener("click", ()=> document.body.classList.remove(cls));
+  }
+  document.addEventListener("keydown", (e)=>{
+    if(e.key === "Escape") document.body.classList.remove(cls);
+  });
+}
+
+function __mzjEnsureCardsContainer(){
+  const wrap = document.querySelector(".table-wrap") || document.querySelector("table")?.parentElement;
+  if(!wrap) return null;
+  let cards = document.querySelector(".cars-cards");
+  if(!cards){
+    cards = document.createElement("div");
+    cards.className = "cars-cards";
+    wrap.parentElement.insertBefore(cards, wrap.nextSibling);
+  }
+  return cards;
+}
+
+function __mzjTableToCards(){
+  if(!__mzjIsMobile()) return;
+  const table = document.querySelector("table");
+  if(!table) return;
+  const tbody = table.querySelector("tbody");
+  const thead = table.querySelector("thead");
+  if(!tbody) return;
+
+  const cards = __mzjEnsureCardsContainer();
+  if(!cards) return;
+
+  const headers = thead ? Array.from(thead.querySelectorAll("th")).map(th=>th.textContent.trim()) : [];
+  cards.innerHTML = "";
+
+  const rows = Array.from(tbody.querySelectorAll("tr"));
+  rows.forEach((tr)=>{
+    const tds = Array.from(tr.querySelectorAll("td"));
+    if(!tds.length) return;
+
+    const card = document.createElement("div");
+    card.className = "car-card";
+
+    const grid = document.createElement("div");
+    grid.className = "car-grid";
+
+    tds.forEach((td, i)=>{
+      const cell = document.createElement("div");
+      cell.className = "car-cell";
+
+      const k = document.createElement("div");
+      k.className = "car-k";
+      k.textContent = headers[i] || `عمود ${i+1}`;
+
+      const v = document.createElement("div");
+      v.className = "car-v";
+      v.textContent = td.textContent.trim() || "—";
+
+      cell.appendChild(k);
+      cell.appendChild(v);
+      grid.appendChild(cell);
+    });
+
+    card.appendChild(grid);
+    cards.appendChild(card);
+  });
+}
+
+function __mzjObserveTable(){
+  if(!__mzjIsMobile()) return;
+  const tbody = document.querySelector("table tbody");
+  if(!tbody) return;
+  const obs = new MutationObserver(()=> __mzjTableToCards());
+  obs.observe(tbody, {childList:true, subtree:true});
+  __mzjTableToCards();
+}
+
+__mzjSetupSidebar();
+
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import {
     getAuth,
@@ -377,3 +465,5 @@ function applyFilterAndRender(){
   /* Start */
   setStatus('', 'جارِ الاتصال…');
   document.body.style.opacity='1';
+
+try{__mzjObserveTable();}catch(e){console.warn(e);}

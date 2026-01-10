@@ -80,3 +80,117 @@
     observeModalTables();
   });
 })();
+
+
+/* ================================
+   Mobile: Convert modal tables to cards (professional view)
+   - No changes to data logic
+   ================================ */
+(function(){
+  const isMobile = () => window.matchMedia && window.matchMedia("(max-width: 768px)").matches;
+
+  function textClean(s){ return (s||"").replace(/\s+/g," ").trim(); }
+
+  function isLongValue(v){
+    return v.length > 28 || /[\n\r]/.test(v);
+  }
+
+  function ensureCardsAfter(table, wrapperClass){
+    const wrap = table.closest(".table-wrap") || table.parentElement;
+    if(!wrap) return null;
+    let cards = wrap.parentElement.querySelector("."+wrapperClass);
+    if(!cards){
+      cards = document.createElement("div");
+      cards.className = wrapperClass;
+      wrap.parentElement.insertBefore(cards, wrap.nextSibling);
+    }
+    return cards;
+  }
+
+  function tableToCards(table){
+    if(!isMobile() || !table) return;
+    const tbody = table.querySelector("tbody");
+    if(!tbody) return;
+
+    const headers = Array.from(table.querySelectorAll("thead th")).map(th => textClean(th.textContent));
+    const rows = Array.from(tbody.querySelectorAll("tr"));
+    if(!rows.length) return;
+
+    const cardsWrap = ensureCardsAfter(table, "mzj-detail-cards");
+    if(!cardsWrap) return;
+
+    cardsWrap.innerHTML = "";
+
+    rows.forEach(tr => {
+      const tds = Array.from(tr.querySelectorAll("td"));
+      if(!tds.length) return;
+
+      const card = document.createElement("div");
+      card.className = "mzj-detail-card";
+
+      const grid = document.createElement("div");
+      grid.className = "mzj-detail-grid";
+
+      tds.forEach((td, i) => {
+        // Skip cells that are just action buttons in modals (rare)
+        const hasControls = td.querySelector("button, a, input, select, textarea");
+        const raw = textClean(td.textContent);
+        if(hasControls && raw === "") return;
+
+        const field = document.createElement("div");
+        field.className = "mzj-field";
+
+        const k = document.createElement("div");
+        k.className = "mzj-k";
+        k.textContent = headers[i] || `عمود ${i+1}`;
+
+        const v = document.createElement("div");
+        v.className = "mzj-v";
+        v.textContent = raw || "—";
+
+        // Mark copyable values
+        const key = (headers[i] || "").toLowerCase();
+        if (/vin|هيكل|رقم الهيكل|جوال|phone|رقم|id|plate|لوحة/.test(key) || /^[0-9]{5,}$/.test(raw)):
+          v.classList.add("copyable");
+
+        // Make long values full width
+        if(isLongValue(raw)) field.classList.add("full");
+
+        field.appendChild(k);
+        field.appendChild(v);
+        grid.appendChild(field);
+      });
+
+      card.appendChild(grid);
+      cardsWrap.appendChild(card);
+    });
+
+    // Hide table only on mobile
+    table.style.display = "none";
+  }
+
+  function scanAllModalTables(){
+    if(!isMobile()) return;
+    // tables inside visible modals (any common modal selector)
+    const candidates = document.querySelectorAll(".modal table, .mzj-modal table, dialog table, .popup table");
+    candidates.forEach(tableToCards);
+  }
+
+  // Observe DOM for modal open / table render changes
+  const obs = new MutationObserver(() => scanAllModalTables());
+  obs.observe(document.documentElement, { childList: true, subtree: true });
+
+  // Copy handler
+  document.addEventListener("click", (e)=>{
+    const el = e.target.closest(".mzj-v.copyable");
+    if(!el) return;
+    const val = textClean(el.textContent);
+    if(!val || val === "—") return;
+    navigator.clipboard?.writeText(val).catch(()=>{});
+    el.style.opacity = "0.6";
+    setTimeout(()=> el.style.opacity="1", 250);
+  });
+
+  // Initial scan
+  document.addEventListener("DOMContentLoaded", ()=> scanAllModalTables());
+})();

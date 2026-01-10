@@ -107,3 +107,29 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   }
 }
+
+
+
+/* ===============================
+   Mobile Table Layout Tweak
+   المطلوب: بدل 3 في الصف نخلي 2 في الصف (عشان البيانات ما تبقاش ناقصة/مقصوصة)
+   وعلى الشاشات الأعرض (520px+) نخليها 3 في الصف
+   =============================== */
+@media (max-width:900px){
+  table.mzj-mobile-table tbody tr{
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  /* لو داخل الخلايا فيه select/input نخليهم ياخدوا عرض الخلية */
+  table.mzj-mobile-table tbody td select,
+  table.mzj-mobile-table tbody td input,
+  table.mzj-mobile-table tbody td textarea{
+    width:100% !important;
+    max-width:100% !important;
+    box-sizing:border-box !important;
+  }
+}
+@media (min-width:520px) and (max-width:900px){
+  table.mzj-mobile-table tbody tr{
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}

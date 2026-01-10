@@ -13,8 +13,11 @@
 /* امنع أي سكرول أفقي مزعج */
 html, body{ max-width:100%; overflow-x:hidden; background:var(--mzj-cream); }
 
+/* منع سكرول الخلفية أثناء فتح السايدبار */
+body.mzj-sidebar-open{ overflow:hidden !important; }
+
 /* ===== Mobile Shell ===== */
-@media (max-width: 900px){
+@media (max-width: 1200px){
 
   /* topbar */
   header.mzj-topbar{
@@ -179,4 +182,42 @@ html, body{ max-width:100%; overflow-x:hidden; background:var(--mzj-cream); }
   #backdrop table tr{ display: table-row !important; background: transparent !important; border: none !important; padding: 0 !important; margin: 0 !important; }
   #backdrop table td{ display: table-cell !important; width: auto !important; padding: 8px 10px !important; border-bottom: 1px solid rgba(62,36,32,.14) !important; }
   #backdrop table td::before{ content: none !important; }
+}
+
+/* ================================
+   FIX: Modal table must stay TABLE (مثل نسخة PC)
+   يلغي أي تحويل لكروت داخل المودال
+   ================================ */
+#backdrop table{
+  display: table !important;
+  width: 100% !important;
+  border-collapse: collapse !important;
+}
+#backdrop table thead{ display: table-header-group !important; }
+#backdrop table tbody{ display: table-row-group !important; }
+#backdrop table tr{ display: table-row !important; background:#fff; }
+#backdrop table th,
+#backdrop table td{
+  display: table-cell !important;
+  padding: 10px 12px !important;
+  border-bottom: 1px solid rgba(62,36,32,.14) !important;
+  vertical-align: middle;
+}
+#backdrop table td::before{ content: none !important; }
+
+/* دعم للباك دروب الموجود في الصفحة (mzjBackdrop) */
+#mzjBackdrop,
+#mzjSidebarOverlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease;
+  z-index: 1090;
+}
+#mzjBackdrop.show,
+#mzjSidebarOverlay.show{
+  opacity: 1;
+  pointer-events: auto;
 }

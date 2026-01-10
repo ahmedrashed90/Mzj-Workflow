@@ -255,3 +255,106 @@ html, body{ max-width:100%; overflow-x:hidden; background:var(--mzj-cream); }
     .mzj-detail-grid{ grid-template-columns: 1fr; }
   }
 }
+
+
+
+/* ================================
+   Modal table (12 columns) -> vertical grid (3 columns per row)
+   المطلوب: جدول لكن مرتب بالطول
+   ================================ */
+@media (max-width: 768px){
+
+  /* Hide any previously generated cards (if exist) */
+  .mzj-detail-cards{ display:none !important; }
+
+  /* Show modal tables */
+  .mzj-modal table,
+  .modal table,
+  dialog table,
+  .popup table{
+    display: block !important;
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+
+  /* Hide thead on mobile (we will show labels per cell) */
+  .mzj-modal table thead,
+  .modal table thead,
+  dialog table thead,
+  .popup table thead{
+    display: none !important;
+  }
+
+  /* Turn each record row into a 3-column grid */
+  .mzj-modal table tbody tr,
+  .modal table tbody tr,
+  dialog table tbody tr,
+  .popup table tbody tr{
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    padding: 12px !important;
+    margin: 0 0 12px 0 !important;
+    background: #fff !important;
+    border: 1px solid rgba(0,0,0,.07) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 6px 18px rgba(0,0,0,.05) !important;
+  }
+
+  /* Each cell becomes a mini block with label + value */
+  .mzj-modal table tbody td,
+  .modal table tbody td,
+  dialog table tbody td,
+  .popup table tbody td{
+    display: block !important;
+    border: 1px solid rgba(0,0,0,.06) !important;
+    border-radius: 14px !important;
+    padding: 10px !important;
+    background: #fff !important;
+    min-width: 0 !important;
+  }
+
+  .mzj-modal table tbody td::before,
+  .modal table tbody td::before,
+  dialog table tbody td::before,
+  .popup table tbody td::before{
+    content: attr(data-label);
+    display: block;
+    font-size: 11px;
+    opacity: .75;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Value styling */
+  .mzj-modal table tbody td,
+  .modal table tbody td,
+  dialog table tbody td,
+  .popup table tbody td{
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    line-height: 1.35 !important;
+    word-break: break-word !important;
+  }
+
+  /* Full-width for last cell in each 3-group when needed (like الملاحظات) */
+  .mzj-modal table tbody td.mzj-full,
+  .modal table tbody td.mzj-full,
+  dialog table tbody td.mzj-full,
+  .popup table tbody td.mzj-full{
+    grid-column: 1 / -1 !important;
+  }
+
+  /* Small screens: 2 columns */
+  @media (max-width: 420px){
+    .mzj-modal table tbody tr,
+    .modal table tbody tr,
+    dialog table tbody tr,
+    .popup table tbody tr{
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+  }
+}

@@ -247,33 +247,36 @@
 
 
 /* ==================================================
-   ✅ FIX (Mobile) — المطلوب فقط:
-   1) زر السايدبار مش شغال => نعمل Toggle robust بدون ما نلمس الموجود
-   2) مودال الجدول: 12 خانة => GridTable (3 في صف) + RTL يمين
+   ✅ Sidebar FIX ONLY (Mobile) — بدون أي تعديل على المودال
    ================================================== */
 (function(){
-  function isMobile(){ return window.matchMedia && window.matchMedia('(max-width: 900px)').matches; }
-  function clean(s){ return (s||'').replace(/\s+/g,' ').trim(); }
+  function onReady(fn){
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+    else fn();
+  }
 
-  /* ---- Sidebar Toggle (robust) ---- */
-  function setupSidebarFix(){
+  onReady(function(){
+    // Find sidebar element
     const sidebar =
       document.getElementById('mzjSidebar') ||
       document.querySelector('.mzj-sidebar') ||
+      document.querySelector('aside.mzj-sidebar') ||
       document.querySelector('aside');
 
-    if(!sidebar) return;
-
+    // Find toggle button (support multiple variants)
     const btn =
       document.getElementById('mzjSidebarBtn') ||
       document.querySelector('[data-mzj-sidebar-btn]') ||
       document.querySelector('.mzjSidebarBtn') ||
+      document.querySelector('button#sidebarToggle') ||
       document.querySelector('button.icon-btn') ||
+      document.querySelector('button[aria-controls="mzjSidebar"]') ||
       document.querySelector('button[aria-label*="menu" i]') ||
       document.querySelector('button[aria-label*="sidebar" i]');
 
-    if(!btn) return;
+    if(!sidebar || !btn) return;
 
+    // Ensure overlay exists (do NOT depend on CSS changes)
     let overlay = document.getElementById('mzjSidebarOverlay');
     if(!overlay){
       overlay = document.createElement('div');
@@ -281,12 +284,41 @@
       document.body.appendChild(overlay);
     }
 
-    const open  = ()=>{ sidebar.classList.add('open'); overlay.classList.add('show'); };
-    const close = ()=>{ sidebar.classList.remove('open'); overlay.classList.remove('show'); };
-    const toggle = ()=> (sidebar.classList.contains('open') ? close() : open());
+    // Minimal inline styles to guarantee overlay works even if CSS missing
+    overlay.style.position = 'fixed';
+    overlay.style.inset = '0';
+    overlay.style.background = 'rgba(0,0,0,.35)';
+    overlay.style.zIndex = '9998';
+    overlay.style.opacity = '0';
+    overlay.style.pointerEvents = 'none';
+    overlay.style.transition = 'opacity .18s ease';
 
-    // Capture = يتغلب على stopPropagation من أي كود تاني
-    btn.addEventListener('click', (e)=>{ e.preventDefault(); toggle(); }, true);
+    // Also ensure sidebar is above overlay (only if not set)
+    sidebar.style.zIndex = sidebar.style.zIndex || '9999';
+
+    const openClass = 'open';
+    const showOverlay = () => { overlay.style.opacity='1'; overlay.style.pointerEvents='auto'; };
+    const hideOverlay = () => { overlay.style.opacity='0'; overlay.style.pointerEvents='none'; };
+
+    function isOpen(){ return sidebar.classList.contains(openClass); }
+    function open(){
+      sidebar.classList.add(openClass);
+      showOverlay();
+    }
+    function close(){
+      sidebar.classList.remove(openClass);
+      hideOverlay();
+    }
+    function toggle(){
+      isOpen() ? close() : open();
+    }
+
+    // Use capture to beat other handlers that stop propagation
+    btn.addEventListener('click', function(e){
+      e.preventDefault();
+      toggle();
+    }, true);
+
     overlay.addEventListener('click', close);
     document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') close(); });
 
@@ -294,95 +326,5 @@
       const a = e.target.closest('a');
       if(a) close();
     });
-  }
-
-  /* ---- Modal GridTable (3 per row) ---- */
-  function removeOldTransforms(backdrop){
-    // اترك الملف كما هو، بس نمسح العناصر المضافة سابقاً (لو موجودة)
-    backdrop.querySelectorAll('.mzj-detail-cards').forEach(el=>el.remove());
-    backdrop.querySelectorAll('.mzj-modal-gridtable').forEach(el=>el.remove());
-  }
-
-  function buildGridFromTable(table){
-    if(!isMobile()) return;
-
-    const thead = table.querySelector('thead');
-    const tbody = table.querySelector('tbody');
-    if(!thead || !tbody) return;
-
-    const headers = Array.from(thead.querySelectorAll('th')).map(th=>clean(th.textContent));
-    const rows = Array.from(tbody.querySelectorAll('tr'));
-    if(!rows.length) return;
-
-    // بنبني GridTable لكل صف بيانات (عادة صف واحد)
-    rows.forEach(tr=>{
-      const tds = Array.from(tr.querySelectorAll('td'));
-      if(!tds.length) return;
-
-      const gridTable = document.createElement('div');
-      gridTable.className = 'mzj-modal-gridtable';
-
-      const chunk = 3;
-      for(let i=0; i<tds.length; i+=chunk){
-        const r = document.createElement('div');
-        r.className = 'mzj-r';
-
-        for(let j=0; j<chunk; j++){
-          const idx = i + j;
-          if(idx >= tds.length) break;
-
-          const cell = document.createElement('div');
-          cell.className = 'mzj-cell';
-
-          const h = document.createElement('div');
-          h.className = 'mzj-h';
-          h.textContent = headers[idx] || `حقل ${idx+1}`;
-
-          const v = document.createElement('div');
-          v.className = 'mzj-val';
-          v.textContent = clean(tds[idx].textContent) || '—';
-
-          cell.appendChild(h);
-          cell.appendChild(v);
-          r.appendChild(cell);
-        }
-        gridTable.appendChild(r);
-      }
-
-      // نخفي الجدول الأصلي بتاج class (CSS في الآخر)
-      table.classList.add('mzj-mobile-grid-src');
-
-      const wrap = table.closest('.table-wrap') || table.parentElement;
-      if(wrap && wrap.parentElement){
-        wrap.parentElement.insertBefore(gridTable, wrap.nextSibling);
-      }else{
-        table.insertAdjacentElement('afterend', gridTable);
-      }
-    });
-  }
-
-  function enhanceModal(backdrop){
-    if(!backdrop || !isMobile()) return;
-    removeOldTransforms(backdrop);
-
-    // اختار جداول المودال داخل backdrop فقط
-    const tables = backdrop.querySelectorAll('table');
-    tables.forEach(buildGridFromTable);
-  }
-
-  function observeBackdrop(){
-    const backdrop = document.getElementById('backdrop');
-    if(!backdrop) return;
-
-    enhanceModal(backdrop);
-
-    const obs = new MutationObserver(()=> enhanceModal(backdrop));
-    obs.observe(backdrop, {childList:true, subtree:true});
-  }
-
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', ()=>{ setupSidebarFix(); observeBackdrop(); });
-  }else{
-    setupSidebarFix(); observeBackdrop();
-  }
+  });
 })();

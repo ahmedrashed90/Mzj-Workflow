@@ -84,3 +84,140 @@
   }
 
 }
+@media (max-width: 768px){
+
+  /* منع تمدد أفقي */
+  html, body { overflow-x: hidden; }
+
+  /* ====== TOPBAR: صف واحد ====== */
+  .topbar{
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    height: 56px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+  }
+
+  .topbar .brand,
+  .topbar .title{
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 14px;
+  }
+
+  /* زر المنيو (هنحقنه بالـ JS لو مش موجود) */
+  .mzj-mobile-menu-btn{
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    border: 1px solid #eee;
+    background: #fff;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+  }
+
+  /* ====== SIDEBAR -> DRAWER ====== */
+  .sidebar{
+    position: fixed !important;
+    top: 0;
+    right: 0; /* RTL */
+    height: 100vh;
+    width: 82vw;
+    max-width: 320px;
+    transform: translateX(110%);
+    transition: transform .25s ease;
+    z-index: 2000;
+    background: #fff;
+    box-shadow: -10px 0 30px rgba(0,0,0,.12);
+    padding: 12px;
+    overflow-y: auto;
+  }
+
+  body.mzj-drawer-open .sidebar{
+    transform: translateX(0);
+  }
+
+  /* Overlay */
+  .mzj-overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.35);
+    z-index: 1900;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease;
+  }
+  body.mzj-drawer-open .mzj-overlay{
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* ====== CONTENT: يسيب مساحة للـ bottom bar ====== */
+  .page-wrapper, .content, .container{
+    padding: 12px !important;
+    padding-bottom: 78px !important; /* مساحة للبوتوم بار */
+    margin: 0 !important;
+    width: 100% !important;
+  }
+
+  /* ====== تحويل قائمة الأزرار الكبيرة لـ Grid ====== */
+  .quick-actions,
+  .menu-buttons,
+  .actions-grid{
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .quick-actions button,
+  .menu-buttons button,
+  .actions-grid button,
+  .btn{
+    width: 100% !important;
+    height: 46px;
+    border-radius: 14px;
+    font-size: 14px;
+  }
+
+  /* ====== BOTTOM BAR ====== */
+  .mzj-bottombar{
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 60px;
+    background: #fff;
+    border-top: 1px solid #eee;
+    z-index: 1800;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 6px 10px;
+  }
+
+  .mzj-bottombar a, .mzj-bottombar button{
+    all: unset;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-size: 11px;
+    padding: 6px 8px;
+    border-radius: 12px;
+  }
+
+  /* ====== الجداول: لفاف اسكرول محترم ====== */
+  .table-wrapper{ width: 100%; overflow-x: auto; }
+  table{ min-width: 720px; }
+}

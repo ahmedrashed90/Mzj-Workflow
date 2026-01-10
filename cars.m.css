@@ -5,6 +5,12 @@
 :root{ --m-sidebar-w:260px; }
 
 @media (max-width:768px){
+  html,body{overflow-x:hidden !important;}
+
+  /* ✅ فك حجز عمود السايدبار بتاع الديسكتوب */
+  .mzj-shell{display:block !important;}
+  .mzj-shell > main, .mzj-content{width:100% !important; margin:0 !important;}
+
 
   /* Topbar: سطر واحد */
   header.mzj-topbar{

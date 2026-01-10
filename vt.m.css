@@ -1,0 +1,84 @@
+/* ============================
+   VT Mobile Overrides (vt.m.css)
+   - لا يغيّر منطق الصفحة
+   - بس يظبط واجهة الموبايل
+   ============================ */
+
+:root{
+  --mzj-mobile-safe: 56px;
+}
+
+/* topbar compact */
+@media (max-width: 900px){
+  .mzj-topbar{
+    position: sticky;
+    top: 0;
+    z-index: 1200;
+  }
+  .mzj-topbar .brand-title{font-size:15px;}
+  .mzj-topbar .brand-sub{font-size:12px;}
+  .mzj-topbar .mzj-chip{display:none;}
+  .mzj-topbar #mzjThemeBtn{display:none;}
+
+  .mzj-content{padding: 10px 10px 80px !important;}
+  .mzj-pagehead{padding: 8px 4px !important;}
+  .page-title{font-size: 20px !important;}
+  .page-desc{font-size: 12px !important;}
+
+  /* Sidebar as drawer */
+  .mzj-sidebar{
+    position: fixed !important;
+    top: 0 !important;
+    right: 0 !important;
+    height: 100dvh !important;
+    width: min(82vw, 320px) !important;
+    transform: translateX(105%) !important;
+    transition: transform .18s ease !important;
+    z-index: 1400 !important;
+    border-left: 1px solid rgba(0,0,0,.08);
+  }
+  .mzj-sidebar.is-open{ transform: translateX(0) !important; }
+
+  .mzj-backdrop{
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0,0,0,.35) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity .18s ease !important;
+    z-index: 1350 !important;
+  }
+  .mzj-backdrop.is-open{
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+
+  /* Make legacy wrapper full width */
+  .legacy.legacy-vt .container{padding: 0 10px 40px !important; margin: 0 !important; max-width: 100% !important;}
+  .legacy.legacy-vt .card{padding: 12px !important; border-radius: 16px !important;}
+  .legacy.legacy-vt .card-header{gap:10px !important;}
+
+  /* Move rows: stack nicely */
+  .legacy.legacy-vt .grid.grid-3{grid-template-columns: 1fr !important;}
+  .legacy.legacy-vt .move-row{padding: 10px !important;}
+  .legacy.legacy-vt .move-row .row{gap: 8px !important;}
+  .legacy.legacy-vt .btn{width: 100%;}
+  .legacy.legacy-vt .row{width: 100%;}
+
+  /* Inputs */
+  .legacy.legacy-vt input,
+  .legacy.legacy-vt select,
+  .legacy.legacy-vt textarea{
+    font-size: 14px !important;
+    padding: 10px 12px !important;
+  }
+
+  /* Car details box grid */
+  .legacy.legacy-vt .table-like{
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    font-size: 14px !important;
+  }
+}
+
+/* keep legacy hidden bars as in original */

@@ -1,6 +1,68 @@
 /* Activity.m.css */
 /* Styles specific to Activity mobile page only */
 
+:root { --m-sidebar-w: 260px; }
+
+/* Topbar small adjustments for mobile */
+.mzj-topbar--mobile{
+  position: sticky;
+  top: 0;
+  z-index: 2500;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+}
+
+.mzj-topbar--mobile .brand-title{
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Sidebar drawer behavior on mobile */
+@media (max-width: 768px){
+  #mzjSidebar.mzj-sidebar{
+    position: fixed !important;
+    top: 0; right: 0;
+    height: 100vh;
+    width: var(--m-sidebar-w);
+    max-width: 80vw;
+    background: #fff;
+    z-index: 3000;
+    transform: translateX(110%);
+    transition: transform .22s ease;
+    overflow-y: auto;
+    box-shadow: -8px 0 24px rgba(0,0,0,.16);
+    border-left: 1px solid #eee;
+  }
+
+  body.mzj-sidebar-open #mzjSidebar.mzj-sidebar{
+    transform: translateX(0);
+  }
+
+  #mzjBackdrop.mzj-backdrop{
+    position: fixed !important;
+    inset: 0;
+    background: rgba(0,0,0,.38);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s ease;
+    z-index: 2900;
+  }
+
+  body.mzj-sidebar-open #mzjBackdrop.mzj-backdrop{
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+/* Cards */
 .activity-cards {
   padding: 12px;
   display: flex;
@@ -22,7 +84,7 @@
 }
 
 .activity-row span {
-  font-weight: 600;
+  font-weight: 700;
   margin-left: 6px;
 }
 
@@ -37,23 +99,4 @@
   font-size: 14px;
   color: #777;
   padding: 20px 0;
-}
-
-/* Topbar small adjustments for mobile */
-.mzj-topbar {
-  position: sticky;
-  top: 0;
-  z-index: 2000;
-  height: 52px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 12px;
-  background: #fff;
-  border-bottom: 1px solid #eee;
-}
-
-.mzj-topbar .brand-title {
-  font-size: 14px;
-  font-weight: 700;
 }

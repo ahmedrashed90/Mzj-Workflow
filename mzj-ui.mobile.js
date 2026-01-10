@@ -162,9 +162,57 @@
 
   function triggerOriginal(table, rowId, type) {
     if (!table || !rowId) return;
-    const selector = type === "del" ? `[data-del="${rowId}"]` : `[data-edit="${rowId}"]`;
+
+    let selector = "";
+    if (type === "del") selector = `[data-del="${rowId}"]`;
+    else if (type === "edit") selector = `[data-edit="${rowId}"]`;
+    else if (type === "save") selector = `[data-save-inline="${rowId}"]`;
+    else if (type === "cancel") selector = `[data-cancel-inline="${rowId}"]`;
+    else selector = `[data-edit="${rowId}"]`;
+
     const btn = table.querySelector(selector);
     if (btn) btn.click();
+  }
+
+  function getTdValue(td) {
+    if (!td) return "";
+    const inp = td.querySelector("input");
+    if (inp) return (inp.value || "").trim();
+    const sel = td.querySelector("select");
+    if (sel) return (sel.options[sel.selectedIndex]?.textContent || sel.value || "").trim();
+    const ta = td.querySelector("textarea");
+    if (ta) return (ta.value || "").trim();
+    return ((td.textContent || "").trim());
+  }
+
+  function extractRowId(tr) {
+    if (!tr) return "";
+    // prefer persisted id if exists
+    const persisted = tr.dataset && tr.dataset.rowId ? tr.dataset.rowId : "";
+    if (persisted) return persisted;
+
+    // normal state buttons
+    const editBtn = tr.querySelector("[data-edit]");
+    if (editBtn) return editBtn.getAttribute("data-edit") || "";
+
+    const delBtn = tr.querySelector("[data-del]");
+    if (delBtn) return delBtn.getAttribute("data-del") || "";
+
+    // inline edit state buttons
+    const saveBtn = tr.querySelector("[data-save-inline]");
+    if (saveBtn) return saveBtn.getAttribute("data-save-inline") || "";
+
+    const cancelBtn = tr.querySelector("[data-cancel-inline]");
+    if (cancelBtn) return cancelBtn.getAttribute("data-cancel-inline") || "";
+
+    return "";
+  }
+
+  function isRowEditing(tr) {
+    if (!tr) return false;
+    if (tr.dataset && tr.dataset.editing === "1") return true;
+    if (tr.querySelector("[data-save-inline]") || tr.querySelector("[data-cancel-inline]")) return true;
+    return false;
   }
 
   function rebuildCarsCards() {
@@ -190,22 +238,24 @@
     cardsWrap.className = "mzj-table-cards";
 
     rows.forEach((tr) => {
-      const editBtn = tr.querySelector("[data-edit]");
-      const delBtn  = tr.querySelector("[data-del]");
-      const rowId = editBtn ? editBtn.getAttribute("data-edit") : (delBtn ? delBtn.getAttribute("data-del") : "");
+      const rowId = extractRowId(tr);
+      if (rowId && tr.dataset) tr.dataset.rowId = rowId;
 
       const tds = Array.from(tr.querySelectorAll("td"));
       if (!tds.length) return;
 
+      const editing = isRowEditing(tr);
+
       const card = document.createElement("div");
       card.className = "mzj-row-card";
       if (rowId) card.dataset.rowId = rowId;
+      if (editing) card.dataset.editing = "1";
 
-      // click on card = edit
+      // click on card = edit (only when not editing)
       card.addEventListener("click", (e) => {
-        // avoid double triggering when clicking action buttons
         const target = e.target;
         if (target && (target.closest(".mzj-row-actions"))) return;
+        if (editing) return;
         triggerOriginal(table, rowId, "edit");
       });
 
@@ -217,7 +267,7 @@
 
       for (let i = 0; i < maxCols; i++) {
         const td = tds[i];
-        const text = (td.textContent || "").trim();
+        const text = getTdValue(td);
 
         const cell = document.createElement("div");
         cell.className = "mzj-cell";
@@ -238,26 +288,49 @@
       const actions = document.createElement("div");
       actions.className = "mzj-row-actions";
 
-      const edit = document.createElement("button");
-      edit.type = "button";
-      edit.className = "btn btn-ghost";
-      edit.textContent = "تعديل ✎";
-      edit.addEventListener("click", (e) => {
-        e.stopPropagation();
-        triggerOriginal(table, rowId, "edit");
-      });
+      if (editing) {
+        const save = document.createElement("button");
+        save.type = "button";
+        save.className = "btn btn-primary";
+        save.textContent = "حفظ";
+        save.addEventListener("click", (e) => {
+          e.stopPropagation();
+          triggerOriginal(table, rowId, "save");
+        });
 
-      const del = document.createElement("button");
-      del.type = "button";
-      del.className = "btn btn-danger";
-      del.textContent = "حذف 🗑";
-      del.addEventListener("click", (e) => {
-        e.stopPropagation();
-        triggerOriginal(table, rowId, "del");
-      });
+        const cancel = document.createElement("button");
+        cancel.type = "button";
+        cancel.className = "btn btn-ghost";
+        cancel.textContent = "إلغاء";
+        cancel.addEventListener("click", (e) => {
+          e.stopPropagation();
+          triggerOriginal(table, rowId, "cancel");
+        });
 
-      actions.appendChild(edit);
-      actions.appendChild(del);
+        actions.appendChild(save);
+        actions.appendChild(cancel);
+      } else {
+        const edit = document.createElement("button");
+        edit.type = "button";
+        edit.className = "btn btn-ghost";
+        edit.textContent = "تعديل ✎";
+        edit.addEventListener("click", (e) => {
+          e.stopPropagation();
+          triggerOriginal(table, rowId, "edit");
+        });
+
+        const del = document.createElement("button");
+        del.type = "button";
+        del.className = "btn btn-danger";
+        del.textContent = "حذف 🗑";
+        del.addEventListener("click", (e) => {
+          e.stopPropagation();
+          triggerOriginal(table, rowId, "del");
+        });
+
+        actions.appendChild(edit);
+        actions.appendChild(del);
+      }
 
       card.appendChild(grid);
       card.appendChild(actions);
@@ -268,6 +341,7 @@
     table.style.display = "none";
     wrap.appendChild(cardsWrap);
   }
+
 
   function observeCarsTable() {
     const table = getCarsTable();

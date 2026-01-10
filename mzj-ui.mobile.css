@@ -1,0 +1,86 @@
+/* ===============================
+   GLOBAL MOBILE RESET
+================================ */
+@media (max-width: 768px) {
+
+  body {
+    margin: 0;
+    padding: 0;
+    font-size: 14px;
+    overflow-x: hidden;
+    background: #fff;
+  }
+
+  /* ===============================
+     HIDE DESKTOP ELEMENTS
+  ================================ */
+  .sidebar,
+  .topbar,
+  .desktop-only {
+    display: none !important;
+  }
+
+  /* ===============================
+     PAGE WRAPPER
+  ================================ */
+  .page-wrapper,
+  .content,
+  .container {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 12px !important;
+  }
+
+  /* ===============================
+     TABLES → MOBILE SCROLL
+  ================================ */
+  .table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    min-width: 720px;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    padding: 8px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  /* ===============================
+     BUTTONS
+  ================================ */
+  button,
+  .btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 15px;
+    border-radius: 10px;
+  }
+
+  /* ===============================
+     CARDS
+  ================================ */
+  .card {
+    border-radius: 14px;
+    margin-bottom: 12px;
+  }
+
+  /* ===============================
+     MODALS
+  ================================ */
+  .modal {
+    align-items: flex-end;
+  }
+
+  .modal-content {
+    width: 100%;
+    max-height: 90vh;
+    border-radius: 16px 16px 0 0;
+  }
+
+}

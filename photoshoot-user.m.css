@@ -228,49 +228,47 @@ html,body{max-width:100%;overflow-x:hidden}
     width:100% !important;
   }
 }
-/* ===== Compact Create Order Form ===== */
-#inner-create {
-  padding-bottom: 60px;
-}
 
-/* grid rows */
-#inner-create tr {
-  margin-bottom: 8px !important;
-}
 
-/* cells */
-#inner-create td {
-  padding: 6px !important;
-}
 
-/* inputs & selects */
-#inner-create input,
-#inner-create select,
-#inner-create textarea {
-  height: 42px !important;
-  padding: 6px 10px !important;
-  font-size: 14px;
-}
+/* ===============================
+   Scoped Compact (ONLY Create Order Table)
+   - يمنع تبوظ التابات التانية
+   =============================== */
+@media (max-width:900px){
+  /* سكوب صارم على جدول "إنشاء طلب" فقط */
+  #inner-create table.mzj-formgrid tbody tr{
+    padding: 10px !important;
+    margin: 0 0 10px 0 !important;
+    gap: 8px !important;
+  }
+  #inner-create table.mzj-formgrid tbody td{
+    padding: 8px !important;
+    border-radius: 12px !important;
+  }
+  #inner-create table.mzj-formgrid tbody td::before{
+    margin-bottom: 4px !important;
+    font-size: 10.5px !important;
+  }
+  #inner-create table.mzj-formgrid tbody td input,
+  #inner-create table.mzj-formgrid tbody td select,
+  #inner-create table.mzj-formgrid tbody td textarea{
+    height: 40px !important;
+    padding: 6px 10px !important;
+    font-size: 14px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  #inner-create table.mzj-formgrid tbody td textarea{
+    min-height: 64px !important;
+    height: auto !important;
+  }
 
-/* textarea أقل ارتفاع */
-#inner-create textarea {
-  min-height: 60px !important;
-}
-
-/* labels */
-#inner-create .label,
-#inner-create label {
-  font-size: 12px;
-  margin-bottom: 4px;
-}
-
-/* modal body */
-.modal-body {
-  padding: 12px !important;
-}
-
-/* prevent huge empty scroll */
-.modal-body {
-  max-height: calc(100vh - 140px);
-  overflow-y: auto;
+  /* لو فيه table-wrapper خاص بإنشاء الطلب فقط */
+  #inner-create .tableWrap,
+  #inner-create .table-wrap,
+  #inner-create .table-responsive,
+  #inner-create .table-container{
+    overflow: visible !important;
+  }
 }

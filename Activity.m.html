@@ -7,27 +7,41 @@
   <title>MZJ | سجل النشاط (موبايل)</title>
 
   <link rel="icon" type="image/x-icon" href="assets/favicon.png">
-
-  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
 
-  <!-- Desktop UI (unchanged) -->
+  <!-- UI الأساسي (بدون تعديل) -->
   <link rel="stylesheet" href="./mzj-ui.css"/>
-
-  <!-- Mobile page-specific styles -->
+  <!-- ستايل خاص بصفحة الموبايل -->
   <link rel="stylesheet" href="./Activity.m.css"/>
 </head>
 
 <body class="mzj">
 
   <!-- Mobile Topbar -->
-  <div class="mzj-topbar">
-    <button id="mzjSidebarBtn" class="icon-btn">☰</button>
+  <div class="mzj-topbar mzj-topbar--mobile">
+    <button id="mzjSidebarBtn" class="icon-btn" title="القائمة">☰</button>
     <div class="brand-title">سجل النشاط</div>
   </div>
 
-  <!-- Sidebar -->
-  <aside id="mzjSidebar" class="mzj-sidebar"></aside>
+  <!-- Sidebar (نفس محتوى نسخة الـ PC) -->
+  <aside id="mzjSidebar" class="mzj-sidebar">
+    <div class="side-section">
+        <div class="side-title">التنقل</div>
+        <nav class="side-nav">
+           <a class="side-link tab" href="./sales.m.html"><i class="fa-solid fa-handshake"></i><span>تتبع المبيعات</span></a>
+          <a class="side-link tab" href="./dashboard.m.html"><i class="fa-solid fa-gauge"></i><span>الداش بورد</span></a>
+          <a class="side-link tab" href="./inventory.m.html"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
+          <a class="side-link tab" href="./vt.m.html"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
+          <a class="side-link tab" href="./photoshoot-user.m.html"><i class="fa-solid fa-camera"></i><span>إدارة الطلبات</span></a>
+          <a class="side-link tab" href="./cars.m.html"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
+          <a class="side-link tab" href="./admin.m.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
+          <a class="side-link tab active" href="./Activity.m.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل النشاط</span></a>
+
+        </nav>
+      </div>
+  </aside>
+
+  <!-- Backdrop -->
   <div id="mzjBackdrop" class="mzj-backdrop"></div>
 
   <!-- Content -->
@@ -37,11 +51,9 @@
     </section>
   </main>
 
-  <!-- Base UI JS -->
+  <!-- Base UI JS (بدون تعديل) -->
   <script src="./mzj-ui.js"></script>
-
   <!-- Mobile page JS -->
   <script type="module" src="./Activity.m.js"></script>
-
 </body>
 </html>

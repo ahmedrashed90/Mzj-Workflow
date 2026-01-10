@@ -38,3 +38,72 @@ html,body{max-width:100%;overflow-x:hidden}
   table{width:100%!important}
   input,select,textarea{font-size:16px!important}
 }
+
+
+
+/* ===============================
+   Mobile Table Fix (Create Order)
+   - يحوّل الجدول من عرض إلى طول
+   - كل صف يتحول Grid (3 خانات في الصف) + عناوين
+   =============================== */
+@media (max-width:900px){
+
+  /* fallback: لو فيه أي جدول لازم يكون قابل للعرض بدون قص */
+  .table-wrap, .table-container, .table-responsive{
+    width:100% !important;
+    overflow-x:auto !important;
+  }
+
+  table.mzj-mobile-table{
+    width:100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    display:block !important;
+  }
+  table.mzj-mobile-table thead{ display:none !important; }
+  table.mzj-mobile-table tbody{ display:block !important; }
+
+  table.mzj-mobile-table tbody tr{
+    display:grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    padding: 12px !important;
+    margin: 0 0 12px 0 !important;
+    background:#fff !important;
+    border: 1px solid rgba(0,0,0,.08) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 6px 18px rgba(0,0,0,.05) !important;
+  }
+
+  table.mzj-mobile-table tbody td{
+    display:block !important;
+    background:#fff !important;
+    border: 1px solid rgba(0,0,0,.06) !important;
+    border-radius: 14px !important;
+    padding: 10px !important;
+    min-width:0 !important;
+    direction: rtl !important;
+    text-align: right !important;
+    font-weight: 800 !important;
+    line-height: 1.35 !important;
+    word-break: break-word !important;
+  }
+
+  table.mzj-mobile-table tbody td::before{
+    content: attr(data-label);
+    display:block;
+    font-size: 11px;
+    opacity: .75;
+    margin-bottom: 6px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow:hidden;
+    text-overflow: ellipsis;
+  }
+
+  @media (max-width: 420px){
+    table.mzj-mobile-table tbody tr{
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+  }
+}

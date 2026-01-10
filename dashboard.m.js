@@ -24,9 +24,9 @@
     const open = () => { sidebar.classList.add('open'); overlay.classList.add('show'); };
     const close = () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); };
 
-    btn.addEventListener('click', (e)=>{ 
-      e.preventDefault(); 
-      sidebar.classList.contains('open') ? close() : open(); 
+    btn.addEventListener('click', (e)=>{
+      e.preventDefault();
+      sidebar.classList.contains('open') ? close() : open();
     });
 
     overlay.addEventListener('click', close);
@@ -42,27 +42,44 @@
      الكود الأصلي موجود – لكن معطّل
      ================================ */
 
-  function enhanceTablesAsCards(){ /* معطّل intentionally */ }
-  function observeModalTables(){ /* معطّل intentionally */ }
-
-  ready(function(){
-    setupSidebar();
-    // observeModalTables(); ❌ متوقف
-  });
-})();
-/* ================================
-   FORCE modal tables to stay tables
-   ================================ */
-(function(){
-  function stopModalCardBehavior(){
-    const modals = document.querySelectorAll('#backdrop, .modal, .mzj-modal');
-    modals.forEach(m=>{
-      m.querySelectorAll('.mzj-detail-cards').forEach(el => el.remove());
+  function enhanceTablesAsCards(root){
+    const tables = (root || document).querySelectorAll('#backdrop table');
+    tables.forEach(table=>{
+      if(table.dataset.mzjEnhanced === '1') return;
+      const headers = Array.from(table.querySelectorAll('thead th')).map(th => (th.textContent || '').trim());
+      if(headers.length){
+        const rows = table.querySelectorAll('tbody tr');
+        rows.forEach(tr=>{
+          const tds = tr.querySelectorAll('td');
+          tds.forEach((td, i)=>{
+            if(!td.getAttribute('data-label')){
+              td.setAttribute('data-label', headers[i] || `حقل ${i+1}`);
+            }
+          });
+        });
+      }
+      table.dataset.mzjEnhanced = '1';
     });
   }
 
-  const obs = new MutationObserver(stopModalCardBehavior);
-  obs.observe(document.body, { childList:true, subtree:true });
+  function observeModalTables(){
+    const backdrop = document.getElementById('backdrop');
+    if(!backdrop) return;
 
-  document.addEventListener('DOMContentLoaded', stopModalCardBehavior);
+    enhanceTablesAsCards(document);
+
+    const obs = new MutationObserver((mutations)=>{
+      for(const m of mutations){
+        if(m.type === 'childList'){
+          enhanceTablesAsCards(backdrop);
+        }
+      }
+    });
+    obs.observe(backdrop, { childList:true, subtree:true });
+  }
+
+  ready(function(){
+    setupSidebar();
+    // observeModalTables(); // ❌ تم تعطيله لمنع تحويل الجدول إلى كروت
+  });
 })();

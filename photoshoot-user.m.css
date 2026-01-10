@@ -1,40 +1,176 @@
-/* photoshoot-user.m.css — Mobile overrides
-   ✅ Drawer sidebar
-   ✅ Tables/cards mobile friendly
+/* photoshoot-user.m.css
+   Mobile-only overrides for photoshoot-user.html (keeps PC logic intact)
+   Focus:
+   1) Prevent "stacked letters" / broken table layout
+   2) Make Create Request table usable on mobile (two/three fields per row)
+   3) Keep Manage Orders + Completed Orders readable (card-table)
+   4) Ensure RTL + right alignment
 */
-html,body{max-width:100%;overflow-x:hidden}
-@media (max-width:900px){
-  .mzj-shell{display:block!important}
-  main, .container{width:100%!important;margin:0!important;padding:12px!important}
 
-  header.mzj-topbar{
-    position:sticky;top:0;z-index:60;
-    padding:10px 12px!important;
-    background:rgba(255,248,239,.95);
-    border-bottom:1px solid rgba(62,36,32,.14)
+/* Base */
+html, body {
+  direction: rtl;
+  text-align: right;
+}
+* { box-sizing: border-box; }
+
+/* Make sure long Arabic doesn't break into vertical letters */
+table, th, td, .tableWrap, .modal, .modal * {
+  word-break: normal !important;
+  overflow-wrap: anywhere !important; /* allow wrap by words, not by single letters */
+  hyphens: none !important;
+  letter-spacing: normal !important;
+}
+
+/* Reduce excessive whitespace on mobile */
+@media (max-width: 900px) {
+  .page, .container, .wrap, .content, .main, .panel, .card, .section {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
   }
-  header.mzj-topbar .topbar-center,
-  header.mzj-topbar .topbar-right{display:none!important}
 
-  .mzj-sidebar{
-    position:fixed!important;
-    top:0;right:0;height:100vh;
-    width:280px;max-width:86vw;
-    transform:translateX(110%);
-    transition:.22s;
-    background:#fff;z-index:80;
-    border-left:1px solid rgba(0,0,0,.12)
+  /* If there is any global table wrapper with horizontal scroll, keep it sane */
+  .tableWrap {
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
   }
-  .mzj-sidebar.open{transform:translateX(0)}
 
-  #mzjBackdrop{
-    position:fixed;inset:0;
-    background:rgba(0,0,0,.35);
-    opacity:0;pointer-events:none;
-    transition:.18s;z-index:70
+  /* ---------- Create Request: turn row into grid cards ---------- */
+  /* Targets: any table inside create tab area */
+  #tab-create table,
+  #createTable,
+  .createTable,
+  .legacy-ps #tab-create table {
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 10px 10px !important;
+    table-layout: auto !important;
   }
-  #mzjBackdrop.show{opacity:1;pointer-events:auto}
 
-  table{width:100%!important}
-  input,select,textarea{font-size:16px!important}
+  /* Hide header row to avoid squeezing */
+  #tab-create table thead,
+  #tab-create table thead tr,
+  #tab-create table thead th {
+    display: none !important;
+  }
+
+  /* Each TR becomes a responsive grid */
+  #tab-create table tbody tr {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px !important;
+    margin: 0 0 10px 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  /* On wider phones, allow 3 columns */
+  @media (min-width: 420px) {
+    #tab-create table tbody tr {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  /* TD becomes field card */
+  #tab-create table tbody td {
+    display: block !important;
+    padding: 10px 10px !important;
+    border: 1px solid rgba(0,0,0,0.08) !important;
+    border-radius: 14px !important;
+    background: #fff !important;
+    min-width: 0 !important;
+    text-align: right !important;
+    vertical-align: top !important;
+  }
+
+  /* Inputs take full width */
+  #tab-create table tbody td input,
+  #tab-create table tbody td select,
+  #tab-create table tbody td textarea,
+  #tab-create table tbody td .select,
+  #tab-create table tbody td .input {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* If there is a delete/remove cell/button, make it span full row */
+  #tab-create table tbody td.is-action,
+  #tab-create table tbody td.action,
+  #tab-create table tbody td[data-action],
+  #tab-create table tbody td:has(button.delete),
+  #tab-create table tbody td:has(.btn-delete),
+  #tab-create table tbody td:has(.removeRowBtn) {
+    grid-column: 1 / -1 !important;
+  }
+
+  /* ---------- Manage / Completed / Activity: card-table rendering ---------- */
+  table.mzj-mobile-cards {
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    table-layout: auto !important;
+  }
+
+  table.mzj-mobile-cards thead { display: none !important; }
+
+  table.mzj-mobile-cards tbody tr {
+    display: block !important;
+    margin: 0 0 12px 0 !important;
+    border: 1px solid rgba(0,0,0,0.08) !important;
+    border-radius: 16px !important;
+    background: #fff !important;
+    overflow: hidden !important;
+  }
+
+  table.mzj-mobile-cards tbody td {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    padding: 10px 12px !important;
+    border-bottom: 1px solid rgba(0,0,0,0.06) !important;
+    text-align: right !important;
+    min-width: 0 !important;
+    white-space: normal !important;
+  }
+
+  table.mzj-mobile-cards tbody td:last-child { border-bottom: 0 !important; }
+
+  table.mzj-mobile-cards tbody td::before {
+    content: attr(data-label);
+    flex: 0 0 auto;
+    font-weight: 800;
+    opacity: 0.8;
+    max-width: 45%;
+  }
+
+  table.mzj-mobile-cards tbody td > * {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  /* Buttons inside card rows */
+  table.mzj-mobile-cards button,
+  table.mzj-mobile-cards .btn {
+    max-width: 100%;
+  }
+
+  /* ---------- Modal tables ---------- */
+  .modal table,
+  .mzj-modal table {
+    width: 100% !important;
+    table-layout: auto !important;
+  }
+  .modal .tableWrap { overflow-x: hidden !important; }
+
+  /* If modal table is huge, render as cards too (JS adds class) */
+  .modal table.mzj-mobile-cards,
+  .mzj-modal table.mzj-mobile-cards { width: 100% !important; }
+
+  /* ---------- Fix any accidental left alignment ---------- */
+  .modal, .modalContent, .modalBody, .modalHeader,
+  .panel, .card, .box, .section, .content {
+    text-align: right !important;
+  }
 }

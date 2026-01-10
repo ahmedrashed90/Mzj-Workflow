@@ -50,3 +50,19 @@
     // observeModalTables(); ❌ متوقف
   });
 })();
+/* ================================
+   FORCE modal tables to stay tables
+   ================================ */
+(function(){
+  function stopModalCardBehavior(){
+    const modals = document.querySelectorAll('#backdrop, .modal, .mzj-modal');
+    modals.forEach(m=>{
+      m.querySelectorAll('.mzj-detail-cards').forEach(el => el.remove());
+    });
+  }
+
+  const obs = new MutationObserver(stopModalCardBehavior);
+  obs.observe(document.body, { childList:true, subtree:true });
+
+  document.addEventListener('DOMContentLoaded', stopModalCardBehavior);
+})();

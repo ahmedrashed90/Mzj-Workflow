@@ -1,0 +1,40 @@
+/* photoshoot-user.m.css — Mobile overrides
+   ✅ Drawer sidebar
+   ✅ Tables/cards mobile friendly
+*/
+html,body{max-width:100%;overflow-x:hidden}
+@media (max-width:900px){
+  .mzj-shell{display:block!important}
+  main, .container{width:100%!important;margin:0!important;padding:12px!important}
+
+  header.mzj-topbar{
+    position:sticky;top:0;z-index:60;
+    padding:10px 12px!important;
+    background:rgba(255,248,239,.95);
+    border-bottom:1px solid rgba(62,36,32,.14)
+  }
+  header.mzj-topbar .topbar-center,
+  header.mzj-topbar .topbar-right{display:none!important}
+
+  .mzj-sidebar{
+    position:fixed!important;
+    top:0;right:0;height:100vh;
+    width:280px;max-width:86vw;
+    transform:translateX(110%);
+    transition:.22s;
+    background:#fff;z-index:80;
+    border-left:1px solid rgba(0,0,0,.12)
+  }
+  .mzj-sidebar.open{transform:translateX(0)}
+
+  #mzjBackdrop{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,.35);
+    opacity:0;pointer-events:none;
+    transition:.18s;z-index:70
+  }
+  #mzjBackdrop.show{opacity:1;pointer-events:auto}
+
+  table{width:100%!important}
+  input,select,textarea{font-size:16px!important}
+}

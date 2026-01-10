@@ -164,7 +164,12 @@
     if (!table || !rowId) return;
     const selector = type === "del" ? `[data-del="${rowId}"]` : `[data-edit="${rowId}"]`;
     const btn = table.querySelector(selector);
-    if (btn) btn.click();
+    if (!btn) return;
+
+    // NOTE: في بعض الموبايلات/المتصفحات، btn.click() على عناصر داخل جدول مخفي
+    // ممكن ماينفّذش Event delegation صح. فبنطلق MouseEvent يدويًا.
+    const ev = new MouseEvent('click', { bubbles: true, cancelable: true, view: window });
+    btn.dispatchEvent(ev);
   }
 
   function rebuildCarsCards() {

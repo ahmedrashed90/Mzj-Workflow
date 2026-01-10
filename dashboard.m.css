@@ -221,3 +221,68 @@ body.mzj-sidebar-open{ overflow:hidden !important; }
   opacity: 1;
   pointer-events: auto;
 }
+
+/* ================================
+   SIDEBAR MENU STYLING (احترافي)
+   يمنع شكل "الفقاعات" الناتج من كلاس .tab القديم
+   ================================ */
+@media (max-width: 1200px){
+  .mzj-sidebar{
+    padding: 14px 12px 18px !important;
+  }
+
+  .mzj-sidebar .side-title{
+    margin: 8px 6px 10px;
+    font-weight: 900;
+    color: var(--mzj-brown);
+    opacity: .9;
+  }
+
+  .mzj-sidebar .side-nav{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 6px;
+  }
+
+  /* reset legacy .tab look inside sidebar */
+  .mzj-sidebar a.tab,
+  .mzj-sidebar .side-link{
+    display: flex !important;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    width: 100% !important;
+    white-space: normal !important;
+    border-radius: 14px !important;
+    padding: 12px 12px !important;
+    text-decoration: none !important;
+    font-weight: 800 !important;
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+    background: #fff !important;
+    border: 1px solid var(--mzj-border) !important;
+    color: var(--mzj-brown) !important;
+    box-shadow: none !important;
+    transform: none !important;
+    margin: 0 !important;
+  }
+
+  .mzj-sidebar a.tab i,
+  .mzj-sidebar .side-link i{
+    color: var(--mzj-beige) !important;
+    width: 18px;
+    text-align: center;
+  }
+
+  .mzj-sidebar a.tab.active,
+  .mzj-sidebar .side-link.active{
+    background: var(--mzj-brown) !important;
+    border-color: var(--mzj-brown) !important;
+    color: #fff !important;
+  }
+  .mzj-sidebar a.tab.active i,
+  .mzj-sidebar .side-link.active i{
+    color: #fff !important;
+  }
+}

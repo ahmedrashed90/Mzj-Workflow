@@ -156,3 +156,102 @@ html, body{ max-width:100%; overflow-x:hidden; background:var(--mzj-cream); }
   /* buttons inside modals */
   #backdrop .btn{ border-radius:14px !important; }
 }
+
+
+
+/* ================================
+   Professional modal data styling
+   ================================ */
+@media (max-width: 768px){
+
+  /* Make dashboard cards edge-to-edge */
+  .cards-grid{ gap: 8px !important; }
+  .card-item{ margin: 0 !important; }
+  .card-item, .card{
+    border-radius: 16px !important;
+  }
+
+  /* Modal container tweaks */
+  .modal, .mzj-modal, .dialog, .popup{
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modal-content, .mzj-modal-content, .dialog-content, .popup-content{
+    border-radius: 18px !important;
+  }
+
+  /* Hide original modal table, show our cards */
+  .mzj-modal .table-wrap,
+  .modal .table-wrap{
+    padding: 0 !important;
+    border: none !important;
+  }
+
+  .mzj-modal table,
+  .modal table{
+    border-radius: 0 !important;
+  }
+
+  /* Generated cards wrapper */
+  .mzj-detail-cards{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 12px 14px;
+  }
+
+  .mzj-detail-card{
+    background: #fff;
+    border: 1px solid rgba(0,0,0,.07);
+    border-radius: 16px;
+    padding: 12px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.05);
+  }
+
+  /* Grid of fields inside a single record */
+  .mzj-detail-grid{
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .mzj-field{
+    border: 1px solid rgba(0,0,0,.06);
+    border-radius: 14px;
+    padding: 10px;
+    min-width: 0;
+    background: #fff;
+  }
+
+  .mzj-k{
+    font-size: 11px;
+    opacity: .75;
+    margin: 0 0 6px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mzj-v{
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.35;
+    word-break: break-word;
+  }
+
+  /* Copyable values (VIN, phone, etc.) */
+  .mzj-v.copyable{
+    text-decoration: underline dotted;
+    cursor: pointer;
+  }
+
+  /* Long text gets full width */
+  .mzj-field.full{
+    grid-column: 1 / -1;
+  }
+
+  /* Small screens: 1 column */
+  @media (max-width: 420px){
+    .mzj-detail-grid{ grid-template-columns: 1fr; }
+  }
+}

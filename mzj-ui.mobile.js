@@ -59,6 +59,103 @@
     });
   }
 
+
+
+  // ====== Simple tables -> cards (for tracking + activity log) ======
+  function debounce(fn, wait=120){
+    let t; 
+    return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), wait); };
+  }
+
+  function buildSimpleCards(table){
+    if (!table) return;
+
+    const tbody = table.querySelector("tbody");
+    if (!tbody) return;
+
+    const wrap = table.closest(".table-wrap") || table.parentElement;
+    if (!wrap) return;
+
+    // headers
+    const headers = Array.from(table.querySelectorAll("thead th")).map(th => th.textContent.trim());
+    const rows = Array.from(tbody.querySelectorAll("tr"));
+    if (!rows.length) {
+      // لو مفيش داتا: امسح الكروت لو موجودة وخلي الجدول مخفي زي ما هو
+      const old = wrap.querySelector(".mzj-table-cards");
+      if (old) old.remove();
+      return;
+    }
+
+    // remove old cards
+    const old = wrap.querySelector(".mzj-table-cards");
+    if (old) old.remove();
+
+    const cardsWrap = document.createElement("div");
+    cardsWrap.className = "mzj-table-cards";
+
+    rows.forEach((tr) => {
+      const tds = Array.from(tr.querySelectorAll("td"));
+      if (!tds.length) return;
+
+      const card = document.createElement("div");
+      card.className = "mzj-row-card";
+
+      const grid = document.createElement("div");
+      grid.className = "mzj-row-grid";
+
+      tds.forEach((td, i) => {
+        const cell = document.createElement("div");
+        cell.className = "mzj-cell";
+
+        const k = document.createElement("div");
+        k.className = "mzj-k";
+        k.textContent = headers[i] || `عمود ${i+1}`;
+
+        const v = document.createElement("div");
+        v.className = "mzj-v";
+        v.textContent = (td.textContent || '').trim() || "—";
+
+        cell.appendChild(k);
+        cell.appendChild(v);
+        grid.appendChild(cell);
+      });
+
+      card.appendChild(grid);
+      cardsWrap.appendChild(card);
+    });
+
+    // hide original table but keep it in DOM for logic
+    table.style.display = "none";
+    wrap.appendChild(cardsWrap);
+  }
+
+  function observeTableForCards(table){
+    if (!table || table.dataset.mzjObserved) return;
+    table.dataset.mzjObserved = "1";
+
+    const rerender = debounce(() => buildSimpleCards(table), 150);
+
+    // Observe tbody if exists
+    const tbody = table.querySelector("tbody");
+    if (tbody) {
+      const obs = new MutationObserver(rerender);
+      obs.observe(tbody, { childList: true, subtree: true, characterData: true });
+      // first render try
+      buildSimpleCards(table);
+      return;
+    }
+
+    // If tbody not ready, observe table until it appears
+    const obs2 = new MutationObserver(() => {
+      const tb = table.querySelector("tbody");
+      if (tb) {
+        obs2.disconnect();
+        observeTableForCards(table);
+      }
+    });
+    obs2.observe(table, { childList: true, subtree: true });
+  }
+
   function getCarsTable() {
     return document.getElementById("carsTable");
   }
@@ -193,6 +290,8 @@
     ensureBackdrop();
     setupSidebarToggle();
     setupInnerTabsDropdown();
+    observeTableForCards(document.getElementById("trackTable"));
+    observeTableForCards(document.getElementById("movesTable"));
     observeCarsTable();
   }
 

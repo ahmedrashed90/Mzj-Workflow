@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -674,7 +675,8 @@ body.auth-checking #loginCard{display:none !important;}
     border-color:#fed7aa;background:#fff7ed;color:#9a3412;
   }
 </style>
-  <link rel="stylesheet" href="./mzj-ui.css" />
+  <link rel="stylesheet" href="./mzj-ui.css"
+  <link rel="stylesheet" href="./photoshoot-user.m.css"> />
 
 <style>
   /* ===== Photoshoot Safe Refactor v4 ===== */
@@ -727,7 +729,6 @@ body.auth-checking #loginCard{display:none !important;}
   }
 </style>
 
-  <link rel="stylesheet" href="./photoshoot-user.m.css">
 </head>
 
 <body class="auth-checking mzj">
@@ -1142,8 +1143,8 @@ async function deleteRequestFromState(requestId, kind){
   const ROLE_PAGES = {
     [ROLE_ADMIN] : 'ALL', // الإدارة تشوف كل الصفحات
     // الإداري: يشوف فقط الداشبورد + نقل السيارات + إدارة الطلبات + كل السيارات + المبيعات
-    [ROLE_IDARI] : ['dashboard.html','vt.html','photoshoot-user.html','cars.html','inventory.html','act.html'],
-    [ROLE_BRANCH]: ['dashboard.html']
+    [ROLE_IDARI] : ['dashboard.m.html','vt.m.html','photoshoot-user.m.html','cars.m.html','inventory.m.html','act.m.html'],
+    [ROLE_BRANCH]: ['dashboard.m.html']
   };
 
   function applyRolePermissions(){
@@ -1172,7 +1173,7 @@ async function deleteRequestFromState(requestId, kind){
       const allowed = (ROLE_PAGES[currentUserRole]||[]).map(x=>x.toLowerCase());
       if(currentPage && !allowed.includes(currentPage)){
         alert('غير مصرح لك بدخول هذه الصفحة');
-        window.location.href = allowed[0] || 'dashboard.html';
+        window.location.href = allowed[0] || 'dashboard.m.html';
       }
     }
   }

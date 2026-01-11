@@ -1,8 +1,21 @@
 {
-  "rewrites": [
+  "builds": [
     {
-      "source": "/photoshoot-user.m/:path*",
-      "destination": "https://mzj-workflow.vercel.app/:path*"
+      "src": "photoshoot-user.m/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "photoshoot-user.m/dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "^/photoshoot-user.m/?$",
+      "dest": "/photoshoot-user.m/dist/index.html"
+    },
+    {
+      "src": "^/photoshoot-user.m/(.*)",
+      "dest": "/photoshoot-user.m/dist/$1"
     }
   ]
 }

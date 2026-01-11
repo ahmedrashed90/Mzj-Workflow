@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -853,6 +854,7 @@ body.auth-checking #loginCard{display:none !important;}
           <option value="shoot">تصوير فقط</option>
           <option value="move">نقل فقط</option>
         </select>
+        <input class="input" id="shootDate" type="date" style="display:none; min-width:180px" />
         <button class="btn" id="btnAddRow"><i class="fa-solid fa-plus"></i>إضافة سيارة</button>
         <button class="btn" id="btnResetRows"><i class="fa-solid fa-rotate"></i>إعادة ضبط الجدول</button>
         <span class="spacer"></span>
@@ -909,6 +911,8 @@ body.auth-checking #loginCard{display:none !important;}
               <th>الحالة</th>
               <th style="width:200px">المنشئ</th>
               <th style="width:170px">آخر تحديث</th>
+              <th style="width:130px">تاريخ التصوير</th>
+              <th>ملاحظات</th>
               <th style="width:130px">إجراءات</th>
             </tr>
           </thead>
@@ -928,6 +932,8 @@ body.auth-checking #loginCard{display:none !important;}
               <th style="width:90px">النوع</th>
               <th style="width:200px">المنشئ</th>
               <th style="width:170px">وقت الإنهاء</th>
+              <th style="width:130px">تاريخ التصوير</th>
+              <th>ملاحظات</th>
               <th style="width:130px">فتح</th>
             </tr>
           </thead>
@@ -1001,6 +1007,7 @@ body.auth-checking #loginCard{display:none !important;}
             <th>السيارة</th>
             <th style="width:170px">المكان</th>
             <th style="width:170px">الوجهة</th>
+            <th style="width:200px">ملاحظات</th>
             <th style="width:110px">النوع</th>
             <th style="width:160px">حالة التنفيذ</th>
             <th style="width:140px">دورك الآن</th>
@@ -1081,7 +1088,8 @@ async function upsertRequestToState({requestId, kind, status, total, createdByEm
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     admin: {},
-    notes: '',
+    notes: buildNotesSummary(rows||[]),
+    shootDate: shouldShowShootDate() ? (document.getElementById('shootDate')?.value || todayISO()) : "",
   };
 
   // approvals only for move
@@ -1303,6 +1311,41 @@ function todayISO(){
     return d.toISOString().slice(0,10);
   }catch(e){ return ''; }
 }
+
+function shouldShowShootDate(){
+  // يظهر تاريخ التصوير لو نوع الطلب (تصوير فقط) أو يوجد أي صف تصوير (في وضع auto/mixed)
+  try{
+    if(!reqType) return false;
+    if(reqType.value === 'shoot') return true;
+    // في حالة auto: لو فيه أي صف تصوير
+    const kinds = Array.from(reqRowsBody.querySelectorAll('.req-kind')).map(el=>el.value);
+    return kinds.includes('shoot');
+  }catch(e){ return false; }
+}
+
+function toggleShootDateUI(){
+  const el = document.getElementById('shootDate');
+  if(!el) return;
+  const show = shouldShowShootDate();
+  el.style.display = show ? 'inline-flex' : 'none';
+  if(show && !el.value){
+    el.value = todayISO();
+  }
+}
+
+function buildNotesSummary(rows){
+  // نجمع ملاحظات الصفوف (اختياري) عشان تظهر في إدارة الطلبات
+  try{
+    const items = (rows||[])
+      .filter(r => String(r.note||'').trim())
+      .map(r => `${r.vin}: ${String(r.note||'').trim()}`);
+    if(!items.length) return '';
+    const s = items.join(' | ');
+    // حد أقصى خفيف عشان ما يكبرش الدوك
+    return s.length > 300 ? (s.slice(0,297) + '...') : s;
+  }catch(e){ return ''; }
+}
+
 async function markShootRowsDoneInMediaSpecs(rows){
   // rows: request rows (subcollection docs)
   const shootRows = (rows||[]).filter(r => (r.kind||'') === 'shoot');
@@ -1377,6 +1420,7 @@ function applyShootUIRestrictions(){
   Array.from(reqRowsBody.querySelectorAll('tr')).forEach(enforceRowKindOptions);
   updatePlaceLabelsAll();
   updatePlaceHeader();
+  toggleShootDateUI();
 }
 
 function includesLoc(loc){ return myLocations().includes(loc); }
@@ -1678,13 +1722,17 @@ function buildFormRows(){
   // default: 1 row only
   reqRowsBody.innerHTML='';
   addFormRow();
+  toggleShootDateUI();
 }
 
 btnAddRow.addEventListener('click', ()=>addFormRow());
 btnResetRows.addEventListener('click', ()=>{ buildFormRows(); applyShootUIRestrictions(); });
 reqRowsBody.addEventListener('change', (e)=>{
-  if(e.target.closest('.req-kind')){ updatePlaceHeader(); updatePlaceLabelForRow(e.target.closest('tr')); }
-});
+  if(e.target.closest('.req-kind')){ updatePlaceHeader(); updatePlaceLabelForRow(e.target.closest('tr')); toggleShootDateUI(); }
+});;
+
+reqType.addEventListener('change', ()=>{ toggleShootDateUI(); });
+
 
 // Remove row (or clear if it's the last row)
 reqRowsBody.addEventListener('click', (e)=>{
@@ -1824,7 +1872,11 @@ btnSubmit.addEventListener('click', async ()=>{
       createdByUid: myUid(),
       createdByEmail: myEmail(),
       createdByName: myName(),
-      total: rows.length
+      total: rows.length,
+      // ✅ للعرض في إدارة الطلبات
+      shootDate: shouldShowShootDate() ? (document.getElementById('shootDate')?.value || todayISO()) : "",
+      notes: buildNotesSummary(rows),
+      vins: rows.map(r=>r.vin).filter(Boolean)
     });
 
         // Mirror summary into mzj_admin_state/v1.{moveRequests|shootRequests}
@@ -1957,6 +2009,7 @@ function renderRowsTable(){
       <td>${row.car||"—"}</td>
       <td class="muted">${src||"—"}</td>
       <td class="muted">${dst||"—"}</td>
+      <td class="muted">${(row.note||"—")}</td>
       <td>${kindLabel(row.kind)}</td>
       <td>${stageText(row)}</td>
       <td>${myTurn ? '<span class="turn-badge">دورك الآن</span>' : (nextStep? '<span class="turn-badge wait">بانتظار مسؤول المرحلة</span>' : '—')}</td>
@@ -2301,7 +2354,8 @@ function passesSearch(req, q){
   const creator = String(req.createdByName||req.createdByEmail||"");
   // also match any VIN by cached field if exists
   const vins = Array.isArray(req.vins) ? req.vins.join(' ') : '';
-  return id.toLowerCase().includes(q) || creator.toLowerCase().includes(q) || vins.toLowerCase().includes(q);
+  const notes = String(req.notes||req.notesSummary||"");
+  return id.toLowerCase().includes(q) || creator.toLowerCase().includes(q) || vins.toLowerCase().includes(q) || notes.toLowerCase().includes(q);
 }
 
 function renderManage(all){
@@ -2327,6 +2381,8 @@ function renderManage(all){
       <td>${statusLabel(req)}</td>
       <td class="muted">${req.createdByName||req.createdByEmail||"—"}</td>
       <td class="muted">${fmtTs(req.updatedAt||req.createdAt)}</td>
+      <td class="muted">${(req.shootDate||"—")}</td>
+      <td class="muted">${(req.notes||req.notesSummary||"—")}</td>
       <td><button class="btn primary" data-open="${req.__id}"><i class="fa-solid fa-up-right-from-square"></i>فتح</button>
 ${canDeleteRequest(req) ? `<button class="btn danger" data-del="${req.__id}" style="margin-right:6px"><i class="fa-solid fa-trash"></i>حذف</button>` : ``}</td>
     `;
@@ -2353,6 +2409,8 @@ function renderDone(all){
       <td>${kindLabel(req.kind)}</td>
       <td class="muted">${req.createdByName||req.createdByEmail||"—"}</td>
       <td class="muted">${fmtTs(req.finishedAt)}</td>
+      <td class="muted">${(req.shootDate||"—")}</td>
+      <td class="muted">${(req.notes||req.notesSummary||"—")}</td>
       <td><button class="btn primary" data-open="${req.__id}">فتح</button></td>
     `;
     tr.querySelector('[data-open]').addEventListener('click', ()=>openRequest(req.__id));

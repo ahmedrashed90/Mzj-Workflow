@@ -2,7 +2,13 @@
   "routes": [
     { "handle": "filesystem" },
 
-    { "src": "^/photoshoot-user.m/?$", "dest": "/photoshoot-user.m/dist/index.html" },
-    { "src": "^/photoshoot-user.m/(.*)$", "dest": "/photoshoot-user.m/dist/$1" }
+    {
+      "src": "^/photoshoot-user.m/?$",
+      "dest": "/photoshoot-user.m/dist/index.html"
+    },
+    {
+      "src": "^/photoshoot-user.m/(.*)$",
+      "dest": "/photoshoot-user.m/dist/$1"
+    }
   ]
 }

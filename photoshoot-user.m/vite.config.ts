@@ -3,8 +3,5 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/photoshoot-user.m/',
-  build: {
-    outDir: 'dist'
-  }
+  base: '/photoshoot-user.m/'
 })

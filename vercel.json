@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/photoshoot-user.m/:path*",
+      "destination": "https://PHOTOSHOOT-USER-MOBILE.vercel.app/:path*"
+    }
+  ]
+}

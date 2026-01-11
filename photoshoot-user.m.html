@@ -674,8 +674,7 @@ body.auth-checking #loginCard{display:none !important;}
     border-color:#fed7aa;background:#fff7ed;color:#9a3412;
   }
 </style>
-  <link rel="stylesheet" href="./mzj-ui.css">
-  <link rel="stylesheet" href="./photoshoot-user.m.fixed.css" />
+  <link rel="stylesheet" href="./mzj-ui.css" />
 
 <style>
   /* ===== Photoshoot Safe Refactor v4 ===== */
@@ -728,6 +727,7 @@ body.auth-checking #loginCard{display:none !important;}
   }
 </style>
 
+  <link rel="stylesheet" href="./photoshoot-user.m.v2.css">
 </head>
 
 <body class="auth-checking mzj">
@@ -846,7 +846,18 @@ body.auth-checking #loginCard{display:none !important;}
     </div>
 
     <!-- Create -->
-    <div class="card-bd" id="inner-create">
+    <div class="card-bd" 
+  <!-- Mobile Tab Selector (3 sections) -->
+  <div class="mzj-mobile-tabbar">
+    <label class="mzj-mobile-tablabel" for="mzjTabSelect">اختر القسم</label>
+    <select id="mzjTabSelect" class="mzj-mobile-tabselect">
+      <option value="create">إنشاء طلب</option>
+      <option value="manage">إدارة الطلبات</option>
+      <option value="done">الطلبات المكتملة</option>
+    </select>
+  </div>
+
+<div id="inner-create">
       <div class="row">
         <input class="input" id="reqBy" placeholder="مقدم الطلب" readonly>
         <select class="select" id="reqType">
@@ -1142,8 +1153,8 @@ async function deleteRequestFromState(requestId, kind){
   const ROLE_PAGES = {
     [ROLE_ADMIN] : 'ALL', // الإدارة تشوف كل الصفحات
     // الإداري: يشوف فقط الداشبورد + نقل السيارات + إدارة الطلبات + كل السيارات + المبيعات
-    [ROLE_IDARI] : ['dashboard.m.html','vt.m.html','photoshoot-user.m.html','cars.m.html','inventory.m.html','act.m.html'],
-    [ROLE_BRANCH]: ['dashboard.m.html']
+    [ROLE_IDARI] : ['dashboard.html','vt.html','photoshoot-user.html','cars.html','inventory.html','act.html'],
+    [ROLE_BRANCH]: ['dashboard.html']
   };
 
   function applyRolePermissions(){
@@ -1172,7 +1183,7 @@ async function deleteRequestFromState(requestId, kind){
       const allowed = (ROLE_PAGES[currentUserRole]||[]).map(x=>x.toLowerCase());
       if(currentPage && !allowed.includes(currentPage)){
         alert('غير مصرح لك بدخول هذه الصفحة');
-        window.location.href = allowed[0] || 'dashboard.m.html';
+        window.location.href = allowed[0] || 'dashboard.html';
       }
     }
   }
@@ -2505,6 +2516,6 @@ document.body.classList.add(isAdmin() ? 'is-admin' : 'not-admin');
     </main>
   </div>
 
-  <script src="./photoshoot-user.m.fixed.js"></script>
+  <script src="./photoshoot-user.m.v2.js"></script>
 </body>
 </html>

@@ -1,79 +1,162 @@
-
-/* photoshoot-user mobile fixes
-   - Make tables readable on mobile without horizontal scroll
-   - Do NOT touch business logic; only enhance rendering
+/* sales.m.js — Mobile helpers for sales.m.html
+   ✅ Sidebar drawer toggle (robust + safe selectors)
+   ✅ Label tables for mobile vertical grid (adds data-label + mzj-mobile-table)
+   ⚠️ لا يغيّر منطق الداتا
 */
 (function(){
-  const isMobile = () => window.matchMedia && window.matchMedia("(max-width: 820px)").matches;
+  function onReady(fn){
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+    else fn();
+  }
+  function isMobile(){ return window.matchMedia && window.matchMedia('(max-width: 900px)').matches; }
+  function clean(s){ return (s||'').replace(/\s+/g,' ').trim(); }
 
-  function applyDataLabels(table){
+  function setupSidebar(){
+    const sidebar =
+      document.getElementById('mzjSidebar') ||
+      document.querySelector('.mzj-sidebar') ||
+      document.querySelector('aside.mzj-sidebar');
+
+    const btn =
+      document.getElementById('mzjSidebarBtn') ||
+      document.querySelector('[data-mzj-sidebar-btn]') ||
+      document.querySelector('.mzjSidebarBtn') ||
+      document.querySelector('button[aria-controls="mzjSidebar"]');
+
+    let backdrop = document.getElementById('mzjBackdrop');
+    if(!backdrop){
+      backdrop = document.createElement('div');
+      backdrop.id = 'mzjBackdrop';
+      document.body.appendChild(backdrop);
+    }
+
+    if(!sidebar || !btn) return;
+
+    const openClass = 'open';
+    const showClass = 'show';
+
+    function open(){
+      sidebar.classList.add(openClass);
+      backdrop.classList.add(showClass);
+    }
+    function close(){
+      sidebar.classList.remove(openClass);
+      backdrop.classList.remove(showClass);
+    }
+    function toggle(){
+      sidebar.classList.contains(openClass) ? close() : open();
+    }
+
+    btn.addEventListener('click', function(e){ e.preventDefault(); toggle(); }, true);
+    backdrop.addEventListener('click', close);
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') close(); });
+
+    sidebar.addEventListener('click', (e)=>{
+      const a = e.target.closest('a');
+      if(a) close();
+    });
+  }
+
+  function labelTable(table){
     if(!table) return;
-    const ths = Array.from(table.querySelectorAll("thead th")).map(th => (th.textContent || "").trim());
-    if(!ths.length) return;
-    const rows = table.querySelectorAll("tbody tr");
-    rows.forEach(tr=>{
-      Array.from(tr.children).forEach((td, idx)=>{
-        if(td && td.tagName === "TD"){
-          const label = ths[idx] || "";
-          if(label) td.setAttribute("data-label", label);
-        }
+    const thead = table.querySelector('thead');
+    const tbody = table.querySelector('tbody');
+    if(!thead || !tbody) return;
+
+    const headers = Array.from(thead.querySelectorAll('th')).map(th => clean(th.textContent));
+    Array.from(tbody.querySelectorAll('tr')).forEach(tr=>{
+      Array.from(tr.querySelectorAll('td')).forEach((td,i)=>{
+        td.setAttribute('data-label', headers[i] || `عمود ${i+1}`);
       });
     });
+
+    table.classList.add('mzj-mobile-table');
   }
 
-  function enhanceTables(){
+  function applyTables(){
     if(!isMobile()) return;
-
-    // Manage + Done tables (lists)
-    const listTables = document.querySelectorAll("table");
-    listTables.forEach(t=>{
-      // heuristics: tables that look like listing tables (have thead+tbody) and not tiny
-      if(t.dataset.mzjEnhanced === "1") return;
-
-      const hasThead = !!t.querySelector("thead");
-      const hasTbody = !!t.querySelector("tbody");
-      if(!hasThead || !hasTbody) return;
-
-      // detect create-request table by presence of inputs/selects/textarea in tbody
-      const hasInputs = !!t.querySelector("tbody input, tbody select, tbody textarea");
-
-      if(hasInputs){
-        t.classList.add("mzj-mobile-grid");
-      }else{
-        t.classList.add("mzj-mobile-cards");
-        applyDataLabels(t);
-      }
-
-      t.dataset.mzjEnhanced = "1";
-    });
+    const tables = document.querySelectorAll('main table, .mzj-content table, .container table, .modal table');
+    tables.forEach(labelTable);
   }
 
-  function watch(){
-    if(!isMobile()) return;
-
-    const targets = [];
-    ["reqRowsBody","ordersTbody","doneTbody"].forEach(id=>{
-      const el = document.getElementById(id);
-      if(el) targets.push(el);
-    });
-
-    const observer = new MutationObserver(()=>{ 
-      // allow DOM to settle
-      requestAnimationFrame(enhanceTables);
-    });
-    targets.forEach(t=>observer.observe(t, {childList:true, subtree:true}));
-  }
-
-  document.addEventListener("DOMContentLoaded", ()=>{
-    enhanceTables();
-    watch();
-
-    // also re-apply on tab switches or any click that may render
-    document.addEventListener("click", ()=>{
-      if(!isMobile()) return;
-      setTimeout(enhanceTables, 30);
-    }, true);
-
-    window.addEventListener("resize", ()=>{ setTimeout(enhanceTables, 60); });
+  onReady(function(){
+    setupSidebar();
+    applyTables();
+    const obs = new MutationObserver(()=> applyTables());
+    obs.observe(document.body, {childList:true, subtree:true});
   });
+})();
+
+
+/* === photoshoot-user: 3 tabs -> dropdown + create formgrid === */
+(function(){
+  function isMobile(){ return window.matchMedia && window.matchMedia('(max-width: 900px)').matches; }
+  function clean(s){ return (s||'').replace(/\s+/g,' ').trim(); }
+
+  function labelTable(table, cls){
+    const thead = table.querySelector('thead');
+    const tbody = table.querySelector('tbody');
+    if(!thead || !tbody) return;
+    const headers = Array.from(thead.querySelectorAll('th')).map(th => clean(th.textContent));
+    Array.from(tbody.querySelectorAll('tr')).forEach(tr=>{
+      Array.from(tr.querySelectorAll('td')).forEach((td,i)=>{
+        td.setAttribute('data-label', headers[i] || `عمود ${i+1}`);
+      });
+    });
+    table.classList.add(cls);
+  }
+
+  function applyCreateFormGrid(){
+    if(!isMobile()) return;
+    const wrap = document.getElementById('inner-create');
+    if(!wrap) return;
+    const table = wrap.querySelector('table');
+    if(!table) return;
+    labelTable(table, 'mzj-formgrid');
+    const rows = table.querySelectorAll('tbody tr');
+    rows.forEach(tr=>{
+      const tds = Array.from(tr.querySelectorAll('td'));
+      if(tds.length >= 1){
+        // mark last cell as long (often note / location)
+        tds[tds.length-1].setAttribute('data-long','1');
+      }
+    });
+  }
+
+  function setupTabDropdown(){
+    if(!isMobile()) return;
+    const sel = document.getElementById('mzjTabSelect');
+    if(!sel) return;
+
+    const secCreate = document.getElementById('inner-create');
+    const secManage = document.getElementById('inner-manage');
+    const secDone   = document.getElementById('inner-done') || document.getElementById('inner-completed');
+
+    function show(which){
+      if(secCreate) secCreate.style.display = (which==='create') ? '' : 'none';
+      if(secManage) secManage.style.display = (which==='manage') ? '' : 'none';
+      if(secDone)   secDone.style.display   = (which==='done')   ? '' : 'none';
+    }
+
+    show(sel.value || 'create');
+
+    sel.addEventListener('change', ()=>{
+      show(sel.value);
+      applyCreateFormGrid();
+    });
+  }
+
+  function boot(){
+    setupTabDropdown();
+    applyCreateFormGrid();
+    // apply card tables (sales.m.v2.js already labels tables; leave it)
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+
+  const obs = new MutationObserver(()=>{
+    applyCreateFormGrid();
+  });
+  obs.observe(document.body, {childList:true, subtree:true});
 })();

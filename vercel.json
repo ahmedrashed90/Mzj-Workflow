@@ -1,0 +1,15 @@
+{
+  "builds": [
+    {
+      "src": "photoshoot-user.m/package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist" }
+    }
+  ],
+  "routes": [
+    { "handle": "filesystem" },
+
+    { "src": "^/photoshoot-user.m/?$", "dest": "/photoshoot-user.m/dist/index.html" },
+    { "src": "^/photoshoot-user.m/(.*)$", "dest": "/photoshoot-user.m/dist/$1" }
+  ]
+}

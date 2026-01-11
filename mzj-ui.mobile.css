@@ -1,49 +1,181 @@
+/* MZJ Mobile UI — Admin page optimizations
+   هدف الملف: تحويل تجربة admin.html لموبايل بشكل ثابت بدون كسر اللوجيك
+*/
+@media (max-width: 768px){
 
-body {
-    font-family: 'Tajawal', sans-serif;
-    background-color: #fff8ef;
-    -webkit-tap-highlight-color: transparent;
-    margin: 0;
-    padding: 0;
-    user-select: none;
-}
+  :root{
+    --m-gap:10px;
+    --m-radius:14px;
+  }
 
-/* تحسين شكل السكرول */
-::-webkit-scrollbar {
-    width: 4px;
-}
-::-webkit-scrollbar-thumb {
-    background: #dcc3b2;
-    border-radius: 10px;
-}
+  html,body{overflow-x:hidden}
+  body{background:var(--cream)}
 
-/* منع الزووم عند الضغط على المدخلات في الآيفون */
-input, select, textarea {
-    font-size: 16px !important;
-}
+  /* ====== Topbar: موبايل (سطر واحد) ====== */
+  .topbar,
+  .mzj-topbar{
+    position:sticky;
+    top:0;
+    z-index:2500;
+    height:52px;
+    padding:0 10px;
+    background:#fff;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
 
-input:focus, select:focus {
-    outline: none;
-    border-color: #3e2420;
-}
+  /* نخفي الزحمة على الموبايل (لو موجودة) */
+  .topbar .actions,
+  .topbar .user-info,
+  .topbar .date,
+  .topbar .extras,
+  .mzj-topbar .brand-sub,
+  .mzj-topbar .mzj-chip,
+  .mzj-topbar .btn-ghost{
+    display:none !important;
+  }
 
-.active-tab {
-    color: #3e2420;
-    font-weight: 900;
-}
+  .topbar .page-title,
+  .mzj-topbar .brand-title{
+    font-size:13px;
+    font-weight:700;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    max-width:62vw;
+  }
 
-/* تأثيرات الضغط للموبايل */
-.active-press:active {
-    transform: scale(0.97);
-    opacity: 0.9;
-}
+  .mzj-mobile-menu-btn,
+  #mzjSidebarBtn{
+    width:36px;
+    height:36px;
+    border-radius:10px;
+    border:1px solid #ddd;
+    background:#fff;
+    font-size:18px;
+    display:grid;
+    place-items:center;
+  }
 
-/* تصميم Modal الموبايل من الأسفل */
-.mobile-modal {
-    animation: slideUp 0.3s ease-out;
-}
+  /* ====== Sidebar: Drawer ضيق ====== */
+  .sidebar,
+  .mzj-sidebar{
+    position:fixed !important;
+    top:0; right:0;
+    height:100vh;
+    width:260px;
+    max-width:80vw;
+    transform:translateX(110%);
+    transition:transform .22s ease;
+    z-index:3000;
+    overflow:auto;
+    background:#fff;
+    border-left:1px solid var(--line);
+    box-shadow:-8px 0 24px rgba(0,0,0,.15);
+    padding:12px 10px;
+  }
+  body.mzj-sidebar-open .sidebar,
+  body.mzj-sidebar-open .mzj-sidebar{transform:translateX(0)}
 
-@keyframes slideUp {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
+  .mzj-backdrop{
+    position:fixed !important;
+    inset:0;
+    background:rgba(0,0,0,.38);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s ease;
+    z-index:2900;
+  }
+  body.mzj-sidebar-open .mzj-backdrop{
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  /* ====== محتوى الصفحة: مساحات أقل ====== */
+  #app .container{padding:0 10px 18px !important; margin:10px auto !important; max-width:100% !important}
+  .card{padding:12px !important; border-radius:var(--m-radius) !important}
+  .row{gap:8px !important}
+
+  /* ====== Inner Tabs -> Dropdown ====== */
+  .inner-tabs{display:none !important}
+  .inner-tabs-select{
+    display:block !important;
+    width:100%;
+    padding:12px 12px;
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:#fff;
+    font-size:14px;
+    margin:0 0 10px 0;
+  }
+
+  /* ====== Buttons ====== */
+  .btn{border-radius:14px !important}
+  .btn, button{font-size:14px !important}
+  .btn-group{gap:8px !important; flex-wrap:wrap}
+
+  /* ====== جداول: نلغي الهوامش ونحسن المساحة ====== */
+  .table-wrap{padding:0 !important; margin:0 !important; border:none !important}
+  table{margin:0 !important}
+  th,td{padding:8px 8px !important}
+
+  /* ====== Cards Grid (3 أعمدة في كل صف) ====== */
+  .mzj-table-cards{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+  .mzj-row-card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:10px;
+  }
+  .mzj-row-card:active{transform:scale(.995)}
+  .mzj-row-grid{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr)); /* ✅ 3 أعمدة */
+    gap:8px;
+  }
+  .mzj-cell{
+    border:1px solid #f0f0f0;
+    border-radius:12px;
+    padding:8px;
+    min-width:0;
+  }
+  .mzj-cell .mzj-k{
+    font-size:11px;
+    opacity:.75;
+    margin-bottom:4px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .mzj-cell .mzj-v{
+    font-size:13px;
+    font-weight:600;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .mzj-row-actions{
+    margin-top:10px;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .mzj-row-actions .btn{
+    flex:1;
+    min-width:120px;
+  }
+
+  /* شاشات أصغر: نخليها 2 أعمدة */
+  @media (max-width: 420px){
+    .mzj-row-grid{grid-template-columns:repeat(2, minmax(0, 1fr));}
+    .topbar .page-title,
+    .mzj-topbar .brand-title{max-width:55vw;}
+  }
 }

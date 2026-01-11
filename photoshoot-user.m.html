@@ -674,6 +674,74 @@ body.auth-checking #loginCard{display:none !important;}
   .turn-badge.wait{
     border-color:#fed7aa;background:#fff7ed;color:#9a3412;
   }
+
+/* =======================
+   Mobile overhaul (Tabs -> Dropdown + vertical layout)
+======================= */
+.inner-select-wrap{display:none; align-items:center; gap:8px;}
+.inner-select-label{font-size:12px; font-weight:900; color:var(--brown);}
+.inner-select{min-width:220px;}
+
+@media (max-width: 768px){
+  /* Container spacing */
+  .container{padding:0 10px 90px}
+  .card-hd{gap:8px}
+  .card-hd h2{font-size:15px}
+
+  /* Hide desktop inner tabs, show dropdown */
+  .inner-tabs{display:none !important;}
+  .inner-select-wrap{display:flex; width:100%;}
+  .inner-select{width:100% !important; min-width:0 !important;}
+
+  /* Make rows stack vertically */
+  .row{flex-direction:column; align-items:stretch;}
+  .row > *{width:100%;}
+  .spacer{display:none;}
+
+  .input,.select,.btn{width:100% !important; min-width:0 !important;}
+  .btn{justify-content:center;}
+
+  /* Tables become vertical cards (only marked tables) */
+  .table.mobile-cards thead{display:none !important;}
+  .table.mobile-cards, .table.mobile-cards tbody, .table.mobile-cards tr, .table.mobile-cards td{display:block; width:100%;}
+  .table.mobile-cards tr{
+    border-bottom:1px solid var(--line);
+    background:#fff;
+    padding:10px 10px;
+  }
+  .table.mobile-cards td{
+    border:none !important;
+    padding:6px 0 !important;
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+  }
+  .table.mobile-cards td::before{
+    content: attr(data-label);
+    flex:0 0 115px;
+    font-weight:900;
+    color:var(--brown);
+    font-size:12px;
+    line-height:1.25;
+  }
+  .table.mobile-cards td:empty::before{content:'';}
+  .table.mobile-cards td .btn{width:auto !important;}
+  .table.mobile-cards td .btn + .btn{margin-right:8px;}
+
+/* Modal full-screen */
+  .modal-backdrop{padding:0 !important;}
+  .modal{
+    width:100% !important;
+    height:100% !important;
+    max-height:100vh !important;
+    border-radius:0 !important;
+  }
+  .modal-hd{position:sticky; top:0; background:#fff; z-index:2;}
+  .modal-ft{position:sticky; bottom:0; z-index:2;}
+  .ft-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important;}
+  .stage-grid{grid-template-columns:1fr !important;}
+}
+
 </style>
   <link rel="stylesheet" href="./mzj-ui.css" />
 
@@ -728,7 +796,6 @@ body.auth-checking #loginCard{display:none !important;}
   }
 </style>
 
-  <link rel="stylesheet" href="./photoshoot-user.m.fixed.css">
 </head>
 
 <body class="auth-checking mzj">
@@ -770,15 +837,15 @@ body.auth-checking #loginCard{display:none !important;}
       <div class="side-section">
         <div class="side-title">العمليات</div>
         <nav class="side-nav">
-          <a class="side-link tab" href="./sales.m.html"><i class="fa-solid fa-handshake"></i><span>تتبع المبيعات</span></a>
-        <a class="side-link tab" href="./dashboard.m.html"><i class="fa-solid fa-gauge"></i><span>الداش بورد</span></a>
-        <a class="side-link tab" href="./inventory.m.html"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
-        <a class="side-link tab" href="./vt.m.html"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
-        <a class="side-link tab active" href="./photoshoot-user.m.html"><i class="fa-solid fa-camera"></i><span>إدارة الطلبات</span></a>
-        <a class="side-link tab" href="./cars.m.html"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
-        <a class="side-link tab" href="./admin.m.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
-        <a class="side-link tab" href="./Activity.m.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل النشاط</span></a>
-        <a class="side-link tab" href="./act.m.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل الحركات</span></a>
+          <a class="side-link tab" href="./sales.html"><i class="fa-solid fa-handshake"></i><span>تتبع المبيعات</span></a>
+        <a class="side-link tab" href="./dashboard.html"><i class="fa-solid fa-gauge"></i><span>الداش بورد</span></a>
+        <a class="side-link tab" href="./inventory.html"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
+        <a class="side-link tab" href="./vt.html"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
+        <a class="side-link tab active" href="./photoshoot-user.html"><i class="fa-solid fa-camera"></i><span>إدارة الطلبات</span></a>
+        <a class="side-link tab" href="./cars.html"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
+        <a class="side-link tab" href="./admin.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
+        <a class="side-link tab" href="./Activity.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل النشاط</span></a>
+        <a class="side-link tab" href="./act.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل الحركات</span></a>
         </nav>
       </div>
     </aside>
@@ -789,16 +856,6 @@ body.auth-checking #loginCard{display:none !important;}
       <section class="mzj-pagehead">
         <div class="pagehead-left">
           <h1 class="page-title">إدارة طلبات التصوير والنقل</h1>
-  <!-- Mobile Tab Selector -->
-  <div class="mzj-mobile-tabbar">
-    <label class="mzj-mobile-tablabel" for="mzjTabSelect">اختر القسم</label>
-    <select id="mzjTabSelect" class="mzj-mobile-tabselect">
-      <option value="create">إنشاء طلب</option>
-      <option value="manage">إدارة الطلبات</option>
-      <option value="done">الطلبات المكتملة</option>
-    </select>
-  </div>
-
           <p class="page-desc">نفس الداتا والمنطق — واجهة موحّدة.</p>
         </div>
       </section>
@@ -810,12 +867,12 @@ body.auth-checking #loginCard{display:none !important;}
 <div class="dashboard-topbar">
   <div class="dashboard-tabs">
     
-    <a class="tab" href="inventory.m.html">المخزون</a>
-    <a class="tab" href="dashboard.m.html">الداش بورد</a>
-    <a class="tab" href="vt.m.html">نقل السيارات</a>
-    <a class="tab active" href="photoshoot-user.m.html">إدارة الطلبات</a>
-    <a class="tab" href="cars.m.html">كل السيارات</a>
-    <a class="tab" href="Activity.m.html">سجل النشاط</a>
+    <a class="tab" href="inventory.html">المخزون</a>
+    <a class="tab" href="dashboard.html">الداش بورد</a>
+    <a class="tab" href="vt.html">نقل السيارات</a>
+    <a class="tab active" href="photoshoot-user.html">إدارة الطلبات</a>
+    <a class="tab" href="cars.html">كل السيارات</a>
+    <a class="tab" href="Activity.html">سجل النشاط</a>
   </div>
 </div>
 
@@ -853,6 +910,16 @@ body.auth-checking #loginCard{display:none !important;}
         <button class="inner-tab active" data-inner="create">إنشاء طلب</button>
         <button class="inner-tab" data-inner="manage">إدارة الطلبات</button>
         <button class="inner-tab" data-inner="done">الطلبات المكتملة</button>
+      </div>
+
+      <!-- Mobile dropdown for tabs -->
+      <div class="inner-select-wrap">
+        <label class="inner-select-label" for="innerSelect">القسم</label>
+        <select class="select inner-select" id="innerSelect">
+          <option value="create">إنشاء طلب</option>
+          <option value="manage">إدارة الطلبات</option>
+          <option value="done">الطلبات المكتملة</option>
+        </select>
       </div>
     </div>
 
@@ -1202,6 +1269,7 @@ const pageCars     = document.getElementById('page-cars');
 const pageActivity = document.getElementById('page-activity');
 
 const innerTabs = document.querySelectorAll('.inner-tab');
+const innerSelect = document.getElementById('innerSelect');
 const innerCreate = document.getElementById('inner-create');
 const innerManage = document.getElementById('inner-manage');
 const innerDone   = document.getElementById('inner-done');
@@ -1501,13 +1569,46 @@ document.querySelectorAll('.dashboard-tab').forEach(tab=>{
 });
 
 function showInner(which){
+  // sync desktop pills
   innerTabs.forEach(t=>t.classList.remove('active'));
   document.querySelector('.inner-tab[data-inner="'+which+'"]')?.classList.add('active');
+
+  // sync mobile dropdown
+  if(innerSelect){ innerSelect.value = which; }
+
   innerCreate.style.display = (which==='create')?'block':'none';
   innerManage.style.display = (which==='manage')?'block':'none';
   innerDone.style.display   = (which==='done')  ?'block':'none';
 }
 innerTabs.forEach(t=>t.addEventListener('click', ()=>showInner(t.dataset.inner)));
+if(innerSelect){ innerSelect.addEventListener('change', ()=>showInner(innerSelect.value)); }
+
+/* =======================
+   Mobile: tables -> cards helpers (non-create tables)
+======================= */
+function markTableAsMobileCards(table){
+  if(!table) return;
+  table.classList.add('mobile-cards');
+
+  // Build labels from <th>
+  const ths = Array.from(table.querySelectorAll('thead th')).map(th => (th.textContent||'').trim());
+  const rows = table.querySelectorAll('tbody tr');
+  rows.forEach(tr=>{
+    const tds = tr.querySelectorAll('td');
+    tds.forEach((td, i)=>{
+      const lbl = ths[i] || '';
+      if(lbl) td.setAttribute('data-label', lbl);
+    });
+  });
+}
+
+function refreshMobileCardLabels(){
+  // Manage + Done + Modal rows tables
+  markTableAsMobileCards(document.querySelector('#inner-manage table.table'));
+  markTableAsMobileCards(document.querySelector('#inner-done table.table'));
+  markTableAsMobileCards(document.querySelector('#modalBackdrop table.table'));
+}
+
 
 function openModal(){
   modalBackdrop.style.display='flex';
@@ -2000,6 +2101,7 @@ function renderRowsTable(){
     tr.appendChild(editTd);
     rowsTbody.appendChild(tr);
   });
+  refreshMobileCardLabels();
 }
 
 async function applyStep(stepNo){
@@ -2348,6 +2450,7 @@ ${canDeleteRequest(req) ? `<button class="btn danger" data-del="${req.__id}" sty
 
     ordersTbody.appendChild(tr);
   });
+  refreshMobileCardLabels();
 }
 
 function renderDone(all){
@@ -2373,6 +2476,7 @@ function renderDone(all){
 
     doneTbody.appendChild(tr);
   });
+  refreshMobileCardLabels();
 }
 
 function watchRequests(){
@@ -2503,6 +2607,7 @@ document.body.classList.add(isAdmin() ? 'is-admin' : 'not-admin');
   showPage('orders');
   showInner('create');
   buildFormRows();
+  refreshMobileCardLabels();
 
   watchAdminState();
   watchRequests();
@@ -2516,6 +2621,5 @@ document.body.classList.add(isAdmin() ? 'is-admin' : 'not-admin');
     </main>
   </div>
 
-  <script src="./photoshoot-user.m.fixed.js"></script>
 </body>
 </html>

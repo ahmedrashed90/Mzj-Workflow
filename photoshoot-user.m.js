@@ -88,7 +88,7 @@
 })();
 
 
-/* === photoshoot-user: 3 tabs -> dropdown + create formgrid === */
+/* === photoshoot-user: dropdown tabs + create form grid === */
 (function(){
   function isMobile(){ return window.matchMedia && window.matchMedia('(max-width: 900px)').matches; }
   function clean(s){ return (s||'').replace(/\s+/g,' ').trim(); }
@@ -113,13 +113,10 @@
     const table = wrap.querySelector('table');
     if(!table) return;
     labelTable(table, 'mzj-formgrid');
-    const rows = table.querySelectorAll('tbody tr');
-    rows.forEach(tr=>{
+
+    wrap.querySelectorAll('tbody tr').forEach(tr=>{
       const tds = Array.from(tr.querySelectorAll('td'));
-      if(tds.length >= 1){
-        // mark last cell as long (often note / location)
-        tds[tds.length-1].setAttribute('data-long','1');
-      }
+      if(tds.length) tds[tds.length-1].setAttribute('data-long','1');
     });
   }
 
@@ -149,7 +146,6 @@
   function boot(){
     setupTabDropdown();
     applyCreateFormGrid();
-    // apply card tables (sales.m.v2.js already labels tables; leave it)
   }
 
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

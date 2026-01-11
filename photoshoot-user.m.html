@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -727,7 +728,7 @@ body.auth-checking #loginCard{display:none !important;}
   }
 </style>
 
-  <link rel="stylesheet" href="./photoshoot-user.m.v2.css">
+  <link rel="stylesheet" href="./photoshoot-user.m.fixed.css">
 </head>
 
 <body class="auth-checking mzj">
@@ -788,6 +789,16 @@ body.auth-checking #loginCard{display:none !important;}
       <section class="mzj-pagehead">
         <div class="pagehead-left">
           <h1 class="page-title">إدارة طلبات التصوير والنقل</h1>
+  <!-- Mobile Tab Selector -->
+  <div class="mzj-mobile-tabbar">
+    <label class="mzj-mobile-tablabel" for="mzjTabSelect">اختر القسم</label>
+    <select id="mzjTabSelect" class="mzj-mobile-tabselect">
+      <option value="create">إنشاء طلب</option>
+      <option value="manage">إدارة الطلبات</option>
+      <option value="done">الطلبات المكتملة</option>
+    </select>
+  </div>
+
           <p class="page-desc">نفس الداتا والمنطق — واجهة موحّدة.</p>
         </div>
       </section>
@@ -846,18 +857,7 @@ body.auth-checking #loginCard{display:none !important;}
     </div>
 
     <!-- Create -->
-    <div class="card-bd" 
-  <!-- Mobile Tab Selector (3 sections) -->
-  <div class="mzj-mobile-tabbar">
-    <label class="mzj-mobile-tablabel" for="mzjTabSelect">اختر القسم</label>
-    <select id="mzjTabSelect" class="mzj-mobile-tabselect">
-      <option value="create">إنشاء طلب</option>
-      <option value="manage">إدارة الطلبات</option>
-      <option value="done">الطلبات المكتملة</option>
-    </select>
-  </div>
-
-<div id="inner-create">
+    <div class="card-bd" id="inner-create">
       <div class="row">
         <input class="input" id="reqBy" placeholder="مقدم الطلب" readonly>
         <select class="select" id="reqType">
@@ -2516,6 +2516,6 @@ document.body.classList.add(isAdmin() ? 'is-admin' : 'not-admin');
     </main>
   </div>
 
-  <script src="./photoshoot-user.m.v2.js"></script>
+  <script src="./photoshoot-user.m.fixed.js"></script>
 </body>
 </html>

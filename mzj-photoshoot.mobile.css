@@ -1,181 +1,37 @@
-/* MZJ Photoshoot Mobile Patch
-   - Fix sidebar positioning/backdrop
-   - Convert inner tabs (إنشاء/إدارة/مكتملة) إلى Dropdown على الموبايل
-   - تحويل الجداول إلى Cards عمودية (بدون Scroll أفقي)
-*/
 
-:root{
-  --mzj-radius:16px;
+body {
+    font-family: 'Tajawal', sans-serif;
+    background-color: #fff8ef; /* Cream background */
+    -webkit-tap-highlight-color: transparent;
+    margin: 0;
+    padding: 0;
 }
 
-/* منع أي سكرول أفقي بسبب min-width أو عناصر عريضة */
-html,body{max-width:100%; overflow-x:hidden;}
-.mzj-content,.container,.card,.legacy{max-width:100%;}
-
-/* ===========================
-   Sidebar (يدعم أكثر من هيكل)
-=========================== */
-.mzj-backdrop,.sidebar-backdrop{display:none;}
-.mzj-backdrop.is-open,.sidebar-backdrop.is-open{display:block;}
-
-@media (max-width: 920px){
-  /* اجبار السايد بار يبقى Panel ثابت يمين */
-  #mzjSidebar,.mzj-sidebar,#sidebar,.sidebar{
-    position:fixed !important;
-    top:0 !important;
-    right:0 !important;
-    left:auto !important;
-    height:100dvh !important;
-    width:min(86vw, 340px) !important;
-    transform:translateX(110%) !important;
-    transition:transform .25s ease !important;
-    z-index:9999 !important;
-    overflow:auto !important;
-    -webkit-overflow-scrolling:touch;
-    border-radius:0 !important;
-  }
-  #mzjSidebar.is-open,.mzj-sidebar.is-open,#sidebar.is-open,.sidebar.is-open{
-    transform:translateX(0) !important;
-  }
-
-  /* Backdrop */
-  .mzj-backdrop,.sidebar-backdrop,#mzjBackdrop{
-    position:fixed !important;
-    inset:0 !important;
-    background:rgba(0,0,0,.45) !important;
-    z-index:9998 !important;
-  }
-
-  /* زرار الهامبرجر */
-  .mzj-topbar .icon-btn,
-  #sidebarToggle,.sidebar-toggle,[data-sidebar-toggle]{
-    touch-action:manipulation;
-  }
+/* Custom scrollbar for mobile */
+::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
 }
 
-/* ===========================
-   Inner Tabs -> Dropdown
-=========================== */
-.inner-tabs-select{display:none;}
-
-@media (max-width: 920px){
-  /* نخفي أزرار التابات الداخلية */
-  .inner-tabs{display:none !important;}
-
-  /* نُظهر Dropdown */
-  .inner-tabs-select{
-    display:block !important;
-    width:100%;
-    margin-top:10px;
-  }
-  .inner-tabs-select select{
-    width:100%;
-    padding:12px 14px;
-    border-radius:12px;
-    border:1px solid var(--line, #e6d8cf);
-    background:#fff;
-    font-weight:800;
-    color:var(--brown, #3e2420);
-    outline:none;
-  }
+::-webkit-scrollbar-thumb {
+    background: #dcc3b2;
+    border-radius: 10px;
 }
 
-/* ===========================
-   Tables -> Vertical Cards
-=========================== */
-
-@media (max-width: 920px){
-  /* إلغاء أي min-width داخل الصفحة */
-  #inner-create .table,
-  .table{
-    min-width:0 !important;
-    width:100% !important;
-    table-layout:auto !important;
-  }
-
-  /* الغاء scroll أفقي في الـ wrapper */
-  .tableWrap{
-    overflow:visible !important;
-    border:none !important;
-    padding:0 !important;
-  }
-
-  /* إخفاء الهيدر وتحويل الصفوف لكروت */
-  .table thead{display:none !important;}
-  .table tbody,
-  .table tr,
-  .table td{display:block;}
-
-  .table tbody tr{
-    margin:10px 0;
-    border:1px solid var(--line, #e6d8cf);
-    border-radius:14px;
-    background:#fff;
-    overflow:hidden;
-    box-shadow:0 6px 18px rgba(0,0,0,.06);
-  }
-
-  .table td{
-    display:flex !important;
-    align-items:flex-start;
-    justify-content:space-between;
-    gap:12px;
-    padding:10px 12px !important;
-    border-bottom:1px dashed rgba(62,36,32,.15) !important;
-    text-align:right !important;
-    white-space:normal !important;
-  }
-  .table tbody tr td:last-child{border-bottom:none !important;}
-
-  /* اسم العمود */
-  .table td::before{
-    content:attr(data-label);
-    font-weight:900;
-    color:var(--brown, #3e2420);
-    opacity:.9;
-    flex:0 0 42%;
-    max-width:42%;
-  }
-
-  /* قيمة الخلية */
-  .table td > *{max-width:56%;}
-  .table td input,
-  .table td select,
-  .table td button,
-  .table td textarea{
-    width:100% !important;
-    max-width:100% !important;
-  }
-
-  /* تحسين صف الأزرار أعلى إنشاء الطلب */
-  #inner-create .row{
-    gap:10px;
-    flex-wrap:wrap !important;
-  }
-  #inner-create .row .spacer{display:none !important;}
-  #inner-create .row > *{
-    flex:1 1 48% !important;
-    min-width:140px;
-  }
-  #inner-create .row #btnSubmit{
-    flex:1 1 100% !important;
-  }
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #3e2420;
+    box-shadow: 0 0 0 2px rgba(62, 36, 32, 0.1);
 }
 
-/* ===========================
-   Modal: Fullscreen on mobile
-=========================== */
-@media (max-width: 920px){
-  .modal,.mzj-modal,.swal2-container{ /* دعم أكثر من مودال */
-    padding:0 !important;
-  }
-  .modal .modal-content,
-  .mzj-modal .modal-content,
-  .modal-content{
-    width:100% !important;
-    max-width:100% !important;
-    height:auto !important;
-    max-height:100dvh !important;
-    border-radius:0 !important;
-  }
+/* Smooth Transitions */
+.transition-all {
+    transition: all 0.3s ease;
+}
+
+/* Mobile specific fixes */
+@media (max-width: 640px) {
+    .modal-content {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
 }

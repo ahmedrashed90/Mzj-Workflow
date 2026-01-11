@@ -1,0 +1,179 @@
+/* MZJ Mobile UI Patch (Sidebar + sizing) */
+:root{
+  --mzj-brown:#3e2420;
+  --mzj-beige:#e8d6c8;
+  --mzj-cream:#fff8ef;
+  --mzj-line:#ead9cc;
+  --mzj-radius:16px;
+}
+
+html,body{max-width:100%; overflow-x:hidden;}
+body{background:var(--mzj-cream);}
+
+/* Make main wrappers respect viewport on mobile */
+.container, .page, .page-content, .content, main{max-width:100%;}
+
+/* ===== Sidebar (supports multiple existing DOMs) ===== */
+/* Backdrop */
+.mzj-sb-backdrop,
+#sidebarBackdrop,
+.sidebar-backdrop,
+.sidebar-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.35);
+  z-index:9998;
+  display:none;
+}
+
+/* Panel */
+.mzj-sidebar,
+#sidebar,
+.sidebar{
+  position:fixed;
+  top:0;
+  bottom:0;
+  right:0;           /* RTL */
+  left:auto;
+  width:min(88vw, 360px);
+  max-width:360px;
+  background:#fff;
+  border-left:1px solid var(--mzj-line);
+  box-shadow:0 24px 70px rgba(0,0,0,.25);
+  z-index:9999;
+  transform:translateX(110%);
+  transition:transform .22s ease;
+  display:flex;
+  flex-direction:column;
+  overscroll-behavior:contain;
+}
+
+/* If you use LTR sidebar in some pages */
+html[dir="ltr"] .mzj-sidebar,
+html[dir="ltr"] #sidebar,
+html[dir="ltr"] .sidebar{
+  left:0;
+  right:auto;
+  border-left:none;
+  border-right:1px solid var(--mzj-line);
+  transform:translateX(-110%);
+}
+
+/* Open state (multiple naming conventions) */
+body.sidebar-open .mzj-sidebar,
+body.sidebar-open #sidebar,
+body.sidebar-open .sidebar,
+.mzj-sidebar.open,
+#sidebar.open,
+.sidebar.open{
+  transform:translateX(0);
+}
+html[dir="ltr"] body.sidebar-open .mzj-sidebar,
+html[dir="ltr"] body.sidebar-open #sidebar,
+html[dir="ltr"] body.sidebar-open .sidebar,
+html[dir="ltr"] .mzj-sidebar.open,
+html[dir="ltr"] #sidebar.open,
+html[dir="ltr"] .sidebar.open{
+  transform:translateX(0);
+}
+
+body.sidebar-open .mzj-sb-backdrop,
+body.sidebar-open #sidebarBackdrop,
+body.sidebar-open .sidebar-backdrop,
+body.sidebar-open .sidebar-overlay,
+.mzj-sb-backdrop.show,
+#sidebarBackdrop.show,
+.sidebar-backdrop.show,
+.sidebar-overlay.show{
+  display:block;
+}
+
+/* Inside sidebar layout */
+.mzj-sidebar .sb-header,
+#sidebar .sb-header,
+.sidebar .sb-header{
+  padding:14px 14px 10px;
+  border-bottom:1px solid var(--mzj-line);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.mzj-sidebar .sb-title,
+#sidebar .sb-title,
+.sidebar .sb-title{
+  font-weight:900;
+  color:var(--mzj-brown);
+}
+
+.mzj-sidebar .sb-close,
+#sidebar .sb-close,
+.sidebar .sb-close{
+  border:1px solid var(--mzj-line);
+  background:#fff;
+  border-radius:12px;
+  padding:10px 12px;
+  cursor:pointer;
+}
+
+.mzj-sidebar nav,
+#sidebar nav,
+.sidebar nav,
+.mzj-sidebar .sb-menu,
+#sidebar .sb-menu,
+.sidebar .sb-menu{
+  padding:12px;
+  overflow:auto;
+}
+
+/* Menu items: full-width and readable */
+.mzj-sidebar a,
+#sidebar a,
+.sidebar a{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:12px 12px;
+  border-radius:14px;
+  text-decoration:none;
+  color:#111827;
+}
+.mzj-sidebar a:hover,
+#sidebar a:hover,
+.sidebar a:hover{background:#faf6f2;}
+
+.mzj-sidebar a.active,
+#sidebar a.active,
+.sidebar a.active{
+  background:#f3ece6;
+  border:1px solid var(--mzj-line);
+  font-weight:900;
+}
+
+/* Prevent the old "center floating" menu if any */
+.sidebar-float,
+.sidebar-menu-float,
+.menu-float{
+  position:fixed !important;
+  inset:auto !important;
+  right:0 !important;
+  top:0 !important;
+  transform:none !important;
+}
+
+/* ===== Mobile Modal: full height + vertical layout ===== */
+@media (max-width: 820px){
+  .modal-backdrop{padding:0 !important;}
+  .modal{width:100% !important; height:100dvh !important; max-height:100dvh !important; border-radius:0 !important;}
+  .modal-hd{position:sticky; top:0; background:#fff; z-index:1;}
+  .modal .row{flex-direction:column; align-items:stretch;}
+  .modal .btn{width:100%;}
+}
+
+/* ===== Make tables not cause horizontal overflow on mobile ===== */
+@media (max-width: 820px){
+  .tableWrap{overflow:visible !important; border:none !important;}
+  table{width:100% !important;}
+}

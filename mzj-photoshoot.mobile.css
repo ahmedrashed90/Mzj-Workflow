@@ -1,111 +1,49 @@
 
-/* MZJ Photoshoot Mobile Patch V3
-   - Bottom Tabs (create/manage/done)
-   - Tables -> vertical cards
-   - Modal fullscreen
-*/
-:root{
-  --mzj-brown: rgb(62,36,32);
-  --mzj-beige: rgb(188,143,116);
-  --mzj-cream: #fff8ef;
-  --mzj-line: rgba(62,36,32,.12);
+body {
+    font-family: 'Tajawal', sans-serif;
+    background-color: #fff8ef;
+    -webkit-tap-highlight-color: transparent;
+    margin: 0;
+    padding: 0;
+    user-select: none;
 }
 
-/* safety: kill horizontal overflow */
-html, body{max-width:100%; overflow-x:hidden !important;}
-.tableW{max-width:100%; overflow:visible !important;}
-.card, .card-bd{max-width:100%}
-
-/* Make inputs/selects full width on mobile */
-@media (max-width: 820px){
-  .row{flex-wrap:wrap !important;}
-  .row > *{flex:1 1 100% !important; min-width:0 !important;}
-  .input, .select, input, select, textarea{width:100% !important; min-width:0 !important;}
+/* تحسين شكل السكرول */
+::-webkit-scrollbar {
+    width: 4px;
+}
+::-webkit-scrollbar-thumb {
+    background: #dcc3b2;
+    border-radius: 10px;
 }
 
-/* Hide inner tabs (we'll render bottom tabs) */
-@media (max-width: 820px){
-  .inner-tabs{display:none !important;}
-  /* give space for bottom bar */
-  body{padding-bottom:86px !important;}
+/* منع الزووم عند الضغط على المدخلات في الآيفون */
+input, select, textarea {
+    font-size: 16px !important;
 }
 
-/* Bottom tabs */
-.mobile-bottom-tabs{
-  position:fixed;
-  left:0; right:0; bottom:0;
-  z-index:10050;
-  background:#fff;
-  border-top:1px solid var(--mzj-line);
-  padding:10px 10px calc(10px + env(safe-area-inset-bottom));
-  display:flex;
-  gap:10px;
-  justify-content:space-between;
-}
-.mobile-bottom-tabs .mbt-btn{
-  flex:1 1 0;
-  border:1px solid var(--mzj-line);
-  background:#fff;
-  color:var(--mzj-brown);
-  border-radius:14px;
-  padding:10px 8px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  font-weight:900;
-  font-size:13px;
-  line-height:1;
-}
-.mobile-bottom-tabs .mbt-btn i{font-size:14px}
-.mobile-bottom-tabs .mbt-btn.active{
-  background:var(--mzj-brown);
-  border-color:var(--mzj-brown);
-  color:#fff;
+input:focus, select:focus {
+    outline: none;
+    border-color: #3e2420;
 }
 
-/* Tables -> Cards */
-@media (max-width: 820px){
-  .table{width:100% !important; min-width:0 !important;}
-  .table thead{display:none !important;}
-  .table, .table tbody, .table tr, .table td{display:block !important; width:100% !important;}
-  .table tr{
-    background:var(--mzj-cream);
-    border:1px solid var(--mzj-line);
-    border-radius:16px;
-    margin:12px 0;
-    padding:8px 10px;
-    box-shadow:0 8px 18px rgba(0,0,0,.05);
-  }
-  .table td{
-    border:none !important;
-    padding:10px 6px !important;
-    display:flex !important;
-    align-items:flex-start;
-    justify-content:space-between;
-    gap:14px;
-  }
-  .table td::before{
-    content: attr(data-label);
-    font-weight:900;
-    color:var(--mzj-brown);
-    flex:0 0 40%;
-    white-space:normal;
-  }
-  .table td > *{max-width:60%;}
-  /* action cells */
-  .table td .btn, .table td button, .table td a{
-    width:100% !important;
-  }
+.active-tab {
+    color: #3e2420;
+    font-weight: 900;
 }
 
-/* Modal -> Fullscreen */
-@media (max-width: 820px){
-  .modal-backdrop{align-items:flex-end !important; padding:0 !important;}
-  .modal{
-    width:100% !important;
-    max-width:100% !important;
-    border-radius:18px 18px 0 0 !important;
-    margin:0 !important;
-  }
+/* تأثيرات الضغط للموبايل */
+.active-press:active {
+    transform: scale(0.97);
+    opacity: 0.9;
+}
+
+/* تصميم Modal الموبايل من الأسفل */
+.mobile-modal {
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
 }

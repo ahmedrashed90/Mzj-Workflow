@@ -1,0 +1,102 @@
+
+/* photoshoot-user mobile fixes (match MZJ mobile style) */
+:root{ --mzj-line: rgba(62,36,32,.14); }
+
+@media (max-width: 820px){
+  /* keep layout tight */
+  .mzj-main{ padding: 12px !important; }
+  .page-head{ gap:10px !important; }
+  .card, .panel, .content-card{ margin: 10px 0 !important; }
+  .card{ border-radius:16px !important; }
+  .tableWrap, .table-wrapper, .table-container{ margin: 0 !important; padding: 0 !important; }
+
+  /* stop ugly letter stacking in any table cells */
+  table td, table th{
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: anywhere !important;
+    text-align: right !important;
+  }
+
+  /* ---------- Generic "table to cards" for manage/done lists ---------- */
+  table.mzj-mobile-cards thead{ display:none !important; }
+  table.mzj-mobile-cards, 
+  table.mzj-mobile-cards tbody, 
+  table.mzj-mobile-cards tr, 
+  table.mzj-mobile-cards td{
+    display:block !important;
+    width:100% !important;
+  }
+
+  table.mzj-mobile-cards tr{
+    border:1px solid var(--mzj-line) !important;
+    border-radius:14px !important;
+    margin:10px 0 !important;
+    overflow:hidden !important;
+    background:#fff !important;
+    box-shadow: 0 8px 22px rgba(0,0,0,.04) !important;
+  }
+
+  table.mzj-mobile-cards td{
+    display:flex !important;
+    align-items:flex-start !important;
+    justify-content:space-between !important;
+    gap:12px !important;
+    padding:10px 12px !important;
+    border-bottom:1px solid rgba(62,36,32,.08) !important;
+    text-align:right !important;
+  }
+  table.mzj-mobile-cards td:last-child{ border-bottom:0 !important; }
+
+  table.mzj-mobile-cards td::before{
+    content: attr(data-label);
+    flex: 0 0 44%;
+    font-weight:800;
+    color: rgb(62,36,32);
+    opacity:.9;
+  }
+  table.mzj-mobile-cards td > *{ flex: 1 1 auto; min-width: 0; }
+
+  /* buttons inside cards */
+  table.mzj-mobile-cards button, 
+  table.mzj-mobile-cards .btn{
+    width:100% !important;
+    justify-content:center !important;
+  }
+
+  /* ---------- Create order table -> 2 column grid per row ---------- */
+  table.mzj-mobile-grid thead{ display:none !important; }
+  table.mzj-mobile-grid,
+  table.mzj-mobile-grid tbody,
+  table.mzj-mobile-grid tr{ display:block !important; width:100% !important; }
+  table.mzj-mobile-grid tr{
+    border:1px solid var(--mzj-line) !important;
+    border-radius:14px !important;
+    padding:12px !important;
+    margin:12px 0 !important;
+    background:#fff !important;
+    box-shadow: 0 8px 22px rgba(0,0,0,.04) !important;
+  }
+  table.mzj-mobile-grid td{
+    display:block !important;
+    width:100% !important;
+    border:0 !important;
+    padding:0 !important;
+    margin:0 !important;
+  }
+  /* if page uses .cell wrapper (label + input) make it grid */
+  table.mzj-mobile-grid td .cell{
+    display:grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap:10px 10px !important;
+  }
+  /* fallback: make direct inputs full width */
+  table.mzj-mobile-grid input, 
+  table.mzj-mobile-grid select, 
+  table.mzj-mobile-grid textarea{
+    width:100% !important;
+  }
+
+  /* compress very tall sections */
+  .tab-content{ padding: 10px !important; }
+}

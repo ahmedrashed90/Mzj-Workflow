@@ -6,7 +6,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
 
   return {
-    base: '/photoshoot-user/', // ✅ السطر المهم
+    base: '/', // ✅ مهم جدًا لمشروع Vercel مستقل
 
     server: {
       port: 3000,

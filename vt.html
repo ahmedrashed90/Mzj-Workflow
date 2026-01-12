@@ -3,6 +3,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
@@ -147,6 +148,28 @@
   .checklist h4{margin:0 0 8px 0;color:var(--brown);font-size:14px}
   .check-row{display:grid;grid-template-columns:18px 1fr;gap:8px;align-items:start}
   .check-row label{margin:0;display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px}
+  /* ===== Agency extras (الوكالة : المخزون المتاح) ===== */
+  .agency-extras{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+  .agency-extras .extras-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+  .agency-extras h3{margin:0;color:var(--brown);font-size:15px}
+  .agency-extras .extras-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+  @media (max-width:620px){.agency-extras .extras-row{grid-template-columns:1fr}}
+  /* شبكة تجهيزات (جنب بعض) + اختيار صح/غلط */
+  .agency-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+  @media (max-width:1080px){.agency-grid{grid-template-columns:repeat(4,minmax(0,1fr));}}
+  @media (max-width:860px){.agency-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
+  @media (max-width:620px){.agency-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+  .agency-item{border:1px solid var(--line);border-radius:12px;background:#fff;overflow:hidden}
+  .agency-item .agency-label{padding:10px 10px 6px;color:var(--brown);font-weight:800;font-size:13px;line-height:1.2}
+  .agency-item .agency-toggle{display:flex;gap:8px;padding:0 10px 10px}
+  .agency-item .tbtn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 8px;cursor:pointer;font-weight:800;font-size:12px;transition:.15s}
+  .agency-item .tbtn:hover{transform:translateY(-1px)}
+  .agency-item .tbtn:active{transform:translateY(0)}
+  .agency-item .tbtn.yes.active{border-color:var(--ok);box-shadow:0 0 0 3px rgba(22,163,74,.12)}
+  .agency-item .tbtn.no.active{border-color:var(--danger);box-shadow:0 0 0 3px rgba(239,68,68,.12)}
+  .agency-item .tbtn.yes.active i{color:var(--ok)}
+  .agency-item .tbtn.no.active i{color:var(--danger)}
+
 </style>
 <style id="noFlash">
   html{background:#fff8ef;}
@@ -352,6 +375,37 @@
           <h2 style="margin:0">عرض بيانات السيارة</h2>
         </div>
         <div class="table-like" id="carDetails" style="margin-top:8px"></div>
+
+        <div class="agency-extras" id="agencyExtrasBox" style="display:none">
+          <div class="extras-head">
+            <h3><i class="fa-solid fa-warehouse" style="color:var(--beige)"></i> تجهيزات الوكالة + تعديل اللون الداخلي</h3>
+            <span class="hint">يظهر هذا القسم فقط لو مكان السيارة: <b>الوكالة : المخزون المتاح</b></span>
+          </div>
+
+          <div class="extras-row">
+            <div>
+              <label for="intColorSelect">اللون الداخلي</label>
+              <select id="intColorSelect" title="تعديل اللون الداخلي">
+                <option value="">— اختر اللون —</option>
+                <option value="احمر">احمر</option>
+                <option value="اسود">اسود</option>
+                <option value="برتقالي">برتقالي</option>
+                <option value="بني غامق">بني غامق</option>
+                <option value="بيج">بيج</option>
+                <option value="جملي">جملي</option>
+                <option value="رمادي">رمادي</option>
+              </select>
+              <p class="hint" style="margin:6px 0 0">أي تعديل هنا يُحفظ على السيارة مباشرة.</p>
+            </div>
+
+            <div>
+              <label>تجهيزات السيارة</label>
+              <div class="agency-grid" id="agencyChecklistGrid" aria-label="تجهيزات السيارة"></div>
+              <p class="hint" style="margin:6px 0 0">اختار ✅ أو ❌ لكل بند.</p>
+            </div>
+          </div>
+        </div>
+
         <p class="hint" id="carDetailsHint" style="margin-top:8px"></p>
       </div>
     </div>
@@ -450,6 +504,109 @@
   function debounce(fn,wait=250){let t;return (...args)=>{clearTimeout(t);t=setTimeout(()=>fn(...args),wait)};}
 
   let stock=[], moves=[], models=[], variantsMap={};
+
+  // ===== Agency extras state =====
+  let currentCarIdx = -1; // مؤشر السيارة المعروضة حالياً داخل stock
+
+  const AGENCY_LOCATION = "الوكالة : المخزون المتاح";
+  const AGENCY_CHECK_ITEMS = [
+    { key:'sensor',  label:'حساس' },
+    { key:'camera',  label:'كاميرا' },
+    { key:'ac',      label:'مكيف' },
+    { key:'radio',   label:'مسجل' },
+    { key:'screen',  label:'شاشة' },
+    { key:'remote',  label:'ريموت' },
+    { key:'mats',    label:'فرشات' },
+    { key:'exting',  label:'طفاية' },
+    { key:'safetyBag', label:'شنطة سلامة' },
+    { key:'spare',   label:'اسبير' }
+  ];
+
+  const persistCarExtrasDebounced = debounce(async ()=>{
+    if(currentCarIdx < 0) return;
+    await persistAll();
+    showToast('تم حفظ تحديثات الوكالة','ok');
+  }, 450);
+
+  function ensureAgencyChecklistObj(rec){
+    if(!rec || typeof rec !== 'object') return {};
+    if(!rec.agencyChecklist || typeof rec.agencyChecklist !== 'object'){
+      rec.agencyChecklist = {};
+    }
+    return rec.agencyChecklist;
+  }
+
+  function renderAgencyExtras(rec, recIdx){
+    if(!agencyExtrasBox || !agencyChecklistGrid || !intColorSelect) return;
+
+    const loc = (rec?.location || '').trim();
+    const show = (loc === AGENCY_LOCATION);
+    agencyExtrasBox.style.display = show ? 'block' : 'none';
+
+    if(!show){
+      currentCarIdx = -1;
+      agencyChecklistGrid.innerHTML = '';
+      if(intColorSelect) intColorSelect.value = '';
+      return;
+    }
+
+    currentCarIdx = recIdx;
+
+    // اللون الداخلي
+    const currentColor = (rec?.intColor || '').toString().trim();
+    intColorSelect.value = currentColor;
+
+    // تجهيزات الوكالة
+    const cl = ensureAgencyChecklistObj(rec);
+    agencyChecklistGrid.innerHTML = AGENCY_CHECK_ITEMS.map(item=>{
+      const val = cl[item.key];
+      const yesActive = val === true;
+      const noActive  = val === false;
+      return `
+        <div class="agency-item">
+          <div class="agency-label">${item.label}</div>
+          <div class="agency-toggle" role="group" aria-label="${item.label}">
+            <button type="button" class="tbtn yes ${yesActive?'active':''}" data-agency-set="${item.key}" data-val="1" title="متوفر">
+              <i class="fa-solid fa-check"></i>
+            </button>
+            <button type="button" class="tbtn no ${noActive?'active':''}" data-agency-set="${item.key}" data-val="0" title="غير متوفر">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // تغييرات اللون الداخلي
+  if(intColorSelect){
+    intColorSelect.addEventListener('change', ()=>{
+      if(currentCarIdx < 0) return;
+      const val = (intColorSelect.value || '').trim();
+      stock[currentCarIdx].intColor = val;
+      // تحديث عرض البيانات فوراً
+      renderCarDetails(stock[currentCarIdx], currentCarIdx);
+      persistCarExtrasDebounced();
+    });
+  }
+
+  // تغييرات تجهيزات الوكالة (✅ / ❌)
+  document.addEventListener('click', (e)=>{
+    const btn = e.target?.closest?.('button[data-agency-set]');
+    if(!btn) return;
+    if(currentCarIdx < 0) return;
+
+    const key = btn.getAttribute('data-agency-set');
+    const val = btn.getAttribute('data-val');
+
+    const rec = stock[currentCarIdx];
+    const cl = ensureAgencyChecklistObj(rec);
+    cl[key] = (val === '1');
+
+    // تحديث الواجهة فوراً + حفظ
+    renderAgencyExtras(rec, currentCarIdx);
+    persistCarExtrasDebounced();
+  });
+
 
   function liftNoFlash(){
     const nf = document.getElementById('noFlash');
@@ -606,7 +763,7 @@
     if(fromSel) fromSel.innerHTML = opts;
   }
 
-  function renderCarDetails(rec){
+  function renderCarDetails(rec, recIdx=-1){
     carDetails.innerHTML=`
       <div style="grid-column:1/-1"><b>سيارة:</b> ${rec.car??""}</div>
       <div><b>البيان:</b> ${rec.variant??""}</div>
@@ -620,6 +777,7 @@
       <div style="grid-column:1/-1"><b>رقم الهيكل:</b> ${rec.vin??""}</div>
       <div style="grid-column:1/-1"><b>الملاحظات:</b> ${rec.notes??""}</div>`;
     carDetailsHint.textContent=rec.vin?`رقم الهيكل: ${rec.vin}`:'لا يوجد رقم هيكل محفوظ لهذه السيارة.';
+    renderAgencyExtras(rec, recIdx);
     carDetailsBox.style.display='block';
   }
 
@@ -674,6 +832,7 @@
       const hasAnyVin = Array.from(anyVin).some(i=> normalizeVin(i.value));
       if(!hasAnyVin){
         carDetailsBox.style.display='none';
+        if(agencyExtrasBox) agencyExtrasBox.style.display='none';
         moveStatus.textContent='';
       }
       return;
@@ -685,7 +844,8 @@
       if(candidates.length === 1) match = candidates[0];
     }
     if(match){
-      renderCarDetails(match);
+      const matchIdx = stock.findIndex(r => normalizeVin(r.vin) === normalizeVin(match.vin));
+      renderCarDetails(match, matchIdx);
       const currentLoc = match.location || '';
       if(currentLoc && fromSel){
         fromSel.value = currentLoc;
@@ -700,6 +860,7 @@
         const msg = 'لم يتم العثور على سيارة بهذا الرقم.';
         moveStatus.textContent = msg;
         carDetailsBox.style.display='none';
+        if(agencyExtrasBox) agencyExtrasBox.style.display='none';
         showMoveAlert('error','لم يتم العثور على السيارة',[msg]);
       }else{
         moveStatus.textContent = '— لم يتم التعرف على السيارة بعد (أكمل رقم الهيكل).';

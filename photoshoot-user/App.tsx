@@ -9,13 +9,13 @@ import ManageOrders from './components/ManageOrders';
 type PageType = 'sales' | 'dashboard' | 'inventory' | 'transfers' | 'all_cars' | 'admin' | 'activity_log' | 'movement_log';
 
 const PAGE_URLS: Record<string, string> = {
-  sales: 'https://mzj-workflow.vercel.app/sales.m.html',
-  dashboard: 'https://mzj-workflow.vercel.app/dashboard.m.html',
-  inventory: 'https://mzj-workflow.vercel.app/inventory.m.html',
-  all_cars: 'https://mzj-workflow.vercel.app/cars.m.html',
-  admin: 'https://mzj-workflow.vercel.app/admin.m.html',
-  activity_log: 'https://mzj-workflow.vercel.app/Activity.m.html',
-  movement_log: 'https://mzj-workflow.vercel.app/act.m.html',
+  sales: '/sales.m.html',
+  dashboard: '/dashboard.m.html',
+  inventory: '/inventory.m.html',
+  all_cars: '/cars.m.html',
+  admin: '/admin.m.html',
+  activity_log: '/Activity.m.html',
+  movement_log: '/act.m.html',
 };
 
 const App: React.FC = () => {
@@ -53,8 +53,24 @@ const App: React.FC = () => {
   ];
 
   const navigateTo = (id: PageType) => {
-    setActiveTab(id);
+    // نقلة داخل تطبيق photoshoot-user (إدارة الطلبات)
+    if (id === 'transfers') {
+      setActiveTab(id);
+      setIsSidebarOpen(false);
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    // باقي الصفحات: افتحها كصفحة مستقلة علشان العنوان يتغير في الـ Address Bar
     setIsSidebarOpen(false);
+    const targetUrl = PAGE_URLS[id as keyof typeof PAGE_URLS];
+    if (targetUrl) {
+      window.location.href = targetUrl;
+      return;
+    }
+
+    // fallback
+    setActiveTab(id);
     window.scrollTo(0, 0);
   };
 
@@ -62,7 +78,8 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     if (!user) return <Login />;
-    
+
+    // التاب الأساسي داخل التطبيق
     if (activeTab === 'transfers') {
       return (
         <div className="flex flex-col gap-6 py-4">
@@ -73,20 +90,15 @@ const App: React.FC = () => {
       );
     }
 
-    const targetUrl = PAGE_URLS[activeTab];
-    if (targetUrl) {
-      return (
-        <div className="w-full h-screen overflow-hidden">
-          <iframe 
-            src={targetUrl} 
-            className="w-full h-full border-none"
-            title={activeTab}
-          />
+    // باقي الصفحات بتفتح Redirect من navigateTo
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center text-center px-6">
+        <div>
+          <p className="text-lg font-semibold text-mzjBrown">جاري فتح الصفحة…</p>
+          <p className="text-sm text-mzjGray mt-2">لو ما اتفتحتش تلقائيًا، جرّب من السايد بار مرة تانية.</p>
         </div>
-      );
-    }
-
-    return <AccessDenied />;
+      </div>
+    );
   };
 
   if (loading) {

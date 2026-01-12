@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -1033,6 +1034,9 @@ body.auth-checking #loginCard{display:none !important;}
   </div>
 </div>
 
+<!-- VIN Suggestions (Autocomplete) -->
+<datalist id="vinSuggestions"></datalist>
+
 <!-- Firebase (Compat) -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -1569,6 +1573,43 @@ function watchAdminState(){
   });
 }
 
+
+/* =======================
+   VIN Autocomplete (Suggestions)
+   - اقتراحات حسب ما تكتب (Prefix match)
+======================= */
+const vinDatalist = document.getElementById('vinSuggestions');
+
+function uniquePush(arr, v, seen){
+  if(!v) return;
+  if(seen.has(v)) return;
+  seen.add(v);
+  arr.push(v);
+}
+
+function buildVinSuggestions(query){
+  const q = normalizeVin(query);
+  if(!q) return [];
+  const out = [];
+  const seen = new Set();
+  // Prefix match on VINs inside stock
+  for(const rec of (stock||[])){
+    const v = normalizeVin(rec && rec.vin);
+    if(v && v.startsWith(q)){
+      uniquePush(out, v, seen);
+      if(out.length >= 25) break;
+    }
+  }
+  return out;
+}
+
+function updateVinDatalist(query){
+  if(!vinDatalist) return;
+  const list = buildVinSuggestions(query);
+  vinDatalist.innerHTML = list.map(v => `<option value="${v}"></option>`).join('');
+}
+
+
 function updatePlaceHeader(){
   // If any row kind = move => header = مكان النقل else مكان التصوير
   const kinds = Array.from(reqRowsBody.querySelectorAll('.req-kind')).map(el=>el.value);
@@ -1629,7 +1670,7 @@ function addFormRow(prefill={}){
     <td>
       <div class="cell">
         <label>VIN</label>
-        <input class="small-input mono req-vin" placeholder="VIN">
+        <input class="small-input mono req-vin" placeholder="VIN" list="vinSuggestions" autocomplete="off">
       </div>
     </td>
 
@@ -1752,6 +1793,19 @@ reqRowsBody.addEventListener('click', (e)=>{
   }
   updatePlaceHeader();
   renumberRows();
+});
+
+
+// VIN suggestions while typing (Autocomplete)
+reqRowsBody.addEventListener('input', (e)=>{
+  const vinInput = e.target.closest('.req-vin');
+  if(!vinInput) return;
+  updateVinDatalist(vinInput.value);
+});
+reqRowsBody.addEventListener('focusin', (e)=>{
+  const vinInput = e.target.closest('.req-vin');
+  if(!vinInput) return;
+  updateVinDatalist(vinInput.value);
 });
 
 // Auto fill on blur of VIN (✅ requirement)
@@ -2125,7 +2179,7 @@ async function updateStockLocationsAfterMoveFinish(rows){
     if(A===B) return true;
     const A2 = stripZeros(A), B2 = stripZeros(B);
     if(!A2 || !B2) return false;
-    return (A2===B2) || A.endsWith(B2) || B.endsWith(A2);
+    return (A2===B2);
   };
 
   await db.runTransaction(async (tx)=>{

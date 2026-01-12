@@ -922,6 +922,51 @@
 
       return digits;
     }
+// ===== PLUS CHANNELS (WhatsApp+ & SMS+) =====
+
+// فتح واتساب ويب/ديسكتوب بنفس نص الرسالة
+function openWhatsAppPlus(stageNum, stageLabel){
+  stageMsg.textContent = "";
+
+  if (!currentCustomerPhone) {
+    stageMsg.innerHTML = "<span class='err'>لا يوجد رقم جوال محفوظ لهذا الطلب.</span>";
+    return;
+  }
+
+  const phone = normalizeSaudiPhone(currentCustomerPhone);
+  if (!phone) {
+    stageMsg.innerHTML = "<span class='err'>رقم الجوال غير صالح.</span>";
+    return;
+  }
+
+  const text = getDefaultStageMessage(stageNum, stageLabel) || "";
+  const waUrl = `https://web.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(text)}`;
+
+  // نسخ احتياطي للنص
+  if (navigator.clipboard) navigator.clipboard.writeText(text).catch(()=>{});
+
+  window.open(waUrl, "_blank", "noopener,noreferrer");
+}
+
+// SMS+ (مؤقتاً يفتح sms: — وبكرة APK)
+function openSmsPlus(stageNum, stageLabel){
+  stageMsg.textContent = "";
+
+  if (!currentCustomerPhone) {
+    stageMsg.innerHTML = "<span class='err'>لا يوجد رقم جوال محفوظ لهذا الطلب.</span>";
+    return;
+  }
+
+  const phone = normalizeSaudiPhone(currentCustomerPhone);
+  if (!phone) {
+    stageMsg.innerHTML = "<span class='err'>رقم الجوال غير صالح.</span>";
+    return;
+  }
+
+  const text = getDefaultStageMessage(stageNum, stageLabel) || "";
+  const smsUrl = `sms:${phone}?body=${encodeURIComponent(text)}`;
+  window.location.href = smsUrl;
+}
 
     
     // ===== Message Templates (shared for SMS + WhatsApp) =====
@@ -1803,7 +1848,25 @@ function clearErpTable() {
           btnWa.onclick = () => openMessageModal("whatsapp", num, label);
           actions.appendChild(btnWa);
         }
-    
+    // ===== WhatsApp+ / SMS+ =====
+const btnSmsPlus = document.createElement("button");
+btnSmsPlus.className = "btn-outline";
+btnSmsPlus.style.fontSize = "12px";
+btnSmsPlus.style.marginRight = "6px";
+btnSmsPlus.textContent = "SMS+";
+btnSmsPlus.disabled = !currentCustomerPhone;
+btnSmsPlus.onclick = () => openSmsPlus(num, label);
+actions.appendChild(btnSmsPlus);
+
+const btnWaPlus = document.createElement("button");
+btnWaPlus.className = "btn-outline";
+btnWaPlus.style.fontSize = "12px";
+btnWaPlus.style.marginRight = "6px";
+btnWaPlus.innerHTML = '<i class="fa-brands fa-whatsapp"></i> واتساب+';
+btnWaPlus.disabled = !currentCustomerPhone;
+btnWaPlus.onclick = () => openWhatsAppPlus(num, label);
+actions.appendChild(btnWaPlus);
+
 
         // زر التراجع
         const btnUndo = document.createElement("button");

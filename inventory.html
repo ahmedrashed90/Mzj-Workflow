@@ -1,6 +1,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl" data-theme="light">
 <head>
@@ -300,11 +301,11 @@
 
   .filter-grid{
     display:grid;
-    grid-template-columns:2fr 1fr 1fr 1fr;
+    grid-template-columns:2fr 1fr 1fr 1fr 1fr;
     gap:10px;
     margin-top:8px;
   }
-  @media(max-width:1100px){.filter-grid{grid-template-columns:1fr 1fr 1fr}}
+  @media(max-width:1100px){.filter-grid{grid-template-columns:1fr 1fr 1fr 1fr}}
   @media(max-width:800px){.filter-grid{grid-template-columns:1fr 1fr}}
   @media(max-width:560px){.filter-grid{grid-template-columns:1fr}}
 
@@ -736,8 +737,16 @@
             <select id="modelFilter" class="select"><option value="">كل السيارات</option></select>
             <input id="yearFilter" class="input" type="number" min="2000" max="2100" placeholder="الموديل (سنة)">
             <input id="dealerFilter" class="input" placeholder="الوكيل">
+            <select id="batchFilter" class="select"><option value="">كل الدُفعات</option></select>
             <div>
-              <select id="locationFilter" class="select"><option value="">كل الأماكن</option><option value="__NO_AGENCY__">كل الأماكن (بدون الوكالة)</option></select>
+              <select id="receiveFilter" class="select">
+                <option value="">تم/لم يتم الاستلام (الكل)</option>
+                <option value="received">تم الاستلام</option>
+                <option value="not_received">لم يتم الاستلام</option>
+              </select>
+              <div class="under-field">
+                <select id="locationFilter" class="select"><option value="">كل الأماكن</option><option value="__NO_AGENCY__">كل الأماكن (بدون الوكالة)</option></select>
+              </div>
               <div class="under-field">
                 <button id="exportAll" class="btn btn-primary">
                   <i class="fa-regular fa-file-excel"></i> تصدير Excel (حسب الفلاتر)
@@ -994,6 +1003,8 @@ const PAGE_ALLOWED_ROLES = [ROLE_ADMIN, ROLE_IDARI, ROLE_BRANCH];
   const modelFilter    = $('#modelFilter');
   const yearFilter     = $('#yearFilter');
   const dealerFilter   = $('#dealerFilter');
+  const batchFilter    = $('#batchFilter');
+  const receiveFilter  = $('#receiveFilter');
   const locationFilter = $('#locationFilter');
 
   const tb = $('#carsTable tbody');
@@ -1035,6 +1046,12 @@ const PAGE_ALLOWED_ROLES = [ROLE_ADMIN, ROLE_IDARI, ROLE_BRANCH];
   const pad  = n => n<10?'0'+n:n;
   const now  = ()=>{const d=new Date();return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;};
   const onlyDate = str => (str||'').toString().slice(0,10);
+
+  function getBatchName(rec){
+    // دعم أكثر من اسم حقل محتمل (حسب مصدر الداتا)
+    const v = rec?.batchName ?? rec?.batch ?? rec?.batch_name ?? rec?.batchTitle ?? rec?.shipmentBatch ?? rec?.deliveryBatch ?? rec?.دفعة ?? '';
+    return clean(v);
+  }
 
   function normalizeVin(v){
     if(!v) return '';
@@ -1149,7 +1166,7 @@ const PAGE_ALLOWED_ROLES = [ROLE_ADMIN, ROLE_IDARI, ROLE_BRANCH];
   }
 
   /* Filters */
-  const filters = { q:'', model:'', year:'', dealer:'', location:'' };
+  const filters = { q:'', model:'', year:'', dealer:'', batch:'', receive:'', location:'' };
 
   function initFilters(){
         const modelsList = uniq(stock.map(r=> clean(r.car)).filter(Boolean)).sort((a,b)=> a.localeCompare(b,'ar'));
@@ -1157,7 +1174,12 @@ const PAGE_ALLOWED_ROLES = [ROLE_ADMIN, ROLE_IDARI, ROLE_BRANCH];
 const locs = uniq(stock.map(r=> r.location || 'غير محدد')).sort((a,b)=> a.localeCompare(b,'ar'));
     locationFilter.innerHTML = '<option value="">كل الأماكن</option><option value="__NO_AGENCY__">كل الأماكن (بدون الوكالة)</option>' +
       locs.map(l=> `<option value="${l==='غير محدد'?'':l}">${l}</option>`).join('');
-  }
+      const batches = uniq(stock.map(r=> getBatchName(r)).filter(Boolean)).sort((a,b)=> a.localeCompare(b,'ar'));
+    if(batchFilter){
+      batchFilter.innerHTML = '<option value="">كل الدُفعات</option>' + batches.map(b=> `<option value="${b}">${b}</option>`).join('');
+    }
+
+}
 
   function applyFilters(rows){
     return rows.filter(r=>{
@@ -1168,6 +1190,16 @@ const locs = uniq(stock.map(r=> r.location || 'غير محدد')).sort((a,b)=> a
             if (filters.model && clean(r.car) !== clean(filters.model)) return false;
       if (filters.year && String(r.modelYear) !== String(filters.year)) return false;
       if (filters.dealer && (!r.dealer || !r.dealer.toLowerCase().includes(filters.dealer.toLowerCase()))) return false;
+      if (filters.batch) {
+        const b = getBatchName(r);
+        if (clean(b) !== clean(filters.batch)) return false;
+      }
+      if (filters.receive) {
+        const loc = String(r.location || '').trim();
+        const isAgency = loc.startsWith('الوكالة :');
+        if (filters.receive === 'received' && isAgency) return false;
+        if (filters.receive === 'not_received' && !isAgency) return false;
+      }
       if (filters.location) {
         if (filters.location === '__NO_AGENCY__') {
           if ((r.location||'').startsWith('الوكالة :')) return false;
@@ -1235,6 +1267,12 @@ const locs = uniq(stock.map(r=> r.location || 'غير محدد')).sort((a,b)=> a
   modelFilter.addEventListener('change', e=>{ filters.model=clean(e.target.value); renderAll(); });
   yearFilter.addEventListener('input', e=>{ filters.year=e.target.value.trim(); renderAll(); });
   dealerFilter.addEventListener('input', e=>{ filters.dealer=e.target.value.trim(); renderAll(); });
+  if(batchFilter){
+    batchFilter.addEventListener('change', e=>{ filters.batch=clean(e.target.value); renderAll(); });
+  }
+  if(receiveFilter){
+    receiveFilter.addEventListener('change', e=>{ filters.receive=e.target.value; renderAll(); });
+  }
   locationFilter.addEventListener('change', e=>{ filters.location=e.target.value; renderAll(); });
 
   /* VIN copy */

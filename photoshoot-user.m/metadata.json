@@ -1,7 +1,0 @@
-{
-  "name": "MZJ Mobile Workspace",
-  "description": "A mobile-optimized management platform for car photoshoot and transfer requests, featuring portrait-view data entries and real-time inventory synchronization.",
-  "requestFramePermissions": [
-    "camera"
-  ]
-}

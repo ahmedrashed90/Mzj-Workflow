@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
@@ -173,8 +174,26 @@
 
             <div style="flex:1"></div>
 
-            <div class="row" style="gap:8px">
-              <input id="quickSearch" placeholder="بحث سريع (VIN / سيارة / من / إلى)" style="min-width:320px"/>
+            <div class="row" style="gap:8px;flex-wrap:wrap">
+              <select id="searchField" style="width:auto;min-width:170px">
+                <option value="all">الكل</option>
+                <option value="vin">رقم الهيكل</option>
+                <option value="car">السيارة</option>
+                <option value="statement">البيان</option>
+                <option value="from">من</option>
+              </select>
+
+              <input id="quickSearch" placeholder="بحث (VIN / سيارة / بيان)" style="min-width:320px"/>
+
+              <div class="row" id="placeFilters" style="gap:8px;display:none">
+                <select id="fromPlace" style="width:auto;min-width:220px">
+                  <option value="">من (الكل)</option>
+                </select>
+                <select id="toPlace" style="width:auto;min-width:220px">
+                  <option value="">إلى (الكل)</option>
+                </select>
+              </div>
+
               <button class="btn btn-ghost" id="btnClearSearch"><i class="fa-solid fa-minus"></i> مسح</button>
               <button class="btn btn-ghost" id="btnExportExcel"><i class="fa-solid fa-file-excel"></i> تصدير Excel</button>
             </div>
@@ -268,6 +287,12 @@
     return v.toString().replace(/[٠-٩]/g,d=>ar[d]).toUpperCase().replace(/[\s\-\._]/g,'').trim();
   }
 
+
+function looksLikeVinInput(raw){
+  const qVin = normalizeVin(raw||'');
+  return qVin.length >= 11 && /^[A-Z0-9]+$/.test(qVin);
+}
+
   // تحويل أي شكل تاريخ/وقت لقيمة رقمية للمقارنة (الأحدث أكبر)
   function toMillis(x){
     try{
@@ -303,7 +328,11 @@
   const connDot=$('#connDot'), connText=$('#connText');
 
   const movesFromDate=$('#movesFromDate'), movesToDate=$('#movesToDate'), btnClearDate=$('#btnClearDate');
+  const searchField=$('#searchField');
   const quickSearch=$('#quickSearch'), btnClearSearch=$('#btnClearSearch'), btnExportExcel=$('#btnExportExcel');
+  const placeFilters=$('#placeFilters');
+  const fromPlaceSel=$('#fromPlace');
+  const toPlaceSel=$('#toPlace');
   const movesTableBody = document.querySelector('#movesTable tbody');
   const stockPlaceBar = $('#stockPlaceBar');
   const stockDot = $('#stockDot');
@@ -314,6 +343,70 @@
   let moves = [];
   let stockItems = [];
   let stockPlaceMap = new Map();
+
+let allPlaces = [];
+
+function uniqSortedPlaces(list){
+  const set = new Set();
+  (Array.isArray(list)?list:[]).forEach(m=>{
+    const a = String(m?.from||'').trim();
+    const b = String(m?.to||'').trim();
+    if(a) set.add(a);
+    if(b) set.add(b);
+  });
+  return Array.from(set).sort((x,y)=> x.localeCompare(y,'ar'));
+}
+
+function fillSelect(sel, items, firstLabel){
+  if(!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '';
+  const opt0 = document.createElement('option');
+  opt0.value = '';
+  opt0.textContent = firstLabel;
+  sel.appendChild(opt0);
+
+  items.forEach(p=>{
+    const o=document.createElement('option');
+    o.value=p;
+    o.textContent=p;
+    sel.appendChild(o);
+  });
+
+  // حاول نرجّع الاختيار السابق لو لسه موجود
+  if(current && items.includes(current)) sel.value = current;
+}
+
+function refreshPlaceFilters(){
+  allPlaces = uniqSortedPlaces(moves);
+  fillSelect(fromPlaceSel, allPlaces, 'من (الكل)');
+
+  // خيارات "إلى" تعتمد على "من" لو تم اختيارها
+  const fp = (fromPlaceSel?.value||'').trim();
+  const toPlaces = fp ? uniqSortedPlaces(moves.filter(m=>String(m.from||'').trim()===fp)) : allPlaces.slice();
+  fillSelect(toPlaceSel, toPlaces, 'إلى (الكل)');
+}
+
+function updateFilterUI(){
+  const f = (searchField?.value || 'all');
+  if(f === 'from'){
+    if(placeFilters) placeFilters.style.display = 'flex';
+    if(quickSearch){
+      quickSearch.value = '';
+      quickSearch.placeholder = 'اختار الأماكن من القوائم';
+      quickSearch.disabled = true;
+    }
+    refreshPlaceFilters();
+  }else{
+    if(placeFilters) placeFilters.style.display = 'none';
+    if(quickSearch){
+      quickSearch.disabled = false;
+      // placeholder حسب نوع الفلتر
+      quickSearch.placeholder = (f==='vin') ? 'اكتب رقم الهيكل' : (f==='car') ? 'اكتب اسم السيارة' : (f==='statement') ? 'اكتب البيان' : 'بحث (VIN / سيارة / بيان / من / إلى)';
+    }
+  }
+}
+
 
   // بناء خريطة (VIN -> المكان الحالي) من stock داخل mzj_admin_state/v1
   function buildStockMap(list){
@@ -363,30 +456,67 @@
   }
 
   function filterBySearch(list){
-    const raw = (quickSearch.value||'').trim();
-    const q = raw.toLowerCase();
-    if(!q) return list;
+  let rows = list;
 
-    // لو المستخدم كتب رقم هيكل (VIN) بشكل واضح: اعرض كل حركات هذا الهيكل + ترتيبها بالأحدث
+  const field = (searchField?.value || 'all');
+
+  // فلتر الأماكن (من/إلى)
+  if(field === 'from'){
+    const fp = (fromPlaceSel?.value || '').trim();
+    const tp = (toPlaceSel?.value || '').trim();
+    if(fp) rows = rows.filter(m => String(m.from||'').trim() === fp);
+    if(tp) rows = rows.filter(m => String(m.to||'').trim() === tp);
+    return rows;
+  }
+
+  const raw = (quickSearch.value||'').trim();
+  if(!raw) return rows;
+
+  const q = raw.toLowerCase();
+
+  // رقم الهيكل
+  if(field === 'vin'){
     const qVin = normalizeVin(raw);
-    const looksLikeVin = qVin.length >= 11 && /^[A-Z0-9]+$/.test(qVin);
-    if(looksLikeVin){
-      const vinMoves = list.filter(m => normalizeVin(m.vin||'') === qVin);
-      vinMoves.sort((a,b)=> (moveTs(b) - moveTs(a)) || ((b.__idx||0) - (a.__idx||0)));
-      return vinMoves;
+    if(!qVin) return rows;
+    // لو VIN كامل: مطابق تام
+    if(qVin.length >= 11 && /^[A-Z0-9]+$/.test(qVin)){
+      return rows.filter(m => normalizeVin(m.vin||'') === qVin);
     }
+    // غير ذلك: بحث جزئي داخل VIN
+    return rows.filter(m => normalizeVin(m.vin||'').includes(qVin));
+  }
 
-    // غير ذلك: بحث عام
-    return list.filter(m=>{
-      const hay = [
-        m.vin||'', m.car||'', m.from||'', m.to||'', m.id||'',
-        (m.date||onlyDate(m.when||''))||''
-      ].join(' ').toLowerCase();
+  // السيارة
+  if(field === 'car'){
+    return rows.filter(m => String(m.car||'').toLowerCase().includes(q));
+  }
+
+  // البيان: (من → إلى) + ID
+  if(field === 'statement'){
+    return rows.filter(m=>{
+      const hay = [m.from||'', m.to||'', m.id||''].join(' ').toLowerCase();
       return hay.includes(q);
     });
   }
 
-  function renderMoves(){
+  // الكل (المنطق القديم)
+  const qVin = normalizeVin(raw);
+  const looksLikeVin = qVin.length >= 11 && /^[A-Z0-9]+$/.test(qVin);
+  if(looksLikeVin){
+    const vinMoves = rows.filter(m => normalizeVin(m.vin||'') === qVin);
+    vinMoves.sort((a,b)=> (moveTs(b) - moveTs(a)) || ((b.__idx||0) - (a.__idx||0)));
+    return vinMoves;
+  }
+
+  return rows.filter(m=>{
+    const hay = [
+      m.vin||'', m.car||'', m.from||'', m.to||'', m.id||'',
+      (m.date||onlyDate(m.when||''))||''
+    ].join(' ').toLowerCase();
+    return hay.includes(q);
+  });
+}
+function renderMoves(){
     movesTableBody.innerHTML='';
     let rows = moves.slice();
 
@@ -442,11 +572,28 @@
     rowsHint.textContent = `عدد السجلات المعروضة: ${rows.length}`;
   }
 
-  movesFromDate.addEventListener('change', renderMoves);
+  searchField?.addEventListener('change', ()=>{
+  updateFilterUI();
+  renderMoves();
+});
+
+fromPlaceSel?.addEventListener('change', ()=>{
+  // حدّث خيارات "إلى" بناءً على "من"
+  refreshPlaceFilters();
+  renderMoves();
+});
+toPlaceSel?.addEventListener('change', ()=> renderMoves());
+
+movesFromDate.addEventListener('change', renderMoves);
   movesToDate.addEventListener('change', renderMoves);
   btnClearDate.addEventListener('click', ()=>{movesFromDate.value=''; movesToDate.value=''; renderMoves();});
   quickSearch.addEventListener('input', ()=> renderMoves());
-  btnClearSearch.addEventListener('click', ()=>{ quickSearch.value=''; renderMoves(); });
+    btnClearSearch.addEventListener('click', ()=>{
+    if(quickSearch) quickSearch.value='';
+    if(fromPlaceSel) fromPlaceSel.value='';
+    if(toPlaceSel) toPlaceSel.value='';
+    renderMoves();
+  });
 
   /* ===== Export CSV (Excel) ===== */
   btnExportExcel?.addEventListener('click', ()=>{
@@ -504,6 +651,9 @@
     }
   });
 
+
+  // تهيئة واجهة الفلاتر
+  updateFilterUI();
   /* ===== Auth ===== */
   onAuthStateChanged(auth, async (user)=>{
     if(user){
@@ -563,6 +713,10 @@
         moves = Array.isArray(d.moves) ? d.moves : [];
         // فهرسة داخلية لضمان ترتيب صحيح عند تساوي/غياب التوقيت
         moves.forEach((m,i)=>{ try{ m.__idx = i; }catch(_){ } });
+        // تحديث قوائم الأماكن
+        refreshPlaceFilters();
+        updateFilterUI();
+
         renderMoves();
         setStatus('ok','مزامنة حيّة');
       }, ()=>{

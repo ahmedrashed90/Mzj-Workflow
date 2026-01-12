@@ -54,25 +54,35 @@ const App: React.FC = () => {
   ];
 
   const navigateTo = (id: PageType) => {
+  // الصفحة الأساسية داخل المشروع
+  if (id === 'transfers') {
     setActiveTab(id);
     setIsSidebarOpen(false);
     window.scrollTo(0, 0);
-  };
+    return;
+  }
 
-  const isIframePage = activeTab !== 'transfers';
+  // باقي الصفحات: افتحها كرابط مباشر (نفس التاب)
+  const targetUrl = PAGE_URLS[id];
+  if (targetUrl) {
+    window.location.href = targetUrl;
+  }
+};
+
 
   const renderContent = () => {
-    if (!user) return <Login />;
-    
-    if (activeTab === 'transfers') {
-      return (
-        <div className="flex flex-col gap-6 py-4">
-          <CreateOrder user={user} profile={profile} />
-          <div className="border-t border-mzjLine mx-4"></div>
-          <ManageOrders user={user} profile={profile} />
-        </div>
-      );
-    }
+  if (!user) return <Login />;
+
+  // المشروع ده مسؤول عن transfers فقط
+  return (
+    <div className="flex flex-col gap-6 py-4">
+      <CreateOrder user={user} profile={profile} />
+      <div className="border-t border-mzjLine mx-4"></div>
+      <ManageOrders user={user} profile={profile} />
+    </div>
+  );
+};
+
 
     const targetUrl = PAGE_URLS[activeTab];
     if (targetUrl) {
@@ -198,3 +208,4 @@ const AccessDenied = () => (
 );
 
 export default App;
+

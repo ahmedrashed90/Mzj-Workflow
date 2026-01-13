@@ -800,13 +800,16 @@
     ];
 
     const FIELD_SYNONYMS = {
-      CustomerName: ["CustomerName","customerName"],
-      CustomerVAT:  ["CustomerVAT","customerVat","customerVAT"],
-      CustomerPhone:["CustomerPhone","customerPhone","customer_phone","contact_mobile"],
-      Branch:       ["Branch","branch"],
-      OrderDate:    ["OrderDate","orderDate"],
-      DeliveryDate: ["DeliveryDate","deliveryDate"],
-      SalesPerson:  ["SalesPerson","salesPerson"],
+  CustomerName: ["CustomerName","customerName","اسم العميل","اسم_العميل","العميل","Customer"],
+  CustomerVAT:  ["CustomerVAT","customerVat","customerVAT","الرقم الضريبي للعميل","الرقم الضريبى للعميل","الرقم الضريبي","VAT"],
+  CustomerPhone:["CustomerPhone","customerPhone","customer_phone","contact_mobile","رقم جوال العميل","رقم الجوال","جوال العميل","هاتف العميل","موبايل العميل","Mobile","Phone"],
+  Branch:       ["Branch","branch","الفرع"],
+  OrderDate:    ["OrderDate","orderDate","تاريخ الطلب"],
+  DeliveryDate: ["DeliveryDate","deliveryDate","تاريخ التسليم"],
+  SalesPerson:  ["SalesPerson","salesPerson","مسؤول المبيعات"],
+  // والباقي زي ما هو عندك...
+};
+
 
       ItemNo:       ["ItemNo","itemNo","no"],
       ItemType:     ["ItemType","itemType","type"],
@@ -1606,7 +1609,28 @@ function clearErpTable() {
 
       const first = records[0] || {};
       const orderNo = first.orderNo || first.OrderNo || currentOrderId || "";
-      currentCustomerPhone = getFieldFlex("CustomerPhone", first) || "";
+      // رقم الجوال (Fallback عربي)
+currentCustomerPhone = (getFieldFlex("CustomerPhone", first) || "").toString().trim();
+if (!currentCustomerPhone || currentCustomerPhone === "-" || currentCustomerPhone === "—") {
+  currentCustomerPhone =
+    (first["رقم جوال العميل"] ||
+     first["رقم الجوال"] ||
+     first["جوال العميل"] ||
+     first["هاتف العميل"] ||
+     first["موبايل العميل"] ||
+     "").toString().trim();
+}
+
+// اسم العميل (Fallback عربي)
+currentCustomerName = (getFieldFlex("CustomerName", first) || "").toString().trim();
+if (!currentCustomerName || currentCustomerName === "-" || currentCustomerName === "—") {
+  currentCustomerName =
+    (first["اسم العميل"] ||
+     first["العميل"] ||
+     first["Customer"] ||
+     "").toString().trim();
+}
+
       let vinBadgeLabel = "";
 
       // ✅ VINs (نهمل '-' و القيم الفارغة)

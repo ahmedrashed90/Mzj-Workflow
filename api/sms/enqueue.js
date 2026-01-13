@@ -5,19 +5,29 @@ function initAdmin() {
 
   const projectId = process.env.FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  const privateKeyRaw = process.env.FIREBASE_PRIVATE_KEY;
 
-  if (!projectId || !clientEmail || !privateKeyRaw) {
+  // ✅ الأفضل: تخزين المفتاح Base64 لتفادي مشاكل \n و OpenSSL
+  const privateKey =
+    process.env.FIREBASE_PRIVATE_KEY_BASE64
+      ? Buffer.from(process.env.FIREBASE_PRIVATE_KEY_BASE64, "base64").toString("utf8")
+      : (process.env.FIREBASE_PRIVATE_KEY || "").replace(/\\n/g, "\n");
+
+  if (!projectId || !clientEmail || !privateKey) {
     throw new Error(
-      "Missing Firebase Admin ENV. Required: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY"
+      "Missing Firebase Admin ENV. Required: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY_BASE64 (or FIREBASE_PRIVATE_KEY)"
     );
+  }
+
+  // ✅ حماية إضافية: تأكد إن المفتاح شكله سليم
+  if (!privateKey.includes("BEGIN PRIVATE KEY") || !privateKey.includes("END PRIVATE KEY")) {
+    throw new Error("Invalid Firebase private key format. Make sure it includes BEGIN/END PRIVATE KEY lines.");
   }
 
   admin.initializeApp({
     credential: admin.credential.cert({
       projectId,
       clientEmail,
-      privateKey: privateKeyRaw.replace(/\\n/g, "\n"),
+      privateKey,
     }),
   });
 }

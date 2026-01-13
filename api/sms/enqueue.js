@@ -1,29 +1,47 @@
 import admin from "firebase-admin";
 
-if (!admin.apps.length) {
+function initAdmin() {
+  if (admin.apps.length) return;
+  // حط بيانات Firebase Admin في ENV (مهم)
+  // FIREBASE_PROJECT_ID
+  // FIREBASE_CLIENT_EMAIL
+  // FIREBASE_PRIVATE_KEY  (مع \n)
   admin.initializeApp({
-    credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)),
+    credential: admin.credential.cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+    }),
   });
 }
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ ok: false, error: "METHOD_NOT_ALLOWED" });
-
   try {
-    const { to, message, source } = req.body || {};
-    if (!to || !message) return res.status(400).json({ ok: false, error: "MISSING_FIELDS" });
+    if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
 
-    const doc = await admin.firestore().collection("sms_queue").add({
-      to,
-      message,
-      source: source || "sales.html",
+    initAdmin();
+
+    // (اختياري) تحقق من Firebase Auth Bearer Token
+    const authHeader = req.headers.authorization || "";
+    const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+    if (!token) return res.status(401).send("Missing token");
+
+    await admin.auth().verifyIdToken(token);
+
+    const { phone, message, source, meta } = req.body || {};
+    if (!phone || !message) return res.status(400).send("phone & message required");
+
+    const docRef = await admin.firestore().collection("sms_outbox").add({
+      to: String(phone),
+      message: String(message),
+      source: String(source || "web"),
+      meta: meta || {},
+      status: "queued",
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      sentAt: null,
-      error: null
     });
 
-    return res.status(200).json({ ok: true, id: doc.id });
+    return res.status(200).json({ ok: true, id: docRef.id });
   } catch (e) {
-    return res.status(500).json({ ok: false, error: e?.message || "UNKNOWN" });
+    return res.status(500).send(String(e?.message || e));
   }
 }

@@ -718,6 +718,7 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    window.auth = auth;
     const db = getFirestore(app);
 
     // UI refs
@@ -982,7 +983,7 @@ async function openSmsPlus(stageNum, stageLabel){
       : "";
 
     // لازم المستخدم يكون مسجل دخول (عشان نرسل ID Token للـ API)
-    if (!window.auth || !auth.currentUser) {
+    if (!auth || !auth.currentUser) {
       setMsg("<span class='err'>لازم تسجل دخول الأول.</span>");
       return;
     }

@@ -17,6 +17,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -1275,75 +1276,30 @@ function toEnglishDigits(str) {
       return sendWhatsAppFreeText(phone, text, st);
     }
 
-<script>
 
-  // =========================
-  // SMS+ → Enqueue للموبايل
-  // =========================
-  async function enqueueSmsPlus(phone, text, stageNum, stageLabel){
-    const payload = {
-      phone: String(phone || "").trim(),
-      message: String(text || ""),
-      stageNum: Number(stageNum || 0),
-      stageLabel: String(stageLabel || ""),
-      orderId: String(window.__mzj_current_order_id || ""),
-      vin: String(window.currentVin || "")
-    };
+    if (msgModalSend) msgModalSend.addEventListener("click", async () => {
+      msgModalMsg.textContent = "";
+      msgModalSend.disabled = true;
 
-    const res = await fetch("/api/sms/enqueue", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      const phone = normalizeSaudiPhone(currentCustomerPhone);
+      const msg = (msgModalText.value || "").trim();
+
+      try{
+        if (modalCtx.channel === "whatsapp") {
+          await sendWhatsAppMessage(phone, msg, modalCtx.stageNum);
+          msgModalMsg.innerHTML = "<span class='ok'>تم إرسال الرسالة من الرقم الموحد عبر واتساب API.</span>";
+        } else {
+          await sendStcSmsForStage(modalCtx.stageNum, modalCtx.stageLabel, msg);
+          // sendStcSmsForStage writes to stageMsg; mirror here too:
+          msgModalMsg.innerHTML = "<span class='ok'>تم إرسال SMS (أو تم تنفيذ محاولة الإرسال).</span>";
+        }
+      }catch(e){
+        console.error(e);
+        msgModalMsg.innerHTML = "<span class='err'>حصل خطأ أثناء الإرسال: " + String(e && (e.message||e)).slice(0,180) + "</span>";
+      }finally{
+        msgModalSend.disabled = false;
+      }
     });
-
-    const t = await res.text();
-    if(!res.ok) throw new Error(t || ("HTTP " + res.status));
-    try { return JSON.parse(t); } catch { return { ok:true, raw:t }; }
-  }
-
-  // =========================
-  // زر الإرسال (WhatsApp / SMS / SMS+)
-  // =========================
-  if (msgModalSend) msgModalSend.addEventListener("click", async () => {
-    ...
-  });
-
-</script>
-
-if (msgModalSend) msgModalSend.addEventListener("click", async () => {
-  msgModalMsg.textContent = "";
-  msgModalSend.disabled = true;
-
-  const phone = normalizeSaudiPhone(currentCustomerPhone);
-  const msg = (msgModalText.value || "").trim();
-
-  try {
-    if (modalCtx.channel === "whatsapp") {
-      await sendWhatsAppMessage(phone, msg, modalCtx.stageNum);
-      msgModalMsg.innerHTML = "<span class='ok'>تم إرسال الرسالة من الرقم الموحد عبر واتساب API.</span>";
-
-    } else if (modalCtx.channel === "sms_plus") {
-      // ✅ SMS+ (من الكمبيوتر) => Enqueue للموبايل
-      await enqueueSmsPlus(phone, msg, modalCtx.stageNum, modalCtx.stageLabel);
-      msgModalMsg.innerHTML = "<span class='ok'>✅ تم تسجيل طلب SMS+ بنجاح وسيتم الإرسال من الموبايل.</span>";
-
-    } else {
-      await sendStcSmsForStage(modalCtx.stageNum, modalCtx.stageLabel, msg);
-      // sendStcSmsForStage writes to stageMsg: msgSmsForStage too
-      msgModalMsg.innerHTML = "<span class='ok'>تم إرسال SMS (أو تم تنفيذ محاولة الإرسال).</span>";
-    }
-
-  } catch (e) {
-    console.error(e);
-    msgModalMsg.innerHTML =
-      "<span class='err'>حصل خطأ أثناء الإرسال: " +
-      String(e && (e.message || e)).slice(0, 180) +
-      "</span>";
-  } finally {
-    msgModalSend.disabled = false;
-  }
-});
-
 
     // ===== Dynamic QR (click to open tracking) =====
     const trackQrBtn = document.getElementById("trackQrBtn");
@@ -1900,7 +1856,7 @@ btnSmsPlus.style.fontSize = "12px";
 btnSmsPlus.style.marginRight = "6px";
 btnSmsPlus.textContent = "SMS+";
 btnSmsPlus.disabled = !currentCustomerPhone;
-btnSmsPlus.onclick = () => openMessageModal("sms_plus", num, label);
+btnSmsPlus.onclick = () => openSmsPlus(num, label);
 actions.appendChild(btnSmsPlus);
 
 const btnWaPlus = document.createElement("button");
@@ -2826,32 +2782,6 @@ ordersListCache = rows;
       </div>
     </div>
   </div>
-<script>
-async function sendSMS(phone, message) {
-  const user = firebase.auth().currentUser;
-
-  if (!user) {
-    alert("لازم تسجل دخول");
-    return;
-  }
-
-  const token = await user.getIdToken();
-
-  await fetch("/api/sms/send", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer " + token
-    },
-    body: JSON.stringify({
-      phone: phone,
-      message: message
-    })
-  });
-
-  alert("تم إرسال الرسالة بنجاح ✅");
-}
-</script>
 
 </body>
 </html>

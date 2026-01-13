@@ -975,7 +975,12 @@ async function openSmsPlus(stageNum, stageLabel){
     }
     const idToken = await user.getIdToken();
 
-    const res = await fetch("/api/sms/enqueue", {
+    // ✅ SMS+ API Base (Vercel)
+// لو عندك دومين ثابت حطه هنا بدل window.location.origin
+const API_BASE = (window.__MZJ_SMS_API_BASE || "https://mzj-workflow.vercel.app);
+
+const res = await fetch(`${API_BASE}/api/sms/enqueue`, {
+
       method: "POST",
       headers: {
         "Content-Type": "application/json",

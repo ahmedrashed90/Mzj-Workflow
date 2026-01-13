@@ -18,6 +18,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -800,16 +801,13 @@
     ];
 
     const FIELD_SYNONYMS = {
-  CustomerName: ["CustomerName","customerName","اسم العميل","اسم_العميل","العميل","Customer"],
-  CustomerVAT:  ["CustomerVAT","customerVat","customerVAT","الرقم الضريبي للعميل","الرقم الضريبى للعميل","الرقم الضريبي","VAT"],
-  CustomerPhone:["CustomerPhone","customerPhone","customer_phone","contact_mobile","رقم جوال العميل","رقم الجوال","جوال العميل","هاتف العميل","موبايل العميل","Mobile","Phone"],
-  Branch:       ["Branch","branch","الفرع"],
-  OrderDate:    ["OrderDate","orderDate","تاريخ الطلب"],
-  DeliveryDate: ["DeliveryDate","deliveryDate","تاريخ التسليم"],
-  SalesPerson:  ["SalesPerson","salesPerson","مسؤول المبيعات"],
-  // والباقي زي ما هو عندك...
-};
-
+      CustomerName: ["CustomerName","customerName","CustomerArabicName","customerArabicName","ClientName","clientName","CompanyName","companyName","UserName","userName","username","اسم_العميل","اسم العميل"],
+      CustomerVAT:  ["CustomerVAT","customerVat","customerVAT"],
+      CustomerPhone: ["CustomerPhone","customerPhone","customer_phone","contact_mobile","mobile","Mobile","customerMobile","CustomerMobile","userMobile","UserMobile","phone","Phone","tel","Tel","جوال","رقم_الجوال","رقم الجوال"],
+      Branch:       ["Branch","branch"],
+      OrderDate:    ["OrderDate","orderDate"],
+      DeliveryDate: ["DeliveryDate","deliveryDate"],
+      SalesPerson:  ["SalesPerson","salesPerson"],
 
       ItemNo:       ["ItemNo","itemNo","no"],
       ItemType:     ["ItemType","itemType","type"],
@@ -895,37 +893,69 @@
     }
 
     
-    // تنسيق رقم الجوال لصيغة سعودية 966
-        function normalizeSaudiPhone(raw) {
+        // تنسيق رقم الجوال لصيغة سعودية 9665xxxxxxxx
+    function normalizeSaudiPhone(raw) {
       if (!raw) return "";
+      let s = String(raw).trim();
 
-      let digits = String(raw).trim();
+      // remove spaces and non-digit/+ chars
+      s = s.replace(/[\s\-()]/g, "");
+      s = s.replace(/[^\d+]/g, "");
 
-      // شيل أي حاجة غير أرقام
-      digits = digits.replace(/[^\d]/g, "");
+      // 00 -> +
+      if (s.startsWith("00")) s = "+" + s.slice(2);
 
-      // 009665xxxxxxxx → 9665xxxxxxxx
-      if (digits.startsWith("00")) {
-        digits = digits.slice(2);
-      }
+      // keep digits only for final format
+      let digits = s.replace(/[^\d]/g, "");
 
-      // 05xxxxxxxx → 9665xxxxxxxx
-      if (digits.startsWith("05")) {
-        digits = "966" + digits.slice(1);
-      }
+      // 05xxxxxxxx -> 9665xxxxxxxx
+      if (/^05\d{8}$/.test(digits)) digits = "966" + digits.slice(1);
 
-      // 5xxxxxxxx → 9665xxxxxxxx
-      if (digits.length === 9 && digits.startsWith("5")) {
-        digits = "966" + digits;
-      }
+      // 5xxxxxxxx -> 9665xxxxxxxx
+      if (/^5\d{8}$/.test(digits)) digits = "966" + digits;
 
-      // تأكيد نهائي
-      if (!digits.startsWith("9665") || digits.length !== 12) {
-        return "";
-      }
+      // +9665xxxxxxxx or 9665xxxxxxxx
+      if (/^9665\d{8}$/.test(digits)) return digits;
 
-      return digits;
+      return "";
     }
+    // ===== Arabic names + fallback phone helpers =====
+    function hasArabic(text=""){
+      return /[\u0600-\u06FF]/.test(String(text));
+    }
+
+    function getCustomerDisplayNameFromRecord(rec = {}){
+      // نحاول نلتقط الاسم من أكثر من حقل (عربي أولاً)
+      const candidates = [
+        getFieldFlex("CustomerName", rec),
+        rec.userName, rec.UserName, rec.username,
+        rec.customerName, rec.CustomerName,
+        rec.customerArabicName, rec.CustomerArabicName,
+        rec.companyName, rec.CompanyName,
+        rec.clientName, rec.ClientName
+      ].filter(v => v && v !== "-" && v !== "—").map(v => String(v).trim()).filter(Boolean);
+
+      const arabic = candidates.find(n => hasArabic(n));
+      return arabic || candidates[0] || "العميل";
+    }
+
+    function getCustomerPhoneFallbackFromRecord(rec = {}){
+      const rawCandidates = [
+        getFieldFlex("CustomerPhone", rec),
+        rec.mobile, rec.Mobile,
+        rec.customerMobile, rec.CustomerMobile,
+        rec.userMobile, rec.UserMobile,
+        rec.phone, rec.Phone,
+        rec.tel, rec.Tel
+      ].filter(v => v && v !== "-" && v !== "—").map(v => String(v).trim());
+
+      for (const c of rawCandidates){
+        const n = normalizeSaudiPhone(c);
+        if (n) return n;
+      }
+      return "";
+    }
+
 // ===== PLUS CHANNELS (WhatsApp+ & SMS+) =====
 
 // فتح واتساب ويب/ديسكتوب بنفس نص الرسالة
@@ -955,83 +985,61 @@ function openWhatsAppPlus(stageNum, stageLabel){
 // ====== SMS+ API ======
 const API_BASE = "https://mzj-workflow.vercel.app";
 
-// SMS+ (يرسل المهمة إلى Vercel/Firestore عشان الموبايل الأندرويد يبعتها SMS من شريحتك)
-async function openSmsPlus(stageNum, stageLabel){
-  try {
-    // ✅ حماية من كسر الصفحة لو stageMsg مش موجود
-    const msgEl = (typeof stageMsg !== "undefined" && stageMsg) ? stageMsg : null;
-    const setMsg = (html) => { if (msgEl) msgEl.innerHTML = html; };
+  // SMS+ (يرسل المهمة إلى Vercel/Firestore عشان الموبايل الأندرويد يبعتها SMS من شريحتك)
+  async function openSmsPlus(stageNum, stageLabel){
+    stageMsg.textContent = "";
 
-    if (msgEl) msgEl.textContent = "";
-
-    if (!window.currentCustomerPhone) {
-      setMsg("<span class='err'>لا يوجد رقم جوال محفوظ لهذا الطلب.</span>");
+    // ✅ Fallback: رقم الجوال ممكن يكون محفوظ في أكتر من حقل
+    const phoneDigits = getCustomerPhoneFallbackFromRecord(window.currentOrderData || {}) || normalizeSaudiPhone(currentCustomerPhone);
+    if (!phoneDigits) {
+      stageMsg.innerHTML = "<span class='err'>لا يوجد رقم جوال صالح لهذا الطلب.</span>";
       return;
     }
 
-    // ✅ حماية لو normalizeSaudiPhone مش موجودة
-    const phone = (typeof normalizeSaudiPhone === "function")
-      ? normalizeSaudiPhone(window.currentCustomerPhone)
-      : String(window.currentCustomerPhone || "").trim();
+    // ✅ اسم العميل (يدعم العربي + يدعم اسم المستخدم للبنوك/التمويل)
+    const customerName = getCustomerDisplayNameFromRecord(window.currentOrderData || {}) || (currentCustomerName || "العميل");
 
-    if (!phone) {
-      setMsg("<span class='err'>رقم الجوال غير صالح.</span>");
-      return;
-    }
+    // نص الرسالة
+    let text = getDefaultStageMessage(stageNum, stageLabel) || "";
+    text = text.replaceAll("{name}", customerName).replaceAll("{{name}}", customerName);
 
-    const text = (typeof getDefaultStageMessage === "function")
-      ? (getDefaultStageMessage(stageNum, stageLabel) || "")
-      : "";
+    try{
+      // لازم المستخدم يكون مسجل دخول (عشان نرسل ID Token للـ API)
+      const user = auth.currentUser;
+      if(!user){
+        stageMsg.innerHTML = "<span class='err'>لازم تسجّل دخول الأول.</span>";
+        return;
+      }
+      const idToken = await user.getIdToken();
 
-    // لازم المستخدم يكون مسجل دخول (عشان نرسل ID Token للـ API)
-    if (!window.auth || !auth.currentUser) {
-      setMsg("<span class='err'>لازم تسجل دخول الأول.</span>");
-      return;
-    }
+      // 📌 عدّل الدومين بتاع Vercel عندك
+      const endpoint = (window.SMS_PLUS_ENDPOINT || "https://YOUR-VERCEL-DOMAIN.vercel.app/api/sms/enqueue");
 
-    const idToken = await auth.currentUser.getIdToken();
+      const res = await fetch(endpoint, {
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json",
+          "Authorization":"Bearer " + idToken
+        },
+        body: JSON.stringify({
+          phone: phoneDigits,          // 9665xxxxxxxx
+          message: text,
+          source: "sales2.html",
+          orderId: (typeof currentOrderId !== "undefined" ? currentOrderId : null),
+          vin: (typeof currentVin !== "undefined" ? currentVin : null)
+        })
+      });
 
-    // ✅ استخدم API_BASE بدل /api... عشان يشتغل حتى لو الصفحة على دومين مختلف
-    const res = await fetch(`${API_BASE}/api/sms/enqueue`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + idToken
-      },
-      body: JSON.stringify({
-        phone,
-        message: text,
-        source: "sales.html",
-        meta: {
-          stageNum: Number(stageNum)||null,
-          stageLabel: String(stageLabel||""),
-          orderId: String(window.currentOrderId||""),
-          vin: String(window.currentVin||"")
-        }
-      })
-    });
+      const data = await res.json().catch(()=> ({}));
+      if(!res.ok || !data.ok){
+        stageMsg.innerHTML = "<span class='err'>فشل إرسال SMS+.</span>";
+        return;
+      }
 
-    const dataText = await res.text();
-    if(!res.ok){
-      throw new Error(dataText || ("HTTP " + res.status));
-    }
-
-    let data;
-    try{ data = JSON.parse(dataText); }catch{ data = { ok:true, raw:dataText }; }
-
-    if(data && data.ok){
-      setMsg("<span class='ok'>تم إرسال الطلب للطابور ✅ (SMS+)</span>");
-    }else{
-      setMsg("<span class='err'>تعذر إضافة الرسالة للطابور.</span>");
-    }
-
-  } catch(e){
-    console.error(e);
-    if (typeof stageMsg !== "undefined" && stageMsg) {
-      stageMsg.innerHTML =
-        "<span class='err'>تعذر إرسال SMS+ للطابور: " +
-        String(e && (e.message||e)).slice(0,240) +
-        "</span>";
+      stageMsg.innerHTML = "<span class='ok'>تم إرسال SMS+ للطابور ✅</span>";
+    }catch(e){
+      stageMsg.innerHTML = "<span class='err'>حدث خطأ أثناء الإرسال.</span>";
+      console.error(e);
     }
   }
 }
@@ -1609,28 +1617,9 @@ function clearErpTable() {
 
       const first = records[0] || {};
       const orderNo = first.orderNo || first.OrderNo || currentOrderId || "";
-      // رقم الجوال (Fallback عربي)
-currentCustomerPhone = (getFieldFlex("CustomerPhone", first) || "").toString().trim();
-if (!currentCustomerPhone || currentCustomerPhone === "-" || currentCustomerPhone === "—") {
-  currentCustomerPhone =
-    (first["رقم جوال العميل"] ||
-     first["رقم الجوال"] ||
-     first["جوال العميل"] ||
-     first["هاتف العميل"] ||
-     first["موبايل العميل"] ||
-     "").toString().trim();
-}
-
-// اسم العميل (Fallback عربي)
-currentCustomerName = (getFieldFlex("CustomerName", first) || "").toString().trim();
-if (!currentCustomerName || currentCustomerName === "-" || currentCustomerName === "—") {
-  currentCustomerName =
-    (first["اسم العميل"] ||
-     first["العميل"] ||
-     first["Customer"] ||
-     "").toString().trim();
-}
-
+      window.currentOrderData = first;
+      currentCustomerPhone = getCustomerPhoneFallbackFromRecord(first) || "";
+      currentCustomerName = getCustomerDisplayNameFromRecord(first) || "";
       let vinBadgeLabel = "";
 
       // ✅ VINs (نهمل '-' و القيم الفارغة)
@@ -2568,8 +2557,8 @@ actions.appendChild(btnWaPlus);
             ? (vins[0] || "—")
             : ("(" + vins.length + ") هياكل");
 
-          const customerName = getFieldFlex("CustomerName", first) || "";
-          const customerPhone = getFieldFlex("CustomerPhone", first) || "";
+          const customerName = getCustomerDisplayNameFromRecord(first) || "";
+          const customerPhone = getCustomerPhoneFallbackFromRecord(first) || "";
           const branch = getFieldFlex("Branch", first) || "";
           const orderDateRaw = getFieldFlex("OrderDate", first) || "";
 

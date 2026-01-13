@@ -2781,6 +2781,32 @@ ordersListCache = rows;
       </div>
     </div>
   </div>
+<script>
+async function sendSMS(phone, message) {
+  const user = firebase.auth().currentUser;
+
+  if (!user) {
+    alert("لازم تسجل دخول");
+    return;
+  }
+
+  const token = await user.getIdToken();
+
+  await fetch("/api/sms/send", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + token
+    },
+    body: JSON.stringify({
+      phone: phone,
+      message: message
+    })
+  });
+
+  alert("تم إرسال الرسالة بنجاح ✅");
+}
+</script>
 
 </body>
 </html>

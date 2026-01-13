@@ -38,15 +38,23 @@ export default async function handler(req, res) {
 
     initAdmin();
 
-    // تحقق من Firebase Auth Bearer Token
+    // تحقق من Firebase Auth Bearer Token (اختياري) أو API Key
     const authHeader = req.headers.authorization || "";
     const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
-    if (!token) return res.status(401).send("Missing token");
 
-    await admin.auth().verifyIdToken(token);
+    const body = req.body || {};
+    const apiKey = (body.apiKey || req.headers["x-api-key"] || "").toString();
+
+    const hasValidApiKey = !!(process.env.SMS_API_KEY && apiKey && apiKey === process.env.SMS_API_KEY);
+
+    if (token) {
+      await admin.auth().verifyIdToken(token);
+    } else if (!hasValidApiKey) {
+      return res.status(401).send("Missing token or invalid apiKey");
+    }
 
     const { phone, to, message, source, meta } = req.body || {};
-    const resolvedPhone = phone || to;
+    const resolvedPhone = (phone || to || "").toString();
     if (!resolvedPhone || !message) return res.status(400).send("phone & message required");
 
     const docRef = await admin.firestore().collection("sms_outbox").add({

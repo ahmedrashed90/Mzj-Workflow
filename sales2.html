@@ -985,6 +985,59 @@ function SMSP_normalizeSaudiPhone(raw){
   if (/^\+9665\d{8}$/.test(p)) return p;
   return null;
 }
+
+function SMSP_tryPhone(val){
+  const n = SMSP_normalizeSaudiPhone(val);
+  return n || null;
+}
+function SMSP_guessPhoneFromObject(obj){
+  if (!obj || typeof obj !== "object") return null;
+
+  // 1) جرّب قيم مباشرة شائعة
+  const directKeys = [
+    "mobile","Mobile","customerMobile","CustomerMobile","userMobile","UserMobile",
+    "phone","Phone","customerPhone","CustomerPhone","contact_mobile","contactMobile",
+    "contact_phone","contactPhone","phone_number","phoneNumber","mobile_no","mobileNo",
+    "رقم الجوال","الجوال","جوال","رقم الهاتف","هاتف","موبايل"
+  ];
+  for (const k of directKeys){
+    if (Object.prototype.hasOwnProperty.call(obj,k)){
+      const got = SMSP_tryPhone(obj[k]);
+      if (got) return got;
+    }
+  }
+
+  // 2) جرّب أي حقل اسمه فيه phone/mobile أو عربي جوال/هاتف
+  for (const [k,v] of Object.entries(obj)){
+    const key = String(k||"").toLowerCase();
+    const looks = key.includes("phone") || key.includes("mobile") || key.includes("tel") ||
+                  String(k).includes("جوال") || String(k).includes("هاتف") || String(k).includes("الجوال");
+    if (looks){
+      const got = SMSP_tryPhone(v);
+      if (got) return got;
+    }
+  }
+
+  // 3) جرّب حاويات داخلية شائعة مستوى واحد
+  const containers = ["customer","Customer","contact","Contact","buyer","Buyer","client","Client","party","Party","data","Data"];
+  for (const c of containers){
+    const inner = obj[c];
+    if (inner && typeof inner === "object"){
+      // جرّب مفاتيح مباشرة داخلها
+      for (const [k,v] of Object.entries(inner)){
+        const key = String(k||"").toLowerCase();
+        const looks = key.includes("phone") || key.includes("mobile") || key.includes("tel") ||
+                      String(k).includes("جوال") || String(k).includes("هاتف") || String(k).includes("الجوال");
+        if (looks){
+          const got = SMSP_tryPhone(v);
+          if (got) return got;
+        }
+      }
+    }
+  }
+
+  return null;
+}
 function getCustomerPhoneFromRecord(rec){
   const cands = [
     getFieldFlex("Mobile", rec),
@@ -1000,6 +1053,9 @@ function getCustomerPhoneFromRecord(rec){
     const n = SMSP_normalizeSaudiPhone(c);
     if (n) return n;
   }
+    const guess = SMSP_guessPhoneFromObject(rec);
+  if (guess) return guess;
+
   return null;
 }
 

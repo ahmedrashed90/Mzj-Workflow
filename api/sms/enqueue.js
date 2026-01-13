@@ -1,8 +1,78 @@
 import admin from "firebase-admin";
 
+function parseServiceAccountFromEnv() {
+  // Prefer a full service account JSON to avoid OpenSSL/\n issues.
+  const raw =
+    process.env.FIREBASE_SERVICE_ACCOUNT_JSON ||
+    process.env.FIREBASE_SERVICE_ACCOUNT ||
+    "";
+
+  const b64 = process.env.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 || process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 || "";
+
+  let jsonText = "";
+  if (b64) {
+    try {
+      jsonText = Buffer.from(b64, "base64").toString("utf8");
+    } catch (e) {
+      throw new Error("Invalid FIREBASE_SERVICE_ACCOUNT*_BASE64 (cannot decode base64).");
+    }
+  } else if (raw) {
+    jsonText = raw;
+  }
+
+  if (!jsonText) return null;
+
+  // Some people paste JSON with surrounding quotes; strip them safely.
+  const trimmed = String(jsonText).trim();
+  const cleaned =
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+      ? trimmed.slice(1, -1)
+      : trimmed;
+
+  let obj;
+  try {
+    obj = JSON.parse(cleaned);
+  } catch (e) {
+    throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON is not valid JSON.");
+  }
+
+  if (!obj.project_id || !obj.client_email || !obj.private_key) {
+    throw new Error("Service account JSON missing required keys: project_id, client_email, private_key.");
+  }
+
+  // Ensure newlines are real
+  obj.private_key = String(obj.private_key).replace(/\\n/g, "\n");
+
+  // Sanity check
+  if (!obj.private_key.includes("BEGIN") || !obj.private_key.includes("END")) {
+    throw new Error("Service account private_key looks invalid (missing BEGIN/END).");
+  }
+
+  return {
+    projectId: obj.project_id,
+    clientEmail: obj.client_email,
+    privateKey: obj.private_key,
+  };
+}
+
 function initAdmin() {
   if (admin.apps.length) return;
 
+  // 1) Best: full service account JSON
+  const sa = parseServiceAccountFromEnv();
+  if (sa) {
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: sa.projectId,
+        clientEmail: sa.clientEmail,
+        privateKey: sa.privateKey,
+      }),
+    });
+    return;
+  }
+
+  // 2) Fallback: split env vars
   const projectId = process.env.FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
 
@@ -13,10 +83,16 @@ function initAdmin() {
 
   if (!projectId || !clientEmail || !privateKey) {
     throw new Error(
-      "Missing Firebase Admin ENV. Required: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY_BASE64 (or FIREBASE_PRIVATE_KEY)"
+      "Missing Firebase Admin ENV. Provide either FIREBASE_SERVICE_ACCOUNT_JSON (recommended) or FIREBASE_PROJECT_ID + FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY(_BASE64)."
     );
   }
 
+  if (!privateKey.includes("BEGIN") || !privateKey.includes("END")) {
+    throw new Error("Invalid Firebase private key format (missing BEGIN/END lines).");
+  }
+
+  // If someone provided an RSA PKCS#1 key, it can fail on some OpenSSL 3 builds.
+  // Recommend using the service account JSON (PKCS#8) if this keeps failing.
   admin.initializeApp({
     credential: admin.credential.cert({
       projectId,
@@ -24,35 +100,6 @@ function initAdmin() {
       privateKey,
     }),
   });
-}
-
-function normalizeSaudiE164(raw) {
-  if (!raw) return "";
-  let p = String(raw).trim();
-
-  // keep digits and +
-  p = p.replace(/[^\d+]/g, "");
-
-  // 00 -> +
-  if (p.startsWith("00")) p = "+" + p.slice(2);
-
-  // 05xxxxxxxx -> +9665xxxxxxxx
-  if (/^05\d{8}$/.test(p)) return "+966" + p.slice(1);
-
-  // 5xxxxxxxx -> +9665xxxxxxxx
-  if (/^5\d{8}$/.test(p)) return "+966" + p;
-
-  // 9665xxxxxxxx -> +9665xxxxxxxx
-  if (/^9665\d{8}$/.test(p)) return "+" + p;
-
-  // +9665xxxxxxxx ok
-  if (/^\+9665\d{8}$/.test(p)) return p;
-
-  // sometimes phone arrives as 966xxxxxxxxx (10-12 digits) - best effort:
-    if (p.startsWith("966") && !p.startsWith("+")) return "+" + p;
-    return "+" + p
-
-  return p;
 }
 
 export default async function handler(req, res) {
@@ -69,15 +116,12 @@ export default async function handler(req, res) {
     await admin.auth().verifyIdToken(token);
 
     const { phone, to, message, source, meta } = req.body || {};
-    const rawPhone = phone || to;
-    if (!rawPhone || !message) return res.status(400).send("phone & message required");
-
-    const norm = normalizeSaudiE164(rawPhone);
+    const target = String(phone || to || "").trim();
+    if (!target || !message) return res.status(400).send("phone/to & message required");
 
     const docRef = await admin.firestore().collection("sms_outbox").add({
-      // store BOTH for Android listeners
-      to: norm,
-      phone: norm,
+      to: target,
+      phone: target,
       message: String(message),
       source: String(source || "web"),
       meta: meta || {},
@@ -85,7 +129,7 @@ export default async function handler(req, res) {
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    return res.status(200).json({ ok: true, id: docRef.id, to: norm });
+    return res.status(200).json({ ok: true, id: docRef.id });
   } catch (e) {
     return res.status(500).send(String(e?.message || e));
   }

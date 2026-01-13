@@ -1,6 +1,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
@@ -215,6 +216,17 @@
                   <th>من</th>
                   <th>إلى</th>
                   <th>المكان الحالي (المخزون)</th>
+                  <th>اللون الداخلي</th>
+                  <th>حساس</th>
+                  <th>كاميرا</th>
+                  <th>مكيف</th>
+                  <th>مسجل</th>
+                  <th>شاشة</th>
+                  <th>ريموت</th>
+                  <th>فرشات</th>
+                  <th>طفاية</th>
+                  <th>شنطة سلامة</th>
+                  <th>اسبير</th>
                   <th class="w-120">ID</th>
                 </tr>
               </thead>
@@ -343,6 +355,7 @@ function looksLikeVinInput(raw){
   let moves = [];
   let stockItems = [];
   let stockPlaceMap = new Map();
+  let stockRecMap = new Map();
 
 let allPlaces = [];
 
@@ -411,15 +424,44 @@ function updateFilterUI(){
   // بناء خريطة (VIN -> المكان الحالي) من stock داخل mzj_admin_state/v1
   function buildStockMap(list){
     stockPlaceMap = new Map();
+    stockRecMap   = new Map();
     (Array.isArray(list)?list:[]).forEach((s)=>{
       const vin = (s && (s.vin || s.VIN || s.chassis || s.chassisNo || s.vinNumber || s['رقم_الهيكل'] || s['رقم الهيكل'] || s['رقمهيكل'] || s.vehicleVin)) ?? '';
       const vNorm = normalizeVin(String(vin||''));
       if(!vNorm) return;
 
+      // احفظ السجل الكامل لقراءة تجهيزات الوكالة/اللون الداخلي.. إلخ
+      stockRecMap.set(vNorm, s);
+
       const place = (s.place || s.location || s.branch || s.currentPlace || s.placeText || s['مكان'] || s['المكان'] || s['المكان الحالي'] || s['مكان السيارة'] || s['مكان_السيارة'] || '') ?? '';
       const p = String(place||'').trim();
       if(p) stockPlaceMap.set(vNorm, p);
     });
+  }
+
+  const AGENCY_LOCATION = "الوكالة : المخزون المتاح";
+  const AGENCY_CHECK_ITEMS = [
+    { key:'sensor',  label:'حساس' },
+    { key:'camera',  label:'كاميرا' },
+    { key:'ac',      label:'مكيف' },
+    { key:'radio',   label:'مسجل' },
+    { key:'screen',  label:'شاشة' },
+    { key:'remote',  label:'ريموت' },
+    { key:'mats',    label:'فرشات' },
+    { key:'exting',  label:'طفاية' },
+    { key:'safetyBag', label:'شنطة سلامة' },
+    { key:'spare',   label:'اسبير' }
+  ];
+
+  function getStockRec(vinRaw){
+    const vNorm = normalizeVin(String(vinRaw||''));
+    return stockRecMap.get(vNorm) || null;
+  }
+
+  function valToMark(v){
+    if(v === true) return '✅';
+    if(v === false) return '❌';
+    return '';
   }
 
   function getStockPlace(vinRaw){
@@ -534,6 +576,10 @@ function renderMoves(){
       const qVin = normalizeVin(qRaw);
       const looksLikeVin = qVin.length >= 11 && /^[A-Z0-9]+$/.test(qVin);
       if(looksLikeVin && i===0){ tr.classList.add('row-latest'); }
+      const rec = getStockRec(vin);
+      const intColor = (rec?.intColor || '').toString().trim();
+      const cl = (rec?.agencyChecklist && typeof rec.agencyChecklist === 'object') ? rec.agencyChecklist : {};
+      const marks = (key)=> valToMark(cl[key]);
       tr.innerHTML=`
         <td>${i+1}</td>
         <td class="nowrap">${m.date || onlyDate(m.when||'')}</td>
@@ -542,6 +588,17 @@ function renderMoves(){
         <td>${m.from||''}</td>
         <td>${m.to||''}</td>
         <td>${getStockPlace(vin) || ''}</td>
+        <td>${intColor}</td>
+        <td>${marks('sensor')}</td>
+        <td>${marks('camera')}</td>
+        <td>${marks('ac')}</td>
+        <td>${marks('radio')}</td>
+        <td>${marks('screen')}</td>
+        <td>${marks('remote')}</td>
+        <td>${marks('mats')}</td>
+        <td>${marks('exting')}</td>
+        <td>${marks('safetyBag')}</td>
+        <td>${marks('spare')}</td>
         <td class="nowrap">${m.id||''}</td>`;
       movesTableBody.appendChild(tr);
     });
@@ -609,9 +666,14 @@ movesFromDate.addEventListener('change', renderMoves);
       }
 
       let csv='\uFEFF'; // BOM لدعم العربية
-      csv += ['#','التاريخ','رقم الهيكل','السيارة','من','إلى','المكان الحالي (المخزون)','ID'].join(',')+'\n';
+      csv += ['#','التاريخ','رقم الهيكل','السيارة','من','إلى','المكان الحالي (المخزون)','اللون الداخلي','حساس','كاميرا','مكيف','مسجل','شاشة','ريموت','فرشات','طفاية','شنطة سلامة','اسبير','ID'].join(',')+'\n';
 
       rows.forEach((m,i)=>{
+        const rec = getStockRec(m.vin);
+        const intColor = (rec?.intColor || '').toString().trim();
+        const cl = (rec?.agencyChecklist && typeof rec.agencyChecklist === 'object') ? rec.agencyChecklist : {};
+        const marks = (key)=> valToMark(cl[key]);
+
         const line = [
           i+1,
           (m.date || onlyDate(m.when||'')) || '',
@@ -620,6 +682,17 @@ movesFromDate.addEventListener('change', renderMoves);
           m.from || '',
           m.to || '',
           getStockPlace(m.vin) || '',
+          intColor,
+          marks('sensor'),
+          marks('camera'),
+          marks('ac'),
+          marks('radio'),
+          marks('screen'),
+          marks('remote'),
+          marks('mats'),
+          marks('exting'),
+          marks('safetyBag'),
+          marks('spare'),
           m.id || ''
         ].map(v => '"'+String(v).replace(/"/g,'""')+'"').join(',');
         csv += line + '\n';

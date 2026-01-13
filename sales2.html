@@ -974,7 +974,7 @@ function getCustomerDisplayNameFromRecord(rec){
   const arabic = cands.find(hasArabic);
   return arabic || cands[0] || "العميل";
 }
-function normalizeSaudiPhone(raw){
+function SMSP_normalizeSaudiPhone(raw){
   if (!raw) return null;
   let p = String(raw).trim();
   p = p.replace(/[^\d+]/g, "");
@@ -997,7 +997,7 @@ function getCustomerPhoneFromRecord(rec){
     getFieldFlex("رقم الهاتف", rec),
   ];
   for (const c of cands){
-    const n = normalizeSaudiPhone(c);
+    const n = SMSP_normalizeSaudiPhone(c);
     if (n) return n;
   }
   return null;
@@ -1012,7 +1012,7 @@ async function openSmsPlus(stageNum, stageLabel){
     // التقط سجل الطلب (لو موجود) عشان نجيب الاسم/الجوال بالفولباك
     const rec0 = (window.currentOrderRecords && window.currentOrderRecords.length) ? window.currentOrderRecords[0] : {};
 
-    const phone = getCustomerPhoneFromRecord(rec0) || normalizeSaudiPhone(window.currentCustomerPhone);
+    const phone = getCustomerPhoneFromRecord(rec0) || SMSP_normalizeSaudiPhone(window.currentCustomerPhone);
     if (!phone){
       setMsg("<span class='err'>لا يوجد رقم جوال صالح لهذا الطلب.</span>");
       return;
@@ -1220,7 +1220,7 @@ async function openSmsPlus(stageNum, stageLabel){
         stageMsg.innerHTML = "<span class='err'>لا يوجد رقم جوال محفوظ لهذا الطلب.</span>";
         return;
       }
-      const phone = normalizeSaudiPhone(currentCustomerPhone);
+      const phone = SMSP_normalizeSaudiPhone(currentCustomerPhone);
       if (!phone) {
         stageMsg.innerHTML = "<span class='err'>رقم الجوال غير صالح.</span>";
         return;
@@ -1385,7 +1385,7 @@ function toEnglishDigits(str) {
       msgModalMsg.textContent = "";
       msgModalSend.disabled = true;
 
-      const phone = normalizeSaudiPhone(currentCustomerPhone);
+      const phone = SMSP_normalizeSaudiPhone(currentCustomerPhone);
       const msg = (msgModalText.value || "").trim();
 
       try{
@@ -1473,7 +1473,7 @@ function toEnglishDigits(str) {
     return;
   }
 
-  const phone = normalizeSaudiPhone(currentCustomerPhone);
+  const phone = SMSP_normalizeSaudiPhone(currentCustomerPhone);
   if (!phone) {
     stageMsg.innerHTML = "<span class='err'>رقم الجوال غير صالح.</span>";
     return;

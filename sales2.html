@@ -775,7 +775,6 @@
     let currentItemNo       = null;
     let currentOrderRecords = [];
     let currentCustomerPhone = ""; // رقم جوال العميل
-    window.currentCustomerPhone = "";
     // بيانات نحتاجها لقالب واتساب (tracking_message)
     let currentCustomerName = "";
     let currentOrderCarsCount = 0;
@@ -960,68 +959,78 @@ async function openSmsPlus(stageNum, stageLabel){
     // ✅ حماية من كسر الصفحة لو stageMsg مش موجود
     const msgEl = (typeof stageMsg !== "undefined" && stageMsg) ? stageMsg : null;
     const setMsg = (html) => { if (msgEl) msgEl.innerHTML = html; };
-
     if (msgEl) msgEl.textContent = "";
 
-    if (!currentCustomerPhone) {
-      setMsg("<span class='err'>لا يوجد رقم جوال صالح لهذا الطلب.</span>");
+    // ✅ رقم الجوال (من نفس متغير الصفحة)
+    const rawPhone = (typeof currentCustomerPhone !== "undefined") ? currentCustomerPhone : "";
+    if (!rawPhone) {
+      setMsg("<span class='err'>لا يوجد رقم جوال محفوظ لهذا الطلب.</span>");
       return;
     }
 
-    // ✅ حماية لو normalizeSaudiPhone مش موجودة
     const phone = (typeof normalizeSaudiPhone === "function")
-      ? normalizeSaudiPhone(currentCustomerPhone)
-      : String(currentCustomerPhone || "").trim();
+      ? normalizeSaudiPhone(rawPhone)
+      : String(rawPhone || "").trim();
 
     if (!phone) {
       setMsg("<span class='err'>رقم الجوال غير صالح.</span>");
       return;
     }
 
-    const text = (typeof getDefaultStageMessage === "function")
+    // ✅ نص الرسالة
+    let text = (typeof getDefaultStageMessage === "function")
       ? (getDefaultStageMessage(stageNum, stageLabel) || "")
       : "";
 
-    // لازم المستخدم يكون مسجل دخول (عشان نرسل ID Token للـ API)
-    if (!window.auth || !auth.currentUser) {
-      setMsg("<span class='err'>لازم تسجل دخول الأول.</span>");
+    // ✅ دعم الاسم العربي/اسم المستخدم إن وجد
+    const nameCandidate = (typeof currentCustomerName !== "undefined" && currentCustomerName) ? String(currentCustomerName) : "العميل";
+    text = text.replaceAll("{name}", nameCandidate).replaceAll("{{name}}", nameCandidate);
+
+    // ✅ توكن تسجيل الدخول اختياري (الـ API يقبل token أو apiKey)
+    let idToken = "";
+    if (window.auth && auth.currentUser) {
+      try { idToken = await auth.currentUser.getIdToken(); } catch(_) { idToken = ""; }
+    }
+
+    const apiKey =
+      (typeof localStorage !== "undefined" && (localStorage.getItem("SMS_API_KEY") || localStorage.getItem("sms_api_key"))) || "";
+
+    if (!idToken && !apiKey) {
+      setMsg("<span class='err'>لازم تسجل دخول أو تضيف SMS_API_KEY.</span>");
       return;
     }
 
-    const idToken = await auth.currentUser.getIdToken();
+    const headers = { "Content-Type": "application/json" };
+    if (idToken) headers["Authorization"] = "Bearer " + idToken;
 
-    // ✅ استخدم API_BASE بدل /api... عشان يشتغل حتى لو الصفحة على دومين مختلف
+    const bodyObj = {
+      phone,
+      message: text,
+      source: "sales2.html",
+      apiKey: apiKey || undefined,
+      meta: {
+        stageNum: Number(stageNum)||null,
+        stageLabel: String(stageLabel||""),
+        orderId: String((typeof currentOrderId!=="undefined" && currentOrderId) ? currentOrderId : ""),
+        vin: String((typeof currentVin!=="undefined" && currentVin) ? currentVin : "")
+      }
+    };
+
     const res = await fetch(`${API_BASE}/api/sms/enqueue`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + idToken
-      },
-      body: JSON.stringify({
-        phone,
-        message: text,
-        source: "sales2.html",
-        meta: {
-          stageNum: Number(stageNum)||null,
-          stageLabel: String(stageLabel||""),
-          orderId: String(window.currentOrderId||""),
-          vin: String(window.currentVin||"")
-        }
-      })
+      headers,
+      body: JSON.stringify(bodyObj)
     });
 
     const dataText = await res.text();
-    if(!res.ok){
-      throw new Error(dataText || ("HTTP " + res.status));
-    }
+    let data = null;
+    try{ data = JSON.parse(dataText); }catch{ data = { ok:false, raw:dataText }; }
 
-    let data;
-    try{ data = JSON.parse(dataText); }catch{ data = { ok:true, raw:dataText }; }
-
-    if(data && data.ok){
+    if(res.ok && data && data.ok){
       setMsg("<span class='ok'>تم إرسال الطلب للطابور ✅ (SMS+)</span>");
     }else{
-      setMsg("<span class='err'>تعذر إضافة الرسالة للطابور.</span>");
+      const errMsg = (data && (data.error || data.raw)) ? String(data.error || data.raw) : String(res.status);
+      setMsg("<span class='err'>تعذر إضافة الرسالة للطابور: " + errMsg + "</span>");
     }
 
   } catch(e){
@@ -1047,15 +1056,7 @@ async function openSmsPlus(stageNum, stageLabel){
         case 1: {
           // ✅ رسالة ملخص الطلب (ديناميكية حسب الطلب) — بدون بيانات سيارة فردية
           const rec0 = (currentOrderRecords && currentOrderRecords.length) ? currentOrderRecords[0] : {};
-          const customerName = (
-            getFieldFlex("UserName", rec0) ||
-            getFieldFlex("userName", rec0) ||
-            getFieldFlex("CustomerName", rec0) ||
-            getFieldFlex("customerName", rec0) ||
-            getFieldFlex("CompanyName", rec0) ||
-            getFieldFlex("companyName", rec0) ||
-            ""
-          ).toString().trim();
+          const customerName = getFieldFlex("CustomerName", rec0) || "";
 
           // VIN المختار فقط للرابط (نقطة دخول للتتبع)
           const vinForLink = vin || "";
@@ -1616,20 +1617,7 @@ function clearErpTable() {
 
       const first = records[0] || {};
       const orderNo = first.orderNo || first.OrderNo || currentOrderId || "";
-      currentCustomerPhone = (
-      getFieldFlex("CustomerPhone", first) ||
-      getFieldFlex("CustomerMobile", first) ||
-      getFieldFlex("Mobile", first) ||
-      getFieldFlex("Phone", first) ||
-      getFieldFlex("CustomerTel", first) ||
-      getFieldFlex("UserMobile", first) ||
-      getFieldFlex("UserPhone", first) ||
-      getFieldFlex("userMobile", first) ||
-      getFieldFlex("userPhone", first) ||
-      ""
-    ).toString().trim();
-      // توافق SMS+ (بعض الأجزاء تستخدم window.currentCustomerPhone)
-      window.currentCustomerPhone = currentCustomerPhone;
+      currentCustomerPhone = getFieldFlex("CustomerPhone", first) || "";
       let vinBadgeLabel = "";
 
       // ✅ VINs (نهمل '-' و القيم الفارغة)

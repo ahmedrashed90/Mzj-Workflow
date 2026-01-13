@@ -949,33 +949,47 @@ function openWhatsAppPlus(stageNum, stageLabel){
   window.open(waUrl, "_blank", "noopener,noreferrer");
 }
 
+// ====== SMS+ API ======
+const API_BASE = "https://mzj-workflow.vercel.app";
+
 // SMS+ (يرسل المهمة إلى Vercel/Firestore عشان الموبايل الأندرويد يبعتها SMS من شريحتك)
 async function openSmsPlus(stageNum, stageLabel){
-  stageMsg.textContent = "";
+  try {
+    // ✅ حماية من كسر الصفحة لو stageMsg مش موجود
+    const msgEl = (typeof stageMsg !== "undefined" && stageMsg) ? stageMsg : null;
+    const setMsg = (html) => { if (msgEl) msgEl.innerHTML = html; };
 
-  if (!currentCustomerPhone) {
-    stageMsg.innerHTML = "<span class='err'>لا يوجد رقم جوال محفوظ لهذا الطلب.</span>";
-    return;
-  }
+    if (msgEl) msgEl.textContent = "";
 
-  const phone = normalizeSaudiPhone(currentCustomerPhone);
-  if (!phone) {
-    stageMsg.innerHTML = "<span class='err'>رقم الجوال غير صالح.</span>";
-    return;
-  }
-
-  const text = getDefaultStageMessage(stageNum, stageLabel) || "";
-
-  try{
-    // لازم المستخدم يكون مسجل دخول (عشان نرسل ID Token للـ API)
-    const user = auth.currentUser;
-    if(!user){
-      stageMsg.innerHTML = "<span class='err'>لازم تسجل دخول الأول.</span>";
+    if (!window.currentCustomerPhone) {
+      setMsg("<span class='err'>لا يوجد رقم جوال محفوظ لهذا الطلب.</span>");
       return;
     }
-    const idToken = await user.getIdToken();
 
-    const res = await fetch("/api/sms/enqueue", {
+    // ✅ حماية لو normalizeSaudiPhone مش موجودة
+    const phone = (typeof normalizeSaudiPhone === "function")
+      ? normalizeSaudiPhone(window.currentCustomerPhone)
+      : String(window.currentCustomerPhone || "").trim();
+
+    if (!phone) {
+      setMsg("<span class='err'>رقم الجوال غير صالح.</span>");
+      return;
+    }
+
+    const text = (typeof getDefaultStageMessage === "function")
+      ? (getDefaultStageMessage(stageNum, stageLabel) || "")
+      : "";
+
+    // لازم المستخدم يكون مسجل دخول (عشان نرسل ID Token للـ API)
+    if (!window.auth || !auth.currentUser) {
+      setMsg("<span class='err'>لازم تسجل دخول الأول.</span>");
+      return;
+    }
+
+    const idToken = await auth.currentUser.getIdToken();
+
+    // ✅ استخدم API_BASE بدل /api... عشان يشتغل حتى لو الصفحة على دومين مختلف
+    const res = await fetch(`${API_BASE}/api/sms/enqueue`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -987,8 +1001,9 @@ async function openSmsPlus(stageNum, stageLabel){
         source: "sales.html",
         meta: {
           stageNum: Number(stageNum)||null,
-          orderId: String(currentOrderId||""),
-          vin: String(currentVin||"")
+          stageLabel: String(stageLabel||""),
+          orderId: String(window.currentOrderId||""),
+          vin: String(window.currentVin||"")
         }
       })
     });
@@ -1002,15 +1017,22 @@ async function openSmsPlus(stageNum, stageLabel){
     try{ data = JSON.parse(dataText); }catch{ data = { ok:true, raw:dataText }; }
 
     if(data && data.ok){
-      stageMsg.innerHTML = "<span class='ok'>تم إرسال الطلب للطابور ✅ (SMS+)</span>";
+      setMsg("<span class='ok'>تم إرسال الطلب للطابور ✅ (SMS+)</span>");
     }else{
-      stageMsg.innerHTML = "<span class='err'>تعذر إضافة الرسالة للطابور.</span>";
+      setMsg("<span class='err'>تعذر إضافة الرسالة للطابور.</span>");
     }
-  }catch(e){
+
+  } catch(e){
     console.error(e);
-    stageMsg.innerHTML = "<span class='err'>تعذر إرسال SMS+ للطابور: " + String(e && (e.message||e)).slice(0,180) + "</span>";
+    if (typeof stageMsg !== "undefined" && stageMsg) {
+      stageMsg.innerHTML =
+        "<span class='err'>تعذر إرسال SMS+ للطابور: " +
+        String(e && (e.message||e)).slice(0,240) +
+        "</span>";
+    }
   }
 }
+
 
     
     // ===== Message Templates (shared for SMS + WhatsApp) =====

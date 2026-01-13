@@ -801,9 +801,9 @@
     ];
 
     const FIELD_SYNONYMS = {
-      CustomerName: ["CustomerName","customerName","CustomerArabicName","customerArabicName","ClientName","clientName","CompanyName","companyName","UserName","userName","username","اسم_العميل","اسم العميل"],
+      CustomerName: ["CustomerName","customerName"],
       CustomerVAT:  ["CustomerVAT","customerVat","customerVAT"],
-      CustomerPhone: ["CustomerPhone","customerPhone","customer_phone","contact_mobile","mobile","Mobile","customerMobile","CustomerMobile","userMobile","UserMobile","phone","Phone","tel","Tel","جوال","رقم_الجوال","رقم الجوال"],
+      CustomerPhone:["CustomerPhone","customerPhone","customer_phone","contact_mobile"],
       Branch:       ["Branch","branch"],
       OrderDate:    ["OrderDate","orderDate"],
       DeliveryDate: ["DeliveryDate","deliveryDate"],
@@ -893,69 +893,37 @@
     }
 
     
-        // تنسيق رقم الجوال لصيغة سعودية 9665xxxxxxxx
-    function normalizeSaudiPhone(raw) {
+    // تنسيق رقم الجوال لصيغة سعودية 966
+        function normalizeSaudiPhone(raw) {
       if (!raw) return "";
-      let s = String(raw).trim();
 
-      // remove spaces and non-digit/+ chars
-      s = s.replace(/[\s\-()]/g, "");
-      s = s.replace(/[^\d+]/g, "");
+      let digits = String(raw).trim();
 
-      // 00 -> +
-      if (s.startsWith("00")) s = "+" + s.slice(2);
+      // شيل أي حاجة غير أرقام
+      digits = digits.replace(/[^\d]/g, "");
 
-      // keep digits only for final format
-      let digits = s.replace(/[^\d]/g, "");
-
-      // 05xxxxxxxx -> 9665xxxxxxxx
-      if (/^05\d{8}$/.test(digits)) digits = "966" + digits.slice(1);
-
-      // 5xxxxxxxx -> 9665xxxxxxxx
-      if (/^5\d{8}$/.test(digits)) digits = "966" + digits;
-
-      // +9665xxxxxxxx or 9665xxxxxxxx
-      if (/^9665\d{8}$/.test(digits)) return digits;
-
-      return "";
-    }
-    // ===== Arabic names + fallback phone helpers =====
-    function hasArabic(text=""){
-      return /[\u0600-\u06FF]/.test(String(text));
-    }
-
-    function getCustomerDisplayNameFromRecord(rec = {}){
-      // نحاول نلتقط الاسم من أكثر من حقل (عربي أولاً)
-      const candidates = [
-        getFieldFlex("CustomerName", rec),
-        rec.userName, rec.UserName, rec.username,
-        rec.customerName, rec.CustomerName,
-        rec.customerArabicName, rec.CustomerArabicName,
-        rec.companyName, rec.CompanyName,
-        rec.clientName, rec.ClientName
-      ].filter(v => v && v !== "-" && v !== "—").map(v => String(v).trim()).filter(Boolean);
-
-      const arabic = candidates.find(n => hasArabic(n));
-      return arabic || candidates[0] || "العميل";
-    }
-
-    function getCustomerPhoneFallbackFromRecord(rec = {}){
-      const rawCandidates = [
-        getFieldFlex("CustomerPhone", rec),
-        rec.mobile, rec.Mobile,
-        rec.customerMobile, rec.CustomerMobile,
-        rec.userMobile, rec.UserMobile,
-        rec.phone, rec.Phone,
-        rec.tel, rec.Tel
-      ].filter(v => v && v !== "-" && v !== "—").map(v => String(v).trim());
-
-      for (const c of rawCandidates){
-        const n = normalizeSaudiPhone(c);
-        if (n) return n;
+      // 009665xxxxxxxx → 9665xxxxxxxx
+      if (digits.startsWith("00")) {
+        digits = digits.slice(2);
       }
-      return "";
-    }
 
+      // 05xxxxxxxx → 9665xxxxxxxx
+      if (digits.startsWith("05")) {
+        digits = "966" + digits.slice(1);
+      }
+
+      // 5xxxxxxxx → 9665xxxxxxxx
+      if (digits.length === 9 && digits.startsWith("5")) {
+        digits = "966" + digits;
+      }
+
+      // تأكيد نهائي
+      if (!digits.startsWith("9665") || digits.length !== 12) {
+        return "";
+      }
+
+      return digits;
+    }
 // ===== PLUS CHANNELS (WhatsApp+ & SMS+) =====
 
 // فتح واتساب ويب/ديسكتوب بنفس نص الرسالة
@@ -985,63 +953,124 @@ function openWhatsAppPlus(stageNum, stageLabel){
 // ====== SMS+ API ======
 const API_BASE = "https://mzj-workflow.vercel.app";
 
-  // SMS+ (يرسل المهمة إلى Vercel/Firestore عشان الموبايل الأندرويد يبعتها SMS من شريحتك)
-  async function openSmsPlus(stageNum, stageLabel){
-    stageMsg.textContent = "";
+// SMS+ (يرسل المهمة إلى Vercel/Firestore عشان الموبايل الأندرويد يبعتها SMS من شريحتك)
 
-    // ✅ Fallback: رقم الجوال ممكن يكون محفوظ في أكتر من حقل
-    const phoneDigits = getCustomerPhoneFallbackFromRecord(window.currentOrderData || {}) || normalizeSaudiPhone(currentCustomerPhone);
-    if (!phoneDigits) {
-      stageMsg.innerHTML = "<span class='err'>لا يوجد رقم جوال صالح لهذا الطلب.</span>";
+// ====== SMS+ Helpers (Arabic name + phone fallback) ======
+function hasArabic(text){
+  return /[\u0600-\u06FF]/.test(String(text || ""));
+}
+function getCustomerDisplayNameFromRecord(rec){
+  const cands = [
+    getFieldFlex("UserName", rec),
+    getFieldFlex("اسم المستخدم", rec),
+    getFieldFlex("CustomerName", rec),
+    getFieldFlex("اسم العميل", rec),
+    getFieldFlex("CompanyName", rec),
+    getFieldFlex("اسم الشركة", rec),
+    getFieldFlex("Name", rec),
+    getFieldFlex("الاسم", rec),
+  ].filter(Boolean).map(s => String(s).trim()).filter(Boolean);
+
+  const arabic = cands.find(hasArabic);
+  return arabic || cands[0] || "العميل";
+}
+function normalizeSaudiPhone(raw){
+  if (!raw) return null;
+  let p = String(raw).trim();
+  p = p.replace(/[^\d+]/g, "");
+  if (p.startsWith("00")) p = "+" + p.slice(2);
+  if (/^05\d{8}$/.test(p)) return "+966" + p.slice(1);
+  if (/^5\d{8}$/.test(p)) return "+966" + p;
+  if (/^9665\d{8}$/.test(p)) return "+" + p;
+  if (/^\+9665\d{8}$/.test(p)) return p;
+  return null;
+}
+function getCustomerPhoneFromRecord(rec){
+  const cands = [
+    getFieldFlex("Mobile", rec),
+    getFieldFlex("CustomerMobile", rec),
+    getFieldFlex("UserMobile", rec),
+    getFieldFlex("CustomerPhone", rec),
+    getFieldFlex("Phone", rec),
+    getFieldFlex("رقم الجوال", rec),
+    getFieldFlex("الجوال", rec),
+    getFieldFlex("رقم الهاتف", rec),
+  ];
+  for (const c of cands){
+    const n = normalizeSaudiPhone(c);
+    if (n) return n;
+  }
+  return null;
+}
+
+async function openSmsPlus(stageNum, stageLabel){
+  try {
+    const msgEl = (typeof stageMsg !== "undefined" && stageMsg) ? stageMsg : null;
+    const setMsg = (html) => { if (msgEl) msgEl.innerHTML = html; };
+    if (msgEl) msgEl.textContent = "";
+
+    // التقط سجل الطلب (لو موجود) عشان نجيب الاسم/الجوال بالفولباك
+    const rec0 = (window.currentOrderRecords && window.currentOrderRecords.length) ? window.currentOrderRecords[0] : {};
+
+    const phone = getCustomerPhoneFromRecord(rec0) || normalizeSaudiPhone(window.currentCustomerPhone);
+    if (!phone){
+      setMsg("<span class='err'>لا يوجد رقم جوال صالح لهذا الطلب.</span>");
       return;
     }
 
-    // ✅ اسم العميل (يدعم العربي + يدعم اسم المستخدم للبنوك/التمويل)
-    const customerName = getCustomerDisplayNameFromRecord(window.currentOrderData || {}) || (currentCustomerName || "العميل");
+    let text = (typeof getDefaultStageMessage === "function")
+      ? (getDefaultStageMessage(stageNum, stageLabel) || "")
+      : "";
 
-    // نص الرسالة
-    let text = getDefaultStageMessage(stageNum, stageLabel) || "";
-    text = text.replaceAll("{name}", customerName).replaceAll("{{name}}", customerName);
+    // دعم الاسم العربي داخل الرسالة لو فيها placeholder
+    const displayName = getCustomerDisplayNameFromRecord(rec0);
+    text = String(text || "")
+      .replaceAll("{name}", displayName)
+      .replaceAll("{{name}}", displayName);
 
-    try{
-      // لازم المستخدم يكون مسجل دخول (عشان نرسل ID Token للـ API)
-      const user = auth.currentUser;
-      if(!user){
-        stageMsg.innerHTML = "<span class='err'>لازم تسجّل دخول الأول.</span>";
-        return;
-      }
-      const idToken = await user.getIdToken();
-
-      // 📌 عدّل الدومين بتاع Vercel عندك
-      const endpoint = (window.SMS_PLUS_ENDPOINT || "https://YOUR-VERCEL-DOMAIN.vercel.app/api/sms/enqueue");
-
-      const res = await fetch(endpoint, {
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json",
-          "Authorization":"Bearer " + idToken
-        },
-        body: JSON.stringify({
-          phone: phoneDigits,          // 9665xxxxxxxx
-          message: text,
-          source: "sales2.html",
-          orderId: (typeof currentOrderId !== "undefined" ? currentOrderId : null),
-          vin: (typeof currentVin !== "undefined" ? currentVin : null)
-        })
-      });
-
-      const data = await res.json().catch(()=> ({}));
-      if(!res.ok || !data.ok){
-        stageMsg.innerHTML = "<span class='err'>فشل إرسال SMS+.</span>";
-        return;
-      }
-
-      stageMsg.innerHTML = "<span class='ok'>تم إرسال SMS+ للطابور ✅</span>";
-    }catch(e){
-      stageMsg.innerHTML = "<span class='err'>حدث خطأ أثناء الإرسال.</span>";
-      console.error(e);
+    // لازم المستخدم يكون مسجل دخول (عشان نرسل ID Token للـ API)
+    if (!window.auth || !auth.currentUser) {
+      setMsg("<span class='err'>لازم تسجل دخول الأول.</span>");
+      return;
     }
+
+    const idToken = await auth.currentUser.getIdToken();
+
+    const res = await fetch(`${API_BASE}/api/sms/enqueue`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + idToken
+      },
+      body: JSON.stringify({
+        phone,
+        message: text,
+        source: "sales2.html",
+        meta: {
+          stageNum: Number(stageNum)||null,
+          stageLabel: String(stageLabel||""),
+          orderId: String(window.currentOrderId||""),
+          vin: String(window.currentVin||"")
+        }
+      })
+    });
+
+    const dataText = await res.text();
+    let data = {};
+    try { data = JSON.parse(dataText); } catch(e){}
+
+    if (!res.ok || !data.ok){
+      const errMsg = (data && (data.error || data.message)) ? (data.error || data.message) : ("HTTP " + res.status);
+      setMsg("<span class='err'>حدث خطأ أثناء الإرسال: " + errMsg + "</span>");
+      return;
+    }
+
+    setMsg("<span class='ok'>تم إرسال الرسالة للطابور ✅</span>");
+  } catch (err) {
+    const msgEl = (typeof stageMsg !== "undefined" && stageMsg) ? stageMsg : null;
+    if (msgEl) msgEl.innerHTML = "<span class='err'>حدث خطأ أثناء الإرسال.</span>";
   }
+}
 
 
     
@@ -1055,7 +1084,7 @@ const API_BASE = "https://mzj-workflow.vercel.app";
         case 1: {
           // ✅ رسالة ملخص الطلب (ديناميكية حسب الطلب) — بدون بيانات سيارة فردية
           const rec0 = (currentOrderRecords && currentOrderRecords.length) ? currentOrderRecords[0] : {};
-          const customerName = getFieldFlex("CustomerName", rec0) || "";
+          const customerName = getCustomerDisplayNameFromRecord(rec0) || "";
 
           // VIN المختار فقط للرابط (نقطة دخول للتتبع)
           const vinForLink = vin || "";
@@ -1616,9 +1645,7 @@ function clearErpTable() {
 
       const first = records[0] || {};
       const orderNo = first.orderNo || first.OrderNo || currentOrderId || "";
-      window.currentOrderData = first;
-      currentCustomerPhone = getCustomerPhoneFallbackFromRecord(first) || "";
-      currentCustomerName = getCustomerDisplayNameFromRecord(first) || "";
+      currentCustomerPhone = (getCustomerPhoneFromRecord(first) || getFieldFlex("CustomerPhone", first) || "");
       let vinBadgeLabel = "";
 
       // ✅ VINs (نهمل '-' و القيم الفارغة)
@@ -2556,8 +2583,8 @@ actions.appendChild(btnWaPlus);
             ? (vins[0] || "—")
             : ("(" + vins.length + ") هياكل");
 
-          const customerName = getCustomerDisplayNameFromRecord(first) || "";
-          const customerPhone = getCustomerPhoneFallbackFromRecord(first) || "";
+          const customerName = getFieldFlex("CustomerName", first) || "";
+          const customerPhone = getFieldFlex("CustomerPhone", first) || "";
           const branch = getFieldFlex("Branch", first) || "";
           const orderDateRaw = getFieldFlex("OrderDate", first) || "";
 

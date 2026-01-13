@@ -45,11 +45,13 @@ export default async function handler(req, res) {
 
     await admin.auth().verifyIdToken(token);
 
-    const { phone, message, source, meta } = req.body || {};
-    if (!phone || !message) return res.status(400).send("phone & message required");
+    const { phone, to, message, source, meta } = req.body || {};
+    const resolvedPhone = phone || to;
+    if (!resolvedPhone || !message) return res.status(400).send("phone & message required");
 
     const docRef = await admin.firestore().collection("sms_outbox").add({
-      to: String(phone),
+      to: String(resolvedPhone),
+      phone: String(resolvedPhone),
       message: String(message),
       source: String(source || "web"),
       meta: meta || {},

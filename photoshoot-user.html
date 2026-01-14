@@ -1,6 +1,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -993,7 +994,7 @@ body.auth-checking #loginCard{display:none !important;}
           <div class="stage"><div class="s-title">1) تم استلام الطلب</div><div class="s-val" id="s1Val">0/0 — 0%</div><div class="bar" style="margin-top:6px"><div id="s1Bar"></div></div></div>
           <div class="stage"><div class="s-title">2) تم إرسال السيارة</div><div class="s-val" id="s2Val">0/0 — 0%</div><div class="bar" style="margin-top:6px"><div id="s2Bar"></div></div></div>
           <div class="stage"><div class="s-title">3) تم استلام السيارة</div><div class="s-val" id="s3Val">0/0 — 0%</div><div class="bar" style="margin-top:6px"><div id="s3Bar"></div></div></div>
-          <div class="stage"><div class="s-title">4) تم الانتهاء</div><div class="s-val" id="s4Val">—</div><div class="bar" style="margin-top:6px"><div id="s4Bar"></div></div></div>
+          <div class="stage"><div class="s-title">4) تم الانتهاء + تأكيد نقل المخزون</div><div class="s-val" id="s4Val">—</div><div class="bar" style="margin-top:6px"><div id="s4Bar"></div></div></div>
         </div>
       </div>
 
@@ -1026,7 +1027,7 @@ body.auth-checking #loginCard{display:none !important;}
         <button class="btn primary ft-btn" id="btnStep1">1 تم استلام الطلب</button>
         <button class="btn primary ft-btn" id="btnStep2">2 تم إرسال السيارة</button>
         <button class="btn primary ft-btn" id="btnStep3">3 تم استلام السيارة</button>
-        <button class="btn primary ft-btn" id="btnStep4"><i class="fa-solid fa-flag-checkered"></i>4 تم الانتهاء</button>
+        <button class="btn primary ft-btn" id="btnStep4"><i class="fa-solid fa-flag-checkered"></i>4 تم الانتهاء + تأكيد نقل المخزون</button>
         <button class="btn ft-btn" id="btnRefreshModal"><i class="fa-solid fa-rotate"></i>تحديث</button>
       </div>
       <div class="small" style="margin-top:8px">ترتيب التنفيذ ثابت: 1 → 2 → 3 → 4 (الإنهاء لمقدم الطلب + الإدارة).</div>
@@ -1465,45 +1466,20 @@ async function deleteRequestById(requestId){
   if(!confirm("تأكيد حذف الطلب؟ سيتم حذف الطلب وكل الصفوف التابعة له.")) return;
 
   const reqRef = db.collection("requests").doc(id);
-      const reqSnap = await reqRef.get();
-    const req = reqSnap.exists ? (reqSnap.data()||{}) : {};
-try{
+
+  // نقرأ الدوك قبل الحذف عشان نعرف نوع الطلب (للـ mzj_admin_state)
+  const reqSnap = await reqRef.get();
+  const req = reqSnap.exists ? (reqSnap.data()||{}) : {};
+
+  try{
     const rowsSnap = await reqRef.collection("rows").get();
     const batch = db.batch();
     rowsSnap.forEach(d=>batch.delete(d.ref));
     batch.delete(reqRef);
     await batch.commit();
 
-  // ✅ تحديث المخزون فورًا عند المرحلة 3 لطلبات النقل (Move)
-  // صفحة المخزون تقرأ من mzj_admin_state/v1.stock، لذلك نحدّثه هنا مباشرة
-  if(stepNo===3){
-    const moveRows = targets.filter(r => (r.kind||'') === 'move');
-    if(moveRows.length){
-      try{
-        await updateStockLocationsAfterMoveFinish(moveRows);
-      }catch(err){
-        console.warn('update stock after step3 failed', err);
-      }
-    }
-  }
-
-
-  // ✅ تحديث المخزون فورًا عند المرحلة 3 لطلبات النقل (Move)
-  // صفحة المخزون تقرأ من mzj_admin_state/v1.stock، لذلك نحدّثه هنا مباشرة
-  if(stepNo===3){
-    const moveRows = targets.filter(r => (r.kind||'') === 'move');
-    if(moveRows.length){
-      try{
-        await updateStockLocationsAfterMoveFinish(moveRows);
-      }catch(err){
-        console.warn('update stock after step3 failed', err);
-      }
-    }
-  }
-
     // remove from mzj_admin_state/v1 maps
     try{ await deleteRequestFromState(id, (req && req.kind) ? req.kind : 'shoot'); }catch(e){}
-
 
     await logAction("حذف طلب", `تم حذف الطلب #${id} بواسطة ${myName()}`);
     alert("تم حذف الطلب ✅");
@@ -2182,48 +2158,71 @@ async function updateStockLocationsAfterMoveFinish(rows){
     return (A2===B2);
   };
 
-  await db.runTransaction(async (tx)=>{
-    const snap = await tx.get(stateRef);
-    const data = snap.exists ? (snap.data()||{}) : {};
-    const arr = Array.isArray(data.stock) ? data.stock.slice() : [];
+  const sleep = (ms)=> new Promise(r=>setTimeout(r, ms));
 
-    // VIN (مرن) -> location
-    const byVin = new Map();
-    rows.forEach(r=>{
-      const vRaw = r.vin || r.__id || "";
-      const v = normSimple(vRaw);
-      if(!v) return;
-      // آخر مكان فعلي بعد النقل = الوجهة (toLocation) أو location
-      // ✅ الوجهة هي المصدر النهائي (نضمن عدم استخدام location القديم قبل تحديث الـ snapshot)
-      const newLoc = rowDestPlace(r) || r.toLocation || r.location || "";
-      if(newLoc) byVin.set(v, newLoc);
-    });
+  // ✅ Retry بسيط (لتعارضات الـ transaction أو ضغط الكتابة)
+  let lastErr = null;
+  for(let attempt=1; attempt<=3; attempt++){
+    try{
+      await db.runTransaction(async (tx)=>{
+        const snap = await tx.get(stateRef);
+        const data = snap.exists ? (snap.data()||{}) : {};
+        const arr = Array.isArray(data.stock) ? data.stock.slice() : [];
 
-    if(!byVin.size) return;
+        // VIN (مرن) -> location
+        const byVin = new Map();
+        rows.forEach(r=>{
+          const vRaw = r.vin || r.__id || "";
+          const v = normSimple(vRaw);
+          if(!v) return;
 
-    let changed = false;
-    for(let i=0;i<arr.length;i++){
-      const rec = arr[i] || {};
-      const recVin = rec.vin || "";
-      if(!recVin) continue;
+          // آخر مكان فعلي بعد النقل = الوجهة (toLocation) أو location
+          // ✅ الوجهة هي المصدر النهائي (نضمن عدم استخدام location القديم قبل تحديث الـ snapshot)
+          const newLoc = rowDestPlace(r) || r.toLocation || r.location || "";
+          if(newLoc) byVin.set(v, newLoc);
+        });
 
-      // دور على تطابق VIN (بما فيها الأصفار)
-      let matchedKey = null;
-      for(const k of byVin.keys()){
-        if(vinMatch(recVin, k)){ matchedKey = k; break; }
-      }
-      if(!matchedKey) continue;
+        if(!byVin.size) return;
 
-      const newLoc = byVin.get(matchedKey);
-      if(rec.location !== newLoc){
-        arr[i] = { ...rec, location: newLoc };
-        changed = true;
+        let changed = false;
+        for(let i=0;i<arr.length;i++){
+          const rec = arr[i] || {};
+          const recVin = rec.vin || "";
+          if(!recVin) continue;
+
+          // دور على تطابق VIN (بما فيها الأصفار)
+          let matchedKey = null;
+          for(const k of byVin.keys()){
+            if(vinMatch(recVin, k)){ matchedKey = k; break; }
+          }
+          if(!matchedKey) continue;
+
+          const newLoc = byVin.get(matchedKey);
+          if(rec.location !== newLoc){
+            arr[i] = { ...rec, location: newLoc };
+            changed = true;
+          }
+        }
+
+        if(changed){
+          tx.set(stateRef, { stock: arr }, { merge:true });
+        }
+      });
+
+      // success
+      lastErr = null;
+      break;
+    }catch(e){
+      lastErr = e;
+      // retry only for transaction/contention style errors
+      if(attempt < 3){
+        await sleep(250 * attempt);
+        continue;
       }
     }
-    if(changed){
-      tx.set(stateRef, { stock: arr }, { merge:true });
-    }
-  });
+  }
+
+  if(lastErr) throw lastErr;
 }
 
 async function finishRequest(){
@@ -2249,8 +2248,21 @@ async function finishRequest(){
     status: "مكتملة",
     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
   }, { merge:true });
-  // ✅ ملاحظة: تثبيت المخزون يتم في الخطوة رقم 3 فقط.
-  // الخطوة رقم 4 (تم الانتهاء) تنهي الطلب ولا تغيّر المخزون.
+  // ✅ الخطوة رقم 4: تم الانتهاء + تأكيد نقل المخزون
+  // نعمل تأكيد إضافي لتثبيت المخزون (خصوصًا لو حصل أي تعارض/تأخير في الخطوة 3)
+  try{
+    const moveRows = (openRows||[])
+      .filter(r => (r.kind||'') === 'move')
+      .map(r => ({ ...r, location: rowDestPlace(r) || r.toLocation || r.location || '' }))
+      .filter(r => (r.vin || r.__id) && r.location);
+
+    if(moveRows.length){
+      await updateStockLocationsAfterMoveFinish(moveRows);
+    }
+  }catch(e){
+    console.warn('step4 stock confirm failed', e);
+  }
+
 
   // ✅ ربط طلب التصوير بـ (نواقص التصوير) في media.html
   // عند الإنهاء: نحاول نعلّم التركيبات داخل media_specs كـ (تم تصويره)

@@ -2,6 +2,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl" data-theme="light">
 <head>
@@ -615,6 +616,62 @@
   }
 
   .cell-notes{cursor:pointer}
+
+  .btn-sm{padding:7px 10px;border-radius:10px;font-size:12px}
+  .cell-check{white-space:nowrap}
+  .check-sum .yes{color:var(--ok);font-weight:800}
+  .check-sum .no{color:var(--danger);font-weight:800}
+
+  /* شبكة التشييك داخل المودال */
+  .check-grid{
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:10px;
+  }
+  @media (max-width:1080px){.check-grid{grid-template-columns:repeat(4,minmax(0,1fr));}}
+  @media (max-width:860px){.check-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
+  @media (max-width:620px){.check-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+  .check-item{
+    border:1px solid var(--line);
+    border-radius:12px;
+    background:#fff;
+    overflow:hidden;
+  }
+  .check-item .lbl{
+    padding:10px 10px 6px;
+    color:var(--brown);
+    font-weight:900;
+    font-size:13px;
+    line-height:1.2;
+  }
+  .check-item .tog{
+    display:flex;
+    gap:8px;
+    padding:0 10px 10px;
+  }
+  .check-item .tbtn{
+    flex:1;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:10px;
+    padding:8px 8px;
+    cursor:pointer;
+    font-weight:900;
+    font-size:12px;
+    transition:.15s;
+  }
+  .check-item .tbtn:hover{transform:translateY(-1px)}
+  .check-item .tbtn:active{transform:translateY(0)}
+  .check-item .tbtn.yes.active{border-color:var(--ok);box-shadow:0 0 0 3px rgba(22,163,74,.12)}
+  .check-item .tbtn.no.active{border-color:var(--danger);box-shadow:0 0 0 3px rgba(239,68,68,.12)}
+  .check-item .tbtn.yes.active i{color:var(--ok)}
+  .check-item .tbtn.no.active i{color:var(--danger)}
+
+
   .cell-notes:hover{background:#fff3e8}
 
 </style>
@@ -777,6 +834,7 @@
                   <th>اللوحة</th>
                   <th>المكان</th>
                   <th>رقم الهيكل</th>
+                  <th>التشييك</th>
                   <th>الملاحظات (اضغط للتعديل)</th>
                 </tr>
               </thead>
@@ -897,7 +955,44 @@
 </div>
 
 
-  </main>
+  
+<!-- مودال التشييك -->
+<div id="checkModal" class="notes-modal-backdrop">
+  <div class="notes-modal">
+    <button class="notes-close" id="checkModalClose" title="إغلاق">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+    <h3>التشييك</h3>
+    <p>اختر ✅ أو ❌ لكل بند، وحدّث اللون الداخلي، ثم اضغط حفظ. يتم الحفظ مباشرة داخل <b>الاستوك</b>.</p>
+
+    <label for="checkIntColorSelect">اللون الداخلي</label>
+    <select id="checkIntColorSelect" class="input" title="اللون الداخلي">
+      <option value="">— اختر اللون —</option>
+      <option value="احمر">احمر</option>
+      <option value="اسود">اسود</option>
+      <option value="برتقالي">برتقالي</option>
+      <option value="بني غامق">بني غامق</option>
+      <option value="بيج">بيج</option>
+      <option value="جملي">جملي</option>
+      <option value="رمادي">رمادي</option>
+    </select>
+
+    <div style="margin-top:12px">
+      <label style="margin-bottom:8px">بنود التشييك</label>
+      <div id="checkGrid" class="check-grid" aria-label="التشييك"></div>
+      <div class="hint" style="margin-top:8px">* زر التشييك متاح فقط لو مكان السيارة: <b>الوكالة : المخزون المتاح</b>.</div>
+    </div>
+
+    <div class="notes-modal-footer">
+      <button class="btn btn-ghost" id="checkModalCancel">إلغاء</button>
+      <button class="btn btn-primary" id="checkModalSave">
+        <i class="fa-regular fa-floppy-disk"></i> حفظ
+      </button>
+    </div>
+  </div>
+</div>
+
+</main>
 </div>
 
 <script src="./mzj-ui.js"></script>
@@ -1014,6 +1109,14 @@ const PAGE_ALLOWED_ROLES = [ROLE_ADMIN, ROLE_IDARI, ROLE_BRANCH];
   const notesModalCancel = $('#notesModalCancel');
   const notesModalSave   = $('#notesModalSave');
   const notesModalClose  = $('#notesModalClose');
+
+  const checkModal       = $('#checkModal');
+  const checkModalCancel = $('#checkModalCancel');
+  const checkModalSave   = $('#checkModalSave');
+  const checkModalClose  = $('#checkModalClose');
+  const checkIntColorSelect = $('#checkIntColorSelect');
+  const checkGrid        = $('#checkGrid');
+
 
   /* حركة نقل DOM */
   const moveRowsContainer = $('#moveRowsContainer');
@@ -1221,7 +1324,58 @@ const locs = uniq(stock.map(r=> r.location || 'غير محدد')).sort((a,b)=> a
     placesCount.textContent = new Set((availableRows||[]).map(r=> clean(r.location||'غير محدد'))).size.toLocaleString('ar-SA');
   }
 
-  function renderTable(filteredRows){
+  
+  /* ===== التشييك (عرض/تعديل) — محفوظ داخل stock ===== */
+  const AGENCY_LOCATION = "الوكالة : المخزون المتاح";
+  const CHECK_ITEMS = [
+    { key:'sensor',    label:'حساس' },
+    { key:'camera',    label:'كاميرا' },
+    { key:'ac',        label:'مكيف' },
+    { key:'radio',     label:'مسجل' },
+    { key:'screen',    label:'شاشة' },
+    { key:'remote',    label:'ريموت' },
+    { key:'mats',      label:'فرشات' },
+    { key:'exting',    label:'طفاية' },
+    { key:'safetyBag', label:'شنطة سلامة' },
+    { key:'spare',     label:'اسبير' }
+  ];
+
+  function canEditCheck(r){
+    // مسموح بالتعديل:
+    // 1) لو السيارة في الوكالة : المخزون المتاح (مرحلة التشييك لأول مرة)
+    // 2) أو لو التشييك موجود بالفعل (حتى لو اتنقلت لمكان آخر)
+    const locOk = clean(r?.location || '') === AGENCY_LOCATION;
+    const hasArabic = (r && typeof r === 'object' && r["التشييك"] && typeof r["التشييك"] === 'object');
+    const hasLegacy = (r && typeof r === 'object' && r.agencyChecklist && typeof r.agencyChecklist === 'object');
+    return locOk || hasArabic || hasLegacy;
+  }
+
+  // نقرأ "التشييك" لو موجود بالعربي، وإلا نقرأ legacy agencyChecklist
+  function readArabicCheck(r){
+    const ar = (r && typeof r === 'object') ? r["التشييك"] : null;
+    if(ar && typeof ar === 'object') return { ...ar };
+
+    const legacy = (r && typeof r === 'object') ? r.agencyChecklist : null;
+    const out = {};
+    if(legacy && typeof legacy === 'object'){
+      CHECK_ITEMS.forEach(it=>{
+        if(it.key in legacy) out[it.label] = legacy[it.key] === true ? true : legacy[it.key] === false ? false : undefined;
+      });
+    }
+    return out;
+  }
+
+  function getCheckSummaryHtml(r){
+    if(!canEditCheck(r)) return '<span class="muted-text">—</span>';
+    const obj = readArabicCheck(r);
+    const vals = Object.values(obj).filter(v=> v === true || v === false);
+    if(!vals.length) return '<span class="muted-text">غير محدد</span>';
+    const yes = vals.filter(v=>v===true).length;
+    const no  = vals.filter(v=>v===false).length;
+    return `<span class="check-sum"><span class="yes">✅ ${yes}</span> <span class="no">❌ ${no}</span></span>`;
+  }
+
+function renderTable(filteredRows){
     tb.innerHTML = '';
 
     const rows = (filteredRows||[]).slice().sort((a,b)=>{
@@ -1247,6 +1401,10 @@ const locs = uniq(stock.map(r=> r.location || 'غير محدد')).sort((a,b)=> a
         <td>${r.plate||''}</td>
         <td>${r.location||''}</td>
         <td class="vin" data-vin="${r.vin||''}">${r.vin||''}</td>
+        <td class="cell-check" data-vin="${r.vin||''}">
+          <button type="button" class="btn btn-ghost btn-sm check-btn" data-vin="${r.vin||''}" ${canEditCheck(r)?'':'disabled'}>عرض / تعديل</button>
+          <div class="hint" style="margin-top:4px">${getCheckSummaryHtml(r)}</div>
+        </td>
         <td class="cell-notes" data-vin="${r.vin||''}">${safeNotes}</td>
       `;
       tb.appendChild(tr);
@@ -1289,13 +1447,18 @@ const locs = uniq(stock.map(r=> r.location || 'غير محدد')).sort((a,b)=> a
 
   /* Export Excel */
   function exportExcel(rows){
-    const header = ["م","سيارة","البيان","الوكيل","اللون الخارجي","اللون الداخلي","موديل","اللوحة","المكان","رقم الهيكل","الملاحظات"];
+    const header = ["م","السيارة","البيان","الوكيل","اللون الخارجي","اللون الداخلي","الموديل","اللوحة","المكان","رقم الهيكل","التشييك","الملاحظات"];
     const data = [header];
     rows.forEach(r=>{
-      data.push([r.id,r.car,r.variant,r.dealer,r.extColor,r.intColor,r.modelYear,r.plate,r.location,r.vin,r.notes||'']);
+      const obj = readArabicCheck(r) || {};
+      const vals = Object.values(obj).filter(v=> v===true || v===false);
+      const yes = vals.filter(v=>v===true).length;
+      const no  = vals.filter(v=>v===false).length;
+      const checkTxt = vals.length ? (`✅ ${yes} / ❌ ${no}`) : "";
+      data.push([r.id,r.car,r.variant,r.dealer,r.extColor,r.intColor,r.modelYear,r.plate,r.location,r.vin,checkTxt,r.notes||'']);
     });
     const ws = XLSX.utils.aoa_to_sheet(data);
-    ws['!cols'] = [{wch:5},{wch:24},{wch:30},{wch:18},{wch:16},{wch:16},{wch:10},{wch:10},{wch:18},{wch:22},{wch:26}];
+    ws['!cols'] = [{wch:5},{wch:24},{wch:30},{wch:18},{wch:16},{wch:16},{wch:10},{wch:10},{wch:18},{wch:22},{wch:14},{wch:26}];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Inventory");
     XLSX.writeFile(wb, "mzj-inventory.xlsx");
@@ -1320,7 +1483,14 @@ const locs = uniq(stock.map(r=> r.location || 'غير محدد')).sort((a,b)=> a
   }
 
   document.addEventListener('click', (e)=>{
-    const cell = e.target.closest('.cell-notes');
+        const checkBtn = e.target.closest('.check-btn');
+    if(checkBtn){
+      const vin = checkBtn.getAttribute('data-vin') || '';
+      if(vin) openCheckModal(vin);
+      return;
+    }
+
+const cell = e.target.closest('.cell-notes');
     if(!cell) return;
     const vin = cell.getAttribute('data-vin') || '';
     if(!vin) return;
@@ -1349,6 +1519,130 @@ const locs = uniq(stock.map(r=> r.location || 'غير محدد')).sort((a,b)=> a
     }
     closeNotesModal();
   });
+
+  
+  /* ===== مودال التشييك (عرض/تعديل) ===== */
+  let editingCheckVin = null;
+  let tempCheck = {}; // { "حساس": true/false, ... }
+
+  function renderCheckGrid(){
+    if(!checkGrid) return;
+    checkGrid.innerHTML = CHECK_ITEMS.map(it=>{
+      const v = tempCheck[it.label];
+      const yesActive = v === true;
+      const noActive  = v === false;
+      return `
+        <div class="check-item">
+          <div class="lbl">${it.label}</div>
+          <div class="tog" role="group" aria-label="${it.label}">
+            <button type="button" class="tbtn yes ${yesActive?'active':''}" data-check-item="${it.label}" data-val="1" title="متوفر">
+              <i class="fa-solid fa-check"></i>
+            </button>
+            <button type="button" class="tbtn no ${noActive?'active':''}" data-check-item="${it.label}" data-val="0" title="غير متوفر">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function openCheckModal(vin){
+    const idx = stock.findIndex(r=> (r.vin||'').toString() === vin.toString());
+    if(idx === -1) return;
+
+    const rec = stock[idx];
+    if(!canEditCheck(rec)){
+      showToastMsg('لا يمكن إضافة التشييك لأول مرة إلا لسيارات: الوكالة : المخزون المتاح (لكن لو التشييك موجود مسبقًا تقدر تعدّله في أي مكان)');
+      return;
+    }
+
+    editingCheckVin = vin;
+
+    // اللون الداخلي (يدعم العربي أو القديم)
+    const currentColor = clean(rec["اللون الداخلي"] || rec.intColor || '');
+    if(checkIntColorSelect) checkIntColorSelect.value = currentColor;
+
+    // التشييك (يدعم العربي أو القديم)
+    tempCheck = readArabicCheck(rec) || {};
+
+    // تأكد من وجود كل البنود
+    CHECK_ITEMS.forEach(it=>{
+      if(!(it.label in tempCheck)) tempCheck[it.label] = undefined;
+    });
+
+    renderCheckGrid();
+    if(checkModal) checkModal.style.display='flex';
+  }
+
+  function closeCheckModal(){
+    if(checkModal) checkModal.style.display='none';
+    editingCheckVin = null;
+    tempCheck = {};
+  }
+
+  // أحداث المودال
+  if(checkModalCancel) checkModalCancel.addEventListener('click', closeCheckModal);
+  if(checkModalClose)  checkModalClose.addEventListener('click', closeCheckModal);
+  if(checkModal){
+    checkModal.addEventListener('click', (e)=>{
+      if(e.target === checkModal) closeCheckModal();
+    });
+  }
+
+  document.addEventListener('click', (e)=>{
+    const btn = e.target.closest('[data-check-item]');
+    if(!btn) return;
+    if(!editingCheckVin) return;
+    const label = btn.getAttribute('data-check-item');
+    const val = btn.getAttribute('data-val');
+    tempCheck[label] = (val === '1');
+    renderCheckGrid();
+  });
+
+  if(checkModalSave){
+    checkModalSave.addEventListener('click', async ()=>{
+      if(!editingCheckVin){ closeCheckModal(); return; }
+      const idx = stock.findIndex(r=> (r.vin||'').toString() === editingCheckVin.toString());
+      if(idx === -1){ closeCheckModal(); return; }
+
+      const rec = { ...stock[idx] };
+
+      // 1) اللون الداخلي (نكتب عربي + قديم)
+      const newColor = clean(checkIntColorSelect?.value || '');
+      rec.intColor = newColor;
+      rec["اللون الداخلي"] = newColor;
+
+      // 2) التشييك (نكتب عربي + قديم)
+      const arObj = {};
+      CHECK_ITEMS.forEach(it=>{
+        const v = tempCheck[it.label];
+        if(v === true || v === false) arObj[it.label] = v;
+      });
+      rec["التشييك"] = arObj;
+
+      const legacy = { ...(rec.agencyChecklist || {}) };
+      CHECK_ITEMS.forEach(it=>{
+        const v = tempCheck[it.label];
+        if(v === true || v === false) legacy[it.key] = v;
+      });
+      rec.agencyChecklist = legacy;
+
+      stock[idx] = rec;
+
+      try{
+        await mzjUpdateDoc(STATE_REF, { stock });
+        showToastMsg('تم حفظ التشييك');
+        renderAll();
+      }catch(err){
+        console.error(err);
+        showToastMsg('تعذّر حفظ التشييك');
+      }
+      closeCheckModal();
+    });
+  }
+
+
 
   /* حركة نقل السيارات — عدد مفتوح + مكان واحد "إلى" */
   const FIXED_LOCATIONS = [

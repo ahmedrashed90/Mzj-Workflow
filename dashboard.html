@@ -2,10 +2,9 @@
 
 
 
+<!DOCTYPE html>
 
-
-
-html dir="rtl" lang="ar">
+<html dir="rtl" lang="ar">
 <head>
 <link href="assets/favicon.png" rel="icon" type="image/x-icon"/>
 <link href="admin.html" rel="prefetch"/>
@@ -787,46 +786,26 @@ const $ = s => document.querySelector(s);
 // ✅ Live collection fallback: requests (لو صفحة إدارة الطلبات بتكتب هنا)
   let unsubRequestsCol = null;
   function subscribeRequestsCollection(){
-    // ⚡ تحميل سريع (بدون Snapshot Listener) لتخفيف الحمل على المتصفح
     if(unsubRequestsCol) return;
-    let alive = true;
-    let timer = null;
-
-    async function loadOnce(){
-      try{
-        const reqCol = collection(db, 'requests');
-        const qReq = query(reqCol, orderBy('createdAt','desc'), limit(200));
-        const snap = await getDocs(qReq);
-
+    try{
+      const reqCol = collection(db, 'requests');
+      const qReq = query(reqCol, orderBy('createdAt','desc'), limit(500));
+      unsubRequestsCol = onSnapshot(qReq, (snap)=>{
         const all = snap.docs.map(d=>({ _docId: d.id, ...(d.data()||{}) }));
-        // ✅ استبعاد المؤرشف من العرض
-        const active = all.filter(r => !r || !r.archived);
+        // مصدرنا الرئيسي الآن: requests/{id} + subcollection rows
+        requestsDocs = all;
 
-        requestsDocs = active;
         const norm = v => String(v||'').toLowerCase().trim();
-        shootRequests = active.filter(r => norm(r.kind || r.type) === 'shoot');
-        moveRequests  = active.filter(r => norm(r.kind || r.type) === 'move');
+        shootRequests = all.filter(r => norm(r.kind || r.type) === 'shoot');
+        moveRequests  = all.filter(r => norm(r.kind || r.type) === 'move');
 
         renderAll();
-        scheduleAutoArchive();
-      }catch(err){
-        console.warn('requests load error', err);
-      }
+      }, (err)=>{
+        console.warn('requests snapshot error', err);
+      });
+    }catch(err){
+      console.warn('subscribeRequestsCollection failed', err);
     }
-
-    // أول تحميل
-    loadOnce();
-
-    // تحديث دوري خفيف
-    timer = setInterval(()=>{ if(alive) loadOnce(); }, 45000);
-
-    // "unsub" وهمي بنفس الاسم لتفادي كسر أي منطق موجود
-    unsubRequestsCol = ()=>{
-      alive = false;
-      if(timer) clearInterval(timer);
-      timer = null;
-      unsubRequestsCol = null;
-    };
   }
 
 
@@ -846,204 +825,6 @@ const $ = s => document.querySelector(s);
   // طلبات نقل السيارات (إلى مباع تم التسليم + تحتاج موافقة مالية وإدارية)
   let transferRequests = [];
   let filteredTransfers = [];
-
-  /* ===== Auto Archive (الأرشفة التلقائية) ===== */
-  const ARCHIVE_COLS = {
-    deliveredCars: 'cars_delivered_archives',
-    approvals: 'transfer_approvals_archives',
-    workflowDone: 'workflow_requests_archives',
-    requestsDone: 'requests_archives'
-    ,salesCompleted: 'sales_archives'
-  };
-
-  let __archiveLock = false;
-  let __archiveTimer = null;
-
-  function simpleHash(str){
-    try{
-      let h = 2166136261;
-      for(let i=0;i<str.length;i++){
-        h ^= str.charCodeAt(i);
-        h += (h<<1) + (h<<4) + (h<<7) + (h<<8) + (h<<24);
-      }
-      // unsigned 32-bit
-      return (h>>>0).toString(16);
-    }catch(e){
-      return String(Date.now());
-    }
-  }
-
-  function normId(v){
-    return String(v||'')
-      .trim()
-      .replace(/\s+/g,'_')
-      .replace(/[^A-Za-z0-9_\-]/g,'')
-      .slice(0,120) || '';
-  }
-
-  function scheduleAutoArchive(){
-    clearTimeout(__archiveTimer);
-    __archiveTimer = setTimeout(()=>{ runAutoArchive().catch(()=>{}); }, 1200);
-  }
-
-  async function runAutoArchive(){
-    if(__archiveLock) return;
-    __archiveLock = true;
-
-    try{
-      let changedState = false;
-
-      /* 1) أرشفة السيارات الموجودة في (مباع تم التسليم) */
-      const deliveredRows = (Array.isArray(stock) ? stock : [])
-        .filter(r => String(r?.location||'').includes('مباع تم التسليم'));
-
-      const deliveredVinSet = new Set(
-        deliveredRows.map(r => String(r?.vin || r?.VIN || r?.chassis || r?.chassisNo || r?.vehicleVin || '').trim()).filter(Boolean)
-      );
-
-      if(deliveredRows.length){
-        for(const r of deliveredRows){
-          const vinRaw = r?.vin || r?.VIN || r?.chassis || r?.chassisNo || r?.vehicleVin || '';
-          const vin = String(vinRaw||'').trim();
-          const id = vin ? ('vin_'+normId(vin)) : ('row_'+simpleHash(JSON.stringify(r||{})));
-
-          await setDoc(
-            doc(db, ARCHIVE_COLS.deliveredCars, id),
-            { ...(r||{}), _archiveType:'delivered', archivedAt: serverTimestamp(), archivedFrom:'dashboard' },
-            { merge:true }
-          );
-        }
-
-        stock = stock.filter(r => !String(r?.location||'').includes('مباع تم التسليم'));
-        changedState = true;
-      }
-
-      /* 2) أرشفة طلبات الموافقة المالية والإدارية (يدخل الأرشيف ويخرج من الكارت عند "مباع تم التسليم") */
-      if(Array.isArray(moves) && moves.length){
-        const isMoveApproved = (m)=> (isApproved(m?.adminApproved) || isApproved(m?.adminApproval)) && (isApproved(m?.financeApproved) || isApproved(m?.financeApproval));
-        const isDeliveredByMove = (m)=> String(m?.to||m?.toLocation||m?.target||'').includes('مباع تم التسليم');
-        const isDeliveredByStock = (m)=> {
-          const vin = String(m?.vin || m?.chassis || '').trim();
-          return vin && deliveredVinSet.has(vin);
-        };
-
-        const toArchiveIdxs = [];
-        for(let i=0;i<moves.length;i++){
-          const m = moves[i];
-          if(!m) continue;
-          if(!isMoveApproved(m)) continue;
-          if(!(isDeliveredByMove(m) || isDeliveredByStock(m))) continue;
-          toArchiveIdxs.push(i);
-        }
-
-        if(toArchiveIdxs.length){
-          for(const idx of toArchiveIdxs){
-            const m = moves[idx];
-            const vin = String(m?.vin || m?.chassis || '').trim();
-            const idBase = vin || (m?.id||m?.requestId||'') || ('move_'+idx);
-            const id = 'appr_'+normId(idBase || simpleHash(JSON.stringify(m||{})));
-
-            await setDoc(
-              doc(db, ARCHIVE_COLS.approvals, id),
-              { ...(m||{}), _archiveType:'approvals_delivered', archivedAt: serverTimestamp(), archivedFrom:'dashboard' },
-              { merge:true }
-            );
-          }
-
-          // حذفها من moves (عشان تخرج من الكارت)
-          moves = moves.filter((_,i)=> !toArchiveIdxs.includes(i));
-          changedState = true;
-        }
-      }
-
-      /* 3) أرشفة الطلبات (تصوير/نقل) اللي مرحلتها (تم التنفيذ) */
-      const doneShoot = (Array.isArray(shootRequests) ? shootRequests : []).filter(r => getOrderStage(r) === 'تم التنفيذ');
-      const doneMove  = (Array.isArray(moveRequests)  ? moveRequests  : []).filter(r => getOrderStage(r) === 'تم التنفيذ');
-      const doneAll = [
-        ...doneShoot.map(r => ({ ...(r||{}), _type:'shoot' })),
-        ...doneMove.map(r => ({ ...(r||{}), _type:'move'  }))
-      ];
-
-      if(doneAll.length){
-        for(const r of doneAll){
-          const idBase = r?._docId || r?.id || r?.requestId || r?.vin || r?.VIN || r?.chassis || r?.chassisNo || '';
-          const id = idBase ? ('req_'+normId(idBase)) : ('req_'+simpleHash(JSON.stringify(r||{})));
-
-          await setDoc(
-            doc(db, ARCHIVE_COLS.workflowDone, id),
-            { ...(r||{}), _archiveType:'done', archivedAt: serverTimestamp(), archivedFrom:'dashboard' },
-            { merge:true }
-          );
-
-          // لو جاية من collection requests (عندها _docId) نعلمها كـ archived هناك أيضًا
-          if(r && r._docId){
-            await setDoc(doc(db, ARCHIVE_COLS.requestsDone, String(r._docId)), { ...(r||{}), _archiveType:'done', archivedAt: serverTimestamp(), archivedFrom:'dashboard' }, { merge:true });
-            
-            // علّم المستند الأصلي كـ archived لتخفيف التحميل في الداش
-            await setDoc(doc(db, 'requests', String(r._docId)), { archived:true, archivedAt: serverTimestamp() }, { merge:true });
-await setDoc(doc(db, 'requests', String(r._docId)), { archived:true, archivedAt: serverTimestamp() }, { merge:true });
-          }
-        }
-
-        shootRequests = (Array.isArray(shootRequests) ? shootRequests : []).filter(r => getOrderStage(r) !== 'تم التنفيذ');
-        moveRequests  = (Array.isArray(moveRequests)  ? moveRequests  : []).filter(r => getOrderStage(r) !== 'تم التنفيذ');
-        changedState = true;
-      }
-
-      // تحديث STATE_REF مرة واحدة فقط
-      
-      /* 4) أرشفة طلبات البيع المكتملة (تتبع طلبات البيع) */
-      if(trackingUser && Array.isArray(salesOrders) && salesOrders.length){
-        const completedSales = salesOrders.filter(o => Number(o?.doneCount||0) >= STAGES_COUNT);
-        if(completedSales.length){
-          for(const o of completedSales){
-            const orderNo = String(o?.orderNo||o?._id||'').trim();
-            const id = orderNo ? ('order_'+normId(orderNo)) : ('order_'+simpleHash(JSON.stringify(o||{})));
-
-            await setDoc(
-              doc(trackingDb, ARCHIVE_COLS.salesCompleted, id),
-              { ...(o||{}), _archiveType:'sales_completed', archivedAt: serverTimestamp(), archivedFrom:'dashboard' },
-              { merge:true }
-            );
-          
-            await setDoc(
-              doc(trackingDb, ERP_COLLECTION, String(o?._id||'')),
-              { archived:true, archivedAt: serverTimestamp(), archivedFrom:'dashboard' },
-              { merge:true }
-            );
-            }
-
-          // إزالة المكتمل من العرض (الكارت) بعد أرشفته
-          salesOrders = salesOrders.filter(o => Number(o?.doneCount||0) < STAGES_COUNT);
-          filteredSalesOrders = (Array.isArray(filteredSalesOrders) ? filteredSalesOrders : []).filter(o => Number(o?.doneCount||0) < STAGES_COUNT);
-
-          // إعادة بناء ملخص الكارت بعد إزالة المكتمل
-          let total = salesOrders.length, notStarted = 0, inProgress = 0;
-          salesOrders.forEach(o=>{
-            const dc = Number(o?.doneCount||0);
-            if(dc <= 0) notStarted++;
-            else inProgress++;
-          });
-          salesSummary = { total, notStarted, inProgress, completed: 0 };
-
-          changedState = true;
-        }
-      }
-
-if(changedState){
-        await setDoc(STATE_REF, { stock, moves, shootRequests, moveRequests }, { merge:true });
-        computeTransferRequests();
-        renderAll();
-        scheduleAutoArchive();
-        showToast('تم نقل العناصر المكتملة للأرشيف');
-      }
-
-    }catch(err){
-      console.warn('Auto archive failed:', err);
-    }finally{
-      __archiveLock = false;
-    }
-  }
 
   // الجهات
   const groupsDef = [
@@ -1124,7 +905,6 @@ if(changedState){
       try{
         await fetchSalesSummary();
         renderAll();
-        scheduleAutoArchive();
       }catch(err){
         console.error('trackingAuth state error', err);
       }
@@ -1177,9 +957,7 @@ $('#btnLogin').addEventListener('click', async ()=>{
       }
 
       total = snap.size;
-      const docs = snap.docs.filter(ds => {
-        try{ return !(ds.data && ds.data().archived); }catch(e){ return true; }
-      });
+      const docs = snap.docs;
 
       const getField = (obj, keys) => {
         for(const k of keys){
@@ -1350,7 +1128,6 @@ $('#btnLogin').addEventListener('click', async ()=>{
       }
       computeTransferRequests();
       renderAll();
-      scheduleAutoArchive();
       // مزامنة ملخص طلبات المبيعات (حتى لو مشروع التتبع مش مسجّل دخول)
       try{ await fetchSalesSummary(); }catch(e){ console.warn('fetchSalesSummary init failed', e); }
 }catch(e){
@@ -1370,7 +1147,6 @@ $('#btnLogin').addEventListener('click', async ()=>{
         moveRequests  = Array.isArray(d.moveRequests)? d.moveRequests: moveRequests;
         computeTransferRequests();
         renderAll();
-        scheduleAutoArchive();
         setStatus('ok','مزامنة حيّة');
       },()=> setStatus('warn','انقطاع المزامنة مؤقتًا'));
     }catch(e){}
@@ -3177,14 +2953,10 @@ const tr = document.createElement('tr');
         <td style="text-align:center">${financeOk ? '✅' : '—'}</td>
         <td>${notesText}</td>
         <td>${statusTxt}</td>
-        <td style="display:flex;gap:6px;flex-wrap:wrap">
+        <td>
           <button class="btn btn-outline btn-xs" data-transfer-view="${idxInMoves}">
             <i class="fa-solid fa-eye"></i> تفاصيل
           </button>
-          ${(adminOk && financeOk && idxInMoves>=0 && String(toLoc||'').includes('مباع تم التسليم')) ? `
-          <button class="btn btn-outline btn-xs" data-transfer-archive="${idxInMoves}">
-            <i class="fa-solid fa-box-archive"></i> أرشفة
-          </button>` : ``}
         </td>
       `;
       modalTableTransfersBody.appendChild(tr);
@@ -3584,7 +3356,6 @@ try{
       await setDoc(STATE_REF, { stock, moves }, { merge:true });
       computeTransferRequests();
       renderAll();
-      scheduleAutoArchive();
       showToast('تم إلغاء الطلب وإرجاع السيارة للمخزون المتاح');
     }catch(e){
       console.error(e);
@@ -3666,18 +3437,9 @@ try{
 
 
 tableTransfersWrap.addEventListener('click',(e)=>{
-
-    // أرشفة يدوية لطلبات الموافقات (بعد الموافقة المالية والإدارية)
-    const abtn = e.target.closest('button[data-transfer-archive]');
-    if(abtn){
-      const idx = abtn.getAttribute('data-transfer-archive');
-      if(idx!=null && idx!=='') archiveTransferApproval(idx);
-      return;
-    }
-
     const btn = e.target.closest('button[data-transfer-view]');
     if(!btn) return;
-const idx = btn.getAttribute('data-transfer-view');
+    const idx = btn.getAttribute('data-transfer-view');
     if(idx==null || idx==='') return;
     openTransferApprovalDetails(idx);
   });

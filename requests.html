@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl" data-theme="light">
 <head>
@@ -557,9 +558,8 @@
   const db   = getFirestore(app);
 
   const STATE_REF = doc(db, "mzj_admin_state", "v1");
-  const REQ_COL   = collection(db, "workflow_requests");
-  const REQ_ARCH  = collection(db, "workflow_requests_archives");
-
+  const REQ_COL   = collection(db, "requests");
+  // نفس المسار للطلبات النشطة والمكتملة — نستخدم حقل archived للتمييز
   /* ========= Roles & Permissions ========= */
   const ROLE_ADMIN   = 'الادارة';
   const ROLE_IDARI   = 'اداري';
@@ -722,8 +722,8 @@
   let stock = [];
   let stockLoaded = false;
 
-  let activeRequests = [];     // from workflow_requests
-  let doneRequests   = [];     // from workflow_requests_archives
+  let activeRequests = [];     // from requests (archived=false)
+  let doneRequests   = [];     // from requests (archived=true)
 
   let unsubActive = null;
   let unsubDone   = null;
@@ -921,6 +921,8 @@
         step2At: null,
         step3At: null,
         step4At: null,
+        archived: false,
+        archivedAt: null,
         createdAt: serverTimestamp(),
         createdBy: auth.currentUser ? (auth.currentUser.email || '') : '',
         createdByUid: auth.currentUser ? auth.currentUser.uid : '',
@@ -992,12 +994,21 @@
 
   function startActiveListener(){
     if(unsubActive) return;
-    const qy = query(REQ_COL, orderBy('createdAt','desc'), limit(250));
+    // مهم: بعض الطلبات القديمة ما فيها حقل archived
+    // لو عملنا where(archived==false) هتختفي (وتطلع 0) — لذلك نسحب من نفس المسار بدون فلتر
+    // ونقسم محليًا: archived === true => مكتملة، غير كذا => نشطة
+    const qy = query(REQ_COL, orderBy('createdAt','desc'), limit(1200));
     unsubActive = onSnapshot(qy, (snap)=>{
-      activeRequests = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+      const all = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+      activeRequests = all.filter(r=>!(r.archived === true));
+      doneRequests   = all.filter(r=>(r.archived === true));
+
       activeCountEl.textContent = String(activeRequests.length);
+      doneCountEl.textContent   = String(doneRequests.length);
+
+      // لو المستخدم على شاشة المتابعة، اعرض النشطة
       renderActiveTable();
-      refreshCountsOnly();
+      // ولو كان على شاشة المكتملة فسيُعاد رسمها عبر startDoneListener
     }, (err)=>{
       console.warn(err);
       manageMsg.textContent = 'تعذّر تحميل الطلبات (تحقق من الاتصال/الصلاحيات).';
@@ -1007,12 +1018,17 @@
 
   function startDoneListener(){
     if(unsubDone) return;
-    const qy = query(REQ_ARCH, orderBy('createdAt','desc'), limit(300));
+    // نفس منطق المتابعة: نسحب من requests بدون فلتر عشان الطلبات اللي بدون archived ما تختفي
+    const qy = query(REQ_COL, orderBy('createdAt','desc'), limit(1200));
     unsubDone = onSnapshot(qy, (snap)=>{
-      doneRequests = snap.docs.map(d=>({ id:d.id, ...d.data() }));
-      doneCountEl.textContent = String(doneRequests.length);
+      const all = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+      activeRequests = all.filter(r=>!(r.archived === true));
+      doneRequests   = all.filter(r=>(r.archived === true));
+
+      activeCountEl.textContent = String(activeRequests.length);
+      doneCountEl.textContent   = String(doneRequests.length);
+
       renderDoneTable();
-      refreshCountsOnly();
     }, (err)=>{
       console.warn(err);
       doneMsg.textContent = 'تعذّر تحميل الطلبات المكتملة (تحقق من الاتصال/الصلاحيات).';
@@ -1024,13 +1040,13 @@
     // لو مفيش listener شغال، نحاول نجيب counts سريعًا (بدون تعقيد)
     // (مش لازم يكون دقيق 100% لكن مفيد كواجهة)
     try{
-      if(!unsubActive){
-        const s = await getDocs(query(REQ_COL, limit(1000)));
-        activeCountEl.textContent = String(s.size);
-      }
-      if(!unsubDone){
-        const s2 = await getDocs(query(REQ_ARCH, limit(1000)));
-        doneCountEl.textContent = String(s2.size);
+      if(!unsubActive && !unsubDone){
+        const s = await getDocs(query(REQ_COL, orderBy('createdAt','desc'), limit(2000)));
+        const all = s.docs.map(d=>d.data());
+        const a = all.filter(r=>!(r.archived === true)).length;
+        const d = all.filter(r=>(r.archived === true)).length;
+        activeCountEl.textContent = String(a);
+        doneCountEl.textContent   = String(d);
       }
     }catch(e){}
   }
@@ -1047,7 +1063,8 @@
   }
 
   function toHeaderText(){
-    return reqType.value === 'تصوير' ? 'مكان التصوير' : 'مكان النقل';
+    // متابعة/مكتملة داخل نفس المسار — العنوان ثابت لتفادي تضارب نوع الطلب
+    return 'إلى';
   }
 
   function renderActiveTable(){
@@ -1106,7 +1123,7 @@
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${fmtTS(r.createdAt) || '-'}</td>
-        <td>${fmtTS(r.step4At) || '-'}</td>
+        <td>${fmtTS(r.step4At) || fmtTS(r.archivedAt) || '-'}</td>
         <td><span class="tag">${r.type||'-'}</span></td>
         <td class="mono">${r.vin||''}</td>
         <td>${r.car||''}</td>
@@ -1228,7 +1245,7 @@
     if(newStep === 4) patch.step4At = serverTimestamp();
 
     try{
-      await updateDoc(doc(db, "workflow_requests", id), patch);
+      await updateDoc(doc(db, "requests", id), patch);
       showToast('تم تحديث الخطوة');
     }catch(e){
       console.error(e);
@@ -1237,15 +1254,15 @@
       return;
     }
 
-    // step 4 => archive (move doc)
+    
+    // step 4 => archive (نفس المسار: requests) عبر تفعيل archived=true
     if(newStep === 4){
       try{
-        const latestSnap = await getDoc(doc(db, "workflow_requests", id));
-        if(latestSnap.exists()){
-          const data = latestSnap.data() || {};
-          await setDoc(doc(db, "workflow_requests_archives", id), data, { merge:true });
-        }
-        await deleteDoc(doc(db, "workflow_requests", id));
+        await updateDoc(doc(db, "requests", id), {
+          archived: true,
+          archivedAt: serverTimestamp(),
+          status: 'مكتمل'
+        });
         showToast('تم نقل الطلب إلى المكتملة');
         closeModal();
         // انتقل لصفحة المكتملة
@@ -1253,10 +1270,11 @@
         switchPanel();
       }catch(e){
         console.error(e);
-        detailsMsg.textContent = 'تمت الخطوة 4 لكن تعذّر نقل الطلب للأرشيف.';
+        detailsMsg.textContent = 'تمت الخطوة 4 لكن تعذّر تفعيل الأرشفة (archived).';
         detailsMsg.className = 'msg warn';
       }
     }
+
   }
 
   step1Btn.addEventListener('click', ()=> updateRequestStep(1));
@@ -1267,7 +1285,7 @@
   /* ========= Delete ========= */
   async function deleteRequest(id, fromModal=false){
     try{
-      await deleteDoc(doc(db, "workflow_requests", id));
+      /* لا نحذف المستند — بنعلّم archived فقط */
       showToast('تم حذف الطلب');
       if(fromModal) closeModal();
     }catch(e){

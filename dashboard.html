@@ -645,7 +645,7 @@ tr:hover{ filter: brightness(0.98); }
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-  import {getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, getDocs, limit, orderBy, addDoc, serverTimestamp} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  import {getFirestore, doc, getDoc, setDoc, deleteDoc, writeBatch, onSnapshot, collection, query, getDocs, limit, orderBy, addDoc, serverTimestamp} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
   /* ===== Firebase ===== */
   const firebaseConfig = {
@@ -809,7 +809,130 @@ const $ = s => document.querySelector(s);
   }
 
 
-  // ملخص طلبات المبيعات من نظام التتبع / ERP
+  
+
+  /* ===== أرشفة ===== */
+
+  // ✅ أرشفة سيارة "تم التسليم": تنقل إلى cars_delivered_archives + تُحذف من stock + تُزال من كارت الموافقات
+  async function archiveDeliveredCar(vin){
+    const v = String(vin||'').trim();
+    if(!v) return;
+
+    const idx = (Array.isArray(stock)?stock:[]).findIndex(r => String(r.vin||'').trim() === v);
+    if(idx === -1){
+      showToast('تعذّر العثور على السيارة داخل تم التسليم');
+      return;
+    }
+
+    const row = stock[idx] || {};
+    const ok = window.confirm(`أرشفة السيارة رقم الهيكل: ${v} ؟`);
+    if(!ok) return;
+
+    try{
+      // 1) احفظ في الأرشيف
+      const archiveRef = doc(db, 'cars_delivered_archives', v);
+      const payload = { ...(row||{}), archivedAt: now(), archivedBy: (currentUserEmail||''), archivedFrom: 'dashboard' };
+      await setDoc(archiveRef, payload, { merge:true });
+
+      // 2) احذف من stock
+      stock.splice(idx, 1);
+
+      // 3) احذف أي طلب موافقات مرتبط بنفس الـ VIN (ينقل إلى تم التسليم)
+      if(Array.isArray(moves)){
+        moves = moves.filter(m=>{
+          const mvVin = String(m?.vin || m?.chassis || '').trim();
+          const toLoc = String(m?.to || m?.toLocation || m?.target || '').trim();
+          if(mvVin === v && toLoc.includes('مباع تم التسليم')) return false;
+          return true;
+        });
+      }
+
+      // 4) احفظ الحالة
+      await setDoc(STATE_REF, { stock, moves }, { merge:true });
+
+      // 5) تحديث واجهة المستخدم
+      computeTransferRequests();
+      if(currentMode==='rows' && currentFilterKey==='delivered'){
+        currentRows  = currentRows.filter(r => String(r?.vin||'').trim() !== v);
+        filteredRows = filteredRows.filter(r => String(r?.vin||'').trim() !== v);
+        renderRowsTable();
+      }
+      renderAll();
+
+      showToast('تمت أرشفة السيارة');
+    }catch(e){
+      console.error('archiveDeliveredCar error', e);
+      showToast('تعذّر أرشفة السيارة');
+    }
+  }
+
+  // ✅ أرشفة طلبات "تم التنفيذ" من requests إلى requests_archives
+  async function archiveDoneRequests(){
+    const list = Array.isArray(requestsDocs) ? requestsDocs.slice() : [];
+    const done = list.filter(r => getOrderStage(r) === 'تم التنفيذ');
+    if(!done.length){
+      showToast('لا يوجد طلبات "تم التنفيذ" للأرشفة');
+      return;
+    }
+
+    const ok = window.confirm(`أرشفة ${done.length} طلب/طلبات (تم التنفيذ) إلى requests_archives ؟`);
+    if(!ok) return;
+
+    let okCount = 0, failCount = 0;
+
+    for(const r of done){
+      const id = String(r?._docId || r?.id || '').trim();
+      if(!id) continue;
+      try{
+        await archiveOneRequest(id, r);
+        okCount++;
+      }catch(err){
+        console.error('archiveOneRequest error', err);
+        failCount++;
+      }
+    }
+
+    if(failCount){
+      showToast(`تمت الأرشفة: ${okCount} — فشل: ${failCount}`);
+    }else{
+      showToast(`تمت أرشفة ${okCount} طلب`);
+    }
+  }
+
+  async function archiveOneRequest(docId, data){
+    const id = String(docId||'').trim();
+    if(!id) return;
+
+    // اجلب rows (subcollection) وخزنها داخل وثيقة الأرشيف (Rows Array)
+    let rows = [];
+    try{
+      const rowsCol = collection(db, 'requests', id, 'rows');
+      const rowsSnap = await getDocs(rowsCol);
+      rows = rowsSnap.docs.map(d=>({ _rowId: d.id, ...(d.data()||{}) }));
+    }catch(e){
+      rows = [];
+    }
+
+    const archiveRef = doc(db, 'requests_archives', id);
+
+    const payload = { ...(data||{}), rows, archivedAt: now(), archivedBy: (currentUserEmail||''), archivedFrom: 'dashboard' };
+    try{ delete payload._docId; }catch(_e){}
+
+    await setDoc(archiveRef, payload, { merge:true });
+
+    // حذف الطلب الأصلي + rows
+    const batch = writeBatch(db);
+    try{
+      const rowsCol2 = collection(db, 'requests', id, 'rows');
+      const rowsSnap2 = await getDocs(rowsCol2);
+      rowsSnap2.docs.forEach(d=> batch.delete(d.ref));
+    }catch(e){}
+    batch.delete(doc(db, 'requests', id));
+    await batch.commit();
+  }
+
+
+// ملخص طلبات المبيعات من نظام التتبع / ERP
   let salesSummary = null;
   // حالة تسجيل الدخول في مشروع التتبع
   let trackingUser = null;
@@ -2192,6 +2315,7 @@ const stockCard = document.getElementById('stockCard');
       <th>اسم الدفعة</th>
       <th>رقم الهيكل</th>
       <th>الملاحظات</th>
+      ${currentFilterKey==='delivered' ? '<th>أرشفة</th>' : ''}
     `;
     modalTableRowsHead.innerHTML = common;
   }
@@ -2214,6 +2338,7 @@ const stockCard = document.getElementById('stockCard');
         <td>${r.batchName||''}</td>
         <td>${r.vin||''}</td>
         <td>${[r.notes,r.adminNotes,r.financeNotes,(r.admin&&r.admin.notes)].filter(v => (v||'').toString().trim()!=='').join(' | ')}</td>
+${currentFilterKey==='delivered' ? `<td><button class="btn btn-outline btn-xs" data-archive-delivered="1" data-vin="${r.vin||''}" title="أرشفة السيارة (تم التسليم)"><i class=\"fa-solid fa-box-archive\"></i> أرشفة</button></td>` : ''}
       `;
       modalTableRowsBody.appendChild(tr);
     });
@@ -2410,6 +2535,17 @@ const stockCard = document.getElementById('stockCard');
     const kind = btn.getAttribute('data-approve');
     const vin  = btn.getAttribute('data-vin');
     openApprovalBoxFor(vin, kind);
+  });
+
+  // أرشفة سيارة "تم التسليم" (تنقل إلى cars_delivered_archives وتخرج من تم التسليم + كارت الموافقات)
+  modalTableRowsBody.addEventListener('click', async (e)=>{
+    const btn = e.target.closest('button[data-archive-delivered]');
+    if(!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const vin = (btn.getAttribute('data-vin') || '').trim();
+    if(!vin){ showToast('رقم الهيكل غير موجود'); return; }
+    await archiveDeliveredCar(vin);
   });
 
   /* ===== Shortages table ===== */
@@ -2674,6 +2810,7 @@ function openShootModal(filter='ALL'){
     const typeLabel = kindNorm === 'move' ? 'طلب نقل' : 'طلب تصوير';
 
     const id = r._docId || r.id || '';
+    const stage = getOrderStage(r);
     const createdAtTxt = formatRequestDate(r.createdAt || r.requestedAt || r.date || '');
     const createdByTxt = r.createdByName || r.createdBy || r.createdByEmail || '-';
 
@@ -2689,10 +2826,13 @@ function openShootModal(filter='ALL'){
       <td>${r?.admin?.received ? '✅ ' + r.admin.received : '—'}</td>
       <td>${r?.admin?.prepared ? '✅ ' + r.admin.prepared : '—'}</td>
       <td>${r?.admin?.notes || ''}</td>
-      <td>
-        <button class="btn btn-outline" data-view-id="${String(id)}" data-view-type="${kindNorm || 'shoot'}" title="عرض تفاصيل الطلب">
+      <td style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-outline btn-xs" data-view-id="${String(id)}" data-view-type="${kindNorm || 'shoot'}" title="عرض تفاصيل الطلب">
           <i class="fa-solid fa-up-right-from-square"></i> تفاصيل
         </button>
+        ${stage==='تم التنفيذ' ? `<button class="btn btn-outline btn-xs" data-archive-id="${String(id)}" data-archive-type="${kindNorm || 'shoot'}" title="أرشفة الطلب">
+          <i class="fa-solid fa-box-archive"></i> أرشفة
+        </button>` : ''}
       </td>
     `;
     modalTableShootBody.appendChild(tr);
@@ -2798,7 +2938,35 @@ function openShootModal(filter='ALL'){
 }
 
 
-  document.getElementById('tableShootWrap').addEventListener('click', (e)=>{
+  document.getElementById('tableShootWrap').addEventListener('click', async (e)=>{
+    // أرشفة طلب واحد (تم التنفيذ) إلى requests_archives
+    const aBtn = e.target.closest('button[data-archive-id]');
+    if(aBtn){
+      e.preventDefault();
+      e.stopPropagation();
+      const id = String(aBtn.getAttribute('data-archive-id')||'').trim();
+      if(!id){ showToast('رقم الطلب غير صحيح'); return; }
+
+      const req = (Array.isArray(requestsDocs) ? requestsDocs : []).find(x => String(x._docId||x.id) === id)
+             || (Array.isArray(currentShoot) ? currentShoot.find(x => String(x._docId||x.id) === id) : null)
+             || (Array.isArray(filteredShoot) ? filteredShoot.find(x => String(x._docId||x.id) === id) : null);
+
+      if(!req){ showToast('لم يتم العثور على بيانات الطلب'); return; }
+
+      const ok = window.confirm(`أرشفة الطلب رقم: #${id} ؟`);
+      if(!ok) return;
+
+      try{
+        await archiveOneRequest(id, req);
+        showToast('تمت أرشفة الطلب');
+      }catch(err){
+        console.error(err);
+        showToast('تعذّر أرشفة الطلب');
+      }
+      return;
+    }
+
+    // عرض تفاصيل الطلب
     const btn = e.target.closest('button[data-view-id]');
     if(!btn) return;
     const id = btn.getAttribute('data-view-id');

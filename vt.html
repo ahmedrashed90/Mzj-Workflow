@@ -5,6 +5,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
@@ -725,7 +726,6 @@
         variantsMap = d.variantsMap || variantsMap;
         fillMoveLists();
         updateRequirementBoxes();
-        toggleNotesVisibility();
         setStatus('ok','مزامنة حيّة');
       },()=> setStatus('warn','انقطاع المزامنة مؤقتًا'));
     }catch(e){}
@@ -753,9 +753,25 @@
 
   function fillMoveLists(){
     const opts = FIXED_LOCATIONS.map(l=> `<option value="${l}">${l}</option>`).join('');
-    if(moveToGlobal) moveToGlobal.innerHTML = opts;
+
+    // ✅ حافظ على اختيار "إلى" الحالي حتى لا يختفي حقل الملاحظات بسبب onSnapshot
+    const prevTo = (moveToGlobal?.value || '').trim();
+    if(moveToGlobal){
+      moveToGlobal.innerHTML = opts;
+      if(prevTo && FIXED_LOCATIONS.includes(prevTo)){
+        moveToGlobal.value = prevTo;
+      }
+    }
+
+    // ✅ حافظ على اختيار "من" لكل سطر
     const fromSelects = moveRowsContainer ? moveRowsContainer.querySelectorAll('.move-from') : [];
-    fromSelects.forEach(sel=> sel.innerHTML=opts);
+    fromSelects.forEach(sel=>{
+      const prev = (sel.value || '').trim();
+      sel.innerHTML = opts;
+      if(prev && FIXED_LOCATIONS.includes(prev)){
+        sel.value = prev;
+      }
+    });
   }
 
   function fillMoveListsForRow(row){
@@ -1040,9 +1056,14 @@
 
       const noteText = (rowData.notesInput?.value || '').trim();
 
-      if(goingIssuesRow && !noteText){
-        errors.push(`يجب كتابة ملاحظة للسيارة ${rec.car||''} (${rec.vin||rowData.vinRaw}) عند النقل إلى مكان "سيارات بها ملاحظات".`);
-        continue;
+      if(goingIssuesRow){
+        if(!noteText){
+          errors.push(`يجب كتابة ملاحظة للسيارة ${rec.car||''} (${rec.vin||rowData.vinRaw}) عند النقل إلى مكان "سيارات بها ملاحظات".`);
+          continue;
+        }
+        // ✅ احفظ الملاحظة مباشرة على السيارة لضمان عدم ضياعها حتى لو حصلت مزامنة/إعادة رسم
+        const existingNotes = rec.notes || '';
+        rec.notes = existingNotes ? (existingNotes + " | " + noteText) : noteText;
       }
 
       // ميتاداتا أساسية للحركة / الطلب
@@ -1207,10 +1228,6 @@ if (goingDeliveredRow) {
 
 // الحركات العادية (نقل فعلي) (نقل فعلي)
       rec.location = toVal;
-      if (goingIssuesRow && noteText) {
-        const existingNotes = rec.notes || '';
-        rec.notes = existingNotes ? (existingNotes + " | " + noteText) : noteText;
-      }
       const stamp = now();
       moves.push({
         when: stamp,

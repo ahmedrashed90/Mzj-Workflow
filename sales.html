@@ -1,23 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -717,6 +697,7 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    window.auth = auth;
     const db = getFirestore(app);
 
     // UI refs
@@ -949,25 +930,90 @@ function openWhatsAppPlus(stageNum, stageLabel){
   window.open(waUrl, "_blank", "noopener,noreferrer");
 }
 
-// SMS+ (مؤقتاً يفتح sms: — وبكرة APK)
-function openSmsPlus(stageNum, stageLabel){
-  stageMsg.textContent = "";
+// ====== SMS+ API ======
+const API_BASE = "https://mzj-workflow.vercel.app";
 
-  if (!currentCustomerPhone) {
-    stageMsg.innerHTML = "<span class='err'>لا يوجد رقم جوال محفوظ لهذا الطلب.</span>";
-    return;
+// SMS+ (يرسل المهمة إلى Vercel/Firestore عشان الموبايل الأندرويد يبعتها SMS من شريحتك)
+async function openSmsPlus(stageNum, stageLabel){
+  try {
+    // ✅ حماية من كسر الصفحة لو stageMsg مش موجود
+    const msgEl = (typeof stageMsg !== "undefined" && stageMsg) ? stageMsg : null;
+    const setMsg = (html) => { if (msgEl) msgEl.innerHTML = html; };
+
+    if (msgEl) msgEl.textContent = "";
+
+    if (!window.currentCustomerPhone) {
+      setMsg("<span class='err'>لا يوجد رقم جوال محفوظ لهذا الطلب.</span>");
+      return;
+    }
+
+    // ✅ حماية لو normalizeSaudiPhone مش موجودة
+    const phone = (typeof normalizeSaudiPhone === "function")
+      ? normalizeSaudiPhone(window.currentCustomerPhone)
+      : String(window.currentCustomerPhone || "").trim();
+
+    if (!phone) {
+      setMsg("<span class='err'>رقم الجوال غير صالح.</span>");
+      return;
+    }
+
+    const text = (typeof getDefaultStageMessage === "function")
+      ? (getDefaultStageMessage(stageNum, stageLabel) || "")
+      : "";
+
+    // لازم المستخدم يكون مسجل دخول (عشان نرسل ID Token للـ API)
+    if (!auth || !auth.currentUser) {
+      setMsg("<span class='err'>لازم تسجل دخول الأول.</span>");
+      return;
+    }
+
+    const idToken = await auth.currentUser.getIdToken();
+
+    // ✅ استخدم API_BASE بدل /api... عشان يشتغل حتى لو الصفحة على دومين مختلف
+    const res = await fetch(`${API_BASE}/api/sms/enqueue`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + idToken
+      },
+      body: JSON.stringify({
+        phone,
+        message: text,
+        source: "sales.html",
+        meta: {
+          stageNum: Number(stageNum)||null,
+          stageLabel: String(stageLabel||""),
+          orderId: String(window.currentOrderId||""),
+          vin: String(window.currentVin||"")
+        }
+      })
+    });
+
+    const dataText = await res.text();
+    if(!res.ok){
+      throw new Error(dataText || ("HTTP " + res.status));
+    }
+
+    let data;
+    try{ data = JSON.parse(dataText); }catch{ data = { ok:true, raw:dataText }; }
+
+    if(data && data.ok){
+      setMsg("<span class='ok'>تم إرسال الطلب للطابور ✅ (SMS+)</span>");
+    }else{
+      setMsg("<span class='err'>تعذر إضافة الرسالة للطابور.</span>");
+    }
+
+  } catch(e){
+    console.error(e);
+    if (typeof stageMsg !== "undefined" && stageMsg) {
+      stageMsg.innerHTML =
+        "<span class='err'>تعذر إرسال SMS+ للطابور: " +
+        String(e && (e.message||e)).slice(0,240) +
+        "</span>";
+    }
   }
-
-  const phone = normalizeSaudiPhone(currentCustomerPhone);
-  if (!phone) {
-    stageMsg.innerHTML = "<span class='err'>رقم الجوال غير صالح.</span>";
-    return;
-  }
-
-  const text = getDefaultStageMessage(stageNum, stageLabel) || "";
-  const smsUrl = `sms:${phone}?body=${encodeURIComponent(text)}`;
-  window.location.href = smsUrl;
 }
+
 
     
     // ===== Message Templates (shared for SMS + WhatsApp) =====
@@ -1020,6 +1066,7 @@ function openSmsPlus(stageNum, stageLabel){
 
           // ✅ تخزين القيم للقالب (tracking_message)
           currentCustomerName = customerName || "";
+          window.currentCustomerName = currentCustomerName;
           currentOrderCarsCount = totalCars || 0;
           currentCarsSubtotal = fmt(carsSubtotal);
           currentCarsTax = fmt(carsTax);
@@ -1541,7 +1588,8 @@ function clearErpTable() {
 
       const first = records[0] || {};
       const orderNo = first.orderNo || first.OrderNo || currentOrderId || "";
-      currentCustomerPhone = getFieldFlex("CustomerPhone", first) || "";
+      currentCustomerPhone = getFieldFlex("CustomerPhone", first) || getFieldFlex("CustomerMobile", first) || getFieldFlex("Mobile", first) || getFieldFlex("Phone", first) || getFieldFlex("UserMobile", first) || getFieldFlex("UserPhone", first) || "";
+      window.currentCustomerPhone = currentCustomerPhone;
       let vinBadgeLabel = "";
 
       // ✅ VINs (نهمل '-' و القيم الفارغة)
@@ -1829,47 +1877,19 @@ function clearErpTable() {
         actions.appendChild(btnDone);
 
         
-        // زر رسالة SMS للعميل في الخطوات 1 و 9 و 10 فقط
+                    // ===== SMS+ (فقط في الخطوة 1 و 9 و 10) =====
         if (num === 1 || num === 9 || num === 10) {
-          const btnSms = document.createElement("button");
-          btnSms.className = "btn-outline";
-          btnSms.style.fontSize = "12px";
-          btnSms.style.marginRight = "6px";
-          btnSms.textContent = "رسالة SMS للعميل";
-          btnSms.disabled = !currentCustomerPhone;
-          btnSms.onclick = () => openMessageModal("sms", num, label);
-          actions.appendChild(btnSms);
-
-          const btnWa = document.createElement("button");
-          btnWa.className = "btn-outline";
-          btnWa.style.fontSize = "12px";
-          btnWa.style.marginRight = "6px";
-          btnWa.innerHTML = '<i class="fa-brands fa-whatsapp"></i> واتساب للعميل';
-          btnWa.disabled = !currentCustomerPhone;
-          btnWa.onclick = () => openMessageModal("whatsapp", num, label);
-          actions.appendChild(btnWa);
+          const btnSmsPlus = document.createElement("button");
+          btnSmsPlus.className = "btn-outline";
+          btnSmsPlus.style.fontSize = "12px";
+          btnSmsPlus.style.marginRight = "6px";
+          btnSmsPlus.textContent = "SMS+";
+          btnSmsPlus.disabled = !currentCustomerPhone;
+          btnSmsPlus.onclick = () => openSmsPlus(num, label);
+          actions.appendChild(btnSmsPlus);
         }
-    // ===== WhatsApp+ / SMS+ =====
-const btnSmsPlus = document.createElement("button");
-btnSmsPlus.className = "btn-outline";
-btnSmsPlus.style.fontSize = "12px";
-btnSmsPlus.style.marginRight = "6px";
-btnSmsPlus.textContent = "SMS+";
-btnSmsPlus.disabled = !currentCustomerPhone;
-btnSmsPlus.onclick = () => openSmsPlus(num, label);
-actions.appendChild(btnSmsPlus);
 
-const btnWaPlus = document.createElement("button");
-btnWaPlus.className = "btn-outline";
-btnWaPlus.style.fontSize = "12px";
-btnWaPlus.style.marginRight = "6px";
-btnWaPlus.innerHTML = '<i class="fa-brands fa-whatsapp"></i> واتساب+';
-btnWaPlus.disabled = !currentCustomerPhone;
-btnWaPlus.onclick = () => openWhatsAppPlus(num, label);
-actions.appendChild(btnWaPlus);
-
-
-        // زر التراجع
+// زر التراجع
         const btnUndo = document.createElement("button");
         btnUndo.className = "btn-outline";
         btnUndo.style.fontSize = "12px";

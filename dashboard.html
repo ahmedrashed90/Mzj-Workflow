@@ -2,6 +2,7 @@
 
 
 
+
 <!DOCTYPE html>
 
 <html dir="rtl" lang="ar">
@@ -792,14 +793,18 @@ const $ = s => document.querySelector(s);
       const qReq = query(reqCol, orderBy('createdAt','desc'), limit(500));
       unsubRequestsCol = onSnapshot(qReq, (snap)=>{
         const all = snap.docs.map(d=>({ _docId: d.id, ...(d.data()||{}) }));
+        // ✅ استبعاد المؤرشف من العرض (الأرشيف)
+        const active = all.filter(r => !r || !r.archived);
+
         // مصدرنا الرئيسي الآن: requests/{id} + subcollection rows
-        requestsDocs = all;
+        requestsDocs = active;
 
         const norm = v => String(v||'').toLowerCase().trim();
-        shootRequests = all.filter(r => norm(r.kind || r.type) === 'shoot');
-        moveRequests  = all.filter(r => norm(r.kind || r.type) === 'move');
+        shootRequests = active.filter(r => norm(r.kind || r.type) === 'shoot');
+        moveRequests  = active.filter(r => norm(r.kind || r.type) === 'move');
 
         renderAll();
+        scheduleAutoArchive();
       }, (err)=>{
         console.warn('requests snapshot error', err);
       });
@@ -825,6 +830,143 @@ const $ = s => document.querySelector(s);
   // طلبات نقل السيارات (إلى مباع تم التسليم + تحتاج موافقة مالية وإدارية)
   let transferRequests = [];
   let filteredTransfers = [];
+
+  /* ===== Auto Archive (الأرشفة التلقائية) ===== */
+  const ARCHIVE_COLS = {
+    deliveredCars: 'cars_delivered_archives',
+    approvals: 'transfer_approvals_archives',
+    workflowDone: 'workflow_requests_archives',
+    requestsDone: 'requests_archives'
+  };
+
+  let __archiveLock = false;
+  let __archiveTimer = null;
+
+  function simpleHash(str){
+    try{
+      let h = 2166136261;
+      for(let i=0;i<str.length;i++){
+        h ^= str.charCodeAt(i);
+        h += (h<<1) + (h<<4) + (h<<7) + (h<<8) + (h<<24);
+      }
+      // unsigned 32-bit
+      return (h>>>0).toString(16);
+    }catch(e){
+      return String(Date.now());
+    }
+  }
+
+  function normId(v){
+    return String(v||'')
+      .trim()
+      .replace(/\s+/g,'_')
+      .replace(/[^A-Za-z0-9_\-]/g,'')
+      .slice(0,120) || '';
+  }
+
+  function scheduleAutoArchive(){
+    clearTimeout(__archiveTimer);
+    __archiveTimer = setTimeout(()=>{ runAutoArchive().catch(()=>{}); }, 1200);
+  }
+
+  async function runAutoArchive(){
+    if(__archiveLock) return;
+    __archiveLock = true;
+
+    try{
+      let changedState = false;
+
+      /* 1) أرشفة السيارات الموجودة في (مباع تم التسليم) */
+      const deliveredRows = (Array.isArray(stock) ? stock : [])
+        .filter(r => String(r?.location||'').includes('مباع تم التسليم'));
+
+      if(deliveredRows.length){
+        for(const r of deliveredRows){
+          const vinRaw = r?.vin || r?.VIN || r?.chassis || r?.chassisNo || r?.vehicleVin || '';
+          const vin = String(vinRaw||'').trim();
+          const id = vin ? ('vin_'+normId(vin)) : ('row_'+simpleHash(JSON.stringify(r||{})));
+
+          await setDoc(
+            doc(db, ARCHIVE_COLS.deliveredCars, id),
+            { ...(r||{}), _archiveType:'delivered', archivedAt: serverTimestamp(), archivedFrom:'dashboard' },
+            { merge:true }
+          );
+        }
+
+        stock = stock.filter(r => !String(r?.location||'').includes('مباع تم التسليم'));
+        changedState = true;
+      }
+
+      /* 2) أرشفة طلبات الموافقات (موافقة مالية + إدارية) */
+      const adminOk = (t)=> (isApproved(t?.adminApproved) || isApproved(t?.adminApproval));
+      const financeOk = (t)=> (isApproved(t?.financeApproved) || isApproved(t?.financeApproval));
+
+      const approvalsDone = (Array.isArray(moves) ? moves : [])
+        .filter(m => isTransferPending(m) && adminOk(m) && financeOk(m));
+
+      if(approvalsDone.length){
+        for(const m of approvalsDone){
+          const vinRaw = m?.vin || m?.VIN || m?.chassis || m?.chassisNo || m?.vehicleVin || '';
+          const vin = String(vinRaw||'').trim();
+          const base = vin ? ('vin_'+normId(vin)+'_'+simpleHash(String(m?.to||'')+String(m?.from||''))) : ('move_'+simpleHash(JSON.stringify(m||{})));
+
+          await setDoc(
+            doc(db, ARCHIVE_COLS.approvals, base),
+            { ...(m||{}), _archiveType:'approvals_done', archivedAt: serverTimestamp(), archivedFrom:'dashboard' },
+            { merge:true }
+          );
+        }
+
+        moves = moves.filter(m => !(isTransferPending(m) && adminOk(m) && financeOk(m)));
+        changedState = true;
+      }
+
+      /* 3) أرشفة الطلبات (تصوير/نقل) اللي مرحلتها (تم التنفيذ) */
+      const doneShoot = (Array.isArray(shootRequests) ? shootRequests : []).filter(r => getOrderStage(r) === 'تم التنفيذ');
+      const doneMove  = (Array.isArray(moveRequests)  ? moveRequests  : []).filter(r => getOrderStage(r) === 'تم التنفيذ');
+      const doneAll = [
+        ...doneShoot.map(r => ({ ...(r||{}), _type:'shoot' })),
+        ...doneMove.map(r => ({ ...(r||{}), _type:'move'  }))
+      ];
+
+      if(doneAll.length){
+        for(const r of doneAll){
+          const idBase = r?._docId || r?.id || r?.requestId || r?.vin || r?.VIN || r?.chassis || r?.chassisNo || '';
+          const id = idBase ? ('req_'+normId(idBase)) : ('req_'+simpleHash(JSON.stringify(r||{})));
+
+          await setDoc(
+            doc(db, ARCHIVE_COLS.workflowDone, id),
+            { ...(r||{}), _archiveType:'done', archivedAt: serverTimestamp(), archivedFrom:'dashboard' },
+            { merge:true }
+          );
+
+          // لو جاية من collection requests (عندها _docId) نعلمها كـ archived هناك أيضًا
+          if(r && r._docId){
+            await setDoc(doc(db, ARCHIVE_COLS.requestsDone, String(r._docId)), { ...(r||{}), _archiveType:'done', archivedAt: serverTimestamp(), archivedFrom:'dashboard' }, { merge:true });
+            await setDoc(doc(db, 'requests', String(r._docId)), { archived:true, archivedAt: serverTimestamp() }, { merge:true });
+          }
+        }
+
+        shootRequests = (Array.isArray(shootRequests) ? shootRequests : []).filter(r => getOrderStage(r) !== 'تم التنفيذ');
+        moveRequests  = (Array.isArray(moveRequests)  ? moveRequests  : []).filter(r => getOrderStage(r) !== 'تم التنفيذ');
+        changedState = true;
+      }
+
+      // تحديث STATE_REF مرة واحدة فقط
+      if(changedState){
+        await setDoc(STATE_REF, { stock, moves, shootRequests, moveRequests }, { merge:true });
+        computeTransferRequests();
+        renderAll();
+        scheduleAutoArchive();
+        showToast('تم نقل العناصر المكتملة للأرشيف');
+      }
+
+    }catch(err){
+      console.warn('Auto archive failed:', err);
+    }finally{
+      __archiveLock = false;
+    }
+  }
 
   // الجهات
   const groupsDef = [
@@ -1128,6 +1270,7 @@ $('#btnLogin').addEventListener('click', async ()=>{
       }
       computeTransferRequests();
       renderAll();
+      scheduleAutoArchive();
       // مزامنة ملخص طلبات المبيعات (حتى لو مشروع التتبع مش مسجّل دخول)
       try{ await fetchSalesSummary(); }catch(e){ console.warn('fetchSalesSummary init failed', e); }
 }catch(e){
@@ -1147,6 +1290,7 @@ $('#btnLogin').addEventListener('click', async ()=>{
         moveRequests  = Array.isArray(d.moveRequests)? d.moveRequests: moveRequests;
         computeTransferRequests();
         renderAll();
+        scheduleAutoArchive();
         setStatus('ok','مزامنة حيّة');
       },()=> setStatus('warn','انقطاع المزامنة مؤقتًا'));
     }catch(e){}
@@ -3356,6 +3500,7 @@ try{
       await setDoc(STATE_REF, { stock, moves }, { merge:true });
       computeTransferRequests();
       renderAll();
+      scheduleAutoArchive();
       showToast('تم إلغاء الطلب وإرجاع السيارة للمخزون المتاح');
     }catch(e){
       console.error(e);

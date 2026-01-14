@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>أرشيف الطلبات والسيارات</title>
+
+  <style>
+    body{font-family: Tahoma, Arial; background:#fff; margin:0; color:#111;}
+    .wrap{max-width:1100px; margin:24px auto; padding:0 16px;}
+    .card{border:1px solid #e6e6e6; border-radius:12px; padding:14px; margin:12px 0; background:#fff;}
+    .row{display:flex; gap:10px; flex-wrap:wrap;}
+    .row > *{flex:1;}
+    input,button{padding:12px 12px; border-radius:10px; border:1px solid #ddd; font-size:14px;}
+    button{cursor:pointer}
+    .muted{color:#666; font-size:13px}
+    .k{display:grid; grid-template-columns: 180px 1fr; gap:8px; padding:6px 0; border-bottom:1px dashed #eee;}
+    .k:last-child{border-bottom:none}
+    .h{font-weight:700; margin-bottom:10px}
+    .badge{display:inline-block; padding:4px 10px; border-radius:999px; border:1px solid #ddd; font-size:12px}
+    table{width:100%; border-collapse:collapse; font-size:13px}
+    th,td{border:1px solid #eee; padding:8px; text-align:right; vertical-align:top}
+    th{background:#fafafa}
+    .err{color:#b00020}
+    .ok{color:#0a7d2c}
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="h">صفحة الأرشيف (VIN Hub)</div>
+      <div class="row">
+        <input id="vinInput" placeholder="اكتب رقم الهيكل أو رقم VIN المختصر (مثال: 3278 أو vin_003278)" />
+        <button id="btnSearch">بحث</button>
+        <button id="btnExport" disabled>تصدير Excel</button>
+      </div>
+      <div class="muted" style="margin-top:8px">
+        يبحث في: cars_delivered_archives + transfer_approvals_archives (+ لاحقًا workflow_requests_archives / requests_archives) + تتبع DB2
+      </div>
+      <div id="msg" style="margin-top:10px"></div>
+    </div>
+
+    <div id="results"></div>
+  </div>
+
+  <!-- Firebase v9+ -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getFirestore, doc, getDoc, collection,
+      query, where, getDocs, orderBy, startAt, endAt
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    /***********************
+     * 1) ضع إعدادات DB1 و DB2 هنا
+     ***********************/
+    const firebaseConfigMain = {
+      // TODO: ضع config المشروع الأساسي (DB1)
+    };
+
+    const firebaseConfigTrack = {
+      // TODO: ضع config مشروع التتبع (DB2)
+    };
+
+    // init apps
+    const appMain  = initializeApp(firebaseConfigMain, "mainApp");
+    const appTrack = initializeApp(firebaseConfigTrack, "trackApp");
+
+    const dbMain  = getFirestore(appMain);
+    const dbTrack = getFirestore(appTrack);
+
+    /***********************
+     * 2) Collections
+     ***********************/
+    const COL_DELIVERED = "cars_delivered_archives";
+    const COL_APPROVALS = "transfer_approvals_archives";
+
+    // لاحقاً لما تعملهم:
+    const COL_WORKFLOW_ARCH = "workflow_requests_archives";
+    const COL_REQUESTS_ARCH = "requests_archives";
+
+    // DB2 tracking (هتتظبط بعد ما تبعت مثال Doc)
+    const COL_TRACKING = "tracking"; // TODO: عدل الاسم لما تبعته
+
+    /***********************
+     * أدوات
+     ***********************/
+    const $ = (id)=>document.getElementById(id);
+    const msg = (html)=>{$("msg").innerHTML = html || "";};
+
+    function normalizeVinKey(input){
+      const t = String(input||"").trim();
+      if (!t) return null;
+
+      // لو كتب vin_003278 جاهز
+      if (t.toLowerCase().startsWith("vin_")) return t;
+
+      // خُد الأرقام فقط
+      const digits = t.replace(/\D+/g,"");
+      if (!digits) return null;
+
+      // pad لحد 6 (حسب نظامك الظاهر بالصورة)
+      const padded = digits.padStart(6,"0");
+      return "vin_" + padded;
+    }
+
+    function safe(v){
+      if (v === undefined || v === null) noticed;
+      if (typeof v === "object" && v?.toDate) return v.toDate().toLocaleString("ar-SA");
+      return String(v ?? "");
+    }
+
+    function renderKV(title, obj, keys){
+      const rows = keys.map(k=>{
+        const val = obj?.[k];
+        return `<div class="k"><div class="muted">${k}</div><div>${safe(val)}</div></div>`;
+      }).join("");
+      return `<div class="card"><div class="h">${title}</div>${rows || "<div class='muted'>لا توجد بيانات</div>"}</div>`;
+    }
+
+    async function getDeliveredByVinKey(vinKey){
+      const ref = doc(dbMain, COL_DELIVERED, vinKey);
+      const snap = await getDoc(ref);
+      return snap.exists() ? { id:snap.id, ...snap.data() } : null;
+    }
+
+    // جلب كل Docs اللي docId يبدأ بـ vinKey + "_"
+    async function getApprovalsByVinKeyPrefix(vinKey){
+      // Firestore trick: range query على documentId
+      const c = collection(dbMain, COL_APPROVALS);
+      const start = vinKey + "_";
+      confirm;
+      // \uf8ff لآخر unicode
+      const qy = query(c, orderBy("__name__"), startAt(start), endAt(start + "\uf8ff"));
+      const qs = await getDocs(qy);
+      const out = [];
+      qs.forEach(d=>out.push({id:d.id, ...d.data()}));
+      return out;
+    }
+
+    async function getTrackingFromDB2(vinKey){
+      // هنعملها مؤقتاً try docId = vinKey (لحد ما تبعتلي مثال)
+      try{
+        const ref = doc(dbTrack, COL_TRACKING, vinKey);
+        const snap = await getDoc(ref);
+        return snap.exists() ? { id:snap.id, ...snap.data() } : null;
+      }catch(e){
+        return null;
+      }
+    }
+
+    function buildExportRow(vinKey, delivered, approvals, tracking){
+      // سطر واحد إكسيل (قابل للتوسعة لاحقاً)
+      const row = {
+        vinKey,
+        car: delivered?.car || "",
+        modelYear: delivered?.modelYear || "",
+        location: delivered?.location || "",
+        batchName: delivered?.batchName || "",
+        dealer: delivered?.dealer || "",
+        deliveredAt: delivered?.deliveredAt || "",
+        financeApprovedAt: approvals?.[0]?.financeApprovedAt || "",
+        adminApprovedAt: approvals?.[0]?.adminApprovedAt || "",
+        archivedAtDelivered: safe(delivered?.archivedAt || ""),
+        archivedAtApprovals: approvals?.[0] ? safe(approvals[0].archivedAt || "") : "",
+        trackingSnapshot: tracking ? JSON.stringify(tracking) : ""
+      };
+      return row;
+    }
+
+    function downloadCSV(filename, rows){
+      const keys = Object.keys(rows[0]||{});
+      const esc = (s)=>('"'+String(s??"").replace(/"/g,'""')+'"');
+      const csv = [
+        keys.join(","),
+        ...rows.map(r=>keys.map(k=>esc(r[k])).join(","))
+      ].join("\n");
+      const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    let lastPayload = null;
+
+    async function runSearch(){
+      $("btnExport").disabled = true;
+      $("results").innerHTML = "";
+      msg("");
+
+      const vinKey = normalizeVinKey($("vinInput").value);
+      if (!vinKey){
+        msg("<div class='err'>اكتب رقم هيكل صحيح.</div>");
+        return;
+      }
+
+      msg("<div class='muted'>جاري البحث…</div>");
+
+      const [delivered, approvals, tracking] = await Promise.all([
+        getDeliveredByVinKey(vinKey),
+        getApprovalsByVinKeyPrefix(vinKey),
+        getTrackingFromDB2(vinKey)
+      ]);
+
+      lastPayload = { vinKey, delivered, approvals, tracking };
+
+      const parts = [];
+
+      // Delivered car
+      parts.push(renderKV("بيانات السيارة (تم التسليم) – cars_delivered_archives", delivered, [
+        "car","modelYear","location","batchName","dealer","extColor","intColor",
+        "delivered","deliveredAt","financeApproved","adminApproved","adminNotes","archivedAt","archivedFrom","notes"
+      ]));
+
+      // Approvals
+      if (approvals?.length){
+        const table = `
+          <div class="card">
+            <div class="h">موافقات النقل – transfer_approvals_archives (${approvals.length})</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>docId</th>
+                  <th>من</th>
+                  <th>التاريخ</th>
+                  <th>مالية</th>
+                  <th>تاريخ المالية</th>
+                  <th>إدارية</th>
+                  <th>تاريخ الإدارية</th>
+                  <th>archivedAt</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${approvals.map(a=>`
+                  <tr>
+                    <td>${a.id}</td>
+                    <td>${safe(a.from)}</td>
+                    <td>${safe(a.date)}</td>
+                    <td>${a.financeApproved ? "✅" : "❌"}</td>
+                    <td>${safe(a.financeApprovedAt)}</td>
+                    <td>${a.adminApproved ? "✅" : "❌"}</td>
+                    <td>${safe(a.adminApprovedAt)}</td>
+                    <td>${safe(a.archivedAt)}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>`;
+        parts.push(table);
+      } else {
+        parts.push(`<div class="card"><div class="h">موافقات النقل</div><div class="muted">لا يوجد أرشيف موافقات لهذا الـ VIN.</div></div>`);
+      }
+
+      // Tracking
+      parts.push(`<div class="card">
+        <div class="h">التتبع (DB2)</div>
+        ${tracking ? `<pre style="margin:0; white-space:pre-wrap; font-size:12px">${JSON.stringify(tracking, null, 2)}</pre>`
+                   : `<div class="muted">لا يوجد تتبع لهذا الـ VIN (أو اسم collection في DB2 مختلف).</div>`}
+      </div>`);
+
+      $("results").innerHTML = parts.join("");
+
+      // enable export if at least something found
+      if (delivered || approvals?.length || tracking){
+        $("btnExport").disabled = false;
+        msg(`<div class='ok'>تم. VIN Key: <span class='badge'>${vinKey}</span></div>`);
+      } else {
+        msg(`<div class='err'>لا توجد بيانات أرشيف لهذا الـ VIN: <span class='badge'>${vinKey}</span></div>`);
+      }
+    }
+
+    $("btnSearch").addEventListener("click", runSearch);
+    $("vinInput").addEventListener("keydown", (e)=>{ if(e.key==="Enter") runSearch(); });
+
+    $("btnExport").addEventListener("click", ()=>{
+      if (!lastPayload) return;
+      const { vinKey, delivered, approvals, tracking } = lastPayload;
+      const row = buildExportRow(vinKey, delivered, approvals, tracking);
+      downloadCSV(`archive_${vinKey}.csv`, [row]);
+    });
+  </script>
+</body>
+</html>

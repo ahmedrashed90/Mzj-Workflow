@@ -3,60 +3,403 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>أرشيف الطلبات والسيارات</title>
+  <title>أرشيف MZJ</title>
+
+  <!-- Tajawal -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 
   <style>
-    body{font-family: Tahoma, Arial; background:#fff; margin:0; color:#111;}
-    .wrap{max-width:1100px; margin:24px auto; padding:0 16px;}
-    .card{border:1px solid #e6e6e6; border-radius:12px; padding:14px; margin:12px 0; background:#fff;}
-    .row{display:flex; gap:10px; flex-wrap:wrap;}
-    .row > *{flex:1;}
-    input,button{padding:12px 12px; border-radius:10px; border:1px solid #ddd; font-size:14px;}
-    button{cursor:pointer}
-    .muted{color:#666; font-size:13px}
-    .k{display:grid; grid-template-columns: 180px 1fr; gap:8px; padding:6px 0; border-bottom:1px dashed #eee;}
-    .k:last-child{border-bottom:none}
-    .h{font-weight:700; margin-bottom:10px}
-    .badge{display:inline-block; padding:4px 10px; border-radius:999px; border:1px solid #ddd; font-size:12px}
-    table{width:100%; border-collapse:collapse; font-size:13px}
-    th,td{border:1px solid #eee; padding:8px; text-align:right; vertical-align:top}
-    th{background:#fafafa}
-    .err{color:#b00020}
+    :root{
+      --brown: rgb(62,36,32);
+      --beige: rgb(188,143,116);
+      --cream: #fff8ef;
+      --line: #eadfd6;
+      --text: #1b1b1b;
+      --muted: #6e6e6e;
+      --shadow: 0 10px 28px rgba(0,0,0,.08);
+      --radius: 16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:"Tajawal", system-ui, -apple-system, Segoe UI, Arial;
+      background: linear-gradient(180deg, var(--cream), #ffffff);
+      color:var(--text);
+    }
+
+    /* Topbar */
+    .topbar{
+      position:sticky; top:0; z-index:50;
+      background: rgba(255,248,239,.92);
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid var(--line);
+    }
+    .topbar-inner{
+      max-width:1180px;
+      margin:0 auto;
+      padding:14px 16px;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+    }
+    .logo{
+      width:38px; height:38px;
+      border-radius:12px;
+      background: var(--brown);
+      box-shadow: var(--shadow);
+      display:grid; place-items:center;
+      color:#fff;
+      font-weight:800;
+      letter-spacing:.5px;
+    }
+    .brand h1{
+      margin:0;
+      font-size:16px;
+      color:var(--brown);
+      line-height:1.1;
+    }
+    .brand .sub{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:2px;
+    }
+
+    .wrap{max-width:1180px; margin:18px auto; padding:0 16px 60px;}
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:14px;
+      align-items:start;
+    }
+    @media (max-width: 980px){
+      .grid{grid-template-columns:1fr}
+    }
+
+    .card{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card-h{
+      padding:14px 14px 10px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background:linear-gradient(180deg, rgba(188,143,116,.12), rgba(255,255,255,0));
+    }
+    .card-h .title{
+      font-weight:800;
+      color:var(--brown);
+      font-size:15px;
+      margin:0;
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--muted);
+      font-size:12px;
+      white-space:nowrap;
+    }
+    .card-b{padding:14px}
+
+    .search{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:stretch;
+    }
+    .search input{
+      flex:1;
+      min-width:240px;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      outline:none;
+      font-size:14px;
+      background:#fff;
+    }
+    .btn{
+      border:none;
+      border-radius:14px;
+      padding:12px 14px;
+      cursor:pointer;
+      font-family:inherit;
+      font-weight:700;
+      font-size:13px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      transition:.15s;
+      white-space:nowrap;
+    }
+    .btn-primary{
+      background: var(--brown);
+      color:#fff;
+    }
+    .btn-primary:hover{opacity:.92}
+    .btn-ghost{
+      background:#fff;
+      color:var(--brown);
+      border:1px solid var(--line);
+    }
+    .btn-ghost:disabled{
+      opacity:.5; cursor:not-allowed;
+    }
+
+    .note{
+      margin-top:10px;
+      color:var(--muted);
+      font-size:12.5px;
+      line-height:1.6;
+    }
+    .msg{
+      margin-top:10px;
+      font-size:13px;
+      line-height:1.6;
+    }
     .ok{color:#0a7d2c}
-    pre{background:#fafafa; border:1px solid #eee; padding:10px; border-radius:10px; overflow:auto}
+    .err{color:#b00020}
+
+    .kv{
+      display:grid;
+      grid-template-columns: 170px 1fr;
+      gap:10px;
+      padding:10px 0;
+      border-bottom:1px dashed #f0e6dd;
+      align-items:start;
+    }
+    .kv:last-child{border-bottom:none}
+    .k{color:var(--muted); font-size:12.5px}
+    .v{color:#222; font-size:13.5px; font-weight:500; word-break:break-word}
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:13px;
+    }
+    th,td{
+      border:1px solid #f0e6dd;
+      padding:8px;
+      text-align:right;
+      vertical-align:top;
+    }
+    th{
+      background:rgba(188,143,116,.12);
+      color:var(--brown);
+      font-weight:800;
+    }
+
+    /* Timeline */
+    .timeline{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .t-item{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      padding:10px;
+      border-radius:14px;
+      border:1px solid #f0e6dd;
+      background:#fff;
+    }
+    .dot{
+      width:12px; height:12px;
+      border-radius:50%;
+      background: var(--beige);
+      margin-top:6px;
+      box-shadow: 0 0 0 4px rgba(188,143,116,.18);
+      flex:0 0 auto;
+    }
+    .t-main{flex:1}
+    .t-title{
+      margin:0;
+      font-weight:800;
+      color:var(--brown);
+      font-size:13.5px;
+    }
+    .t-meta{
+      margin-top:4px;
+      color:var(--muted);
+      font-size:12.5px;
+      line-height:1.5;
+      word-break:break-word;
+    }
+
+    details{
+      border:1px solid #f0e6dd;
+      border-radius:14px;
+      padding:10px 12px;
+      background:#fff;
+    }
+    details summary{
+      cursor:pointer;
+      font-weight:800;
+      color:var(--brown);
+      outline:none;
+    }
+    pre{
+      margin:10px 0 0;
+      padding:10px;
+      border-radius:12px;
+      border:1px solid #f0e6dd;
+      background: #fffdf9;
+      font-size:12px;
+      overflow:auto;
+      direction:ltr;
+    }
+    .tag{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:4px 10px;
+      border-radius:999px;
+      border:1px solid #f0e6dd;
+      background:#fff;
+      font-size:12px;
+      color:var(--muted);
+    }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="card">
-      <div class="h">صفحة الأرشيف (VIN Hub)</div>
-      <div class="row">
-        <input id="qInput" placeholder="اكتب VIN (مثال: 3278 أو vin_003278) أو رقم طلب مبيعات (SAL-ORD-...)" />
-        <button id="btnSearch">بحث</button>
-        <button id="btnExport" disabled>تصدير Excel (CSV)</button>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="logo">MZJ</div>
+        <div>
+          <h1>أرشيف المعرض</h1>
+          <div class="sub">بحث VIN + موافقات + تشييك + تتبع</div>
+        </div>
       </div>
-      <div class="muted" style="margin-top:8px">
-        VIN: cars_delivered_archives + transfer_approvals_archives + media_specs (DB1) + Tracking (DB2) <br>
-        Sales Order: sales_archives (DB2)
-      </div>
-      <div id="msg" style="margin-top:10px"></div>
+      <span class="pill">عرض فقط • تصدير Excel</span>
     </div>
+  </div>
 
-    <div id="results"></div>
+  <div class="wrap">
+    <div class="grid">
+
+      <!-- Search -->
+      <div class="card">
+        <div class="card-h">
+          <div class="title">البحث</div>
+          <span class="pill" id="vinBadge">VIN: —</span>
+        </div>
+        <div class="card-b">
+          <div class="search">
+            <input id="vinInput" placeholder="اكتب VIN (مثال: 3278 أو vin_003278)" />
+            <button class="btn btn-primary" id="btnSearch">بحث</button>
+            <button class="btn btn-ghost" id="btnExport" disabled>تصدير Excel</button>
+          </div>
+
+          <div class="note">
+            • الأرشيف: <span class="tag">cars_delivered_archives</span> + <span class="tag">transfer_approvals_archives</span><br>
+            • التشييك (من المخزون): <span class="tag">cars</span> (أولوية) ثم fallback <span class="tag">media_specs</span><br>
+            • التتبع: <span class="tag">DB2 / erp_vins</span>
+          </div>
+
+          <div class="msg" id="msg"></div>
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      <div class="card">
+        <div class="card-h">
+          <div class="title">Timeline بالتواريخ</div>
+          <span class="pill" id="tlCount">0 حدث</span>
+        </div>
+        <div class="card-b">
+          <div class="timeline" id="timeline">
+            <div class="t-item">
+              <div class="dot"></div>
+              <div class="t-main">
+                <p class="t-title">جاهز</p>
+                <div class="t-meta">اكتب رقم الهيكل وابحث…</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delivered -->
+      <div class="card">
+        <div class="card-h">
+          <div class="title">بيانات السيارة (تم التسليم)</div>
+          <span class="pill">DB1</span>
+        </div>
+        <div class="card-b" id="deliveredBox">
+          <div class="note">لا توجد بيانات بعد.</div>
+        </div>
+      </div>
+
+      <!-- Approvals -->
+      <div class="card">
+        <div class="card-h">
+          <div class="title">موافقات النقل المؤرشفة</div>
+          <span class="pill">DB1</span>
+        </div>
+        <div class="card-b" id="approvalsBox">
+          <div class="note">لا توجد بيانات بعد.</div>
+        </div>
+      </div>
+
+      <!-- Checklist -->
+      <div class="card">
+        <div class="card-h">
+          <div class="title">التشييك (من المخزون)</div>
+          <span class="pill">DB1</span>
+        </div>
+        <div class="card-b" id="checkBox">
+          <div class="note">لا توجد بيانات بعد.</div>
+        </div>
+      </div>
+
+      <!-- Tracking -->
+      <div class="card">
+        <div class="card-h">
+          <div class="title">التتبع</div>
+          <span class="pill">DB2 / erp_vins</span>
+        </div>
+        <div class="card-b" id="trackingBox">
+          <div class="note">لا توجد بيانات بعد.</div>
+        </div>
+      </div>
+
+    </div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
-      getFirestore, doc, getDoc, collection,
-      query, getDocs, orderBy, startAt, endAt
+      getFirestore, doc, getDoc, collection, getDocs,
+      query, orderBy, startAt, endAt
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     /***********************
-     * 1) Firebase Configs
+     * Firebase Configs
      ***********************/
-    // DB1 (mzj-agenda) ✅
+    // DB1 (mzj-agenda)
     const firebaseConfigMain = {
       apiKey: "AIzaSyC614bGqnYf4Q-weTNemzWENTpa8DjGeHw",
       authDomain: "mzj-agenda.firebaseapp.com",
@@ -67,7 +410,7 @@
       measurementId: "G-770YFMGWQ4"
     };
 
-    // DB2 (mzj-tracking) ✅
+    // DB2 (mzj-tracking)
     const firebaseConfigTrack = {
       apiKey: "AIzaSyCorGtT5_Z68jCtLODvqnv0Fb7QW5eR6MQ",
       authDomain: "mzj-tracking.firebaseapp.com",
@@ -85,31 +428,25 @@
     const dbTrack  = getFirestore(appTrack);
 
     /***********************
-     * 2) Collections
+     * Collections
      ***********************/
-    // DB1 Archives
+    // DB1 archives
     const COL_DELIVERED = "cars_delivered_archives";
     const COL_APPROVALS = "transfer_approvals_archives";
-    const COL_MEDIA     = "media_specs";
 
-    // DB2 Sales Archives (حسب الصورة)
-    const COL_SALES_ARCH = "sales_archives";
+    // DB1 inventory (checklist is here)
+    const COL_CARS       = "cars";
+    const COL_MEDIA_FALL = "media_specs"; // fallback فقط
 
-    // DB2 Tracking (مش متأكد من الاسم النهائي عندك، فهنجرب كذا اسم)
-    const TRACKING_COLLECTION_CANDIDATES = [
-      "tracking",
-      "trackings",
-      "vin_tracking",
-      "vinTracking",
-      "orders",       // (لو التتبع مخزن هنا عندك)
-      "erp_orders"    // (أحياناً التتبع يبقى جزء من order doc)
-    ];
+    // DB2 tracking
+    const COL_TRACKING = "erp_vins";
 
     /***********************
-     * Helpers
+     * DOM helpers
      ***********************/
     const $ = (id)=>document.getElementById(id);
-    const msg = (html)=>{$("msg").innerHTML = html || "";};
+    const setMsg = (html)=>{ $("msg").innerHTML = html || ""; };
+    const setBadge = (vinKey)=>{ $("vinBadge").textContent = "VIN: " + (vinKey || "—"); };
 
     function normalizeVinKey(input){
       const t = String(input||"").trim();
@@ -119,29 +456,27 @@
       const digits = t.replace(/\D+/g,"");
       if (!digits) return null;
 
+      // عندك ظاهر 6 أرقام (003278)
       const padded = digits.padStart(6,"0");
       return "vin_" + padded;
     }
 
-    function isSalesOrderNo(input){
-      const t = String(input||"").trim().toUpperCase();
-      return t.startsWith("SAL-ORD-");
-    }
-
     function safe(v){
       if (v === undefined || v === null) return "";
-      if (typeof v === "object" && typeof v.toDate === "function") {
+      if (typeof v === "object" && typeof v.toDate === "function"){
         return v.toDate().toLocaleString("ar-SA");
       }
       return String(v);
     }
 
-    function renderKV(title, obj, keys){
-      const rows = keys.map(k=>{
-        const val = obj?.[k];
-        return `<div class="k"><div class="muted">${k}</div><div>${safe(val)}</div></div>`;
-      }).join("");
-      return `<div class="card"><div class="h">${title}</div>${rows || "<div class='muted'>لا توجد بيانات</div>"}</div>`;
+    function kvList(obj, keys){
+      if (!obj) return `<div class="note">لا توجد بيانات.</div>`;
+      return keys.map(k=>`
+        <div class="kv">
+          <div class="k">${k}</div>
+          <div class="v">${safe(obj[k])}</div>
+        </div>
+      `).join("");
     }
 
     async function getDocById(db, col, id){
@@ -150,114 +485,109 @@
       return snap.exists() ? { id:snap.id, ...snap.data() } : null;
     }
 
-    // Query: docId يبدأ بـ prefix (مثلاً vin_003278_)
+    // docs whose docId starts with prefix
     async function getDocsByIdPrefix(db, colName, prefix){
       const c = collection(db, colName);
       const qy = query(c, orderBy("__name__"), startAt(prefix), endAt(prefix + "\uf8ff"));
       const qs = await getDocs(qy);
       const out = [];
-      qs.forEach(d=>out.push({id:d.id, ...d.data()}));
+      qs.forEach(d=>out.push({ id:d.id, ...d.data() }));
       return out;
     }
 
-    // DB1: delivered by exact docId = vinKey
-    async function getDeliveredByVinKey(vinKey){
+    /***********************
+     * Fetchers (DB1)
+     ***********************/
+    async function getDelivered(vinKey){
       return await getDocById(dbMain, COL_DELIVERED, vinKey);
     }
 
-    // DB1: approvals by docId prefix = vinKey + "_"
-    async function getApprovalsByVinKey(vinKey){
+    async function getApprovals(vinKey){
       return await getDocsByIdPrefix(dbMain, COL_APPROVALS, vinKey + "_");
     }
 
-    // DB1: media_specs (نجرب docId = vinKey، ولو لا نجرب prefix query)
-    async function getMediaSpecsByVinKey(vinKey){
-      const exact = await getDocById(dbMain, COL_MEDIA, vinKey);
-      if (exact) return exact;
+    // Checklist from inventory (cars) first, fallback to media_specs
+    async function getChecklist(vinKey){
+      // 1) from cars
+      const carDoc = await getDocById(dbMain, COL_CARS, vinKey);
+      if (carDoc) return { _source: "cars", ...carDoc };
 
-      const list = await getDocsByIdPrefix(dbMain, COL_MEDIA, vinKey);
-      if (list?.length) return list[0];
+      // 2) fallback media_specs
+      const mediaExact = await getDocById(dbMain, COL_MEDIA_FALL, vinKey);
+      if (mediaExact) return { _source: "media_specs", ...mediaExact };
+
+      const mediaList = await getDocsByIdPrefix(dbMain, COL_MEDIA_FALL, vinKey);
+      if (mediaList?.length) return { _source: "media_specs", ...mediaList[0] };
+
       return null;
     }
 
-    // DB2: Tracking tries multiple collections + tries docId forms
-    async function getTrackingFromDB2(vinKey){
-      const candidatesDocIds = [
-        vinKey,                 // vin_003278
-        vinKey.replace("vin_",""), // 003278
-      ];
+    /***********************
+     * Tracking (DB2 / erp_vins)
+     ***********************/
+    async function getTracking(vinKey){
+      // try docId = vinKey, then raw digits
+      const raw = vinKey.replace("vin_","");
+      const a = await getDocById(dbTrack, COL_TRACKING, vinKey);
+      if (a) return { _docIdTried: vinKey, ...a };
 
-      for (const colName of TRACKING_COLLECTION_CANDIDATES){
-        for (const docId of candidatesDocIds){
-          try{
-            const snap = await getDocById(dbTrack, colName, docId);
-            if (snap) return { _collection: colName, ...snap };
-          } catch(e){
-            // ignore
-          }
-        }
-      }
+      const b = await getDocById(dbTrack, COL_TRACKING, raw);
+      if (b) return { _docIdTried: raw, ...b };
+
       return null;
     }
 
-    // DB2: Sales archive by orderNo (docId = SAL-ORD-....)
-    async function getSalesArchive(orderNo){
-      const id = String(orderNo).trim();
-      return await getDocById(dbTrack, COL_SALES_ARCH, id);
+    /***********************
+     * Timeline Builder
+     ***********************/
+    function pushEvent(arr, title, dateVal, extra){
+      const d = dateVal ? safe(dateVal) : "";
+      if (!d && !extra) return;
+      arr.push({
+        title,
+        date: d || "—",
+        meta: extra || ""
+      });
     }
 
-    function buildExportRow(payload){
-      const { kind } = payload;
-
-      if (kind === "sales"){
-        const s = payload.sales || {};
-        return [{
-          kind: "sales_archives",
-          orderNo: s.orderNo || s.id || "",
-          archivedAt: safe(s.archivedAt || ""),
-          archivedBy: s.archivedBy || ""
-        }];
+    function renderTimeline(events){
+      const box = $("timeline");
+      if (!events?.length){
+        $("tlCount").textContent = "0 حدث";
+        box.innerHTML = `
+          <div class="t-item">
+            <div class="dot"></div>
+            <div class="t-main">
+              <p class="t-title">لا توجد أحداث</p>
+              <div class="t-meta">جرّب VIN آخر.</div>
+            </div>
+          </div>`;
+        return;
       }
 
-      const vinKey = payload.vinKey;
-      const delivered = payload.delivered;
-      const approvals = payload.approvals || [];
-      const media = payload.media || null;
-      const tracking = payload.tracking || null;
+      // sort by date string when possible (we keep simple; you can enhance after)
+      // We'll keep original order; push in meaningful order.
+      $("tlCount").textContent = `${events.length} حدث`;
 
-      const firstA = approvals.length ? approvals[0] : null;
-
-      return [{
-        kind: "vin_archive",
-        vinKey,
-        car: delivered?.car || "",
-        modelYear: delivered?.modelYear || "",
-        location: delivered?.location || "",
-        batchName: delivered?.batchName || "",
-        dealer: delivered?.dealer || "",
-        extColor: delivered?.extColor || "",
-        intColor: delivered?.intColor || "",
-        deliveredAt: delivered?.deliveredAt || "",
-        financeApprovedAt: firstA?.financeApprovedAt || "",
-        adminApprovedAt: firstA?.adminApprovedAt || "",
-        archivedAtDelivered: safe(delivered?.archivedAt || ""),
-        archivedAtApprovals: firstA ? safe(firstA.archivedAt || "") : "",
-        media_specs_json: media ? JSON.stringify(media) : "",
-        tracking_collection: tracking?._collection || "",
-        tracking_json: tracking ? JSON.stringify(tracking) : ""
-      }];
+      box.innerHTML = events.map(e=>`
+        <div class="t-item">
+          <div class="dot"></div>
+          <div class="t-main">
+            <p class="t-title">${e.title}</p>
+            <div class="t-meta">${e.date}${e.meta ? " • " + e.meta : ""}</div>
+          </div>
+        </div>
+      `).join("");
     }
 
+    /***********************
+     * Export CSV
+     ***********************/
     function downloadCSV(filename, rows){
       if (!rows?.length) return;
       const keys = Object.keys(rows[0]);
-
       const esc = (s)=>('"'+String(s??"").replace(/"/g,'""')+'"');
-      const csv = [
-        keys.join(","),
-        ...rows.map(r=>keys.map(k=>esc(r[k])).join(","))
-      ].join("\n");
-
+      const csv = [keys.join(","), ...rows.map(r=>keys.map(k=>esc(r[k])).join(","))].join("\n");
       const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -269,137 +599,223 @@
       URL.revokeObjectURL(url);
     }
 
+    function buildExportRow(vinKey, delivered, approvals, checklist, tracking){
+      const firstA = approvals?.[0] || null;
+
+      // حاول استخراج التشييك بشكل ذكي
+      const checklistCore =
+        checklist?.checklist ||
+        checklist?.inspection ||
+        checklist?.featuresCheck ||
+        checklist?.media_specs ||
+        null;
+
+      return [{
+        vinKey,
+        car: delivered?.car || checklist?.car || "",
+        modelYear: delivered?.modelYear || checklist?.modelYear || "",
+        location: delivered?.location || checklist?.location || "",
+        batchName: delivered?.batchName || checklist?.batchName || "",
+        dealer: delivered?.dealer || checklist?.dealer || "",
+        deliveredAt: delivered?.deliveredAt || "",
+        archivedAt_delivered: safe(delivered?.archivedAt || ""),
+
+        financeApproved: delivered?.financeApproved ?? firstA?.financeApproved ?? "",
+        financeApprovedAt: firstA?.financeApprovedAt || "",
+        adminApproved: delivered?.adminApproved ?? firstA?.adminApproved ?? "",
+        adminApprovedAt: firstA?.adminApprovedAt || "",
+        archivedAt_approvals: firstA ? safe(firstA.archivedAt || "") : "",
+
+        checklist_source: checklist?._source || "",
+        checklist_json: checklistCore ? JSON.stringify(checklistCore) : (checklist ? JSON.stringify(checklist) : ""),
+        tracking_docIdTried: tracking?._docIdTried || "",
+        tracking_json: tracking ? JSON.stringify(tracking) : ""
+      }];
+    }
+
     let lastPayload = null;
 
+    /***********************
+     * UI render sections
+     ***********************/
+    function renderDelivered(delivered){
+      const box = $("deliveredBox");
+      if (!delivered){
+        box.innerHTML = `<div class="note">لا يوجد أرشيف تسليم لهذا الـ VIN.</div>`;
+        return;
+      }
+      box.innerHTML = kvList(delivered, [
+        "car","modelYear","location","batchName","dealer","extColor","intColor",
+        "delivered","deliveredAt","financeApproved","adminApproved","adminNotes",
+        "archivedAt","archivedFrom","notes"
+      ]);
+    }
+
+    function renderApprovals(list){
+      const box = $("approvalsBox");
+      if (!list?.length){
+        box.innerHTML = `<div class="note">لا يوجد موافقات مؤرشفة لهذا الـ VIN.</div>`;
+        return;
+      }
+      box.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>docId</th>
+              <th>من</th>
+              <th>التاريخ</th>
+              <th>مالية</th>
+              <th>تاريخ المالية</th>
+              <th>إدارية</th>
+              <th>تاريخ الإدارية</th>
+              <th>archivedAt</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${list.map(a=>`
+              <tr>
+                <td>${a.id}</td>
+                <td>${safe(a.from)}</td>
+                <td>${safe(a.date)}</td>
+                <td>${a.financeApproved ? "✅" : "❌"}</td>
+                <td>${safe(a.financeApprovedAt)}</td>
+                <td>${a.adminApproved ? "✅" : "❌"}</td>
+                <td>${safe(a.adminApprovedAt)}</td>
+                <td>${safe(a.archivedAt)}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function renderChecklist(checklist){
+      const box = $("checkBox");
+      if (!checklist){
+        box.innerHTML = `<div class="note">لا يوجد تشييك لهذا الـ VIN (لا في cars ولا media_specs).</div>`;
+        return;
+      }
+
+      const core =
+        checklist.checklist ||
+        checklist.inspection ||
+        checklist.featuresCheck ||
+        checklist.media_specs ||
+        null;
+
+      box.innerHTML = `
+        <div class="note">المصدر: <b>${checklist._source}</b></div>
+
+        ${core ? `
+          <details open>
+            <summary>التشييك (المحتوى الأساسي)</summary>
+            <pre>${JSON.stringify(core, null, 2)}</pre>
+          </details>
+        ` : ""}
+
+        <details ${core ? "" : "open"}>
+          <summary>Document كامل</summary>
+          <pre>${JSON.stringify(checklist, null, 2)}</pre>
+        </details>
+      `;
+    }
+
+    function renderTracking(tracking){
+      const box = $("trackingBox");
+      if (!tracking){
+        box.innerHTML = `<div class="note">لا يوجد تتبع لهذا الـ VIN داخل erp_vins (DB2) أو docId مختلف.</div>`;
+        return;
+      }
+
+      box.innerHTML = `
+        <div class="note">docId المستخدم: <b>${tracking._docIdTried || tracking.id}</b></div>
+        <details open>
+          <summary>بيانات التتبع (JSON)</summary>
+          <pre>${JSON.stringify(tracking, null, 2)}</pre>
+        </details>
+      `;
+    }
+
+    /***********************
+     * Search flow
+     ***********************/
     async function runSearch(){
       $("btnExport").disabled = true;
-      $("results").innerHTML = "";
-      msg("");
+      setMsg("");
+      const vinKey = normalizeVinKey($("vinInput").value);
+      setBadge(vinKey);
 
-      const input = String($("qInput").value||"").trim();
-      if (!input){
-        msg("<div class='err'>اكتب VIN أو رقم طلب.</div>");
-        return;
-      }
-
-      msg("<div class='muted'>جاري البحث…</div>");
-
-      // Case 1: Sales Order
-      if (isSalesOrderNo(input)){
-        const sales = await getSalesArchive(input);
-
-        lastPayload = { kind:"sales", sales };
-        const parts = [];
-        parts.push(renderKV("أرشيف أوامر المبيعات – sales_archives (DB2)", sales, [
-          "orderNo","archivedBy","archivedAt"
-        ]));
-
-        $("results").innerHTML = parts.join("");
-
-        if (sales){
-          $("btnExport").disabled = false;
-          msg(`<div class='ok'>تم. OrderNo: <span class='badge'>${sales.orderNo || sales.id}</span></div>`);
-        } else {
-          msg(`<div class='err'>لم يتم العثور على هذا الطلب في sales_archives.</div>`);
-        }
-        return;
-      }
-
-      // Case 2: VIN
-      const vinKey = normalizeVinKey(input);
       if (!vinKey){
-        msg("<div class='err'>VIN غير صحيح.</div>");
+        setMsg(`<div class="err">اكتب رقم هيكل صحيح.</div>`);
         return;
       }
 
-      const [delivered, approvals, media, tracking] = await Promise.all([
-        getDeliveredByVinKey(vinKey),
-        getApprovalsByVinKey(vinKey),
-        getMediaSpecsByVinKey(vinKey),
-        getTrackingFromDB2(vinKey)
+      setMsg(`<div class="muted">جاري البحث…</div>`);
+
+      const [delivered, approvals, checklist, tracking] = await Promise.all([
+        getDelivered(vinKey),
+        getApprovals(vinKey),
+        getChecklist(vinKey),
+        getTracking(vinKey)
       ]);
 
-      lastPayload = { kind:"vin", vinKey, delivered, approvals, media, tracking };
+      renderDelivered(delivered);
+      renderApprovals(approvals);
+      renderChecklist(checklist);
+      renderTracking(tracking);
 
-      const parts = [];
+      // Build timeline
+      const events = [];
 
-      parts.push(renderKV("بيانات السيارة (تم التسليم) – cars_delivered_archives (DB1)", delivered, [
-        "car","modelYear","location","batchName","dealer","extColor","intColor",
-        "delivered","deliveredAt","financeApproved","adminApproved","adminNotes","archivedAt","archivedFrom","notes"
-      ]));
-
-      parts.push(`<div class="card">
-        <div class="h">التشييك / Media Specs – media_specs (DB1)</div>
-        ${media ? `<pre>${JSON.stringify(media, null, 2)}</pre>` : `<div class="muted">لا يوجد media_specs لهذا الـ VIN (أو docId مختلف).</div>`}
-      </div>`);
-
-      if (approvals?.length){
-        parts.push(`
-          <div class="card">
-            <div class="h">موافقات النقل – transfer_approvals_archives (DB1) (${approvals.length})</div>
-            <table>
-              <thead>
-                <tr>
-                  <th>docId</th>
-                  <th>من</th>
-                  <th>التاريخ</th>
-                  <th>مالية</th>
-                  <th>تاريخ المالية</th>
-                  <th>إدارية</th>
-                  <th>تاريخ الإدارية</th>
-                  <th>archivedAt</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${approvals.map(a=>`
-                  <tr>
-                    <td>${a.id}</td>
-                    <td>${safe(a.from)}</td>
-                    <td>${safe(a.date)}</td>
-                    <td>${a.financeApproved ? "✅" : "❌"}</td>
-                    <td>${safe(a.financeApprovedAt)}</td>
-                    <td>${a.adminApproved ? "✅" : "❌"}</td>
-                    <td>${safe(a.adminApprovedAt)}</td>
-                    <td>${safe(a.archivedAt)}</td>
-                  </tr>
-                `).join("")}
-              </tbody>
-            </table>
-          </div>
-        `);
-      } else {
-        parts.push(`<div class="card"><div class="h">موافقات النقل</div><div class="muted">لا يوجد أرشيف موافقات لهذا الـ VIN.</div></div>`);
+      if (delivered){
+        pushEvent(events, "تم التسليم", delivered.deliveredAt || delivered.archivedAt, delivered.location ? `الموقع: ${safe(delivered.location)}` : "");
+        pushEvent(events, "أرشفة التسليم", delivered.archivedAt, delivered.archivedFrom ? `من: ${safe(delivered.archivedFrom)}` : "");
+        if (delivered.financeApproved) pushEvent(events, "موافقة مالية (داخل التسليم)", delivered.archivedAt, "");
+        if (delivered.adminApproved) pushEvent(events, "موافقة إدارية (داخل التسليم)", delivered.archivedAt, "");
       }
 
-      parts.push(`
-        <div class="card">
-          <div class="h">التتبع (DB2)</div>
-          ${tracking
-            ? `<div class="muted">Collection: <span class="badge">${tracking._collection}</span></div><pre>${JSON.stringify(tracking, null, 2)}</pre>`
-            : `<div class="muted">لم يتم العثور على تتبع لهذا الـ VIN (قد يكون اسم collection مختلف أو docId مختلف).</div>`}
-        </div>
-      `);
+      if (approvals?.length){
+        approvals.forEach((a, idx)=>{
+          pushEvent(events, `طلب موافقات نقل #${idx+1}`, a.date, a.from ? `من: ${safe(a.from)}` : "");
+          if (a.financeApproved) pushEvent(events, "موافقة مالية", a.financeApprovedAt || a.archivedAt, "");
+          if (a.adminApproved) pushEvent(events, "موافقة إدارية", a.adminApprovedAt || a.archivedAt, "");
+          pushEvent(events, "أرشفة الموافقات", a.archivedAt, "");
+        });
+      }
 
-      $("results").innerHTML = parts.join("");
+      if (checklist){
+        pushEvent(events, "تشييك (مخزون)", "", `المصدر: ${safe(checklist._source)}`);
+      }
 
-      if (delivered || approvals?.length || media || tracking){
+      if (tracking){
+        // نضيف Snapshot event للتتبع (لحد ما نعرف حقول المراحل بالتحديد)
+        pushEvent(events, "تتبع (DB2)", "", "تم جلب بيانات التتبع من erp_vins");
+      }
+
+      renderTimeline(events);
+
+      lastPayload = { vinKey, delivered, approvals, checklist, tracking };
+      if (delivered || approvals?.length || checklist || tracking){
         $("btnExport").disabled = false;
-        msg(`<div class='ok'>تم. VIN Key: <span class='badge'>${vinKey}</span></div>`);
+        setMsg(`<div class="ok">تم جلب بيانات الأرشيف.</div>`);
       } else {
-        msg(`<div class='err'>لا توجد بيانات أرشيف لهذا الـ VIN: <span class='badge'>${vinKey}</span></div>`);
+        setMsg(`<div class="err">لا توجد بيانات أرشيف لهذا الـ VIN.</div>`);
       }
     }
 
     $("btnSearch").addEventListener("click", runSearch);
-    $("qInput").addEventListener("keydown", (e)=>{ if(e.key==="Enter") runSearch(); });
+    $("vinInput").addEventListener("keydown", (e)=>{ if (e.key==="Enter") runSearch(); });
 
     $("btnExport").addEventListener("click", ()=>{
       if (!lastPayload) return;
-      const rows = buildExportRow(lastPayload);
-      const name = lastPayload.kind === "sales"
-        ? `sales_archive_${(lastPayload.sales?.orderNo || "unknown")}.csv`
-        : `archive_${lastPayload.vinKey}.csv`;
-      downloadCSV(name, rows);
+      const rows = buildExportRow(
+        lastPayload.vinKey,
+        lastPayload.delivered,
+        lastPayload.approvals,
+        lastPayload.checklist,
+        lastPayload.tracking
+      );
+      downloadCSV(`archive_${lastPayload.vinKey}.csv`, rows);
     });
   </script>
 </body>

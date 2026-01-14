@@ -4,6 +4,7 @@
 
 
 
+
 <!DOCTYPE html>
 
 <html dir="rtl" lang="ar">
@@ -1241,6 +1242,10 @@ btnLogin.addEventListener('click', async ()=>{
           }
           rec[field]=val;
         });
+        // مزامنة الملاحظات مع مفاتيح بديلة عشان تظهر في صفحات الاستوك
+        rec.note = rec.notes || '';
+        rec.issuesNotes = rec.notes || '';
+        rec['الملاحظات'] = rec.notes || '';
         stock[idx]=rec;
         persistAll();
         renderTable();
@@ -1281,6 +1286,11 @@ btnLogin.addEventListener('click', async ()=>{
       batchName:batchNameInput.value.trim(),
       notes:notesInput.value.trim()
     };
+    // مزامنة الملاحظات مع مفاتيح بديلة عشان تظهر في صفحات الاستوك
+    record.note = record.notes;
+    record.issuesNotes = record.notes;
+    record['الملاحظات'] = record.notes;
+
     if(!record.car) return showToast('اختر السيارة أولًا','err');
 
     if(editId){const idx=stock.findIndex(r=>r.id===editId); if(idx>-1) stock[idx]=record; editId=null; showToast('تم التعديل','ok');}

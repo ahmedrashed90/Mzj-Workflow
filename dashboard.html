@@ -3,6 +3,7 @@
 
 
 
+
 <!DOCTYPE html>
 
 <html dir="rtl" lang="ar">
@@ -787,30 +788,46 @@ const $ = s => document.querySelector(s);
 // ✅ Live collection fallback: requests (لو صفحة إدارة الطلبات بتكتب هنا)
   let unsubRequestsCol = null;
   function subscribeRequestsCollection(){
+    // ⚡ تحميل سريع (بدون Snapshot Listener) لتخفيف الحمل على المتصفح
     if(unsubRequestsCol) return;
-    try{
-      const reqCol = collection(db, 'requests');
-      const qReq = query(reqCol, orderBy('createdAt','desc'), limit(500));
-      unsubRequestsCol = onSnapshot(qReq, (snap)=>{
+    let alive = true;
+    let timer = null;
+
+    async function loadOnce(){
+      try{
+        const reqCol = collection(db, 'requests');
+        const qReq = query(reqCol, orderBy('createdAt','desc'), limit(200));
+        const snap = await getDocs(qReq);
+
         const all = snap.docs.map(d=>({ _docId: d.id, ...(d.data()||{}) }));
-        // ✅ استبعاد المؤرشف من العرض (الأرشيف)
+        // ✅ استبعاد المؤرشف من العرض
         const active = all.filter(r => !r || !r.archived);
 
-        // مصدرنا الرئيسي الآن: requests/{id} + subcollection rows
         requestsDocs = active;
-
         const norm = v => String(v||'').toLowerCase().trim();
         shootRequests = active.filter(r => norm(r.kind || r.type) === 'shoot');
         moveRequests  = active.filter(r => norm(r.kind || r.type) === 'move');
 
         renderAll();
         scheduleAutoArchive();
-      }, (err)=>{
-        console.warn('requests snapshot error', err);
-      });
-    }catch(err){
-      console.warn('subscribeRequestsCollection failed', err);
+      }catch(err){
+        console.warn('requests load error', err);
+      }
     }
+
+    // أول تحميل
+    loadOnce();
+
+    // تحديث دوري خفيف
+    timer = setInterval(()=>{ if(alive) loadOnce(); }, 45000);
+
+    // "unsub" وهمي بنفس الاسم لتفادي كسر أي منطق موجود
+    unsubRequestsCol = ()=>{
+      alive = false;
+      if(timer) clearInterval(timer);
+      timer = null;
+      unsubRequestsCol = null;
+    };
   }
 
 
@@ -837,6 +854,7 @@ const $ = s => document.querySelector(s);
     approvals: 'transfer_approvals_archives',
     workflowDone: 'workflow_requests_archives',
     requestsDone: 'requests_archives'
+    ,salesCompleted: 'sales_archives'
   };
 
   let __archiveLock = false;
@@ -880,6 +898,10 @@ const $ = s => document.querySelector(s);
       const deliveredRows = (Array.isArray(stock) ? stock : [])
         .filter(r => String(r?.location||'').includes('مباع تم التسليم'));
 
+      const deliveredVinSet = new Set(
+        deliveredRows.map(r => String(r?.vin || r?.VIN || r?.chassis || r?.chassisNo || r?.vehicleVin || '').trim()).filter(Boolean)
+      );
+
       if(deliveredRows.length){
         for(const r of deliveredRows){
           const vinRaw = r?.vin || r?.VIN || r?.chassis || r?.chassisNo || r?.vehicleVin || '';
@@ -897,28 +919,42 @@ const $ = s => document.querySelector(s);
         changedState = true;
       }
 
-      /* 2) أرشفة طلبات الموافقات (موافقة مالية + إدارية) */
-      const adminOk = (t)=> (isApproved(t?.adminApproved) || isApproved(t?.adminApproval));
-      const financeOk = (t)=> (isApproved(t?.financeApproved) || isApproved(t?.financeApproval));
+      /* 2) أرشفة طلبات الموافقة المالية والإدارية (يدخل الأرشيف ويخرج من الكارت عند "مباع تم التسليم") */
+      if(Array.isArray(moves) && moves.length){
+        const isMoveApproved = (m)=> (isApproved(m?.adminApproved) || isApproved(m?.adminApproval)) && (isApproved(m?.financeApproved) || isApproved(m?.financeApproval));
+        const isDeliveredByMove = (m)=> String(m?.to||m?.toLocation||m?.target||'').includes('مباع تم التسليم');
+        const isDeliveredByStock = (m)=> {
+          const vin = String(m?.vin || m?.chassis || '').trim();
+          return vin && deliveredVinSet.has(vin);
+        };
 
-      const approvalsDone = (Array.isArray(moves) ? moves : [])
-        .filter(m => isTransferPending(m) && adminOk(m) && financeOk(m));
-
-      if(approvalsDone.length){
-        for(const m of approvalsDone){
-          const vinRaw = m?.vin || m?.VIN || m?.chassis || m?.chassisNo || m?.vehicleVin || '';
-          const vin = String(vinRaw||'').trim();
-          const base = vin ? ('vin_'+normId(vin)+'_'+simpleHash(String(m?.to||'')+String(m?.from||''))) : ('move_'+simpleHash(JSON.stringify(m||{})));
-
-          await setDoc(
-            doc(db, ARCHIVE_COLS.approvals, base),
-            { ...(m||{}), _archiveType:'approvals_done', archivedAt: serverTimestamp(), archivedFrom:'dashboard' },
-            { merge:true }
-          );
+        const toArchiveIdxs = [];
+        for(let i=0;i<moves.length;i++){
+          const m = moves[i];
+          if(!m) continue;
+          if(!isMoveApproved(m)) continue;
+          if(!(isDeliveredByMove(m) || isDeliveredByStock(m))) continue;
+          toArchiveIdxs.push(i);
         }
 
-        moves = moves.filter(m => !(isTransferPending(m) && adminOk(m) && financeOk(m)));
-        changedState = true;
+        if(toArchiveIdxs.length){
+          for(const idx of toArchiveIdxs){
+            const m = moves[idx];
+            const vin = String(m?.vin || m?.chassis || '').trim();
+            const idBase = vin || (m?.id||m?.requestId||'') || ('move_'+idx);
+            const id = 'appr_'+normId(idBase || simpleHash(JSON.stringify(m||{})));
+
+            await setDoc(
+              doc(db, ARCHIVE_COLS.approvals, id),
+              { ...(m||{}), _archiveType:'approvals_delivered', archivedAt: serverTimestamp(), archivedFrom:'dashboard' },
+              { merge:true }
+            );
+          }
+
+          // حذفها من moves (عشان تخرج من الكارت)
+          moves = moves.filter((_,i)=> !toArchiveIdxs.includes(i));
+          changedState = true;
+        }
       }
 
       /* 3) أرشفة الطلبات (تصوير/نقل) اللي مرحلتها (تم التنفيذ) */
@@ -943,7 +979,10 @@ const $ = s => document.querySelector(s);
           // لو جاية من collection requests (عندها _docId) نعلمها كـ archived هناك أيضًا
           if(r && r._docId){
             await setDoc(doc(db, ARCHIVE_COLS.requestsDone, String(r._docId)), { ...(r||{}), _archiveType:'done', archivedAt: serverTimestamp(), archivedFrom:'dashboard' }, { merge:true });
+            
+            // علّم المستند الأصلي كـ archived لتخفيف التحميل في الداش
             await setDoc(doc(db, 'requests', String(r._docId)), { archived:true, archivedAt: serverTimestamp() }, { merge:true });
+await setDoc(doc(db, 'requests', String(r._docId)), { archived:true, archivedAt: serverTimestamp() }, { merge:true });
           }
         }
 
@@ -953,7 +992,46 @@ const $ = s => document.querySelector(s);
       }
 
       // تحديث STATE_REF مرة واحدة فقط
-      if(changedState){
+      
+      /* 4) أرشفة طلبات البيع المكتملة (تتبع طلبات البيع) */
+      if(trackingUser && Array.isArray(salesOrders) && salesOrders.length){
+        const completedSales = salesOrders.filter(o => Number(o?.doneCount||0) >= STAGES_COUNT);
+        if(completedSales.length){
+          for(const o of completedSales){
+            const orderNo = String(o?.orderNo||o?._id||'').trim();
+            const id = orderNo ? ('order_'+normId(orderNo)) : ('order_'+simpleHash(JSON.stringify(o||{})));
+
+            await setDoc(
+              doc(trackingDb, ARCHIVE_COLS.salesCompleted, id),
+              { ...(o||{}), _archiveType:'sales_completed', archivedAt: serverTimestamp(), archivedFrom:'dashboard' },
+              { merge:true }
+            );
+          
+            await setDoc(
+              doc(trackingDb, ERP_COLLECTION, String(o?._id||'')),
+              { archived:true, archivedAt: serverTimestamp(), archivedFrom:'dashboard' },
+              { merge:true }
+            );
+            }
+
+          // إزالة المكتمل من العرض (الكارت) بعد أرشفته
+          salesOrders = salesOrders.filter(o => Number(o?.doneCount||0) < STAGES_COUNT);
+          filteredSalesOrders = (Array.isArray(filteredSalesOrders) ? filteredSalesOrders : []).filter(o => Number(o?.doneCount||0) < STAGES_COUNT);
+
+          // إعادة بناء ملخص الكارت بعد إزالة المكتمل
+          let total = salesOrders.length, notStarted = 0, inProgress = 0;
+          salesOrders.forEach(o=>{
+            const dc = Number(o?.doneCount||0);
+            if(dc <= 0) notStarted++;
+            else inProgress++;
+          });
+          salesSummary = { total, notStarted, inProgress, completed: 0 };
+
+          changedState = true;
+        }
+      }
+
+if(changedState){
         await setDoc(STATE_REF, { stock, moves, shootRequests, moveRequests }, { merge:true });
         computeTransferRequests();
         renderAll();
@@ -1047,6 +1125,7 @@ const $ = s => document.querySelector(s);
       try{
         await fetchSalesSummary();
         renderAll();
+        scheduleAutoArchive();
       }catch(err){
         console.error('trackingAuth state error', err);
       }
@@ -1099,7 +1178,9 @@ $('#btnLogin').addEventListener('click', async ()=>{
       }
 
       total = snap.size;
-      const docs = snap.docs;
+      const docs = snap.docs.filter(ds => {
+        try{ return !(ds.data && ds.data().archived); }catch(e){ return true; }
+      });
 
       const getField = (obj, keys) => {
         for(const k of keys){
@@ -3097,10 +3178,14 @@ const tr = document.createElement('tr');
         <td style="text-align:center">${financeOk ? '✅' : '—'}</td>
         <td>${notesText}</td>
         <td>${statusTxt}</td>
-        <td>
+        <td style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn btn-outline btn-xs" data-transfer-view="${idxInMoves}">
             <i class="fa-solid fa-eye"></i> تفاصيل
           </button>
+          ${(adminOk && financeOk && idxInMoves>=0 && String(toLoc||'').includes('مباع تم التسليم')) ? `
+          <button class="btn btn-outline btn-xs" data-transfer-archive="${idxInMoves}">
+            <i class="fa-solid fa-box-archive"></i> أرشفة
+          </button>` : ``}
         </td>
       `;
       modalTableTransfersBody.appendChild(tr);
@@ -3582,9 +3667,18 @@ try{
 
 
 tableTransfersWrap.addEventListener('click',(e)=>{
+
+    // أرشفة يدوية لطلبات الموافقات (بعد الموافقة المالية والإدارية)
+    const abtn = e.target.closest('button[data-transfer-archive]');
+    if(abtn){
+      const idx = abtn.getAttribute('data-transfer-archive');
+      if(idx!=null && idx!=='') archiveTransferApproval(idx);
+      return;
+    }
+
     const btn = e.target.closest('button[data-transfer-view]');
     if(!btn) return;
-    const idx = btn.getAttribute('data-transfer-view');
+const idx = btn.getAttribute('data-transfer-view');
     if(idx==null || idx==='') return;
     openTransferApprovalDetails(idx);
   });

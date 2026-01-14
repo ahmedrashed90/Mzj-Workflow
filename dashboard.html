@@ -1,6 +1,7 @@
 
 
 
+
 <!DOCTYPE html>
 
 <html dir="rtl" lang="ar">
@@ -1281,9 +1282,22 @@ $('#btnLogin').addEventListener('click', async ()=>{
     const delivered = rows.filter(r => (r.location||'').includes('مباع تم التسليم')).length;
 
     // أي سيارة فيها ملاحظة (مباشرة أو إدارية/مالية) تظهر تحت كرت "ملاحظات"
-    const notes = rows.filter(r =>
-      hasAnyCarNotes(r) || (r.location||'').includes('سيارات بها ملاحظات')
-    ).length;
+    const notes = ( (()=>{
+      // ✅ في كروت: الوكالة/المستودع/الفروع، زرار "ملاحظات" يعرض:
+      // 1) سيارات مكانها "سيارات بها ملاحظات"
+      // 2) أو سيارات في "المخزون المتاح" ومكتوب لها أي ملاحظة في حقل الملاحظات
+      // مع استبعاد "تحت التسليم" و "تم التسليم"
+      const specialKeys = new Set(['AGENCY','WAREHOUSE','BR1','BR2','BR3']);
+      const isSpecial = specialKeys.has(group.key);
+      if(!isSpecial) return notesLocation;
+      return rows.filter(r=>{
+        const loc = (r.location||'');
+        if(loc.includes('مباع تحت التسليم') || loc.includes('مباع تم التسليم')) return false;
+        const inNotesLoc = loc.includes('سيارات بها ملاحظات');
+        const inStock = loc.endsWith('المخزون المتاح');
+        return inNotesLoc || (inStock && hasAnyCarNotes(r));
+      }).length;
+    })() );
 
     // نحافظ على حساب الإجماليات كما هي معتمدة على المكان فقط
     const actualTotal = available + notesLocation;
@@ -1804,7 +1818,7 @@ function renderShootCard(gridEl){
     const isAgency = (r)=> String((r && r.location) ? r.location : '').trim().startsWith('الوكالة :');
     const agencyTotal = live.filter(isAgency).length;
     const forSaleTotal = live.filter(r=> !isAgency(r)).length;
-    const notesTotal = live.filter(r => (typeof hasAnyCarNotes==='function' && hasAnyCarNotes(r)) || String((r && r.location) ? r.location : '').includes('سيارات بها ملاحظات')).length;
+    const notesTotal = live.filter(r => String((r && r.location) ? r.location : '').includes('سيارات بها ملاحظات')).length;
 
     const agEl = document.getElementById('stockAgencyTotal');
     if(agEl) agEl.textContent = agencyTotal.toLocaleString('ar-SA');
@@ -2427,16 +2441,33 @@ const stockCard = document.getElementById('stockCard');
   }
 
   // فتح سيارات الجهة
-  function rowsForFilter(rows, filterKey){
+  function rowsForFilter(rows, filterKey, groupKey=null){
     if(filterKey==='available'){ return rows.filter(r => (r.location||'').endsWith('المخزون المتاح')); }
-    if(filterKey==='notes'){ return rows.filter(r => hasAnyCarNotes(r) || (r.location||'').includes('سيارات بها ملاحظات')); }
+
+    if(filterKey==='notes'){
+      const specialKeys = new Set(['AGENCY','WAREHOUSE','BR1','BR2','BR3']);
+      const isSpecial = specialKeys.has(groupKey);
+      if(!isSpecial){
+        // الافتراضي: حسب المكان فقط
+        return rows.filter(r => (r.location||'').includes('سيارات بها ملاحظات'));
+      }
+      // ✅ للوكالة/المستودع/الفروع: (مكان ملاحظات) أو (مخزون متاح + ملاحظة مكتوبة)
+      return rows.filter(r=>{
+        const loc = (r.location||'');
+        if(loc.includes('مباع تحت التسليم') || loc.includes('مباع تم التسليم')) return false;
+        const inNotesLoc = loc.includes('سيارات بها ملاحظات');
+        const inStock = loc.endsWith('المخزون المتاح');
+        return inNotesLoc || (inStock && hasAnyCarNotes(r));
+      });
+    }
+
     if(filterKey==='pending'){ return rows.filter(r => (r.location||'').includes('مباع تحت التسليم')); }
     if(filterKey==='delivered'){ return rows.filter(r => (r.location||'').includes('مباع تم التسليم')); }
     return rows;
   }
   function openModalForGroupRows(group, filterKey=null){
     const rows = rowsForMembers(group.members);
-    const list = rowsForFilter(rows, filterKey);
+    const list = rowsForFilter(rows, filterKey, group.key);
     currentRows = list.slice();
     filteredRows= currentRows.slice();
     currentFilterKey = filterKey;
@@ -2480,7 +2511,7 @@ function openModalForStockTop(kind){
       currentRows = live.filter(r=> !isAgency(r));
       title = 'المخزون — المتاح للبيع (بدون الوكالة)';
     }else if(kind==='notes'){
-      currentRows = live.filter(r => (typeof hasAnyCarNotes==='function' && hasAnyCarNotes(r)) || String((r && r.location) ? r.location : '').includes('سيارات بها ملاحظات'));
+      currentRows = live.filter(r => String((r && r.location) ? r.location : '').includes('سيارات بها ملاحظات'));
       title = 'المخزون — سيارات بها ملاحظات';
     }else{
       currentRows = live.slice();

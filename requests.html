@@ -1234,7 +1234,7 @@
         <td><span class="badge">${stepLabel(r.step)}</span></td>
         <td>
           <button class="btn btn-sm btn-outline btn-open" data-id="${r.id}"><i class="fa-solid fa-folder-open"></i> فتح</button>
-          <button class="btn btn-sm btn-danger btn-del-req" data-id="${r.id}" title="حذف"><i class="fa-solid fa-trash"></i></button>
+          ${isGlobalUser() ? `<button class="btn btn-sm btn-danger btn-del-req" data-id="${r.id}" title="حذف"><i class="fa-solid fa-trash"></i></button>` : ``}
         </td>
       `;
       activeTbody.appendChild(tr);
@@ -1485,6 +1485,11 @@
     }
     const delBtn = e.target.closest('.btn-del-req');
     if(delBtn){
+      if(!isGlobalUser()){
+        const msg = 'غير مصرح لك بتنفيذ هذه الخطوة';
+        showToast(msg);
+        return;
+      }
       const id = delBtn.getAttribute('data-id');
       const ok = confirm('تأكيد حذف الطلب؟');
       if(ok) deleteRequest(id, false);

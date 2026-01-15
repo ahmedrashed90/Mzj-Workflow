@@ -634,6 +634,13 @@
     }catch(e){ return ''; }
   }
 
+  function creatorText(r){
+    const n = clean(r?.createdByName || '');
+    const e = clean(r?.createdByEmail || '');
+    const c = clean(r?.createdBy || '');
+    return n || e || c || '-';
+  }
+
   function liftNoFlash(){
     const nf = document.getElementById('noFlash');
     if(nf) nf.remove();
@@ -729,6 +736,16 @@
   function isCreatorGlobalUser(req){
     const creator = (req?.createdBy || "").toLowerCase();
     return GLOBAL_USERS.has(creator);
+  }
+
+  function isPristineRequest(req){
+    const s = Number(req?.step || 0);
+    return s === 0 && !req?.step1At && !req?.step2At && !req?.step3At && !req?.step4At;
+  }
+  function canDeleteRequest(req){
+    if(isGlobalUser()) return true; // الصلاحية العامة
+    const creator = (req?.createdBy || '').toLowerCase();
+    return creator && creator === meEmail() && isPristineRequest(req);
   }
 
   // Used for UI "مسؤول الخطوة القادمة" display (one primary email)
@@ -827,6 +844,8 @@
   const btnAddRow     = $('#btnAddRow');
   const btnClearRows  = $('#btnClearRows');
   const btnSubmit     = $('#btnSubmit');
+  let isSubmitting = false; // guard against double submit
+
   const createTbody   = $('#createTbody');
   const createMsg     = $('#createMsg');
   const vinDatalist   = $('#vinDatalist');
@@ -1005,6 +1024,8 @@
 
   /* ========= Submit Requests ========= */
   async function submitRequests(){
+    if(isSubmitting) return;
+    isSubmitting = true;
     createMsg.textContent = '';
     createMsg.className = 'msg';
 
@@ -1027,10 +1048,14 @@
 
     const rows = Array.from(createTbody.querySelectorAll('tr'));
     const payloads = [];
+    const seenVins = new Set();
+
 
     for(const tr of rows){
       const vin = normalizeVin(tr.querySelector('.vin-input')?.value || '');
       if(!vin) continue;
+      if(seenVins.has(vin)) continue;
+      seenVins.add(vin);
 
       const car = findCarByVin(vin);
       if(!car){
@@ -1062,6 +1087,8 @@
         archivedAt: null,
         createdAt: serverTimestamp(),
         createdBy: auth.currentUser ? (auth.currentUser.email || '') : '',
+        createdByEmail: auth.currentUser ? (auth.currentUser.email || '') : '',
+        createdByName: auth.currentUser ? ((auth.currentUser.displayName || '').trim() || ((auth.currentUser.email||'').split('@')[0]||'')) : '',
         createdByUid: auth.currentUser ? auth.currentUser.uid : '',
         status: 'جديد'
       });
@@ -1091,6 +1118,7 @@
       createMsg.classList.add('err');
     }finally{
       btnSubmit.disabled = false;
+      isSubmitting = false;
     }
   }
 
@@ -1225,7 +1253,7 @@
       tr.innerHTML = `
         <td>${fmtTS(r.createdAt) || '-'}</td>
         <td><span class="tag">${r.type||'-'}</span></td>
-        <td class="mono">${(r.createdBy||'-')}</td>
+        <td class="mono">${creatorText(r)}</td>
         <td class="mono">${r.vin||''}</td>
         <td>${r.car||''}</td>
         <td>${r.variant||''}</td>
@@ -1234,7 +1262,7 @@
         <td><span class="badge">${stepLabel(r.step)}</span></td>
         <td>
           <button class="btn btn-sm btn-outline btn-open" data-id="${r.id}"><i class="fa-solid fa-folder-open"></i> فتح</button>
-          ${isGlobalUser() ? `<button class="btn btn-sm btn-danger btn-del-req" data-id="${r.id}" title="حذف"><i class="fa-solid fa-trash"></i></button>` : ``}
+          ${canDeleteRequest(r) ? `<button class="btn btn-sm btn-danger btn-del-req" data-id="${r.id}" title="حذف"><i class="fa-solid fa-trash"></i></button>` : ``}
         </td>
       `;
       activeTbody.appendChild(tr);
@@ -1263,7 +1291,7 @@
         <td>${fmtTS(r.createdAt) || '-'}</td>
         <td>${fmtTS(r.step4At) || fmtTS(r.archivedAt) || '-'}</td>
         <td><span class="tag">${r.type||'-'}</span></td>
-        <td class="mono">${(r.createdBy||'-')}</td>
+        <td class="mono">${creatorText(r)}</td>
         <td class="mono">${r.vin||''}</td>
         <td>${r.car||''}</td>
         <td>${r.variant||''}</td>
@@ -1318,7 +1346,7 @@
       return;
     }
 
-    deleteReqBtn.style.display = isGlobalUser() ? 'inline-flex' : 'none';
+    deleteReqBtn.style.display = canDeleteRequest(d) ? 'inline-flex' : 'none';
     moveWarn.style.display = 'block';
 
     const lock1 = (s < 1) && !canPerformStep(d, 1);
@@ -1461,18 +1489,54 @@
     }
   }
 
-  deleteReqBtn.addEventListener('click', ()=>{
+  deleteReqBtn.addEventListener('click', async ()=>{
     if(!currentOpen || currentOpen.isArchived) return;
+
+    // صلاحية الحذف:
+    // - الصلاحية العامة: حذف في أي وقت
+    // - منشئ الطلب: حذف فقط إذا لم يبدأ أي إجراء
     if(!isGlobalUser()){
-      const msg = 'غير مصرح لك بتنفيذ هذه الخطوة';
+      const creator = (currentOpen.createdBy || '').toLowerCase();
+      if(creator !== meEmail()){
+        const msg = 'غير مصرح لك بتنفيذ هذه الخطوة';
+        detailsMsg.textContent = msg;
+        detailsMsg.className = 'msg err';
+        showToast(msg);
+        return;
+      }
+      if(!isPristineRequest(currentOpen)){
+        const msg = 'لا يمكن حذف الطلب بعد بدء الإجراءات';
+        detailsMsg.textContent = msg;
+        detailsMsg.className = 'msg warn';
+        showToast(msg);
+        return;
+      }
+    }
+
+    const ok = confirm('تأكيد حذف الطلب؟');
+    if(!ok) return;
+
+    // تحقق أخير من الداتا قبل الحذف (خصوصاً لمنشئ الطلب)
+    try{
+      if(!isGlobalUser()){
+        const snap = await getDoc(doc(db,'requests', currentOpen.id));
+        const data = snap.exists() ? snap.data() : null;
+        if(!data || !isPristineRequest(data)){
+          const msg = 'لا يمكن حذف الطلب بعد بدء الإجراءات';
+          detailsMsg.textContent = msg;
+          detailsMsg.className = 'msg warn';
+          showToast(msg);
+          return;
+        }
+      }
+      await deleteRequest(currentOpen.id, true);
+    }catch(e){
+      console.error(e);
+      const msg = 'تعذّر حذف الطلب.';
       detailsMsg.textContent = msg;
       detailsMsg.className = 'msg err';
       showToast(msg);
-      return;
     }
-    const id = currentOpen.id;
-    const ok = confirm('تأكيد حذف الطلب؟');
-    if(ok) deleteRequest(id, true);
   });
 
   document.addEventListener('click', (e)=>{
@@ -1485,14 +1549,41 @@
     }
     const delBtn = e.target.closest('.btn-del-req');
     if(delBtn){
-      if(!isGlobalUser()){
+      const id = delBtn.getAttribute('data-id');
+      const rec = activeRequests.find(r=> r.id === id);
+      if(!rec) return;
+
+      if(!canDeleteRequest(rec)){
         const msg = 'غير مصرح لك بتنفيذ هذه الخطوة';
         showToast(msg);
         return;
       }
-      const id = delBtn.getAttribute('data-id');
+      if(!isGlobalUser() && !isPristineRequest(rec)){
+        const msg = 'لا يمكن حذف الطلب بعد بدء الإجراءات';
+        showToast(msg);
+        return;
+      }
+
       const ok = confirm('تأكيد حذف الطلب؟');
-      if(ok) deleteRequest(id, false);
+      if(!ok) return;
+
+      (async ()=>{
+        try{
+          if(!isGlobalUser()){
+            const snap = await getDoc(doc(db,'requests', id));
+            const data = snap.exists() ? snap.data() : null;
+            if(!data || !isPristineRequest(data)){
+              showToast('لا يمكن حذف الطلب بعد بدء الإجراءات');
+              return;
+            }
+          }
+          await deleteRequest(id, false);
+        }catch(e){
+          console.error(e);
+          showToast('تعذّر حذف الطلب.');
+        }
+      })();
+
       return;
     }
     const openArch = e.target.closest('.btn-open-arch');

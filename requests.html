@@ -1,6 +1,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl" data-theme="light">
 <head>
@@ -439,6 +440,7 @@
                 <tr>
                   <th>تاريخ الإنشاء</th>
                   <th>نوع</th>
+                  <th>منشئ الطلب</th>
                   <th>رقم الهيكل</th>
                   <th>السيارة</th>
                   <th>الفئة</th>
@@ -469,6 +471,7 @@
                   <th>تاريخ الإنشاء</th>
                   <th>تاريخ الإنهاء</th>
                   <th>نوع</th>
+                  <th>منشئ الطلب</th>
                   <th>رقم الهيكل</th>
                   <th>السيارة</th>
                   <th>الفئة</th>
@@ -560,20 +563,6 @@
   const STATE_REF = doc(db, "mzj_admin_state", "v1");
   const REQ_COL   = collection(db, "requests");
   // نفس المسار للطلبات النشطة والمكتملة — نستخدم حقل archived للتمييز
-
-  /* ========= Global Users (صلاحية عامة) ========= */
-  const GLOBAL_USERS = [
-    "coo@mzjcars.com",
-    "an9036663@gmail.com",
-    "ceo@mzjcars.com",
-    "hossamzayan10@gmail.com",
-    "mr.ahmed_rashed@outlook.sa"
-  ].map(e => (e||"").toLowerCase());
-
-  function isGlobalUser(email){
-    return GLOBAL_USERS.includes(String(email||"").toLowerCase());
-  }
-
   /* ========= Roles & Permissions ========= */
   const ROLE_ADMIN   = 'الادارة';
   const ROLE_IDARI   = 'اداري';
@@ -668,16 +657,171 @@
 
   /* ========= Locations (هنكمل تخصيصها بعدين) ========= */
   const FIXED_LOCATIONS = [
-    "المستودع : المخزون المتاح","المستودع : سيارات بها ملاحظات","المستودع : مباع تحت التسليم","المستودع : مباع تم التسليم",
-    "الوكالة : المخزون المتاح","الوكالة : سيارات بها ملاحظات","الوكالة : مباع تحت التسليم","الوكالة : مباع تم التسليم",
-    "فرع 1 الصالة : المخزون المتاح","فرع 1 الصالة : سيارات بها ملاحظات","فرع 1 الصالة : مباع تحت التسليم","فرع 1 الصالة : مباع تم التسليم",
-    "فرع 2 الملتقى : المخزون المتاح","فرع 2 الملتقى : سيارات بها ملاحظات","فرع 2 الملتقى : مباع تحت التسليم","فرع 2 الملتقى : مباع تم التسليم",
-    "فرع 3 القادسية : المخزون المتاح","فرع 3 القادسية : سيارات بها ملاحظات","فرع 3 القادسية : مباع تحت التسليم","فرع 3 القادسية : مباع تم التسليم"
+    "المستودع : المخزون المتاح",
+    "المستودع : سيارات بها ملاحظات",
+    "المستودع : مباع تحت التسليم",
+    "فرع 1 الصالة : المخزون المتاح",
+    "فرع 1 الصالة : سيارات بها ملاحظات",
+    "فرع 1 الصالة : مباع تحت التسليم",
+    "فرع 2 الملتقى : المخزون المتاح",
+    "فرع 2 الملتقى : سيارات بها ملاحظات",
+    "فرع 2 الملتقى : مباع تحت التسليم",
+    "فرع 3 القادسية : المخزون المتاح",
+    "فرع 3 القادسية : سيارات بها ملاحظات",
+    "فرع 3 القادسية : مباع تحت التسليم",
   ];
+
+  /* ========= Users with Global Permission ========= */
+  const GLOBAL_USERS = new Set([
+    "coo@mzjcars.com",
+    "an9036663@gmail.com",
+    "ceo@mzjcars.com",
+    "hossamzayan10@gmail.com",
+    "mr.ahmed_rashed@outlook.sa"
+  ].map(e => (e||"").toLowerCase()));
+  // Page access (this page is for admins only)
+  const ADMIN_EMAILS = new Set([
+    "kamelashraf948@gmail.com",
+    "mohammed.ezat1989@gmail.com",
+    "aldynmtwlys@gmail.com",
+    "alaasamak100@gmail.com"
+  ].map(e => (e||"").toLowerCase()));
+
+
+  /* ========= Location Owners (Admin Responsibilities) ========= */
+  const LOCATION_OWNER = new Map([
+    // فرع 2 الملتقى
+    ["فرع 2 الملتقى : المخزون المتاح","kamelashraf948@gmail.com"],
+    ["فرع 2 الملتقى : سيارات بها ملاحظات","kamelashraf948@gmail.com"],
+    ["فرع 2 الملتقى : مباع تحت التسليم","kamelashraf948@gmail.com"],
+    ["فرع 2 الملتقى : مباع تم التسليم","kamelashraf948@gmail.com"],
+
+    // المستودع
+    ["المستودع : المخزون المتاح","Mohammed.ezat1989@gmail.com"],
+    ["المستودع : سيارات بها ملاحظات","Mohammed.ezat1989@gmail.com"],
+    ["المستودع : مباع تحت التسليم","Mohammed.ezat1989@gmail.com"],
+    ["المستودع : مباع تم التسليم","Mohammed.ezat1989@gmail.com"],
+
+    // فرع 1 الصالة
+    ["فرع 1 الصالة : المخزون المتاح","aldynmtwlys@gmail.com"],
+    ["فرع 1 الصالة : سيارات بها ملاحظات","aldynmtwlys@gmail.com"],
+    ["فرع 1 الصالة : مباع تحت التسليم","aldynmtwlys@gmail.com"],
+    ["فرع 1 الصالة : مباع تم التسليم","aldynmtwlys@gmail.com"],
+
+    // فرع 3 القادسية
+    ["فرع 3 القادسية : المخزون المتاح","alaasamak100@gmail.com"],
+    ["فرع 3 القادسية : سيارات بها ملاحظات","alaasamak100@gmail.com"],
+    ["فرع 3 القادسية : مباع تحت التسليم","alaasamak100@gmail.com"],
+    ["فرع 3 القادسية : مباع تم التسليم","alaasamak100@gmail.com"]
+  ].map(([loc,email])=>[clean(loc), (email||"").toLowerCase()]));
+
+  function meEmail(){
+    return (auth.currentUser?.email || "").toLowerCase();
+  }
+  function isGlobalUser(){
+    return GLOBAL_USERS.has(meEmail());
+  }
+  function ownerOfLocation(loc){
+    return LOCATION_OWNER.get(clean(loc||"")) || "";
+  }
+
+  // Who is allowed to perform each step for a given request
+  
+  function isCreatorGlobalUser(req){
+    const creator = (req?.createdBy || "").toLowerCase();
+    return GLOBAL_USERS.has(creator);
+  }
+
+  // Used for UI "مسؤول الخطوة القادمة" display (one primary email)
+  function responsibleEmailForStep(req, stepNum){
+    const type = clean(req?.type||"");
+    const creator = (req?.createdBy || "").toLowerCase();
+    const fromOwner = ownerOfLocation(req?.fromLocation).toLowerCase();
+    const toOwner   = ownerOfLocation(req?.toLocation).toLowerCase();
+
+    if(stepNum === 1 || stepNum === 2){
+      return fromOwner;
+    }
+    if(stepNum === 3){
+      if(type === "تصوير"){
+        return toOwner;
+      }
+      // نقل: الأصل منشئ الطلب، لكن لو المنشئ صلاحية عامة نخلي المسؤول هو مكان الوصول
+      return isCreatorGlobalUser(req) ? toOwner : creator;
+    }
+    if(stepNum === 4){
+      // الأصل منشئ الطلب، لكن لو المنشئ صلاحية عامة نخلي المسؤول هو مكان الوصول
+      return isCreatorGlobalUser(req) ? toOwner : creator;
+    }
+    return creator;
+  }
+
+  function canPerformStep(req, stepNum){
+    if(isGlobalUser()) return true;
+
+    const me = meEmail();
+    if(!me) return false;
+
+    const type = clean(req?.type||"");
+    const creator = (req?.createdBy || "").toLowerCase();
+    const fromOwner = ownerOfLocation(req?.fromLocation).toLowerCase();
+    const toOwner   = ownerOfLocation(req?.toLocation).toLowerCase();
+
+    // 1) تم استلام الطلب + 2) تم إرسال السيارة => مسؤول مكان السيارة (من)
+    if(stepNum === 1 || stepNum === 2){
+      return me === fromOwner;
+    }
+
+    // 3) تم استلام السيارة
+    if(stepNum === 3){
+      if(type === "تصوير"){
+        // استلام السيارة في مكان التصوير => مسؤول (إلى)
+        return me === toOwner;
+      }
+      // نقل
+      if(me === creator) return true;
+      // استثناء: لو المنشئ صلاحية عامة، نسمح لمسؤول مكان الوصول (إلى)
+      if(isCreatorGlobalUser(req) && me === toOwner) return true;
+      return false;
+    }
+
+    // 4) تم الانتهاء
+    if(stepNum === 4){
+      if(me === creator) return true;
+      // استثناء: لو المنشئ صلاحية عامة، نسمح لمسؤول مكان الوصول (إلى)
+      if(isCreatorGlobalUser(req) && me === toOwner) return true;
+      return false;
+    }
+
+    return false;
+  }
+
+
+
+
+  // Delete permission:
+  // - Global users: can delete any request
+  // - Creator: can delete ONLY if no action has been taken (step=0 and no step timestamps)
+  function canDeleteRequest(req){
+    if(!req) return false;
+    if(isGlobalUser()) return true;
+
+    const me = meEmail();
+    const creator = (req.createdBy || '').toLowerCase();
+    if(!me || me !== creator) return false;
+
+    const step = Number(req.step || 0);
+    const noActions =
+      step <= 0 &&
+      !req.step1At && !req.step2At && !req.step3At && !req.step4At;
+
+    // Only for active (non-archived) requests
+    return noActions && !(req.archived === true);
+  }
 
   function fillLocations(){
     const sel = $('#destLocation');
-    sel.innerHTML = FIXED_LOCATIONS.map(l=> `<option value="${l}">${l}</option>`).join('');
+    sel.innerHTML = `<option value="">-- اختر --</option>` + FIXED_LOCATIONS.map(l=> `<option value="${l}">${l}</option>`).join('');
   }
 
   /* ========= DOM ========= */
@@ -881,6 +1025,8 @@
   reqType.addEventListener('change', toggleReqTypeUI);
 
   /* ========= Submit Requests ========= */
+  
+  /* ========= Submit Requests ========= */
   async function submitRequests(){
     createMsg.textContent = '';
     createMsg.className = 'msg';
@@ -909,7 +1055,9 @@
     for(const tr of rows){
       const vin = normalizeVin(tr.querySelector('.vin-input')?.value || '');
       if(!vin) continue;
-      if(seen.has(vin)) continue; // منع تكرار نفس الهيكل داخل نفس الطلب
+
+      // prevent duplicate VINs داخل نفس الطلب
+      if(seen.has(vin)) continue;
       seen.add(vin);
 
       const car = findCarByVin(vin);
@@ -925,9 +1073,9 @@
         vin,
         car: clean(car.car || ''),
         variant: clean(car.variant || ''),
-        extColor: clean(car.extColor || car["اللون الخارجي"] || ''),
-        intColor: clean(car.intColor || car["اللون الداخلي"] || ''),
-        modelYear: clean(car.modelYear || car.model || ''),
+        extColor: clean(car.extColor || ''),
+        intColor: clean(car.intColor || ''),
+        modelYear: clean(car.modelYear || ''),
         fromLocation: clean(car.location || ''),
         note
       });
@@ -939,27 +1087,26 @@
       return;
     }
 
-    // حقول متوافقة مع النسخة الحالية (عشان الجداول/المودال ما تتكسرش)
+    // legacy fields (for tables) — first car only
     const first = cars[0];
-    const fromSame = cars.every(c => c.fromLocation === first.fromLocation);
-    const payload = {
+
+    const requestDoc = {
       type,
-      // legacy single-car fields (عرض سريع)
+      // legacy (first car)
       vin: first.vin,
       car: first.car,
       variant: first.variant,
       extColor: first.extColor,
       intColor: first.intColor,
       modelYear: first.modelYear,
-      fromLocation: fromSame ? first.fromLocation : 'متعدد',
-      // destination
+      fromLocation: first.fromLocation,
+
+      // request-level
       toLocation: dest,
       shootDate: (type === 'تصوير') ? sDate : '',
-      // new: multiple cars
-      cars,
+      cars,                   // all cars in one request
       totalCars: cars.length,
 
-      // workflow
       step: 0,
       step1At: null,
       step2At: null,
@@ -967,6 +1114,7 @@
       step4At: null,
       archived: false,
       archivedAt: null,
+
       createdAt: serverTimestamp(),
       createdBy: auth.currentUser ? (auth.currentUser.email || '') : '',
       createdByUid: auth.currentUser ? auth.currentUser.uid : '',
@@ -975,9 +1123,9 @@
 
     btnSubmit.disabled = true;
     try{
-      await addDoc(REQ_COL, payload);
+      await addDoc(REQ_COL, requestDoc);
       showToast(`تم إرسال طلب (${cars.length} سيارة)`);
-      createMsg.textContent = `تم إرسال الطلب بنجاح — عدد السيارات: ${cars.length}.`;
+      createMsg.textContent = `تم إرسال الطلب بنجاح — عدد السيارات: ${cars.length}`;
       createMsg.classList.add('ok');
       clearCreate();
       // انتقل تلقائيًا للمتابعة
@@ -991,6 +1139,7 @@
       btnSubmit.disabled = false;
     }
   }
+
 
   /* ========= Panels Switching ========= */
   function switchPanel(){
@@ -1106,9 +1255,6 @@
     activeTbody.innerHTML = '';
     $('#toHeader').textContent = toHeaderText();
 
-    const me = auth.currentUser ? (auth.currentUser.email || '') : '';
-    const canDel = isGlobalUser(me);
-
     const rows = activeRequests.slice().sort((a,b)=>{
       const at = a.createdAt?.seconds || 0, bt = b.createdAt?.seconds || 0;
       return bt - at;
@@ -1116,18 +1262,18 @@
 
     if(!rows.length){
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td colspan="9" class="muted">لا توجد طلبات نشطة.</td>`;
+      tr.innerHTML = `<td colspan="10" class="muted">لا توجد طلبات نشطة.</td>`;
       activeTbody.appendChild(tr);
       return;
     }
 
     for(const r of rows){
       const tr = document.createElement('tr');
-      const delBtn = canDel ? `<button class="btn btn-sm btn-danger btn-del-req" data-id="${r.id}" title="حذف"><i class="fa-solid fa-trash"></i></button>` : '';
       tr.innerHTML = `
         <td>${fmtTS(r.createdAt) || '-'}</td>
         <td><span class="tag">${r.type||'-'}</span></td>
-        <td class="mono">${r.vin||''}${(r.totalCars && Number(r.totalCars)>1) ? ` <span class="badge">x${Number(r.totalCars)}</span>` : ''}</td>
+        <td class="mono">${(r.createdBy||'-')}</td>
+        <td class="mono">${r.vin||''}</td>
         <td>${r.car||''}</td>
         <td>${r.variant||''}</td>
         <td>${r.fromLocation||''}</td>
@@ -1135,7 +1281,7 @@
         <td><span class="badge">${stepLabel(r.step)}</span></td>
         <td>
           <button class="btn btn-sm btn-outline btn-open" data-id="${r.id}"><i class="fa-solid fa-folder-open"></i> فتح</button>
-          ${delBtn}
+          ${canDeleteRequest(r) ? `<button class="btn btn-sm btn-danger btn-del-req" data-id="${r.id}" title="حذف"><i class="fa-solid fa-trash"></i></button>` : ``}
         </td>
       `;
       activeTbody.appendChild(tr);
@@ -1153,7 +1299,7 @@
 
     if(!rows.length){
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td colspan="9" class="muted">لا توجد طلبات مكتملة.</td>`;
+      tr.innerHTML = `<td colspan="10" class="muted">لا توجد طلبات مكتملة.</td>`;
       doneTbody.appendChild(tr);
       return;
     }
@@ -1164,6 +1310,7 @@
         <td>${fmtTS(r.createdAt) || '-'}</td>
         <td>${fmtTS(r.step4At) || fmtTS(r.archivedAt) || '-'}</td>
         <td><span class="tag">${r.type||'-'}</span></td>
+        <td class="mono">${(r.createdBy||'-')}</td>
         <td class="mono">${r.vin||''}</td>
         <td>${r.car||''}</td>
         <td>${r.variant||''}</td>
@@ -1182,58 +1329,54 @@
     detailsMsg.className = 'msg';
 
     const d = rec;
-    const list = Array.isArray(d.cars) && d.cars.length ? d.cars : null;
-
-    let carsBox = '';
-    if(list){
-      const rows = list.map((c,i)=>`
-        <tr>
-          <td>${i+1}</td>
-          <td class="mono">${c.vin||''}</td>
-          <td>${c.car||''}</td>
-          <td>${c.variant||''}</td>
-          <td>${c.fromLocation||''}</td>
-          <td>${c.note||''}</td>
-        </tr>
-      `).join('');
-      carsBox = `
-        <div class="kv" style="grid-column:1/-1">
-          <div class="k">السيارات داخل الطلب (${list.length})</div>
-          <div class="v" style="font-weight:700;color:var(--text)">
-            <div class="table-wrap" style="margin-top:6px">
-              <table>
-                <thead>
-                  <tr>
-                    <th style="width:44px">م</th>
-                    <th>رقم الهيكل</th>
-                    <th>السيارة</th>
-                    <th>الفئة</th>
-                    <th>من</th>
-                    <th>ملاحظة</th>
-                  </tr>
-                </thead>
-                <tbody>${rows}</tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
     detailsGrid.innerHTML = `
       <div class="kv"><div class="k">نوع الطلب</div><div class="v">${d.type||'-'}</div></div>
       <div class="kv"><div class="k">الحالة</div><div class="v">${stepLabel(d.step)}</div></div>
-      ${list ? '' : `<div class="kv"><div class="k">رقم الهيكل</div><div class="v mono">${d.vin||''}</div></div>`}
-      ${list ? '' : `<div class="kv"><div class="k">السيارة</div><div class="v">${d.car||''}</div></div>`}
-      ${list ? '' : `<div class="kv"><div class="k">الفئة</div><div class="v">${d.variant||''}</div></div>`}
-      ${list ? '' : `<div class="kv"><div class="k">الخارجي</div><div class="v">${d.extColor||''}</div></div>`}
-      ${list ? '' : `<div class="kv"><div class="k">الداخلي</div><div class="v">${d.intColor||''}</div></div>`}
-      ${list ? '' : `<div class="kv"><div class="k">الموديل</div><div class="v">${d.modelYear||''}</div></div>`}
+      <div class="kv"><div class="k">رقم الهيكل</div><div class="v mono">${d.vin||''}</div></div>
+      <div class="kv"><div class="k">السيارة</div><div class="v">${d.car||''}</div></div>
+      <div class="kv"><div class="k">الفئة</div><div class="v">${d.variant||''}</div></div>
+      <div class="kv"><div class="k">الخارجي</div><div class="v">${d.extColor||''}</div></div>
+      <div class="kv"><div class="k">الداخلي</div><div class="v">${d.intColor||''}</div></div>
+      <div class="kv"><div class="k">الموديل</div><div class="v">${d.modelYear||''}</div></div>
       <div class="kv"><div class="k">المكان الحالي (من)</div><div class="v">${d.fromLocation||''}</div></div>
       <div class="kv"><div class="k">${d.type==='تصوير'?'مكان التصوير':'مكان النقل'} (إلى)</div><div class="v">${d.toLocation||''}</div></div>
       <div class="kv"><div class="k">تاريخ التصوير</div><div class="v">${d.shootDate||'-'}</div></div>
-      ${list ? carsBox : `<div class="kv" style="grid-column:1/-1"><div class="k">ملاحظة</div><div class="v">${d.note? d.note : '—'}</div></div>`}
-    `;
+      <div class="kv" style="grid-column:1/-1"><div class="k">ملاحظة</div><div class="v">${d.note? d.note : '—'}</div></div>
+    
+      ${(Array.isArray(d.cars) && d.cars.length>1) ? `
+      <div class="kv" style="grid-column:1/-1">
+        <div class="k">السيارات داخل الطلب</div>
+        <div class="v">
+          <div class="table-wrap" style="margin-top:6px">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:54px">م</th>
+                  <th>رقم الهيكل</th>
+                  <th>السيارة</th>
+                  <th>الفئة</th>
+                  <th>المكان الحالي (من)</th>
+                  <th>ملاحظة</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${d.cars.map((c,idx)=>`
+                  <tr>
+                    <td>${idx+1}</td>
+                    <td class="mono">${c.vin||''}</td>
+                    <td>${c.car||''}</td>
+                    <td>${c.variant||''}</td>
+                    <td>${c.fromLocation||''}</td>
+                    <td>${c.note||'—'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      ` : ``}
+`;
 
     const s = Number(d.step||0);
 
@@ -1256,17 +1399,27 @@
       return;
     }
 
-    // إظهار زر الحذف فقط للصلاحية العامة
-    const me = auth.currentUser ? (auth.currentUser.email || '') : '';
-    deleteReqBtn.style.display = isGlobalUser(me) ? 'inline-flex' : 'none';
+    deleteReqBtn.style.display = canDeleteRequest(d) ? 'inline-flex' : 'none';
     moveWarn.style.display = 'block';
 
-    setBtn(step1Btn, s>=1, false);
-    setBtn(step2Btn, s>=2, s<1);
-    setBtn(step3Btn, s>=3, s<2);
-    setBtn(step4Btn, s>=4, s<3);
+    const lock1 = (s < 1) && !canPerformStep(d, 1);
+    const lock2 = (s < 2) && !canPerformStep(d, 2);
+    const lock3 = (s < 3) && !canPerformStep(d, 3);
+    const lock4 = (s < 4) && !canPerformStep(d, 4);
 
-    stepsHint.textContent = `آخر تحديث: ${fmtTS(d.updatedAt)||fmtTS(d.createdAt)||'—'}`;
+    setBtn(step1Btn, s>=1, lock1);
+    setBtn(step2Btn, s>=2, (s<1) || lock2);
+    setBtn(step3Btn, s>=3, (s<2) || lock3);
+    setBtn(step4Btn, s>=4, (s<3) || lock4);
+
+    const baseHint = `آخر تحديث: ${fmtTS(d.updatedAt)||fmtTS(d.createdAt)||'—'}`;
+    const nextStep = (s>=4) ? null : (s+1);
+    if(nextStep){
+      const resp = responsibleEmailForStep(d, nextStep) || '';
+      stepsHint.textContent = resp ? (baseHint + ` — مسؤول الخطوة القادمة: ${resp}`) : baseHint;
+    }else{
+      stepsHint.textContent = baseHint;
+    }
 
     detailsBackdrop.style.display='flex';
   }
@@ -1287,44 +1440,48 @@
     const d  = currentOpen.data;
 
     const step = Number(d.step||0);
+    // Permission gate: only responsible user for this step (or global users) can execute
+    if(!canPerformStep(d, newStep)){
+      const msg = 'غير مصرح لك بتنفيذ هذه الخطوة';
+      detailsMsg.textContent = msg;
+      detailsMsg.className = 'msg err';
+      showToast(msg);
+      return;
+    }
+
     if(newStep <= step) { showToast('هذه الخطوة تم تنفيذها بالفعل'); return; }
 
-    // step 3 moves stock location (يدعم تعدد السيارات داخل الطلب)
+        // step 3 moves stock location
     if(newStep === 3){
       await loadStockOnce();
 
-      const list = Array.isArray(d.cars) && d.cars.length ? d.cars : [{ vin: d.vin, fromLocation: d.fromLocation }];
-      const oldLocs = [];
-      const movedIdx = [];
+      const vins = Array.isArray(d.cars) && d.cars.length
+        ? d.cars.map(c=> normalizeVin(c.vin||'')).filter(Boolean)
+        : [ normalizeVin(d.vin||'') ].filter(Boolean);
 
-      // تحقق إن كل السيارات موجودة
-      for(const c of list){
-        const vin = normalizeVin(c.vin||'');
+      // keep backups for rollback
+      const backups = [];
+
+      for(const vin of vins){
         const idx = stock.findIndex(r => normalizeVin(r.vin) === vin);
         if(idx === -1){
-          detailsMsg.textContent = `غير موجود في المخزون: ${vin}`;
+          detailsMsg.textContent = 'لم يتم العثور على سيارة داخل المخزون لتحديث المكان.';
           detailsMsg.className = 'msg err';
           return;
         }
-        oldLocs.push({ idx, old: stock[idx].location });
-        movedIdx.push(idx);
-      }
-
-      // حدث محليًا
-      for(const {idx} of oldLocs){
+        backups.push({ idx, oldLoc: clean(stock[idx].location || '') });
         stock[idx] = { ...stock[idx], location: d.toLocation };
       }
 
       try{
-        // اكتب على الاستوك
-        await setDoc(STOCK_REF, { items: stock }, { merge: true });
+        await updateDoc(STATE_REF, { stock });
       }catch(e){
         console.error(e);
-        detailsMsg.textContent = 'تعذّر تحديث مكان السيارة في المخزون.';
+        detailsMsg.textContent = 'تعذّر تحديث مكان السيارة/السيارات في المخزون.';
         detailsMsg.className = 'msg err';
         // rollback local
-        for(const {idx, old} of oldLocs){
-          stock[idx] = { ...stock[idx], location: old };
+        for(const b of backups){
+          stock[b.idx] = { ...stock[b.idx], location: b.oldLoc };
         }
         return;
       }
@@ -1338,20 +1495,35 @@
 
     try{
       await updateDoc(doc(db, "requests", id), patch);
-
-      // step 4 => archive (نفس المستند)
-      if(newStep === 4){
-        await updateDoc(doc(db, "requests", id), { archived: true, archivedAt: serverTimestamp() });
-      }
-
-      showToast('تم تحديث المرحلة');
-      closeModal();
-      await loadRequests();
+      showToast('تم تحديث الخطوة');
     }catch(e){
       console.error(e);
-      detailsMsg.textContent = 'تعذّر تحديث المرحلة.';
+      detailsMsg.textContent = 'تعذّر تحديث الطلب.';
       detailsMsg.className = 'msg err';
+      return;
     }
+
+    
+    // step 4 => archive (نفس المسار: requests) عبر تفعيل archived=true
+    if(newStep === 4){
+      try{
+        await updateDoc(doc(db, "requests", id), {
+          archived: true,
+          archivedAt: serverTimestamp(),
+          status: 'مكتمل'
+        });
+        showToast('تم نقل الطلب إلى المكتملة');
+        closeModal();
+        // انتقل لصفحة المكتملة
+        actionSelect.value = 'done';
+        switchPanel();
+      }catch(e){
+        console.error(e);
+        detailsMsg.textContent = 'تمت الخطوة 4 لكن تعذّر تفعيل الأرشفة (archived).';
+        detailsMsg.className = 'msg warn';
+      }
+    }
+
   }
 
   step1Btn.addEventListener('click', ()=> updateRequestStep(1));
@@ -1361,25 +1533,10 @@
 
   /* ========= Delete ========= */
   async function deleteRequest(id, fromModal=false){
-    const me = auth.currentUser ? (auth.currentUser.email || '') : '';
-    if(!isGlobalUser(me)){
-      const msg = 'غير مصرح لك بتنفيذ هذه الخطوة';
-      if(fromModal){
-        detailsMsg.textContent = msg;
-        detailsMsg.className = 'msg err';
-      }else{
-        manageMsg.textContent = msg;
-        manageMsg.className = 'msg err';
-      }
-      showToast(msg);
-      return;
-    }
-
     try{
-      await deleteDoc(doc(db, "requests", id));
+      await deleteDoc(doc(db,'requests',id));
       showToast('تم حذف الطلب');
       if(fromModal) closeModal();
-      await loadRequests();
     }catch(e){
       console.error(e);
       const msg = 'تعذّر حذف الطلب.';
@@ -1395,6 +1552,13 @@
 
   deleteReqBtn.addEventListener('click', ()=>{
     if(!currentOpen || currentOpen.isArchived) return;
+    if(!canDeleteRequest(currentOpen.data)){
+      const msg = 'غير مصرح لك بتنفيذ هذه الخطوة';
+      detailsMsg.textContent = msg;
+      detailsMsg.className = 'msg err';
+      showToast(msg);
+      return;
+    }
     const id = currentOpen.id;
     const ok = confirm('تأكيد حذف الطلب؟');
     if(ok) deleteRequest(id, true);
@@ -1411,6 +1575,12 @@
     const delBtn = e.target.closest('.btn-del-req');
     if(delBtn){
       const id = delBtn.getAttribute('data-id');
+      const rec = activeRequests.find(r=> r.id === id);
+      if(!canDeleteRequest(rec)){
+        const msg = 'غير مصرح لك بتنفيذ هذه الخطوة';
+        showToast(msg);
+        return;
+      }
       const ok = confirm('تأكيد حذف الطلب؟');
       if(ok) deleteRequest(id, false);
       return;
@@ -1435,6 +1605,12 @@
   /* ========= Auth ========= */
   onAuthStateChanged(auth, async (user)=>{
     if(user){
+      const email = (user.email || '').toLowerCase();
+      if(!ADMIN_EMAILS.has(email) && !GLOBAL_USERS.has(email)){
+        window.location.href = 'unauthorized.html';
+        return;
+      }
+
       const role = await fetchUserRole(user);
       window.__mzjUserRole = role || null;
 

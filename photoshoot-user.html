@@ -2,6 +2,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl" data-theme="light">
 <head>
@@ -684,9 +685,15 @@
     "kamelashraf948@gmail.com",
     "mohammed.ezat1989@gmail.com",
     "aldynmtwlys@gmail.com",
-    "alaasamak100@gmail.com"
-
+    "alaasamak100@gmail.com",
+    "madfars11@gmail.com"
   ].map(e => (e||"").toLowerCase()));
+
+  // View-only users (can access page but cannot perform actions)
+  const VIEW_ONLY_EMAILS = new Set([
+    "madfars11@gmail.com"
+  ].map(e => (e||"").toLowerCase()));
+
 
 
   /* ========= Location Owners (Admin Responsibilities) ========= */
@@ -1612,7 +1619,11 @@
         return;
       }
 
-      const role = await fetchUserRole(user);
+      let role = await fetchUserRole(user);
+
+      const isViewOnly = VIEW_ONLY_EMAILS.has(email) && !GLOBAL_USERS.has(email);
+      if(!role && isViewOnly) role = ROLE_IDARI;
+
       window.__mzjUserRole = role || null;
 
       if(!role || !PAGE_ALLOWED_ROLES.includes(role)){
@@ -1632,6 +1643,13 @@
       toggleReqTypeUI();
       clearCreate();
       refreshCountsOnly();
+
+      // View-only: remove create option and force manage/done only
+      if(isViewOnly){
+        const optCreate = actionSelect.querySelector('option[value="create"]');
+        if(optCreate) optCreate.remove();
+        actionSelect.value = 'manage';
+      }
 
       // افتراضيًا: create
       switchPanel();

@@ -725,32 +725,77 @@
   }
 
   // Who is allowed to perform each step for a given request
+  
+  function isCreatorGlobalUser(req){
+    const creator = (req?.createdBy || "").toLowerCase();
+    return GLOBAL_USERS.has(creator);
+  }
+
+  // Used for UI "مسؤول الخطوة القادمة" display (one primary email)
   function responsibleEmailForStep(req, stepNum){
     const type = clean(req?.type||"");
     const creator = (req?.createdBy || "").toLowerCase();
+    const fromOwner = ownerOfLocation(req?.fromLocation).toLowerCase();
+    const toOwner   = ownerOfLocation(req?.toLocation).toLowerCase();
 
     if(stepNum === 1 || stepNum === 2){
-      return ownerOfLocation(req?.fromLocation).toLowerCase();
+      return fromOwner;
     }
     if(stepNum === 3){
       if(type === "تصوير"){
-        return ownerOfLocation(req?.toLocation).toLowerCase();
+        return toOwner;
       }
-      // نقل
-      return creator;
+      // نقل: الأصل منشئ الطلب، لكن لو المنشئ صلاحية عامة نخلي المسؤول هو مكان الوصول
+      return isCreatorGlobalUser(req) ? toOwner : creator;
     }
     if(stepNum === 4){
-      return creator;
+      // الأصل منشئ الطلب، لكن لو المنشئ صلاحية عامة نخلي المسؤول هو مكان الوصول
+      return isCreatorGlobalUser(req) ? toOwner : creator;
     }
     return creator;
   }
 
   function canPerformStep(req, stepNum){
     if(isGlobalUser()) return true;
+
     const me = meEmail();
-    const resp = responsibleEmailForStep(req, stepNum);
-    return !!me && !!resp && me === resp;
+    if(!me) return false;
+
+    const type = clean(req?.type||"");
+    const creator = (req?.createdBy || "").toLowerCase();
+    const fromOwner = ownerOfLocation(req?.fromLocation).toLowerCase();
+    const toOwner   = ownerOfLocation(req?.toLocation).toLowerCase();
+
+    // 1) تم استلام الطلب + 2) تم إرسال السيارة => مسؤول مكان السيارة (من)
+    if(stepNum === 1 || stepNum === 2){
+      return me === fromOwner;
+    }
+
+    // 3) تم استلام السيارة
+    if(stepNum === 3){
+      if(type === "تصوير"){
+        // استلام السيارة في مكان التصوير => مسؤول (إلى)
+        return me === toOwner;
+      }
+      // نقل
+      if(me === creator) return true;
+      // استثناء: لو المنشئ صلاحية عامة، نسمح لمسؤول مكان الوصول (إلى)
+      if(isCreatorGlobalUser(req) && me === toOwner) return true;
+      return false;
+    }
+
+    // 4) تم الانتهاء
+    if(stepNum === 4){
+      if(me === creator) return true;
+      // استثناء: لو المنشئ صلاحية عامة، نسمح لمسؤول مكان الوصول (إلى)
+      if(isCreatorGlobalUser(req) && me === toOwner) return true;
+      return false;
+    }
+
+    return false;
   }
+
+
 
 
   function fillLocations(){
@@ -1273,7 +1318,7 @@
       return;
     }
 
-    deleteReqBtn.style.display = 'inline-flex';
+    deleteReqBtn.style.display = isGlobalUser() ? 'inline-flex' : 'none';
     moveWarn.style.display = 'block';
 
     const lock1 = (s < 1) && !canPerformStep(d, 1);
@@ -1400,7 +1445,7 @@
   /* ========= Delete ========= */
   async function deleteRequest(id, fromModal=false){
     try{
-      /* لا نحذف المستند — بنعلّم archived فقط */
+      await deleteDoc(doc(db,'requests',id));
       showToast('تم حذف الطلب');
       if(fromModal) closeModal();
     }catch(e){
@@ -1418,6 +1463,13 @@
 
   deleteReqBtn.addEventListener('click', ()=>{
     if(!currentOpen || currentOpen.isArchived) return;
+    if(!isGlobalUser()){
+      const msg = 'غير مصرح لك بتنفيذ هذه الخطوة';
+      detailsMsg.textContent = msg;
+      detailsMsg.className = 'msg err';
+      showToast(msg);
+      return;
+    }
     const id = currentOpen.id;
     const ok = confirm('تأكيد حذف الطلب؟');
     if(ok) deleteRequest(id, true);

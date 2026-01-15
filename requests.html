@@ -560,6 +560,20 @@
   const STATE_REF = doc(db, "mzj_admin_state", "v1");
   const REQ_COL   = collection(db, "requests");
   // نفس المسار للطلبات النشطة والمكتملة — نستخدم حقل archived للتمييز
+
+  /* ========= Global Users (صلاحية عامة) ========= */
+  const GLOBAL_USERS = [
+    "coo@mzjcars.com",
+    "an9036663@gmail.com",
+    "ceo@mzjcars.com",
+    "hossamzayan10@gmail.com",
+    "mr.ahmed_rashed@outlook.sa"
+  ].map(e => (e||"").toLowerCase());
+
+  function isGlobalUser(email){
+    return GLOBAL_USERS.includes(String(email||"").toLowerCase());
+  }
+
   /* ========= Roles & Permissions ========= */
   const ROLE_ADMIN   = 'الادارة';
   const ROLE_IDARI   = 'اداري';
@@ -911,9 +925,9 @@
         vin,
         car: clean(car.car || ''),
         variant: clean(car.variant || ''),
-        extColor: clean(car.extColor || ''),
-        intColor: clean(car.intColor || ''),
-        modelYear: clean(car.modelYear || ''),
+        extColor: clean(car.extColor || car["اللون الخارجي"] || ''),
+        intColor: clean(car.intColor || car["اللون الداخلي"] || ''),
+        modelYear: clean(car.modelYear || car.model || ''),
         fromLocation: clean(car.location || ''),
         note
       });
@@ -925,23 +939,27 @@
       return;
     }
 
-    // طلب واحد يحتوي على عدة سيارات (مع الحفاظ على الحقول القديمة للعرض)
+    // حقول متوافقة مع النسخة الحالية (عشان الجداول/المودال ما تتكسرش)
     const first = cars[0];
-    const baseReq = {
+    const fromSame = cars.every(c => c.fromLocation === first.fromLocation);
+    const payload = {
       type,
+      // legacy single-car fields (عرض سريع)
       vin: first.vin,
       car: first.car,
       variant: first.variant,
       extColor: first.extColor,
       intColor: first.intColor,
       modelYear: first.modelYear,
-      fromLocation: first.fromLocation,
+      fromLocation: fromSame ? first.fromLocation : 'متعدد',
+      // destination
       toLocation: dest,
       shootDate: (type === 'تصوير') ? sDate : '',
-      note: '',
+      // new: multiple cars
       cars,
-      total: cars.length,
+      totalCars: cars.length,
 
+      // workflow
       step: 0,
       step1At: null,
       step2At: null,
@@ -954,11 +972,12 @@
       createdByUid: auth.currentUser ? auth.currentUser.uid : '',
       status: 'جديد'
     };
-btnSubmit.disabled = true;
+
+    btnSubmit.disabled = true;
     try{
-      await addDoc(REQ_COL, baseReq);
-      showToast(`تم إرسال طلب واحد (${baseReq.total} سيارة)`);
-      createMsg.textContent = `تم إرسال طلب واحد يحتوي على ${baseReq.total} سيارة.`;
+      await addDoc(REQ_COL, payload);
+      showToast(`تم إرسال طلب (${cars.length} سيارة)`);
+      createMsg.textContent = `تم إرسال الطلب بنجاح — عدد السيارات: ${cars.length}.`;
       createMsg.classList.add('ok');
       clearCreate();
       // انتقل تلقائيًا للمتابعة
@@ -1087,6 +1106,9 @@ btnSubmit.disabled = true;
     activeTbody.innerHTML = '';
     $('#toHeader').textContent = toHeaderText();
 
+    const me = auth.currentUser ? (auth.currentUser.email || '') : '';
+    const canDel = isGlobalUser(me);
+
     const rows = activeRequests.slice().sort((a,b)=>{
       const at = a.createdAt?.seconds || 0, bt = b.createdAt?.seconds || 0;
       return bt - at;
@@ -1101,10 +1123,11 @@ btnSubmit.disabled = true;
 
     for(const r of rows){
       const tr = document.createElement('tr');
+      const delBtn = canDel ? `<button class="btn btn-sm btn-danger btn-del-req" data-id="${r.id}" title="حذف"><i class="fa-solid fa-trash"></i></button>` : '';
       tr.innerHTML = `
         <td>${fmtTS(r.createdAt) || '-'}</td>
         <td><span class="tag">${r.type||'-'}</span></td>
-        <td class="mono">${r.vin||''}</td>
+        <td class="mono">${r.vin||''}${(r.totalCars && Number(r.totalCars)>1) ? ` <span class="badge">x${Number(r.totalCars)}</span>` : ''}</td>
         <td>${r.car||''}</td>
         <td>${r.variant||''}</td>
         <td>${r.fromLocation||''}</td>
@@ -1112,7 +1135,7 @@ btnSubmit.disabled = true;
         <td><span class="badge">${stepLabel(r.step)}</span></td>
         <td>
           <button class="btn btn-sm btn-outline btn-open" data-id="${r.id}"><i class="fa-solid fa-folder-open"></i> فتح</button>
-          <button class="btn btn-sm btn-danger btn-del-req" data-id="${r.id}" title="حذف"><i class="fa-solid fa-trash"></i></button>
+          ${delBtn}
         </td>
       `;
       activeTbody.appendChild(tr);
@@ -1159,19 +1182,57 @@ btnSubmit.disabled = true;
     detailsMsg.className = 'msg';
 
     const d = rec;
+    const list = Array.isArray(d.cars) && d.cars.length ? d.cars : null;
+
+    let carsBox = '';
+    if(list){
+      const rows = list.map((c,i)=>`
+        <tr>
+          <td>${i+1}</td>
+          <td class="mono">${c.vin||''}</td>
+          <td>${c.car||''}</td>
+          <td>${c.variant||''}</td>
+          <td>${c.fromLocation||''}</td>
+          <td>${c.note||''}</td>
+        </tr>
+      `).join('');
+      carsBox = `
+        <div class="kv" style="grid-column:1/-1">
+          <div class="k">السيارات داخل الطلب (${list.length})</div>
+          <div class="v" style="font-weight:700;color:var(--text)">
+            <div class="table-wrap" style="margin-top:6px">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width:44px">م</th>
+                    <th>رقم الهيكل</th>
+                    <th>السيارة</th>
+                    <th>الفئة</th>
+                    <th>من</th>
+                    <th>ملاحظة</th>
+                  </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     detailsGrid.innerHTML = `
       <div class="kv"><div class="k">نوع الطلب</div><div class="v">${d.type||'-'}</div></div>
       <div class="kv"><div class="k">الحالة</div><div class="v">${stepLabel(d.step)}</div></div>
-      <div class="kv"><div class="k">رقم الهيكل</div><div class="v mono">${d.vin||''}</div></div>
-      <div class="kv"><div class="k">السيارة</div><div class="v">${d.car||''}</div></div>
-      <div class="kv"><div class="k">الفئة</div><div class="v">${d.variant||''}</div></div>
-      <div class="kv"><div class="k">الخارجي</div><div class="v">${d.extColor||''}</div></div>
-      <div class="kv"><div class="k">الداخلي</div><div class="v">${d.intColor||''}</div></div>
-      <div class="kv"><div class="k">الموديل</div><div class="v">${d.modelYear||''}</div></div>
+      ${list ? '' : `<div class="kv"><div class="k">رقم الهيكل</div><div class="v mono">${d.vin||''}</div></div>`}
+      ${list ? '' : `<div class="kv"><div class="k">السيارة</div><div class="v">${d.car||''}</div></div>`}
+      ${list ? '' : `<div class="kv"><div class="k">الفئة</div><div class="v">${d.variant||''}</div></div>`}
+      ${list ? '' : `<div class="kv"><div class="k">الخارجي</div><div class="v">${d.extColor||''}</div></div>`}
+      ${list ? '' : `<div class="kv"><div class="k">الداخلي</div><div class="v">${d.intColor||''}</div></div>`}
+      ${list ? '' : `<div class="kv"><div class="k">الموديل</div><div class="v">${d.modelYear||''}</div></div>`}
       <div class="kv"><div class="k">المكان الحالي (من)</div><div class="v">${d.fromLocation||''}</div></div>
       <div class="kv"><div class="k">${d.type==='تصوير'?'مكان التصوير':'مكان النقل'} (إلى)</div><div class="v">${d.toLocation||''}</div></div>
       <div class="kv"><div class="k">تاريخ التصوير</div><div class="v">${d.shootDate||'-'}</div></div>
-      <div class="kv" style="grid-column:1/-1"><div class="k">ملاحظة</div><div class="v">${d.note? d.note : '—'}</div></div>
+      ${list ? carsBox : `<div class="kv" style="grid-column:1/-1"><div class="k">ملاحظة</div><div class="v">${d.note? d.note : '—'}</div></div>`}
     `;
 
     const s = Number(d.step||0);
@@ -1195,7 +1256,9 @@ btnSubmit.disabled = true;
       return;
     }
 
-    deleteReqBtn.style.display = 'inline-flex';
+    // إظهار زر الحذف فقط للصلاحية العامة
+    const me = auth.currentUser ? (auth.currentUser.email || '') : '';
+    deleteReqBtn.style.display = isGlobalUser(me) ? 'inline-flex' : 'none';
     moveWarn.style.display = 'block';
 
     setBtn(step1Btn, s>=1, false);
@@ -1226,30 +1289,43 @@ btnSubmit.disabled = true;
     const step = Number(d.step||0);
     if(newStep <= step) { showToast('هذه الخطوة تم تنفيذها بالفعل'); return; }
 
-    // step 3 moves stock location
+    // step 3 moves stock location (يدعم تعدد السيارات داخل الطلب)
     if(newStep === 3){
       await loadStockOnce();
 
-      const vin = normalizeVin(d.vin||'');
-      const idx = stock.findIndex(r => normalizeVin(r.vin) === vin);
-      if(idx === -1){
-        detailsMsg.textContent = 'لم يتم العثور على السيارة داخل المخزون لتحديث المكان.';
-        detailsMsg.className = 'msg err';
-        return;
+      const list = Array.isArray(d.cars) && d.cars.length ? d.cars : [{ vin: d.vin, fromLocation: d.fromLocation }];
+      const oldLocs = [];
+      const movedIdx = [];
+
+      // تحقق إن كل السيارات موجودة
+      for(const c of list){
+        const vin = normalizeVin(c.vin||'');
+        const idx = stock.findIndex(r => normalizeVin(r.vin) === vin);
+        if(idx === -1){
+          detailsMsg.textContent = `غير موجود في المخزون: ${vin}`;
+          detailsMsg.className = 'msg err';
+          return;
+        }
+        oldLocs.push({ idx, old: stock[idx].location });
+        movedIdx.push(idx);
       }
 
-      // update stock
-      const oldLoc = clean(stock[idx].location || '');
-      stock[idx] = { ...stock[idx], location: d.toLocation };
+      // حدث محليًا
+      for(const {idx} of oldLocs){
+        stock[idx] = { ...stock[idx], location: d.toLocation };
+      }
 
       try{
-        await updateDoc(STATE_REF, { stock });
+        // اكتب على الاستوك
+        await setDoc(STOCK_REF, { items: stock }, { merge: true });
       }catch(e){
         console.error(e);
         detailsMsg.textContent = 'تعذّر تحديث مكان السيارة في المخزون.';
         detailsMsg.className = 'msg err';
         // rollback local
-        stock[idx] = { ...stock[idx], location: oldLoc };
+        for(const {idx, old} of oldLocs){
+          stock[idx] = { ...stock[idx], location: old };
+        }
         return;
       }
     }
@@ -1262,35 +1338,20 @@ btnSubmit.disabled = true;
 
     try{
       await updateDoc(doc(db, "requests", id), patch);
-      showToast('تم تحديث الخطوة');
+
+      // step 4 => archive (نفس المستند)
+      if(newStep === 4){
+        await updateDoc(doc(db, "requests", id), { archived: true, archivedAt: serverTimestamp() });
+      }
+
+      showToast('تم تحديث المرحلة');
+      closeModal();
+      await loadRequests();
     }catch(e){
       console.error(e);
-      detailsMsg.textContent = 'تعذّر تحديث الطلب.';
+      detailsMsg.textContent = 'تعذّر تحديث المرحلة.';
       detailsMsg.className = 'msg err';
-      return;
     }
-
-    
-    // step 4 => archive (نفس المسار: requests) عبر تفعيل archived=true
-    if(newStep === 4){
-      try{
-        await updateDoc(doc(db, "requests", id), {
-          archived: true,
-          archivedAt: serverTimestamp(),
-          status: 'مكتمل'
-        });
-        showToast('تم نقل الطلب إلى المكتملة');
-        closeModal();
-        // انتقل لصفحة المكتملة
-        actionSelect.value = 'done';
-        switchPanel();
-      }catch(e){
-        console.error(e);
-        detailsMsg.textContent = 'تمت الخطوة 4 لكن تعذّر تفعيل الأرشفة (archived).';
-        detailsMsg.className = 'msg warn';
-      }
-    }
-
   }
 
   step1Btn.addEventListener('click', ()=> updateRequestStep(1));
@@ -1300,10 +1361,25 @@ btnSubmit.disabled = true;
 
   /* ========= Delete ========= */
   async function deleteRequest(id, fromModal=false){
+    const me = auth.currentUser ? (auth.currentUser.email || '') : '';
+    if(!isGlobalUser(me)){
+      const msg = 'غير مصرح لك بتنفيذ هذه الخطوة';
+      if(fromModal){
+        detailsMsg.textContent = msg;
+        detailsMsg.className = 'msg err';
+      }else{
+        manageMsg.textContent = msg;
+        manageMsg.className = 'msg err';
+      }
+      showToast(msg);
+      return;
+    }
+
     try{
-      /* لا نحذف المستند — بنعلّم archived فقط */
+      await deleteDoc(doc(db, "requests", id));
       showToast('تم حذف الطلب');
       if(fromModal) closeModal();
+      await loadRequests();
     }catch(e){
       console.error(e);
       const msg = 'تعذّر حذف الطلب.';

@@ -439,6 +439,7 @@
                 <tr>
                   <th>تاريخ الإنشاء</th>
                   <th>نوع</th>
+                  <th>منشئ الطلب</th>
                   <th>رقم الهيكل</th>
                   <th>السيارة</th>
                   <th>الفئة</th>
@@ -469,6 +470,7 @@
                   <th>تاريخ الإنشاء</th>
                   <th>تاريخ الإنهاء</th>
                   <th>نوع</th>
+                  <th>منشئ الطلب</th>
                   <th>رقم الهيكل</th>
                   <th>السيارة</th>
                   <th>الفئة</th>
@@ -654,16 +656,106 @@
 
   /* ========= Locations (هنكمل تخصيصها بعدين) ========= */
   const FIXED_LOCATIONS = [
-    "المستودع : المخزون المتاح","المستودع : سيارات بها ملاحظات","المستودع : مباع تحت التسليم","المستودع : مباع تم التسليم",
-    "الوكالة : المخزون المتاح","الوكالة : سيارات بها ملاحظات","الوكالة : مباع تحت التسليم","الوكالة : مباع تم التسليم",
-    "فرع 1 الصالة : المخزون المتاح","فرع 1 الصالة : سيارات بها ملاحظات","فرع 1 الصالة : مباع تحت التسليم","فرع 1 الصالة : مباع تم التسليم",
-    "فرع 2 الملتقى : المخزون المتاح","فرع 2 الملتقى : سيارات بها ملاحظات","فرع 2 الملتقى : مباع تحت التسليم","فرع 2 الملتقى : مباع تم التسليم",
-    "فرع 3 القادسية : المخزون المتاح","فرع 3 القادسية : سيارات بها ملاحظات","فرع 3 القادسية : مباع تحت التسليم","فرع 3 القادسية : مباع تم التسليم"
+    "المستودع : المخزون المتاح",
+    "المستودع : سيارات بها ملاحظات",
+    "المستودع : مباع تحت التسليم",
+    "فرع 1 الصالة : المخزون المتاح",
+    "فرع 1 الصالة : سيارات بها ملاحظات",
+    "فرع 1 الصالة : مباع تحت التسليم",
+    "فرع 2 الملتقى : المخزون المتاح",
+    "فرع 2 الملتقى : سيارات بها ملاحظات",
+    "فرع 2 الملتقى : مباع تحت التسليم",
+    "فرع 3 القادسية : المخزون المتاح",
+    "فرع 3 القادسية : سيارات بها ملاحظات",
+    "فرع 3 القادسية : مباع تحت التسليم",
   ];
+
+  /* ========= Users with Global Permission ========= */
+  const GLOBAL_USERS = new Set([
+    "coo@mzjcars.com",
+    "an9036663@gmail.com",
+    "ceo@mzjcars.com",
+    "hossamzayan10@gmail.com",
+    "mr.ahmed_rashed@outlook.sa"
+  ].map(e => (e||"").toLowerCase()));
+  // Page access (this page is for admins only)
+  const ADMIN_EMAILS = new Set([
+    "kamelashraf948@gmail.com",
+    "mohammed.ezat1989@gmail.com",
+    "aldynmtwlys@gmail.com",
+    "alaasamak100@gmail.com"
+  ].map(e => (e||"").toLowerCase()));
+
+
+  /* ========= Location Owners (Admin Responsibilities) ========= */
+  const LOCATION_OWNER = new Map([
+    // فرع 2 الملتقى
+    ["فرع 2 الملتقى : المخزون المتاح","kamelashraf948@gmail.com"],
+    ["فرع 2 الملتقى : سيارات بها ملاحظات","kamelashraf948@gmail.com"],
+    ["فرع 2 الملتقى : مباع تحت التسليم","kamelashraf948@gmail.com"],
+    ["فرع 2 الملتقى : مباع تم التسليم","kamelashraf948@gmail.com"],
+
+    // المستودع
+    ["المستودع : المخزون المتاح","Mohammed.ezat1989@gmail.com"],
+    ["المستودع : سيارات بها ملاحظات","Mohammed.ezat1989@gmail.com"],
+    ["المستودع : مباع تحت التسليم","Mohammed.ezat1989@gmail.com"],
+    ["المستودع : مباع تم التسليم","Mohammed.ezat1989@gmail.com"],
+
+    // فرع 1 الصالة
+    ["فرع 1 الصالة : المخزون المتاح","aldynmtwlys@gmail.com"],
+    ["فرع 1 الصالة : سيارات بها ملاحظات","aldynmtwlys@gmail.com"],
+    ["فرع 1 الصالة : مباع تحت التسليم","aldynmtwlys@gmail.com"],
+    ["فرع 1 الصالة : مباع تم التسليم","aldynmtwlys@gmail.com"],
+
+    // فرع 3 القادسية
+    ["فرع 3 القادسية : المخزون المتاح","alaasamak100@gmail.com"],
+    ["فرع 3 القادسية : سيارات بها ملاحظات","alaasamak100@gmail.com"],
+    ["فرع 3 القادسية : مباع تحت التسليم","alaasamak100@gmail.com"],
+    ["فرع 3 القادسية : مباع تم التسليم","alaasamak100@gmail.com"]
+  ].map(([loc,email])=>[clean(loc), (email||"").toLowerCase()]));
+
+  function meEmail(){
+    return (auth.currentUser?.email || "").toLowerCase();
+  }
+  function isGlobalUser(){
+    return GLOBAL_USERS.has(meEmail());
+  }
+  function ownerOfLocation(loc){
+    return LOCATION_OWNER.get(clean(loc||"")) || "";
+  }
+
+  // Who is allowed to perform each step for a given request
+  function responsibleEmailForStep(req, stepNum){
+    const type = clean(req?.type||"");
+    const creator = (req?.createdBy || "").toLowerCase();
+
+    if(stepNum === 1 || stepNum === 2){
+      return ownerOfLocation(req?.fromLocation).toLowerCase();
+    }
+    if(stepNum === 3){
+      if(type === "تصوير"){
+        return ownerOfLocation(req?.toLocation).toLowerCase();
+      }
+      // نقل
+      return creator;
+    }
+    if(stepNum === 4){
+      return creator;
+    }
+    return creator;
+  }
+
+  function canPerformStep(req, stepNum){
+    if(isGlobalUser()) return true;
+    const me = meEmail();
+    const resp = responsibleEmailForStep(req, stepNum);
+    return !!me && !!resp && me === resp;
+  }
+
 
   function fillLocations(){
     const sel = $('#destLocation');
-    sel.innerHTML = FIXED_LOCATIONS.map(l=> `<option value="${l}">${l}</option>`).join('');
+    sel.innerHTML = `<option value="">-- اختر --</option>` + FIXED_LOCATIONS.map(l=> `<option value="${l}">${l}</option>`).join('');
   }
 
   /* ========= DOM ========= */
@@ -1078,7 +1170,7 @@
 
     if(!rows.length){
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td colspan="9" class="muted">لا توجد طلبات نشطة.</td>`;
+      tr.innerHTML = `<td colspan="10" class="muted">لا توجد طلبات نشطة.</td>`;
       activeTbody.appendChild(tr);
       return;
     }
@@ -1088,6 +1180,7 @@
       tr.innerHTML = `
         <td>${fmtTS(r.createdAt) || '-'}</td>
         <td><span class="tag">${r.type||'-'}</span></td>
+        <td class="mono">${(r.createdBy||'-')}</td>
         <td class="mono">${r.vin||''}</td>
         <td>${r.car||''}</td>
         <td>${r.variant||''}</td>
@@ -1114,7 +1207,7 @@
 
     if(!rows.length){
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td colspan="9" class="muted">لا توجد طلبات مكتملة.</td>`;
+      tr.innerHTML = `<td colspan="10" class="muted">لا توجد طلبات مكتملة.</td>`;
       doneTbody.appendChild(tr);
       return;
     }
@@ -1125,6 +1218,7 @@
         <td>${fmtTS(r.createdAt) || '-'}</td>
         <td>${fmtTS(r.step4At) || fmtTS(r.archivedAt) || '-'}</td>
         <td><span class="tag">${r.type||'-'}</span></td>
+        <td class="mono">${(r.createdBy||'-')}</td>
         <td class="mono">${r.vin||''}</td>
         <td>${r.car||''}</td>
         <td>${r.variant||''}</td>
@@ -1182,12 +1276,24 @@
     deleteReqBtn.style.display = 'inline-flex';
     moveWarn.style.display = 'block';
 
-    setBtn(step1Btn, s>=1, false);
-    setBtn(step2Btn, s>=2, s<1);
-    setBtn(step3Btn, s>=3, s<2);
-    setBtn(step4Btn, s>=4, s<3);
+    const lock1 = (s < 1) && !canPerformStep(d, 1);
+    const lock2 = (s < 2) && !canPerformStep(d, 2);
+    const lock3 = (s < 3) && !canPerformStep(d, 3);
+    const lock4 = (s < 4) && !canPerformStep(d, 4);
 
-    stepsHint.textContent = `آخر تحديث: ${fmtTS(d.updatedAt)||fmtTS(d.createdAt)||'—'}`;
+    setBtn(step1Btn, s>=1, lock1);
+    setBtn(step2Btn, s>=2, (s<1) || lock2);
+    setBtn(step3Btn, s>=3, (s<2) || lock3);
+    setBtn(step4Btn, s>=4, (s<3) || lock4);
+
+    const baseHint = `آخر تحديث: ${fmtTS(d.updatedAt)||fmtTS(d.createdAt)||'—'}`;
+    const nextStep = (s>=4) ? null : (s+1);
+    if(nextStep){
+      const resp = responsibleEmailForStep(d, nextStep) || '';
+      stepsHint.textContent = resp ? (baseHint + ` — مسؤول الخطوة القادمة: ${resp}`) : baseHint;
+    }else{
+      stepsHint.textContent = baseHint;
+    }
 
     detailsBackdrop.style.display='flex';
   }
@@ -1208,6 +1314,15 @@
     const d  = currentOpen.data;
 
     const step = Number(d.step||0);
+    // Permission gate: only responsible user for this step (or global users) can execute
+    if(!canPerformStep(d, newStep)){
+      const msg = 'غير مصرح لك بتنفيذ هذه الخطوة';
+      detailsMsg.textContent = msg;
+      detailsMsg.className = 'msg err';
+      showToast(msg);
+      return;
+    }
+
     if(newStep <= step) { showToast('هذه الخطوة تم تنفيذها بالفعل'); return; }
 
     // step 3 moves stock location
@@ -1343,6 +1458,12 @@
   /* ========= Auth ========= */
   onAuthStateChanged(auth, async (user)=>{
     if(user){
+      const email = (user.email || '').toLowerCase();
+      if(!ADMIN_EMAILS.has(email) && !GLOBAL_USERS.has(email)){
+        window.location.href = 'unauthorized.html';
+        return;
+      }
+
       const role = await fetchUserRole(user);
       window.__mzjUserRole = role || null;
 

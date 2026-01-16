@@ -2,6 +2,7 @@
 
 
 
+
 <!DOCTYPE html>
 
 <html dir="rtl" lang="ar">
@@ -796,8 +797,19 @@ const $ = s => document.querySelector(s);
         requestsDocs = all;
 
         const norm = v => String(v||'').toLowerCase().trim();
-        shootRequests = all.filter(r => norm(r.kind || r.type) === 'shoot');
-        moveRequests  = all.filter(r => norm(r.kind || r.type) === 'move');
+
+        // ✅ دعم أنواع الطلبات العربية/الإنجليزية بدون تعديل صفحة requests
+        const kindOf = (r)=>{
+          const t = norm(r?.kind || r?.type);
+          // تصوير
+          if(['shoot','photo','photoshoot','تصوير'].includes(t)) return 'shoot';
+          // نقل
+          if(['move','transfer','نقل'].includes(t)) return 'move';
+          return t;
+        };
+
+        shootRequests = all.filter(r => kindOf(r) === 'shoot');
+        moveRequests  = all.filter(r => kindOf(r) === 'move');
 
         renderAll();
       }, (err)=>{
@@ -931,6 +943,90 @@ const $ = s => document.querySelector(s);
     await batch.commit();
   }
 
+
+
+  // ✅ أرشفة طلبات المبيعات المكتملة من erp_orders إلى erp_orders_archives (مشروع التتبع)
+  async function archiveCompletedSalesOrders(){
+    try{
+      const colRef = collection(trackingDb, ERP_COLLECTION);
+      const snap = await getDocs(query(colRef, limit(300)));
+      if(snap.empty){
+        showToast('لا يوجد طلبات مبيعات للأرشفة');
+        return;
+      }
+
+      // حدّد المكتملة بناءً على التتبع (stages)
+      const completedDocs = [];
+
+      const getField = (obj, keys) => {
+        for(const k of keys){
+          if(obj && obj[k] != null && String(obj[k]).trim() !== '') return obj[k];
+        }
+        return '';
+      };
+
+      for(const docSnap of snap.docs){
+        const d = docSnap.data() || {};
+        const orderNo = getField(d, ['orderNo','OrderNo','order_no','name']) || docSnap.id;
+
+        let doneCount = 0;
+
+        try{
+          let trackDocId = String(orderNo);
+          const itemNo = getField(d, ['itemNo','ItemNo','item_no','item','itemNumber']);
+          if(!trackDocId.includes('_') && itemNo) trackDocId = trackDocId + '_' + itemNo;
+
+          let tSnap = await getDoc(doc(trackingDb, TRACK_COLLECTION, trackDocId, 'public', 'status'));
+
+          // Fallbacks
+          if(!tSnap.exists() && !String(orderNo).includes('_')){
+            tSnap = await getDoc(doc(trackingDb, TRACK_COLLECTION, String(orderNo) + '_1', 'public', 'status'));
+            if(!tSnap.exists()){
+              tSnap = await getDoc(doc(trackingDb, TRACK_COLLECTION, String(orderNo) + '_2', 'public', 'status'));
+            }
+          }
+
+          if(tSnap.exists()){
+            const tData = tSnap.data() || {};
+            const stagesObj = tData.stages || {};
+            const keys = Object.keys(stagesObj);
+            doneCount = keys.filter(k=> !!stagesObj[k]).length;
+          }
+        }catch(_e){
+          doneCount = 0;
+        }
+
+        if(doneCount >= STAGES_COUNT){
+          completedDocs.push(docSnap)
+        }
+      }
+
+      const done = completedDocs;
+
+      if(!done.length){
+        showToast('لا يوجد طلبات مبيعات مكتملة للأرشفة');
+        return;
+      }
+
+      const ok = window.confirm(`أرشفة ${done.length} طلب/طلبات مبيعات مكتملة إلى erp_orders_archives ؟`);
+      if(!ok) return;
+
+      const batch = writeBatch(trackingDb);
+      for(const docSnap of done){
+        const payload = { ...(docSnap.data()||{}), archivedAt: now(), archivedBy: (currentUserEmail||''), archivedFrom: 'dashboard' };
+        const archRef = doc(trackingDb, 'erp_orders_archives', docSnap.id);
+        batch.set(archRef, payload, { merge:true });
+        batch.delete(doc(trackingDb, ERP_COLLECTION, docSnap.id));
+      }
+      await batch.commit();
+
+      showToast('تمت أرشفة طلبات المبيعات المكتملة');
+      await refreshSalesSummary();
+    }catch(e){
+      console.error('archiveCompletedSalesOrders error', e);
+      showToast('تعذّر أرشفة طلبات المبيعات');
+    }
+  }
 
 // ملخص طلبات المبيعات من نظام التتبع / ERP
   let salesSummary = null;
@@ -1590,34 +1686,27 @@ function renderShootCard(gridEl){
              الطلبات (تصوير و نقل)
           </h3>
           <div class="sub-metrics">
-            <span class="metric shoot-metric" data-status="ALL">
-              <i class="fa-solid fa-list-ol"></i>
-              إجمالي الطلبات:
-              <b>${st.total.toLocaleString('ar-SA')}</b>
-              — تصوير: <b>${st.shootTotal.toLocaleString('ar-SA')}</b>
-              | طلب نقل: <b>${st.moveTotal.toLocaleString('ar-SA')}</b>
-            </span>
             <span class="metric shoot-metric" data-status="تم الإنشاء">
-              <i class="fa-solid fa-gears"></i>
-              تم الإنشاء:
+              <i class="fa-solid fa-plus"></i>
+              انشاء طلب:
               <b>${st.inProg.toLocaleString('ar-SA')}</b>
             </span>
             <span class="metric shoot-metric" data-status="تم الإرسال">
-              <i class="fa-solid fa-wand-magic-sparkles"></i>
-              تم الإرسال:
+              <i class="fa-solid fa-truck-fast"></i>
+              تم ارسال السيارة:
               <b>${st.prepared.toLocaleString('ar-SA')}</b>
             </span>
             <span class="metric shoot-metric" data-status="تم الاستلام">
-              <i class="fa-regular fa-hourglass-half"></i>
-              تم الاستلام:
+              <i class="fa-solid fa-hand-holding"></i>
+              تم استلام السيارة:
               <b>${st.reviewing.toLocaleString('ar-SA')}</b>
             </span>
             <span class="metric shoot-metric" data-status="تم التنفيذ">
               <i class="fa-regular fa-circle-check"></i>
-              تم التنفيذ:
+              تم الانتهاء:
               <b>${st.done.toLocaleString('ar-SA')}</b>
             </span>
-          </div>
+          </div></div>
         </div>
         <div class="group-total" title="إجمالي الطلبات">
           ${st.total.toLocaleString('ar-SA')}
@@ -1649,20 +1738,6 @@ function renderShootCard(gridEl){
         } else {
           openShootModal(status);
         }
-      });
-    });
-
-    // الضغط على الكارت يفتح إجمالي الطلبات
-    card.addEventListener('click', (ev)=>{
-      if(ev.target.closest('.sales-metric')) return;
-      openSalesModal('total');
-    });
-    // الضغط على أي رقم يفتح مودال بفلتر
-    card.querySelectorAll('.sales-metric').forEach(el=>{
-      el.addEventListener('click', (e)=>{
-        e.stopPropagation();
-        const f = el.getAttribute('data-sfilter') || 'total';
-        openSalesModal(f);
       });
     });
 
@@ -1835,10 +1910,6 @@ function renderShootCard(gridEl){
             تتبع طلبات البيع
           </h3>
           <div class="sub-metrics">
-            <span class="metric sales-metric" data-sfilter="total" style="cursor:pointer">
-              <i class="fa-solid fa-list-ol"></i>
-              إجمالي الطلبات: <b>${s.total.toLocaleString('ar-SA')}</b>
-            </span>
             <span class="metric sales-metric" data-sfilter="notStarted" style="cursor:pointer">
               <i class="fa-solid fa-circle-dot"></i>
               لم تبدأ: <b>${s.notStarted.toLocaleString('ar-SA')}</b>
@@ -1850,6 +1921,9 @@ function renderShootCard(gridEl){
             <span class="metric sales-metric" data-sfilter="completed" style="cursor:pointer">
               <i class="fa-solid fa-circle-check"></i>
               مكتملة: <b>${s.completed.toLocaleString('ar-SA')}</b>
+              <button class=\"btn btn-xs btn-outline\" id=\"btnSalesArchive\" type=\"button\" style=\"margin-inline-start:10px;\">
+                <i class=\"fa-solid fa-box-archive\"></i> أرشفة
+              </button>
             </span>
           </div>
         </div>
@@ -1873,6 +1947,14 @@ function renderShootCard(gridEl){
       btnSalesSync.addEventListener('click', async (e)=>{
         e.stopPropagation();
         await refreshSalesSummary();
+      });
+    }
+
+    const btnSalesArchive = card.querySelector('#btnSalesArchive');
+    if(btnSalesArchive){
+      btnSalesArchive.addEventListener('click', async (e)=>{
+        e.stopPropagation();
+        await archiveCompletedSalesOrders();
       });
     }
 

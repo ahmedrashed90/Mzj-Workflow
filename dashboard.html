@@ -3,6 +3,7 @@
 
 
 
+
 <!DOCTYPE html>
 
 <html dir="rtl" lang="ar">
@@ -946,62 +947,21 @@ const $ = s => document.querySelector(s);
 
 
   // ✅ أرشفة طلبات المبيعات المكتملة من erp_orders إلى erp_orders_archives (مشروع التتبع)
+  // ملاحظة: نعتمد على salesOrders (التي تُعرض في الداش) + erpCache لتجنب اختلافات الفلترة وتقليل القراءات
   async function archiveCompletedSalesOrders(){
     try{
-      const colRef = collection(trackingDb, ERP_COLLECTION);
-      const snap = await getDocs(query(colRef, limit(300)));
-      if(snap.empty){
-        showToast('لا يوجد طلبات مبيعات للأرشفة');
+      // تأكد أن مشروع التتبع مسجّل دخول (إن كانت القواعد تتطلب)
+      if(!trackingAuth.currentUser){
+        showToast('سجّل دخولك أولاً في مشروع التتبع','warn');
         return;
       }
 
-      // حدّد المكتملة بناءً على التتبع (stages)
-      const completedDocs = [];
-
-      const getField = (obj, keys) => {
-        for(const k of keys){
-          if(obj && obj[k] != null && String(obj[k]).trim() !== '') return obj[k];
-        }
-        return '';
-      };
-
-      for(const docSnap of snap.docs){
-        const d = docSnap.data() || {};
-        const orderNo = getField(d, ['orderNo','OrderNo','order_no','name']) || docSnap.id;
-
-        let doneCount = 0;
-
-        try{
-          let trackDocId = String(orderNo);
-          const itemNo = getField(d, ['itemNo','ItemNo','item_no','item','itemNumber']);
-          if(!trackDocId.includes('_') && itemNo) trackDocId = trackDocId + '_' + itemNo;
-
-          let tSnap = await getDoc(doc(trackingDb, TRACK_COLLECTION, trackDocId, 'public', 'status'));
-
-          // Fallbacks
-          if(!tSnap.exists() && !String(orderNo).includes('_')){
-            tSnap = await getDoc(doc(trackingDb, TRACK_COLLECTION, String(orderNo) + '_1', 'public', 'status'));
-            if(!tSnap.exists()){
-              tSnap = await getDoc(doc(trackingDb, TRACK_COLLECTION, String(orderNo) + '_2', 'public', 'status'));
-            }
-          }
-
-          if(tSnap.exists()){
-            const tData = tSnap.data() || {};
-            const stagesObj = tData.stages || {};
-            const keys = Object.keys(stagesObj);
-            doneCount = keys.filter(k=> !!stagesObj[k]).length;
-          }
-        }catch(_e){
-          doneCount = 0;
-        }
-
-        if(doneCount >= STAGES_COUNT){
-          completedDocs.push(docSnap)
-        }
+      // تأكد أن بيانات المبيعات محمّلة
+      if(!Array.isArray(salesOrders) || !salesOrders.length){
+        await fetchSalesSummary();
       }
 
-      const done = completedDocs;
+      const done = (salesOrders||[]).filter(o => Number(o.doneCount||0) >= STAGES_COUNT);
 
       if(!done.length){
         showToast('لا يوجد طلبات مبيعات مكتملة للأرشفة');
@@ -1012,21 +972,31 @@ const $ = s => document.querySelector(s);
       if(!ok) return;
 
       const batch = writeBatch(trackingDb);
-      for(const docSnap of done){
-        const payload = { ...(docSnap.data()||{}), archivedAt: now(), archivedBy: (currentUserEmail||''), archivedFrom: 'dashboard' };
-        const archRef = doc(trackingDb, 'erp_orders_archives', docSnap.id);
+
+      done.forEach(o=>{
+        const id = String(o._id || o.orderNo || '').trim();
+        if(!id) return;
+
+        const base = (erpCache && erpCache.get(id)) ? (erpCache.get(id) || {}) : {};
+        const payload = { ...base, archivedAt: now(), archivedBy: (currentUserEmail||''), archivedFrom: 'dashboard' };
+
+        const archRef = doc(trackingDb, 'erp_orders_archives', id);
         batch.set(archRef, payload, { merge:true });
-        batch.delete(doc(trackingDb, ERP_COLLECTION, docSnap.id));
-      }
+        batch.delete(doc(trackingDb, ERP_COLLECTION, id));
+      });
+
       await batch.commit();
 
       showToast('تمت أرشفة طلبات المبيعات المكتملة');
+      // أعد تحميل الملخص والكاش
       await refreshSalesSummary();
     }catch(e){
       console.error('archiveCompletedSalesOrders error', e);
       showToast('تعذّر أرشفة طلبات المبيعات');
     }
   }
+
+
 
 // ملخص طلبات المبيعات من نظام التتبع / ERP
   let salesSummary = null;
@@ -1037,6 +1007,8 @@ const $ = s => document.querySelector(s);
   // قائمة الطلبات (للمودال)
   let salesOrders = [];
   let filteredSalesOrders = [];
+  // كاش بيانات ERP للطلبات (لاستخدامه في الأرشفة بدون قراءات إضافية)
+  let erpCache = new Map();
   let currentSalesFilter = 'total';
 // سياق الموافقات (مباع تحت التسليم)
   let approvalContext = null;
@@ -1157,7 +1129,7 @@ $('#btnLogin').addEventListener('click', async ()=>{
     try{ await createUserWithEmailAndPassword(auth, $('#email').value.trim(), $('#password').value); }
     catch(e){ $('#authHint').textContent='تعذّر إنشاء الحساب: '+(e?.message||e); }
   });
-  $('#btnSignOut').addEventListener('click', ()=> signOut(auth));
+  $('#btnSignOut').addEventListener('click', async ()=>{ try{ await signOut(auth);}catch(_e){} try{ await signOut(trackingAuth);}catch(_e2){} });
 
   /* ===== Data ===== */
   // تحميل ملخص طلبات المبيعات من مشروع التتبع (ERP + Tracking)
@@ -1177,6 +1149,11 @@ $('#btnLogin').addEventListener('click', async ()=>{
 
       total = snap.size;
       const docs = snap.docs;
+
+      // Cache ERP docs (id -> data) for archive action
+      erpCache = new Map();
+      docs.forEach(ds=>{ try{ erpCache.set(ds.id, ds.data()||{}); }catch(_e){} });
+
 
       const getField = (obj, keys) => {
         for(const k of keys){

@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Firebase Diagnostics | mzj-agenda</title>
+  <style>
+    :root{
+      --bg:#0b0f14; --card:#121a24; --card2:#0f1722; --text:#e9eef7; --muted:#9fb0c6;
+      --border:#243246; --accent:#7dd3fc; --warn:#fbbf24; --bad:#fb7185; --ok:#34d399;
+      --btn:#1b2a3d; --btn2:#20344c; --shadow: 0 10px 28px rgba(0,0,0,.35);
+      --radius:14px;
+      font-synthesis-weight:none;
+    }
+    body{margin:0;background:linear-gradient(180deg,#070a0f, #0b0f14);color:var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Tahoma, Arial;
+    }
+    .wrap{max-width:1100px;margin:0 auto;padding:18px 14px 40px;}
+    .top{
+      display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+      padding:14px 16px; background:rgba(18,26,36,.9); border:1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow); position:sticky; top:10px; z-index:10;
+      backdrop-filter: blur(10px);
+    }
+    .brand{display:flex;gap:10px;align-items:center;}
+    .dot{width:12px;height:12px;border-radius:999px;background:var(--warn);box-shadow:0 0 0 4px rgba(251,191,36,.12);}
+    .title{font-weight:800; letter-spacing:.2px;}
+    .sub{color:var(--muted); font-size:13px}
+    .grid{display:grid; grid-template-columns: 1.1fr .9fr; gap:12px; margin-top:12px;}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
+    .card{
+      background:rgba(18,26,36,.75); border:1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card h2{
+      margin:0; padding:12px 14px; font-size:14px; background:rgba(15,23,34,.9);
+      border-bottom:1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .card h2 small{font-weight:600;color:var(--muted)}
+    .card .body{padding:14px}
+    label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px}
+    input, textarea, select{
+      width:100%; box-sizing:border-box;
+      background:rgba(11,15,20,.7); color:var(--text);
+      border:1px solid var(--border); border-radius:12px;
+      padding:10px 12px; outline:none;
+    }
+    textarea{min-height:92px; resize:vertical; line-height:1.4}
+    .row{display:grid; grid-template-columns: 1fr 1fr; gap:10px}
+    @media (max-width: 700px){ .row{grid-template-columns:1fr} }
+    .btns{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+    button{
+      border:1px solid var(--border); background:var(--btn); color:var(--text);
+      padding:10px 12px; border-radius:12px; cursor:pointer; font-weight:700;
+    }
+    button:hover{background:var(--btn2)}
+    button.primary{border-color: rgba(125,211,252,.35); box-shadow:0 0 0 4px rgba(125,211,252,.08) inset}
+    button.danger{border-color: rgba(251,113,133,.35)}
+    button.good{border-color: rgba(52,211,153,.35)}
+    .kv{
+      display:grid; grid-template-columns: 220px 1fr;
+      gap:8px 10px; font-size:13px; align-items:start;
+    }
+    @media (max-width: 700px){ .kv{grid-template-columns:1fr} }
+    .k{color:var(--muted)}
+    .v{word-break:break-word}
+    .pill{
+      display:inline-flex; align-items:center; gap:7px;
+      border:1px solid var(--border); background:rgba(11,15,20,.6);
+      padding:6px 10px; border-radius:999px; font-size:12px; color:var(--muted)
+    }
+    .pill .s{width:8px; height:8px; border-radius:999px; background:var(--warn)}
+    .pill.ok .s{background:var(--ok)}
+    .pill.bad .s{background:var(--bad)}
+    .pill.warn .s{background:var(--warn)}
+    pre{
+      margin:0; padding:14px; background:rgba(7,10,15,.8);
+      border-top:1px solid var(--border);
+      font-size:12px; line-height:1.55; color:#dbe7ff; overflow:auto; max-height:520px;
+      white-space:pre-wrap; word-break:break-word;
+    }
+    .hint{color:var(--muted); font-size:12px; margin-top:8px; line-height:1.6}
+    .split{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    @media (max-width: 980px){ .split{grid-template-columns:1fr} }
+    .mini{
+      border:1px dashed rgba(159,176,198,.35);
+      padding:10px 12px; border-radius:12px; background:rgba(11,15,20,.35);
+    }
+    .mini b{color:#fff}
+    .note{
+      border:1px solid rgba(251,191,36,.25);
+      background:rgba(251,191,36,.08);
+      padding:10px 12px; border-radius:12px; color:#ffe7a7; font-size:12px; line-height:1.6;
+    }
+  </style>
+</head>
+
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">
+      <span class="dot" id="topDot"></span>
+      <div>
+        <div class="title">Firebase Diagnostics (mzj-agenda)</div>
+        <div class="sub">تشخيص: Auth / Firestore Rules / مسارات مكررة / رجوع الحالة بعد النقل</div>
+      </div>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center">
+      <span class="pill warn" id="netPill"><span class="s"></span><span id="netTxt">...</span></span>
+      <span class="pill warn" id="authPill"><span class="s"></span><span id="authTxt">Auth: ...</span></span>
+      <span class="pill warn" id="dbPill"><span class="s"></span><span id="dbTxt">DB: ...</span></span>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- LEFT -->
+    <div class="card">
+      <h2>
+        <span>١) إعدادات الفحص</span>
+        <small>اختار VIN + المسارات اللي بتقرأ/تكتب منها</small>
+      </h2>
+      <div class="body">
+        <div class="row">
+          <div>
+            <label>VIN / رقم الهيكل المراد مراقبته</label>
+            <input id="vinInput" placeholder="مثال: KMH... أو أي VIN" />
+          </div>
+          <div>
+            <label>حقل الموقع الأساسي (location field)</label>
+            <input id="locFieldInput" value="location" />
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <div>
+            <label>مسار الكتابة الأساسي عند النقل (Target Write Path)</label>
+            <input id="writePathInput" value="erp_vins/{VIN}" />
+          </div>
+          <div>
+            <label>المكان الجديد (للاختبار)</label>
+            <input id="newLocInput" placeholder="مثال: معرض - مخزون متاح - تحت التصوير ..." />
+          </div>
+        </div>
+
+        <div style="margin-top:10px">
+          <label>المسارات اللي هنراقبها لايف (واحد في كل سطر) — استعمل {VIN}</label>
+          <textarea id="pathsInput">erp_vins/{VIN}
+cars/{VIN}
+inventory/{VIN}
+workspace_tasks/{VIN}</textarea>
+          <div class="hint">
+            لو عندك مسارات فعلية غير دي (مثلاً: erp_Vins بدل erp_vins، أو stock/...) اكتبها هنا.
+            الهدف: نكشف “قراءة من مسار وكتابة في مسار” أو تكرار VIN.
+          </div>
+        </div>
+
+        <div class="btns">
+          <button class="primary" id="btnInit">تشغيل Firebase + تشخيص عام</button>
+          <button class="good" id="btnAnon">تسجيل دخول مجهول (Anonymous)</button>
+          <button id="btnReadAll">قراءة مرة واحدة لكل المسارات</button>
+          <button class="primary" id="btnWatch">بدء المراقبة (Live)</button>
+          <button class="danger" id="btnStop">إيقاف المراقبة</button>
+        </div>
+
+        <div class="btns">
+          <button class="primary" id="btnWriteTest">اختبار نقل (Write ثم Verify)</button>
+          <button id="btnDupScan">فحص تكرار VIN (Query by field)</button>
+          <button id="btnClear">مسح اللوج</button>
+        </div>
+
+        <div class="note" style="margin-top:12px">
+          <b>مهم جدًا عشان نعرف “مين بيرجّع”:</b><br/>
+          لو صفحاتك المختلفة بتكتب على نفس الدوك بدون حقول تدقيق (updatedBy / updatedByApp / updatedAt)،
+          هنعرف إن فيه تعديل حصل… بس صعب نحدد المصدر. صفحة التشخيص دي بتكتب الحقول دي في اختبار النقل فقط.
+        </div>
+      </div>
+      <pre id="log"></pre>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="card">
+      <h2>
+        <span>٢) حالة الاتصال + معلومات المشروع</span>
+        <small>يوضح هل المشكلة Auth أو Rules أو مسار</small>
+      </h2>
+      <div class="body">
+        <div class="split">
+          <div class="mini">
+            <b>Firebase SDK</b>
+            <div class="kv" style="margin-top:8px">
+              <div class="k">الإصدار</div><div class="v" id="sdkVer">-</div>
+              <div class="k">المشروع</div><div class="v" id="projId">-</div>
+              <div class="k">authDomain</div><div class="v" id="authDomain">-</div>
+              <div class="k">storageBucket</div><div class="v" id="bucket">-</div>
+            </div>
+          </div>
+          <div class="mini">
+            <b>Session</b>
+            <div class="kv" style="margin-top:8px">
+              <div class="k">Network</div><div class="v" id="netState">-</div>
+              <div class="k">Auth User</div><div class="v" id="userState">-</div>
+              <div class="k">UID</div><div class="v" id="uidState">-</div>
+              <div class="k">Email</div><div class="v" id="emailState">-</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mini" style="margin-top:10px">
+          <b>إعدادات فحص التكرار (Query by field)</b>
+          <div class="hint" style="margin-top:6px">
+            ده يفحص هل VIN موجود كـ <b>field</b> داخل أكتر من Collection (مثلاً: docs فيها vin = "..." مش doc id).
+            اكتب Collections مفصولة بسطر.
+          </div>
+          <label style="margin-top:10px">Collections للفحص (واحد في كل سطر)</label>
+          <textarea id="dupColsInput">erp_vins
+cars
+inventory
+workflow_requests
+workspace_tasks</textarea>
+          <div class="row" style="margin-top:10px">
+            <div>
+              <label>اسم الحقل اللي يحمل VIN داخل الدوك</label>
+              <input id="vinFieldInput" value="vin" />
+            </div>
+            <div>
+              <label>حد أقصى نتائج لكل Collection</label>
+              <input id="dupLimitInput" type="number" value="5" min="1" max="50" />
+            </div>
+          </div>
+        </div>
+
+        <div class="mini" style="margin-top:10px">
+          <b>إرشادات سريعة لسبب “رجوع المكان”</b>
+          <div class="hint" style="margin-top:8px; line-height:1.7">
+            1) لو ظهر <b>permission-denied</b> بعد النقل → Rules تمنع التحديث فيرجع.<br/>
+            2) لو المسار اللي كتبت فيه يختلف عن المسار اللي بتقرأ منه → “رجوع وهمي”.<br/>
+            3) لو ظهر تعديل ثاني بعد ثواني على نفس الدوك → فيه Writer ثاني (صفحة أخرى / سكربت / فانكشن).<br/>
+            4) لو نفس VIN موجود في Collections متعددة بقيم location مختلفة → تكرار/مسارات مكررة.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  // ===== Firebase (Modular) =====
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, onSnapshot,
+    updateDoc, serverTimestamp,
+    collection, query, where, getDocs, limit as qLimit
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC614bGqnYf4Q-weTNemzWENTpa8DjGeHw",
+    authDomain: "mzj-agenda.firebaseapp.com",
+    projectId: "mzj-agenda",
+    storageBucket: "mzj-agenda.firebasestorage.app",
+    messagingSenderId: "834700407721",
+    appId: "1:834700407721:web:75c17665d4f032fd65cab8"
+  };
+
+  // ===== UI helpers =====
+  const $ = (id) => document.getElementById(id);
+
+  function setPill(pillEl, state, text){
+    pillEl.classList.remove("ok","bad","warn");
+    pillEl.classList.add(state);
+    pillEl.querySelector("span:last-child").textContent = text;
+  }
+
+  function logLine(msg, obj){
+    const el = $("log");
+    const ts = new Date().toLocaleString("ar-SA");
+    el.textContent += `\n[${ts}] ${msg}`;
+    if(obj !== undefined){
+      try { el.textContent += `\n${JSON.stringify(obj, null, 2)}\n`; }
+      catch(e){ el.textContent += `\n${String(obj)}\n`; }
+    } else {
+      el.textContent += "\n";
+    }
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function diffObjects(a={}, b={}){
+    const out = {};
+    const keys = new Set([...Object.keys(a||{}), ...Object.keys(b||{})]);
+    for(const k of keys){
+      const av = a?.[k];
+      const bv = b?.[k];
+      if(JSON.stringify(av) !== JSON.stringify(bv)){
+        out[k] = { from: av ?? null, to: bv ?? null };
+      }
+    }
+    return out;
+  }
+
+  function resolvePath(template, vin){
+    return template.replaceAll("{VIN}", vin);
+  }
+
+  function getVin(){
+    const vin = $("vinInput").value.trim();
+    if(!vin) throw new Error("اكتب VIN الأول.");
+    return vin;
+  }
+
+  function getPaths(){
+    const raw = $("pathsInput").value.split("\n").map(s=>s.trim()).filter(Boolean);
+    return raw;
+  }
+
+  // ===== Firebase state =====
+  let app = null;
+  let auth = null;
+  let db = null;
+  let unsubAuth = null;
+  let unsubs = [];
+
+  function updateNetUI(){
+    const online = navigator.onLine;
+    $("netState").textContent = online ? "Online" : "Offline";
+    setPill($("netPill"), online ? "ok" : "bad", online ? "Online" : "Offline");
+    $("topDot").style.background = online ? "var(--ok)" : "var(--bad)";
+  }
+  window.addEventListener("online", updateNetUI);
+  window.addEventListener("offline", updateNetUI);
+  updateNetUI();
+
+  function attachAuthListener(){
+    if(unsubAuth) unsubAuth();
+    unsubAuth = onAuthStateChanged(auth, (user)=>{
+      if(user){
+        $("userState").textContent = "Signed In ✅";
+        $("uidState").textContent = user.uid || "-";
+        $("emailState").textContent = user.email || "(Anonymous)";
+        setPill($("authPill"), "ok", "Auth: Signed In");
+        setPill($("dbPill"), "ok", "DB: Ready");
+      }else{
+        $("userState").textContent = "Not Signed In";
+        $("uidState").textContent = "-";
+        $("emailState").textContent = "-";
+        setPill($("authPill"), "warn", "Auth: Not Signed In");
+        setPill($("dbPill"), "warn", "DB: Ready");
+      }
+    }, (err)=>{
+      setPill($("authPill"), "bad", "Auth: Error");
+      logLine("AUTH LISTENER ERROR", { code: err.code, message: err.message });
+    });
+  }
+
+  // ===== Actions =====
+  async function initFirebase(){
+    try{
+      app = initializeApp(firebaseConfig);
+      auth = getAuth(app);
+      db = getFirestore(app);
+
+      $("sdkVer").textContent = "firebasejs/10.12.5 (CDN)";
+      $("projId").textContent = firebaseConfig.projectId;
+      $("authDomain").textContent = firebaseConfig.authDomain;
+      $("bucket").textContent = firebaseConfig.storageBucket;
+
+      attachAuthListener();
+
+      setPill($("dbPill"), "ok", "DB: Ready");
+      logLine("INIT OK ✅", { projectId: firebaseConfig.projectId });
+
+      // تشخيص سريع: قراءة بسيطة (لو rules تمنع القراءة هتعرف فورًا)
+      // ملاحظة: Firestore ما يسمحش “list collections” من الويب، فنعمل read على paths لو في VIN
+      if($("vinInput").value.trim()){
+        await readAllOnce();
+      }else{
+        logLine("جاهز. اكتب VIN واضغط: قراءة مرة واحدة / بدء المراقبة.");
+      }
+
+    }catch(e){
+      setPill($("dbPill"), "bad", "DB: Init Error");
+      logLine("INIT FAIL ❌", { message: e.message, stack: e.stack });
+    }
+  }
+
+  async function signInAnon(){
+    if(!auth) return logLine("لازم تعمل INIT الأول.");
+    try{
+      const res = await signInAnonymously(auth);
+      logLine("ANON SIGN-IN OK ✅", { uid: res.user.uid });
+    }catch(e){
+      // غالبًا: auth/operation-not-allowed لو Anonymous مش مفعّل
+      logLine("ANON SIGN-IN FAIL ❌", { code: e.code, message: e.message });
+      setPill($("authPill"), "bad", "Auth: Error");
+    }
+  }
+
+  async function readAllOnce(){
+    if(!db) return logLine("لازم تعمل INIT الأول.");
+    let vin;
+    try { vin = getVin(); } catch(e){ return logLine(e.message); }
+
+    const paths = getPaths();
+    logLine("READ ALL ONCE ▶", { vin, paths });
+
+    for(const tpl of paths){
+      const path = resolvePath(tpl, vin);
+      try{
+        const ref = doc(db, path);
+        const snap = await getDoc(ref);
+        logLine(`READ ${path} exists=${snap.exists()}`, snap.exists() ? snap.data() : null);
+      }catch(e){
+        logLine(`READ ERROR ${path}`, { code: e.code, message: e.message });
+      }
+    }
+  }
+
+  function stopWatching(){
+    for(const u of unsubs) try{ u(); }catch(_){}
+    unsubs = [];
+    logLine("WATCH STOPPED ⏹️");
+  }
+
+  function startWatching(){
+    if(!db) return logLine("لازم تعمل INIT الأول.");
+    let vin;
+    try { vin = getVin(); } catch(e){ return logLine(e.message); }
+
+    stopWatching();
+
+    const paths = getPaths();
+    logLine("WATCH START ▶", { vin, paths });
+
+    for(const tpl of paths){
+      const path = resolvePath(tpl, vin);
+      const ref = doc(db, path);
+
+      let prev = null;
+      const unsub = onSnapshot(ref, (snap)=>{
+        const cur = snap.exists() ? snap.data() : null;
+
+        if(prev === null){
+          logLine(`WATCH ${path} (initial) exists=${snap.exists()}`, cur);
+        }else{
+          logLine(`CHANGE ${path} exists=${snap.exists()}`, {
+            diff: diffObjects(prev, cur),
+            data: cur
+          });
+        }
+        prev = cur;
+      }, (err)=>{
+        logLine(`WATCH ERROR ${path}`, { code: err.code, message: err.message });
+      });
+
+      unsubs.push(unsub);
+    }
+  }
+
+  async function writeThenVerify(){
+    if(!db || !auth) return logLine("لازم تعمل INIT الأول.");
+    let vin;
+    try { vin = getVin(); } catch(e){ return logLine(e.message); }
+
+    const locField = $("locFieldInput").value.trim() || "location";
+    const newLoc = $("newLocInput").value.trim();
+    if(!newLoc) return logLine("اكتب المكان الجديد للاختبار.");
+
+    const writeTpl = $("writePathInput").value.trim() || "erp_vins/{VIN}";
+    const writePath = resolvePath(writeTpl, vin);
+
+    const user = auth.currentUser;
+    const who = user?.email || user?.uid || "anonymous";
+
+    logLine("WRITE TEST ▶", { writePath, [locField]: newLoc });
+
+    try{
+      const ref = doc(db, writePath);
+      await updateDoc(ref, {
+        [locField]: newLoc,
+        updatedAt: serverTimestamp(),
+        updatedBy: who,
+        updatedByApp: "diagnostics",
+        updateReason: "transfer-test"
+      });
+
+      logLine("WRITE OK ✅", { writePath });
+
+      const now = await getDoc(ref);
+      logLine("VERIFY NOW", now.exists()? now.data() : { exists:false });
+
+      setTimeout(async ()=>{
+        try{
+          const later = await getDoc(ref);
+          logLine("VERIFY +3s", later.exists()? later.data() : { exists:false });
+        }catch(e2){
+          logLine("VERIFY +3s ERROR", { code: e2.code, message: e2.message });
+        }
+      }, 3000);
+
+    }catch(e){
+      // permission-denied / not-found / unavailable
+      logLine("WRITE FAIL ❌", { code: e.code, message: e.message });
+    }
+  }
+
+  async function duplicateScan(){
+    if(!db) return logLine("لازم تعمل INIT الأول.");
+    let vin;
+    try { vin = getVin(); } catch(e){ return logLine(e.message); }
+
+    const cols = $("dupColsInput").value.split("\n").map(s=>s.trim()).filter(Boolean);
+    const vinField = $("vinFieldInput").value.trim() || "vin";
+    const lim = Math.max(1, Math.min(50, parseInt($("dupLimitInput").value || "5", 10)));
+
+    logLine("DUP SCAN ▶", { vin, vinField, collections: cols, limit: lim });
+
+    for(const colName of cols){
+      try{
+        const colRef = collection(db, colName);
+        const qy = query(colRef, where(vinField, "==", vin), qLimit(lim));
+        const res = await getDocs(qy);
+
+        if(res.empty){
+          logLine(`DUP ${colName}: 0 results`);
+          continue;
+        }
+
+        const items = [];
+        res.forEach(d=>{
+          items.push({ id: d.id, path: `${colName}/${d.id}`, data: d.data() });
+        });
+
+        logLine(`DUP ${colName}: ${items.length} result(s)`, items);
+
+      }catch(e){
+        logLine(`DUP ERROR ${colName}`, { code: e.code, message: e.message });
+      }
+    }
+
+    logLine("DUP SCAN DONE ✅");
+  }
+
+  // ===== Buttons =====
+  $("btnInit").addEventListener("click", initFirebase);
+  $("btnAnon").addEventListener("click", signInAnon);
+  $("btnReadAll").addEventListener("click", readAllOnce);
+  $("btnWatch").addEventListener("click", startWatching);
+  $("btnStop").addEventListener("click", stopWatching);
+  $("btnWriteTest").addEventListener("click", writeThenVerify);
+  $("btnDupScan").addEventListener("click", duplicateScan);
+  $("btnClear").addEventListener("click", ()=>{ $("log").textContent=""; logLine("LOG CLEARED ✅"); });
+
+  // initial pill text
+  $("netTxt").textContent = "Network: ...";
+  $("authTxt").textContent = "Auth: ...";
+  $("dbTxt").textContent = "DB: ...";
+  setPill($("netPill"), navigator.onLine ? "ok" : "bad", navigator.onLine ? "Online" : "Offline");
+  setPill($("authPill"), "warn", "Auth: Not Ready");
+  setPill($("dbPill"), "warn", "DB: Not Ready");
+  logLine("جاهز. اضغط: تشغيل Firebase + تشخيص عام.");
+</script>
+</body>
+</html>

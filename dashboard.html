@@ -4,6 +4,7 @@
 
 
 
+
 <!DOCTYPE html>
 
 <html dir="rtl" lang="ar">
@@ -454,6 +455,9 @@ tr:hover{ filter: brightness(0.98); }
   <span class="chip" data-stock-top="notes" title="إجمالي سيارات بها ملاحظات (كل الفروع والوكالة)">
     <i class="fa-solid fa-triangle-exclamation"></i> سيارات بها ملاحظات: <b id="stockNotesTotal">0</b>
   </span>
+  <span class="chip" data-stock-top="pending" title="إجمالي السيارات (مباع تحت التسليم)">
+    <i class="fa-solid fa-truck"></i> تحت التسليم: <b id="stockPendingTotal">0</b>
+  </span>
 </div>
 </div></div></div><div class="cards" id="groupsGrid"></div>
 </div>
@@ -542,6 +546,7 @@ tr:hover{ filter: brightness(0.98); }
 <th>البيان</th>
 <th>اللون الداخلي</th>
 <th>اللون الخارجي</th>
+<th>اللون الداخلي</th>
 <th>الموديل</th>
 <th>عدد الفرع</th>
 <th>الإجمالي العام</th>
@@ -576,6 +581,7 @@ tr:hover{ filter: brightness(0.98); }
 <thead>
 <tr>
 <th>#</th>
+<th>نوع الطلب</th>
 <th>التاريخ</th>
 <th>رقم الهيكل</th>
 <th>السيارة</th>
@@ -624,13 +630,15 @@ tr:hover{ filter: brightness(0.98); }
 <thead>
 <tr>
 <th>#</th>
+<th>نوع الطلب</th>
 <th>رقم الهيكل</th>
 <th>السيارة</th>
 <th>البيان</th>
 <th>اللون الخارجي</th>
+<th>اللون الداخلي</th>
 <th>الموديل</th>
-<th>المكان الحالي</th>
-<th>مكان التصوير</th>
+<th>المكان الحالي (من)</th>
+<th>مكان النقل/التصوير</th>
 <th>ملاحظات</th>
 </tr>
 </thead>
@@ -799,14 +807,12 @@ const $ = s => document.querySelector(s);
 
         const norm = v => String(v||'').toLowerCase().trim();
 
-        // ✅ دعم أنواع الطلبات العربية/الإنجليزية بدون تعديل صفحة requests
+        // ✅ دعم أنواع الطلبات العربية/الإنجليزية (قيم قد تكون: "طلب تصوير", "نقل", ...)
         const kindOf = (r)=>{
-          const t = norm(r?.kind || r?.type);
-          // تصوير
-          if(['shoot','photo','photoshoot','تصوير'].includes(t)) return 'shoot';
-          // نقل
-          if(['move','transfer','نقل'].includes(t)) return 'move';
-          return t;
+          const t = norm(r?.kind || r?.requestType || r?.orderType || r?.type || r?._type || '');
+          if (t.includes('move') || t.includes('transfer') || t.includes('نقل')) return 'move';
+          if (t.includes('shoot') || t.includes('photo') || t.includes('تصوير')) return 'shoot';
+          return 'shoot';
         };
 
         shootRequests = all.filter(r => kindOf(r) === 'shoot');
@@ -1603,31 +1609,72 @@ $('#btnLogin').addEventListener('click', async ()=>{
   
     // تحديد المرحلة الحالية للطلب (بايبلاين حصري لكل طلب)
   // تم الإنشاء: طلب جديد
-  // تم الاستلام: تم استلام السيارة/الطلب
-  // تم الإرسال: تم إرسال السيارة (بعد التجهيز)
+  // تم الإرسال: تم إرسال السيارة
+  // تم الاستلام: تم استلام السيارة
   // تم التنفيذ: تم الانتهاء
   function getOrderStage(r){
     const status   = (r?.status || '').toString().trim();
-    const received = !!(r?.admin && r.admin.received);
-    const prepared = !!(r?.admin && r.admin.prepared);
 
-    // 1) تم التنفيذ (أي "مكتملة" لازم تعتبر تم التنفيذ حتى لو مفيش received/prepared)
-    if (isShootDone(r) || /^(مكتملة|مكتمل|تم التنفيذ|تم|منفّذ|منفذ|منتهي|منتهية|تم الانتهاء|تم الإنتهاء)$/i.test(status)) {
+    // دعم حقول خطوات شائعة (لو صفحة الطلبات بتكتب Timestamps للخطوات)
+    const step2 = r?.step2At || r?.sentAt || r?.sendAt || r?.shippedAt || r?.preparedAt;
+    const step3 = r?.step3At || r?.receivedAt || r?.receiveAt || r?.arrivedAt;
+    const step4 = r?.step4At || r?.doneAt || r?.completedAt || r?.finishedAt || r?.closedAt;
+
+    // دعم أعلام admin القديمة (لو موجودة)
+    const receivedFlag = !!(r?.admin && (r.admin.received || r.admin.step3 || r.admin.receivedAt));
+    const sentFlag     = !!(r?.admin && (r.admin.prepared || r.admin.step2 || r.admin.sentAt || r.admin.preparedAt));
+
+    // 1) تم التنفيذ (الأعلى أولوية)
+    if (
+      step4 ||
+      isShootDone(r) ||
+      /^(مكتملة|مكتمل|تم التنفيذ|تم الانتهاء|تم الإنتهاء|منفّذ|منفذ|منتهي|منتهية|مغلق|مقفول)$/i.test(status)
+    ) {
       return 'تم التنفيذ';
     }
 
-    // 2) تم الإرسال
-    if (prepared || /^(تم الإرسال|تم ارسال|تم التجهيز|تم الشحن)$/i.test(status)) {
-      return 'تم الإرسال';
+    // 2) تم الاستلام (لو تم الاستلام يبقى خلاص خرج من الإرسال)
+    if (
+      step3 ||
+      receivedFlag ||
+      /^(تم الاستلام|تم استلام|تم استلام السيارة|استلام)$/i.test(status)
+    ) {
+      return 'تم الاستلام';
     }
 
-    // 3) تم الاستلام
-    if (received || /^(تم الاستلام|تم استلام)$/i.test(status)) {
-      return 'تم الاستلام';
+    // 3) تم الإرسال
+    if (
+      step2 ||
+      sentFlag ||
+      /^(تم الإرسال|تم ارسال|تم إرسال السيارة|تم ارسال السيارة|ارسال|إرسال|تم التجهيز|تم الشحن)$/i.test(status)
+    ) {
+      return 'تم الإرسال';
     }
 
     // 4) تم الإنشاء (افتراضي)
     return 'تم الإنشاء';
+  }
+
+  // تحديد نوع الطلب (تصوير/نقل) بشكل مرن لأن أسماء الحقول تختلف بين الصفحات
+  function normalizeRequestKind(r){
+    const rawVals = [
+      r?.kind,
+      r?.requestKind,
+      r?.requestType,
+      r?.orderType,
+      r?.type,
+      r?._type,
+      r?.category
+    ].filter(Boolean).map(v=>String(v).toLowerCase().trim());
+
+    const raw = rawVals.join(' | ');
+    // عربي/انجليزي
+    if (raw.includes('move') || raw.includes('transfer') || raw.includes('نقل')) return 'move';
+    if (raw.includes('shoot') || raw.includes('photo') || raw.includes('تصوير')) return 'shoot';
+
+    // استدلال إضافي بسيط
+    if (r?.toLocation && r?.fromLocation && (String(r?.type||'').includes('نقل'))) return 'move';
+    return 'shoot';
   }
 
 function shootStats(){
@@ -1862,6 +1909,7 @@ function renderShootCard(gridEl){
       const trackUrl = vin ? (TRACK_PUBLIC_BASE + encodeURIComponent(vin)) : '';
       tr.innerHTML = `
         <td>${idx+1}</td>
+      <td>${isMove ? 'طلب نقل' : 'طلب تصوير'}</td>
         <td>${o.orderNo||''}</td>
         <td>${o.customerName||''}</td>
         <td>${o.phone||''}</td>
@@ -2001,6 +2049,7 @@ function renderShootCard(gridEl){
     const agencyTotal = live.filter(isAgency).length;
     const forSaleTotal = live.filter(r=> !isAgency(r)).length;
     const notesTotal = live.filter(r => String((r && r.location) ? r.location : '').includes('سيارات بها ملاحظات')).length;
+    const pendingTotal = (stock || []).filter(r => String((r && r.location) ? r.location : '').includes('مباع تحت التسليم')).length;
 
     const agEl = document.getElementById('stockAgencyTotal');
     if(agEl) agEl.textContent = agencyTotal.toLocaleString('ar-SA');
@@ -2008,6 +2057,9 @@ function renderShootCard(gridEl){
     if(fsEl) fsEl.textContent = forSaleTotal.toLocaleString('ar-SA');
     const ntEl = document.getElementById('stockNotesTotal');
     if(ntEl) ntEl.textContent = notesTotal.toLocaleString('ar-SA');
+
+    const pnEl = document.getElementById('stockPendingTotal');
+    if(pnEl) pnEl.textContent = pendingTotal.toLocaleString('ar-SA');
   }
       function mzjNormArabicBasic(s){
         return mzjClean(s)
@@ -2284,14 +2336,20 @@ const stockCard = document.getElementById('stockCard');
     }
 
     if(currentMode==='shoot'){
+      // ✅ احترم فلتر الأزرار (تم الإنشاء/تم الإرسال/تم الاستلام/تم التنفيذ) حتى لو مفيش بحث
+      const base = currentShoot.filter(s=> matchesShootFilter(s, currentShootFilter));
       if(!q){
-        filteredShoot = currentShoot.slice();
+        filteredShoot = base.slice();
       }else{
-        filteredShoot = currentShoot.filter(s=>{
+        filteredShoot = base.filter(s=>{
           const hay = [
-            s?.id, s?.requestId, s?.vin, s?.chassis,
-            s?.car, s?.variant, s?.branch, s?.location,
-            s?.status, s?.notes, s?.createdBy, s?.assignedTo,
+            s?.id, s?.requestId, s?._docId,
+            s?.createdByName, s?.createdBy, s?.createdByEmail,
+            s?.status,
+            s?.car, s?.variant,
+            s?.vin, s?.chassis,
+            s?.fromLocation, s?.toLocation, s?.location,
+            s?.admin?.notes,
             s?.createdAt, s?.requestedAt
           ].filter(Boolean).join(' | ');
           return __includes(hay, q);
@@ -2386,6 +2444,7 @@ const stockCard = document.getElementById('stockCard');
       const tr=document.createElement('tr');
       tr.innerHTML=`
         <td>${idx+1}</td>
+      <td>${isMove ? 'طلب نقل' : 'طلب تصوير'}</td>
         <td>${r.car||''}</td>
         <td>${r.variant||''}</td>
         <td><span class="tag">${r.dealer||'-'}</span></td>
@@ -2708,6 +2767,10 @@ function openModalForStockTop(kind){
     }else if(kind==='notes'){
       currentRows = live.filter(r => String((r && r.location) ? r.location : '').includes('سيارات بها ملاحظات'));
       title = 'المخزون — سيارات بها ملاحظات';
+    }else if(kind==='pending'){
+      // مباع تحت التسليم (لا نستبعد المباع هنا)
+      currentRows = (stock || []).filter(r => String((r && r.location) ? r.location : '').includes('مباع تحت التسليم'));
+      title = 'تحت التسليم — كل السيارات';
     }else{
       currentRows = live.slice();
       title = 'المخزون';
@@ -2862,10 +2925,31 @@ function openShootModal(filter='ALL'){
   }
 
   function renderShootTable(){
+  // ✅ تأكيد الفلترة حسب الزرار المختار (حتى لو حصل أي re-render)
+  const q = __normText((modalSearch && modalSearch.value) ? modalSearch.value : '');
+  const base = (Array.isArray(currentShoot) ? currentShoot : []).filter(s=> matchesShootFilter(s, currentShootFilter));
+  if(!q){
+    filteredShoot = base.slice();
+  }else{
+    filteredShoot = base.filter(s=>{
+      const hay = [
+        s?.id, s?.requestId, s?._docId,
+        s?.createdByName, s?.createdBy, s?.createdByEmail,
+        s?.status,
+        s?.car, s?.variant,
+        s?.vin, s?.chassis,
+        s?.fromLocation, s?.toLocation, s?.location,
+        s?.admin?.notes,
+        s?.createdAt, s?.requestedAt
+      ].filter(Boolean).join(' | ');
+      return __includes(hay, q);
+    });
+  }
+
   modalTableShootBody.innerHTML='';
   filteredShoot.forEach(r=>{
     const tr=document.createElement('tr');
-    const kindNorm = String(r.kind || r.type || r._type || '').toLowerCase().trim();
+    const kindNorm = normalizeRequestKind(r);
     const typeLabel = kindNorm === 'move' ? 'طلب نقل' : 'طلب تصوير';
 
     const id = r._docId || r.id || '';
@@ -2873,7 +2957,12 @@ function openShootModal(filter='ALL'){
     const createdAtTxt = formatRequestDate(r.createdAt || r.requestedAt || r.date || '');
     const createdByTxt = r.createdByName || r.createdBy || r.createdByEmail || '-';
 
-    const rowsCount = (r.total != null) ? Number(r.total) : ((r.rows && Array.isArray(r.rows)) ? r.rows.length : 0);
+    const carsCount = Array.isArray(r.cars) ? r.cars.length
+      : (r.cars && typeof r.cars === 'object' ? Object.keys(r.cars).length : 0);
+    const rowsCount = (r.total != null) ? Number(r.total)
+      : (carsCount ? carsCount
+      : ((Array.isArray(r.rows) && r.rows.length) ? r.rows.length
+      : (r.rows && typeof r.rows === 'object' ? Object.keys(r.rows).length : 0)));
 
     tr.innerHTML = `
       <td>${id ? ('#' + id) : ''}</td>
@@ -2906,8 +2995,8 @@ function openShootModal(filter='ALL'){
     return;
   }
 
-  const kindNorm = String(type || '').toLowerCase().trim();
-  const isMove = kindNorm === 'move';
+  // نوع الطلب: استنتجه من بيانات الدوك نفسها (أدق)، ثم fallback من الزرار
+  const fallbackKind = String(type || '').toLowerCase().trim();
 
   // الداتا الأساسية من requestsDocs (snapshot)
   const req = (Array.isArray(requestsDocs) ? requestsDocs : []).find(x => String(x._docId) === docId)
@@ -2918,38 +3007,18 @@ function openShootModal(filter='ALL'){
     return;
   }
 
+  const reqKind = normalizeRequestKind(req);
+  const isMove = (reqKind === 'move') || (fallbackKind === 'move');
+
   // عنوان التفاصيل
   shootDetailsIdSpan.textContent = '#' + docId + (isMove ? ' — طلب نقل' : ' — طلب تصوير');
 
-  // صندوق معلومات الطلب
-  const metaEl = document.getElementById('shootMeta') || (()=>{
-    const el = document.createElement('div');
-    el.id = 'shootMeta';
-    el.style.cssText = "margin:8px 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff";
-    // ضعه قبل الجدول
-    const wrap = shootDetailsBox.querySelector('.table-wrap');
-    shootDetailsBox.insertBefore(el, wrap);
-    return el;
-  })();
-
-  const createdAtTxt = formatRequestDate(req.createdAt);
-  const updatedAtTxt = formatRequestDate(req.updatedAt);
-  const createdByName = req.createdByName || '';
-  const createdByEmail = req.createdByEmail || '';
-  const status = req.status || '';
-  const total = (req.total != null) ? req.total : '';
-  metaEl.innerHTML = `
-    <div style="display:flex;flex-wrap:wrap;gap:8px">
-      <span class="tag">النوع: ${(isMove ? 'نقل' : 'تصوير')}</span>
-      <span class="tag">الحالة: ${status || '—'}</span>
-      <span class="tag">الإجمالي: ${String(total||'—')}</span>
-    </div>
-    <div class="hint" style="margin-top:8px">
-      <div><b>أنشأه:</b> ${[createdByName, createdByEmail].filter(Boolean).join(' — ') || '—'}</div>
-      <div><b>تاريخ الإنشاء:</b> ${createdAtTxt || '—'}</div>
-      <div><b>آخر تحديث:</b> ${updatedAtTxt || '—'}</div>
-    </div>
-  `;
+  // ✅ حسب طلبك: لا نعرض البطاقات/الصندوق العلوي — نعرض الجدول فقط
+  const metaEl = document.getElementById('shootMeta');
+  if(metaEl){
+    metaEl.innerHTML = '';
+    metaEl.style.display = 'none';
+  }
 
   // جلب rows من subcollection: requests/{docId}/rows
   let rows = [];
@@ -2962,6 +3031,11 @@ function openShootModal(filter='ALL'){
     rows = [];
   }
 
+  // ✅ Fallback: لو مفيش subcollection rows استخدم cars[] من الدوك نفسه (زي اللي عندك في Firestore)
+  if((!rows || !rows.length) && Array.isArray(req.cars) && req.cars.length){
+    rows = req.cars.map((c, i)=>({ _rowId: String(i), ...(c||{}) }));
+  }
+
   // ترتيب بسيط
   rows.sort((a,b)=> String(a._rowId||'').localeCompare(String(b._rowId||'')));
 
@@ -2972,18 +3046,22 @@ function openShootModal(filter='ALL'){
     const car        = row.car || row.model || '';
     const variant    = row.variant || row.trim || row.statement || '';
     const extColor   = row.extColor || row.ext_color || row.color || '';
+    const intColor   = row.intColor || row.int_color || row.interiorColor || '';
     const modelYear  = row.modelYear || row.year || '';
-    const currLoc    = row.location || row.currentLocation || row.fromLocation || row.from || '';
-    const targetLoc  = row.shootPlace || row.toLocation || row.to || row.target || '';
+    const currLoc    = row.location || row.currentLocation || row.fromLocation || row.from || req.fromLocation || req.from || req.location || '';
+    // مكان النقل/التصوير: خده من الصف نفسه، ولو فاضي خده من الدوك (زي صفحة الطلبات)
+    const targetLoc  = row.toLocation || row.to || row.target || row.shootPlace || row.shootLocation || req.toLocation || req.to || req.target || req.shootPlace || req.shootLocation || '';
     const note       = row.note || row.message || '';
 
     const tr=document.createElement('tr');
     tr.innerHTML = `
       <td>${idx+1}</td>
+      <td>${isMove ? 'طلب نقل' : 'طلب تصوير'}</td>
       <td>${vin}</td>
       <td>${car}</td>
       <td>${variant}</td>
       <td>${extColor}</td>
+      <td>${intColor}</td>
       <td>${modelYear}</td>
       <td>${currLoc}</td>
       <td>${targetLoc}</td>
@@ -3170,6 +3248,7 @@ function openShootModal(filter='ALL'){
 const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${idx+1}</td>
+      <td>${isMove ? 'طلب نقل' : 'طلب تصوير'}</td>
         <td>${date}</td>
         <td>${vin}</td>
         <td>${carName}</td>
@@ -3796,6 +3875,8 @@ tableTransfersWrap.addEventListener('click',(e)=>{
     const transferCard = target.closest('#transferCard');
 
     if(shootCard){
+      // لو الضغط على متريكس الكارت (انشاء/ارسال/استلام/انتهاء) سيترك الـ handler الخاص بها يعمل
+      if(target.closest('.shoot-metric')) return;
       // اترك متريكس المبيعات فقط لو كانت موجودة داخل نفس الكارت (احتياط)
       if(target.closest('.sales-metric')) return;
       ev.preventDefault();

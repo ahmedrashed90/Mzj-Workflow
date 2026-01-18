@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -99,12 +100,13 @@
                   <th style="width:170px">التاريخ</th>
                   <th style="width:240px">العضو</th>
                   <th style="width:170px">الدور</th>
+                  <th style="width:210px">رقم الهيكل</th>
                   <th style="width:200px">نوع الحركة</th>
                   <th>التفاصيل</th>
                 </tr>
               </thead>
               <tbody id="activityRows">
-                <tr><td colspan="6" class="subtle">جارِ التحميل…</td></tr>
+              <tr><td colspan="7" class="subtle">جارِ التحميل…</td></tr>
               </tbody>
             </table>
           </div>
@@ -171,6 +173,97 @@
 
     const $ = (id)=> document.getElementById(id);
     const safe = (v)=> (v===null || v===undefined) ? "" : String(v);
+
+    // استخراج رقم الهيكل (VIN) من أي شكل بيانات يجي من اللوج
+    const VIN_RE = /\b[A-HJ-NPR-Z0-9]{17}\b/g; // VIN القياسي 17 حرف (بدون I,O,Q)
+
+    function extractVinFromAny(input){
+      try{
+        if(!input) return [];
+        // arrays
+        if(Array.isArray(input)){
+          return input.flatMap(extractVinFromAny);
+        }
+        // objects
+        if(typeof input === 'object'){
+          const hits = [];
+          // حقول شائعة
+          const directKeys = ["vin","VIN","chassis","chassisNo","chassisNumber","vinNumber","carVin","carVIN","vehicleVin","vehicleVIN","vins","vinList","vinNumbers","chassisNumbers"];
+          for (const k of directKeys){
+            if (k in input) hits.push(...extractVinFromAny(input[k]));
+          }
+          // أي string داخل object
+          for (const [k,v] of Object.entries(input)){
+            if (directKeys.includes(k)) continue;
+            if(typeof v === 'string') hits.push(...extractVinFromAny(v));
+          }
+          return hits;
+        }
+        // strings / numbers
+        const s = String(input);
+        const m = s.match(VIN_RE);
+        return m ? m : [];
+      }catch(_){
+        return [];
+      }
+    }
+
+    function getVinDisplay(d){
+      // 1) لو في vin مباشر
+      const primary = d?.vin || d?.VIN || d?.chassis || d?.chassisNo || d?.chassisNumber || d?.vinNumber || d?.carVin || d?.carVIN;
+      let vins = [];
+      if(primary) vins.push(...extractVinFromAny(primary));
+      // 2) لو في قائمة
+      if(d?.vins) vins.push(...extractVinFromAny(d.vins));
+      if(d?.vinList) vins.push(...extractVinFromAny(d.vinList));
+      // 3) من meta/payload/details
+      vins.push(...extractVinFromAny(d?.meta));
+      vins.push(...extractVinFromAny(d?.payload));
+      vins.push(...extractVinFromAny(d?.details));
+      vins.push(...extractVinFromAny(d?.before));
+      vins.push(...extractVinFromAny(d?.after));
+      // unique
+      vins = Array.from(new Set(vins.map(v=>String(v).trim()).filter(Boolean)));
+      return vins.length ? vins.join(" • ") : "—";
+    }
+
+    function prettyDetails(d){
+      try{
+        const parts = [];
+        const addLine = (label, val)=>{
+          if(val===undefined || val===null || (typeof val==='string' && !val.trim())) return;
+          if(typeof val === 'object'){
+            const json = JSON.stringify(val, null, 2);
+            parts.push(`<div class="subtle" style="margin-top:6px">${label}</div><pre style="margin:0;white-space:pre-wrap;direction:ltr;text-align:left;background:rgba(0,0,0,.04);padding:10px;border-radius:12px;overflow:auto">${escapeHtml(json)}</pre>`);
+          }else{
+            parts.push(`<div><span class="subtle">${label}:</span> ${escapeHtml(String(val))}</div>`);
+          }
+        };
+
+        // تفاصيل أساسية
+        addLine("تفاصيل", d.details);
+        addLine("المسار", d.path || d.refPath);
+        addLine("من → إلى", (d.from && d.to) ? `${d.from} → ${d.to}` : (d.fromTo || ""));
+        addLine("الحالة", d.status || d.step || d.state);
+        addLine("قبل", d.before);
+        addLine("بعد", d.after);
+        addLine("Meta", d.meta);
+        addLine("Payload", d.payload);
+
+        return parts.length ? parts.join("") : "—";
+      }catch(_){
+        return safe(d.details) || "—";
+      }
+    }
+
+    function escapeHtml(str){
+      return String(str)
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'",'&#39;');
+    }
 
     const roleCache = new Map(); // emailLower -> roleLabel
 
@@ -318,14 +411,16 @@
         snap.forEach((docSnap)=>{
           const d = docSnap.data() || {};
           const member = (safe(d.userName) || "—") + (d.userEmail ? `<div class="subtle">${safe(d.userEmail)}</div>` : "");
+          const vinCell = getVinDisplay(d);
           rowsEl.insertAdjacentHTML("beforeend", `
             <tr>
               <td>${++i}</td>
               <td>${safe(getCreatedAtDisplay(d))||"—"}</td>
               <td>${member}</td>
               <td class="role-cell" data-email="${safe(d.userEmail||'')}" data-doc="${docSnap.id}">${safe(d.role)||"—"}</td>
+              <td style="direction:ltr;unicode-bidi:bidi-override">${safe(vinCell)}</td>
               <td>${safe(d.action)||"—"}</td>
-              <td>${safe(d.details)||"—"}</td>
+              <td>${prettyDetails(d)}</td>
             </tr>
           `);
         });
@@ -342,11 +437,11 @@
           }catch(_){}
         });
 
-        if (!i) rowsEl.innerHTML = `<tr><td colspan="6" class="subtle">لا يوجد سجلات بعد.</td></tr>`;
+        if (!i) rowsEl.innerHTML = `<tr><td colspan="7" class="subtle">لا يوجد سجلات بعد.</td></tr>`;
         countEl.textContent = String(i);
       }, (err)=>{
         console.error(err);
-        rowsEl.innerHTML = `<tr><td colspan="6" class="subtle">تعذّر تحميل سجل النشاط.</td></tr>`;
+        rowsEl.innerHTML = `<tr><td colspan="7" class="subtle">تعذّر تحميل سجل النشاط.</td></tr>`;
       });
     }
   </script>

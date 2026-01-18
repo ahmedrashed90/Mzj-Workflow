@@ -1,0 +1,900 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>نقل السيارات — MZJ Cars</title>
+  <link rel="icon" type="image/x-icon" href="assets/favicon.png">
+
+  <!-- No-flash auth gate -->
+  <style id="noFlash">
+    html{background:#fff8ef}
+    body{opacity:0;transition:.14s ease}
+  </style>
+
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="./mzj-ui.css"/>
+
+  <style>
+    :root{
+      --brown:#3e2420; --beige:#bc8f74; --cream:#fff8ef;
+      --text:#1f2937; --muted:#6b7280;
+      --line:#e5e7eb; --line-strong:#d1d5db;
+      --card:#ffffff; --bg:#fff8ef; --radius:14px;
+      --shadow:0 10px 24px rgba(0,0,0,.06);
+      --ok:#16a34a; --danger:#ef4444; --info:#0ea5e9; --warn:#f59e0b;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:"Tajawal",system-ui,Arial}
+
+    /* Small helpers */
+    .container{max-width:1280px;margin:18px auto;padding:0 16px;display:grid;grid-template-columns:1fr;gap:14px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px}
+    .card h3{margin:0 0 10px;color:var(--brown);font-size:16px;font-weight:900;display:flex;align-items:center;gap:8px}
+    .hint{font-size:12px;color:var(--muted)}
+
+    .dot{width:9px;height:9px;border-radius:999px;background:var(--warn);display:inline-block}
+    .dot.ok{background:var(--ok)}
+    .dot.err{background:var(--danger)}
+    .dot.warn{background:var(--warn)}
+
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .grid{display:grid;gap:10px}
+    .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    @media(max-width:920px){.grid-3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:640px){.grid-2,.grid-3{grid-template-columns:1fr}}
+
+    label{display:block;font-size:12px;font-weight:800;color:var(--brown);margin-bottom:5px}
+    .input,.select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;font-family:inherit;font-size:13px;transition:.15s}
+    .input:focus,.select:focus,textarea:focus{outline:none;border-color:var(--beige);box-shadow:0 0 0 1px rgba(188,143,116,.35)}
+    textarea{min-height:90px;resize:vertical}
+
+    .btn{border:1px solid var(--line);background:#fff;border-radius:12px;padding:9px 12px;cursor:pointer;font-weight:900;display:inline-flex;gap:8px;align-items:center;transition:.15s;font-size:13px}
+    .btn:active{transform:translateY(1px)}
+    .btn-primary{background:var(--brown);border-color:var(--brown);color:#fff;border-radius:999px;padding-inline:18px}
+    .btn-ghost{background:#fff}
+    .btn-outline{background:#fff;border-color:var(--brown);color:var(--brown)}
+    .btn-danger{background:var(--danger);border-color:var(--danger);color:#fff}
+
+    .pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 10px;font-size:11px}
+
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
+    table{width:100%;border-collapse:separate;border-spacing:0}
+    th,td{border:1px solid var(--line);border-left-color:var(--line-strong);padding:8px 10px;text-align:right;vertical-align:top;font-size:13px;background:#fff}
+    thead th{position:sticky;top:0;background:#f9fafb;border-bottom:2px solid var(--line-strong);z-index:1}
+    tbody tr:nth-child(even) td{background:#fffdf8}
+    tbody tr:hover td{background:#f3f4f6}
+
+    .tag{display:inline-block;background:#f6f6f6;border:1px solid var(--line);padding:2px 8px;border-radius:999px;font-size:12px;color:#444}
+    .ok{color:var(--ok);font-weight:900}
+    .bad{color:var(--danger);font-weight:900}
+
+    /* Auth */
+    .auth-wrap{min-height:60vh;display:grid;place-items:center;padding:24px}
+    .auth-card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:18px;max-width:420px;width:96%}
+    .auth-card h2{margin:0 0 10px;color:var(--brown);font-weight:900}
+    .auth-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+
+    /* Modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;z-index:400}
+    .modal{background:#fff;border-radius:18px;box-shadow:0 20px 45px rgba(0,0,0,.18);max-width:980px;width:95%;padding:14px;border:1px solid var(--line);position:relative}
+    .modal h3{margin:0 0 10px;color:var(--brown);font-size:16px;font-weight:900;display:flex;align-items:center;gap:8px}
+    .modal .close{position:absolute;left:10px;top:10px;border:none;background:transparent;cursor:pointer;color:var(--muted)}
+    .modal-footer{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:10px}
+
+    /* Toast */
+    .toast{position:fixed;bottom:20px;right:20px;background:#1f2937;color:#fff;padding:9px 13px;border-radius:999px;display:none;font-size:12px;z-index:450}
+    .toast.show{display:block;animation:fade .18s ease-out}
+    @keyframes fade{from{opacity:0;transform:translate(0,6px)}to{opacity:1;transform:translate(0,0)}}
+
+    /* VIN entry table */
+    .vin-entry-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
+    .vin-entry-table{width:100%;border-collapse:separate;border-spacing:0}
+    .vin-entry-table th,.vin-entry-table td{border:1px solid var(--line);border-left-color:var(--line-strong);padding:8px 10px;text-align:right;vertical-align:top;font-size:13px;background:#fff}
+    .vin-entry-table thead th{position:sticky;top:0;background:#f9fafb;border-bottom:2px solid var(--line-strong);z-index:1}
+    .vin-entry-table tbody tr:nth-child(even) td{background:#fffdf8}
+    .vin-entry-table tbody tr:hover td{background:#f3f4f6}
+    .vin-entry-table .vin-inp{min-width:240px}
+    .vin-entry-table .tiny{font-size:12px;color:var(--muted)}
+    .vin-entry-table .row-actions{white-space:nowrap}
+    .btn-icon{padding:8px 10px;border-radius:12px}
+  </style>
+</head>
+<body class="mzj">
+
+<header class="mzj-topbar">
+  <div class="topbar-left">
+    <button class="icon-btn" id="mzjSidebarBtn" aria-label="القائمة"><i class="fa-solid fa-bars"></i></button>
+    <div class="brand">
+      <div class="brand-mark">MZJ</div>
+      <div class="brand-text">
+        <div class="brand-title">محمد بن ذعار العجمي للسيارات</div>
+        <div class="brand-sub">Workspace</div>
+      </div>
+    </div>
+  </div>
+  <div class="topbar-center">
+    <div class="mzj-breadcrumb">
+      <span class="crumb">الرئيسية</span>
+      <i class="fa-solid fa-chevron-left"></i>
+      <span class="crumb current">نقل السيارات</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="mzj-chip">
+      <span class="dot warn" id="connDot" style="margin-inline-start:2px"></span>
+      <span id="connText">جارِ الاتصال…</span>
+    </div>
+    <button class="mzj-btn mzj-btn-ghost" id="btnSignOut" style="display:none" type="button">
+      <i class="fa-solid fa-right-from-bracket"></i>
+      <span>تسجيل الخروج</span>
+    </button>
+  </div>
+</header>
+
+<div class="mzj-shell" id="mzjShell">
+  <aside class="mzj-sidebar" id="mzjSidebar">
+    <div class="side-section">
+      <div class="side-title">الإدارة</div>
+      <nav class="side-nav">
+        <a class="side-link tab" href="./sales.html"><i class="fa-solid fa-handshake"></i><span>تتبع المبيعات</span></a>
+        <a class="side-link tab" href="./dashboard.html"><i class="fa-solid fa-gauge"></i><span>الداش بورد</span></a>
+        <a class="side-link tab" href="./inventory.html"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
+        <a class="side-link tab active" href="./move-new.html"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
+        <a class="side-link tab" href="./photoshoot-user.html"><i class="fa-solid fa-camera"></i><span>إدارة الطلبات</span></a>
+        <a class="side-link tab" href="./cars.html"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
+        <a class="side-link tab" href="./admin.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
+        <a class="side-link tab" href="./Activity.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل النشاط</span></a>
+        <a class="side-link tab" href="./act.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل الحركات</span></a>
+      </nav>
+    </div>
+  </aside>
+
+  <div class="mzj-backdrop" id="mzjBackdrop"></div>
+  <main class="mzj-content">
+
+    <!-- Auth Gate -->
+    <div id="authGate" class="auth-wrap">
+      <div class="auth-card">
+        <h2>تسجيل الدخول</h2>
+        <label for="email">البريد الإلكتروني</label>
+        <input id="email" type="email" class="input" placeholder="you@example.com"/>
+        <label for="password" style="margin-top:8px">كلمة المرور</label>
+        <input id="password" type="password" class="input" placeholder="••••••••"/>
+        <div class="auth-actions">
+          <button class="btn btn-primary" id="btnLogin">تسجيل الدخول</button>
+          <button class="btn btn-outline" id="btnSignup">إنشاء حساب</button>
+        </div>
+        <p class="hint" id="authHint" style="margin-top:10px"></p>
+      </div>
+    </div>
+
+    <!-- App -->
+    <div id="app" style="display:none">
+      <div class="container">
+
+        <div class="card">
+          <div class="row" style="justify-content:space-between">
+            <div class="row">
+              <span class="pill"><i class="fa-solid fa-database" style="color:var(--beige)"></i> المصدر: <b>mzj_admin_state/v1</b></span>
+              <span class="pill"><i class="fa-solid fa-car" style="color:var(--beige)"></i> سيارات مُضافة: <b id="vinCount">0</b></span>
+            </div>
+            <div class="row">
+              <button class="btn btn-ghost" id="btnClear"><i class="fa-solid fa-eraser"></i> مسح</button>
+              <button class="btn btn-outline" id="btnOpenPreview"><i class="fa-solid fa-table"></i> معاينة الطلب</button>
+              <button class="btn btn-primary" id="btnExecute"><i class="fa-solid fa-right-left"></i> تنفيذ النقل</button>
+            </div>
+          </div>
+          <p class="hint" style="margin:8px 0 0">اكتب أرقام الهياكل (VIN) — كل رقم في سطر. عند اختيار "سيارات بها ملاحظات" تظهر خانة الملاحظة. النقل إلى "مباع تم التسليم" ممنوع إلا بعد موافقة مالية وإدارية.</p>
+        </div>
+
+        <div class="card">
+          <h3><i class="fa-solid fa-pen" style="color:var(--beige)"></i> بيانات النقل</h3>
+          <div class="grid grid-2">
+            <div>
+              <label>أرقام الهياكل</label>
+              <div class="vin-entry-wrap">
+                <table class="vin-entry-table">
+                  <thead>
+                    <tr>
+                      <th style="width:48px">#</th>
+                      <th>رقم الهيكل (VIN)</th>
+                      <th>السيارة</th>
+                      <th>المكان الحالي</th>
+                      <th>ملاحظات</th>
+                      <th class="row-actions">إجراء</th>
+                    </tr>
+                  </thead>
+                  <tbody id="vinTbody"></tbody>
+                </table>
+              </div>
+
+              <div class="row" style="justify-content:space-between;margin-top:10px">
+                <span class="hint">اكتب رقم الهيكل في صفه. تقدر تلصق قائمة VIN (كل رقم في سطر) داخل أول خانة وسيتم توزيعها تلقائيًا.</span>
+                <button class="btn btn-outline" id="btnAddVin" type="button"><i class="fa-solid fa-plus"></i> إضافة رقم هيكل</button>
+              </div>
+            </div>
+            <div>
+              <label>إلى (مكان واحد لكل النقل)</label>
+              <select id="toLocation" class="select"></select>
+
+              <div id="issuesBox" style="display:none;margin-top:10px">
+                <label>ملاحظة (إجباري عند النقل إلى سيارات بها ملاحظات)</label>
+                <textarea id="issuesNotes" placeholder="مثال: خدوش بسيطة / انتظار قطع / …"></textarea>
+              </div>
+
+              <div class="hint" id="liveHint" style="margin-top:10px"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3><i class="fa-solid fa-clock-rotate-left" style="color:var(--beige)"></i> سجل آخر الحركات</h3>
+          <div class="row" style="justify-content:space-between;margin-bottom:8px">
+            <span class="hint">آخر 30 حركة (من نفس الوثيقة) — يتم التحديث تلقائيًا.</span>
+            <button class="btn btn-ghost" id="btnRefresh"><i class="fa-solid fa-rotate"></i> تحديث</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>الوقت</th>
+                  <th>رقم الهيكل</th>
+                  <th>السيارة</th>
+                  <th>من</th>
+                  <th>إلى</th>
+                  <th>نفّذها</th>
+                  <th>الموافقات</th>
+                </tr>
+              </thead>
+              <tbody id="movesTbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Preview Modal -->
+    <div id="previewModal" class="modal-backdrop">
+      <div class="modal">
+        <button class="close" id="previewClose" title="إغلاق"><i class="fa-solid fa-xmark"></i></button>
+        <h3><i class="fa-solid fa-table" style="color:var(--beige)"></i> معاينة طلب النقل</h3>
+        <p class="hint" style="margin:0 0 10px">قبل التنفيذ: تأكد من السيارات + المكان الحالي + تحقق القيود.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>م</th>
+                <th>رقم الهيكل</th>
+                <th>السيارة</th>
+                <th>المكان الحالي</th>
+                <th>المكان الجديد</th>
+                <th>الحالة</th>
+              </tr>
+            </thead>
+            <tbody id="previewTbody"></tbody>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" id="previewCancel">إغلاق</button>
+          <button class="btn btn-primary" id="previewExecute"><i class="fa-solid fa-right-left"></i> تنفيذ النقل</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast">تم</div>
+
+  </main>
+</div>
+
+<script src="./mzj-ui.js"></script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc, onSnapshot, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC614bGqnYf4Q-weTNemzWENTpa8DjGeHw",
+    authDomain: "mzj-agenda.firebaseapp.com",
+    projectId: "mzj-agenda",
+    storageBucket: "mzj-agenda.firebasestorage.app",
+    messagingSenderId: "834700407721",
+    appId: "1:834700407721:web:75c17665d4f032fd65cab8"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  const STATE_REF = doc(db, "mzj_admin_state", "v1");
+
+  const ROLE_ADMIN = 'الادارة';
+  const ROLE_IDARI = 'اداري';
+  const PAGE_ALLOWED_ROLES = [ROLE_ADMIN, ROLE_IDARI];
+
+  const FIXED_LOCATIONS = [
+    "المستودع : المخزون المتاح","المستودع : سيارات بها ملاحظات","المستودع : مباع تحت التسليم","المستودع : مباع تم التسليم",
+    "الوكالة : المخزون المتاح","الوكالة : سيارات بها ملاحظات","الوكالة : مباع تحت التسليم","الوكالة : مباع تم التسليم",
+    "فرع 1 الصالة : المخزون المتاح","فرع 1 الصالة : سيارات بها ملاحظات","فرع 1 الصالة : مباع تحت التسليم","فرع 1 الصالة : مباع تم التسليم",
+    "فرع 2 الملتقى : المخزون المتاح","فرع 2 الملتقى : سيارات بها ملاحظات","فرع 2 الملتقى : مباع تحت التسليم","فرع 2 الملتقى : مباع تم التسليم",
+    "فرع 3 القادسية : المخزون المتاح","فرع 3 القادسية : سيارات بها ملاحظات","فرع 3 القادسية : مباع تحت التسليم","فرع 3 القادسية : مباع تم التسليم"
+  ];
+
+  const $ = (s)=> document.querySelector(s);
+
+  const connDot  = $('#connDot');
+  const connText = $('#connText');
+
+  const authGate = $('#authGate');
+  const appRoot  = $('#app');
+  const btnSignOut = $('#btnSignOut');
+
+  const emailEl = $('#email');
+  const passEl  = $('#password');
+  const btnLogin = $('#btnLogin');
+  const btnSignup= $('#btnSignup');
+  const authHint = $('#authHint');
+
+  const vinTbody    = $('#vinTbody');
+  const toLocation  = $('#toLocation');
+  const issuesBox   = $('#issuesBox');
+  const issuesNotes = $('#issuesNotes');
+  const liveHint    = $('#liveHint');
+  const vinCount    = $('#vinCount');
+
+  const btnClear = $('#btnClear');
+  const btnAddVin = $('#btnAddVin');
+  const btnOpenPreview = $('#btnOpenPreview');
+  const btnExecute = $('#btnExecute');
+  const btnRefresh = $('#btnRefresh');
+
+  const previewModal = $('#previewModal');
+  const previewTbody = $('#previewTbody');
+  const previewClose = $('#previewClose');
+  const previewCancel= $('#previewCancel');
+  const previewExecute = $('#previewExecute');
+
+  const movesTbody = $('#movesTbody');
+  const toast = $('#toast');
+
+  // Helpers
+  const clean = (v)=> String(v ?? '')
+    .replace(/[\u200E\u200F\u202A-\u202E\u2066-\u2069]/g,'')
+    .replace(/\s+/g,' ')
+    .trim();
+
+  function normalizeVin(v){
+    if(!v) return '';
+    const ar = {'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9'};
+    return v.toString().trim().split('').map(ch=> ar[ch] ?? ch).join('').toUpperCase();
+  }
+
+  const pad = n => n<10 ? '0'+n : String(n);
+  const nowStamp = ()=>{
+    const d = new Date();
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  };
+  const onlyDate = (s)=> (s||'').toString().slice(0,10);
+
+  function liftNoFlash(){
+    const nf = document.getElementById('noFlash');
+    if(nf) nf.remove();
+    document.body.style.opacity = '1';
+  }
+
+  function setStatus(mode, txt){
+    connDot.className = 'dot ' + (mode==='ok'?'ok':mode==='err'?'err':'warn');
+    connText.textContent = txt;
+  }
+
+  function toastMsg(text){
+    toast.textContent = text;
+    toast.classList.add('show');
+    setTimeout(()=> toast.classList.remove('show'), 1800);
+  }
+
+  function getVinInputs(){
+    return Array.from(vinTbody.querySelectorAll('input[data-vin]'));
+  }
+
+  function parseVins(){
+    const vals = getVinInputs()
+      .map(inp => clean(normalizeVin(inp.value)))
+      .filter(Boolean);
+    const uniq = [];
+    const seen = new Set();
+    for(const v of vals){
+      if(!seen.has(v)) { seen.add(v); uniq.push(v); }
+    }
+    return uniq;
+  }
+
+  function updateUICounts(){
+    vinCount.textContent = String(parseVins().length);
+  }
+
+  function lookupCarByVin(vin){
+    const v = clean(normalizeVin(vin));
+    if(!v) return null;
+    return (stateCache.stock||[]).find(r => clean(normalizeVin(r?.vin)) === v) || null;
+  }
+
+  function refreshRowData(tr){
+    const inp = tr.querySelector('input[data-vin]');
+    const carTd = tr.querySelector('[data-col="car"]');
+    const locTd = tr.querySelector('[data-col="loc"]');
+    const notesTd = tr.querySelector('[data-col="notes"]');
+    const idxTd = tr.querySelector('[data-col="idx"]');
+
+    const vin = clean(normalizeVin(inp?.value || ''));
+    if(inp && inp.value !== vin) inp.value = vin;
+
+    if(idxTd){
+      const rows = Array.from(vinTbody.querySelectorAll('tr'));
+      idxTd.textContent = String(rows.indexOf(tr) + 1);
+    }
+
+    if(!vin){
+      carTd.textContent = '—';
+      locTd.textContent = '—';
+      notesTd.innerHTML = '<span class="tiny">—</span>';
+      return;
+    }
+
+    const rec = lookupCarByVin(vin);
+    if(!rec){
+      carTd.innerHTML = `<span class="bad">غير موجود</span>`;
+      locTd.textContent = '—';
+      notesTd.innerHTML = '<span class="tiny">—</span>';
+      return;
+    }
+
+    carTd.textContent = rec.car || rec.model || rec.name || '—';
+    locTd.textContent = clean(rec.location || '—');
+    const n = clean(rec.notes || '');
+    notesTd.innerHTML = n ? `<span class="tiny">${n}</span>` : '<span class="tiny">—</span>';
+  }
+
+  function addVinRow(initialVin=''){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td data-col="idx" class="tiny">—</td>
+      <td>
+        <input class="input vin-inp" data-vin type="text" placeholder="KMH..." value="${clean(initialVin)}" autocomplete="off" spellcheck="false" />
+      </td>
+      <td data-col="car">—</td>
+      <td data-col="loc">—</td>
+      <td data-col="notes"><span class="tiny">—</span></td>
+      <td class="row-actions">
+        <button class="btn btn-ghost btn-icon" data-remove type="button" title="حذف"><i class="fa-solid fa-trash"></i></button>
+      </td>
+    `;
+    vinTbody.appendChild(tr);
+
+    const inp = tr.querySelector('input[data-vin]');
+    inp.addEventListener('input', ()=>{ refreshRowData(tr); updateUICounts(); });
+
+    // Paste: لو لصقت أكتر من سطر في خانة واحدة، نوزعهم تلقائيًا
+    inp.addEventListener('paste', (e)=>{
+      const text = (e.clipboardData || window.clipboardData)?.getData('text') || '';
+      if(!text) return;
+      const lines = text.split(/\r?\n/).map(x=>clean(normalizeVin(x))).filter(Boolean);
+      if(lines.length <= 1) return;
+      e.preventDefault();
+      inp.value = lines[0];
+      refreshRowData(tr);
+      for(let i=1;i<lines.length;i++) addVinRow(lines[i]);
+      renumberVinRows();
+      updateUICounts();
+    });
+
+    tr.querySelector('[data-remove]').addEventListener('click', ()=>{
+      tr.remove();
+      if(!vinTbody.querySelector('tr')) addVinRow('');
+      renumberVinRows();
+      updateUICounts();
+    });
+
+    refreshRowData(tr);
+    renumberVinRows();
+    updateUICounts();
+    return tr;
+  }
+
+  function renumberVinRows(){
+    Array.from(vinTbody.querySelectorAll('tr')).forEach((tr, i)=>{
+      const idxTd = tr.querySelector('[data-col="idx"]');
+      if(idxTd) idxTd.textContent = String(i+1);
+    });
+  }
+
+  function refreshAllVinRows(){
+    Array.from(vinTbody.querySelectorAll('tr')).forEach(tr=> refreshRowData(tr));
+  }
+
+  function updateIssuesBox(){
+    const toVal = clean(toLocation.value);
+    const isIssues = /سيارات بها ملاحظات/.test(toVal);
+    issuesBox.style.display = isIssues ? 'block' : 'none';
+    if(!isIssues) issuesNotes.value = '';
+  }
+
+  // Roles
+  async function fetchUserRole(user){
+    try{
+      const snap = await getDoc(doc(db, 'user', user.uid));
+      if(snap.exists()){
+        const d = snap.data() || {};
+        return d.role || null;
+      }
+    }catch(e){
+      console.error('Error fetching role', e);
+    }
+    return null;
+  }
+
+  // Render moves (last 30)
+  function renderMovesTable(moves){
+    const rows = (Array.isArray(moves)? moves: [])
+      .slice()
+      .sort((a,b)=> clean(b.when||'').localeCompare(clean(a.when||'')))
+      .slice(0,30);
+
+    movesTbody.innerHTML = '';
+    if(!rows.length){
+      movesTbody.innerHTML = '<tr><td colspan="7" class="hint">لا يوجد حركات بعد.</td></tr>';
+      return;
+    }
+
+    for(const m of rows){
+      const okA = m.adminApproved === true;
+      const okF = m.financeApproved === true;
+      const stateTxt = (okA && okF) ? '✅ مكتملة' : (okA || okF) ? '🟡 جزئية' : '—';
+      const by = clean(m.performedBy || m.by || m.userEmail || '');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="nowrap">${m.when || ''}</td>
+        <td class="nowrap">${m.vin || ''}</td>
+        <td>${m.car || ''}</td>
+        <td>${m.from || ''}</td>
+        <td>${m.to || ''}</td>
+        <td>${by || '—'}</td>
+        <td>${stateTxt}</td>
+      `;
+      movesTbody.appendChild(tr);
+    }
+  }
+
+  // Load / Subscribe state
+  let stateCache = { stock: [], moves: [] };
+  let unsub = null;
+  let isExecuting = false;
+  let currentUser = null;
+
+  async function loadOnce(){
+    const snap = await getDoc(STATE_REF);
+    const d = snap.exists() ? (snap.data()||{}) : {};
+    stateCache.stock = Array.isArray(d.stock) ? d.stock : [];
+    stateCache.moves = Array.isArray(d.moves) ? d.moves : [];
+    renderMovesTable(stateCache.moves);
+    refreshAllVinRows();
+  }
+
+  function subscribe(){
+    if(unsub) { try{unsub();}catch(e){} }
+    unsub = onSnapshot(STATE_REF, (snap)=>{
+      if(!snap.exists()) return;
+      // أثناء التنفيذ: لا نعمل overwrite للحالة المحلية (عشان ما يحصلش رجوع في UI)
+      if(isExecuting) return;
+      const d = snap.data() || {};
+      stateCache.stock = Array.isArray(d.stock) ? d.stock : stateCache.stock;
+      stateCache.moves = Array.isArray(d.moves) ? d.moves : stateCache.moves;
+      renderMovesTable(stateCache.moves);
+      refreshAllVinRows();
+      setStatus('ok','متصل — مزامنة حيّة');
+    }, (err)=>{
+      console.warn('snapshot error', err);
+      setStatus('warn','تعذّر الاتصال — مزامنة متوقفة مؤقتًا');
+    });
+  }
+
+  function fillLocations(){
+    toLocation.innerHTML = '<option value="">اختر المكان الجديد</option>' + FIXED_LOCATIONS.map(l=>`<option value="${l}">${l}</option>`).join('');
+  }
+
+  // Preview builder
+  function buildPreviewRows(toVal, vins, stock, moves){
+    const goingIssues = /سيارات بها ملاحظات/.test(toVal);
+    const goingDelivered = /مباع تم التسليم/.test(toVal);
+
+    const issuesTxt = goingIssues ? clean(issuesNotes.value) : '';
+
+    const out = [];
+    for(const vin of vins){
+      const rec = stock.find(r => normalizeVin(r?.vin) === vin);
+      if(!rec){
+        out.push({ vin, car:'—', from:'—', to:toVal, ok:false, msg:'غير موجود في المخزون' });
+        continue;
+      }
+
+      const from = clean(rec.location || '');
+      if(!from){
+        out.push({ vin, car: rec.car || '', from:'—', to:toVal, ok:false, msg:'لا يوجد مكان حالي محفوظ' });
+        continue;
+      }
+      if(from === toVal){
+        out.push({ vin, car: rec.car || '', from, to:toVal, ok:false, msg:'نفس المكان الحالي' });
+        continue;
+      }
+
+      if(goingIssues && !issuesTxt){
+        out.push({ vin, car: rec.car || '', from, to:toVal, ok:false, msg:'ملاحظة مطلوبة (سيارات بها ملاحظات)' });
+        continue;
+      }
+
+      if(goingDelivered){
+        const history = (moves||[]).filter(m => normalizeVin(m?.vin) === vin);
+        const hasFull = history.some(m => m.adminApproved===true && m.financeApproved===true);
+        if(!hasFull){
+          out.push({ vin, car: rec.car || '', from, to:toVal, ok:false, msg:'ممنوع: لا توجد موافقة مالية وإدارية مكتملة' });
+          continue;
+        }
+      }
+
+      out.push({ vin, car: rec.car || '', from, to:toVal, ok:true, msg:'جاهز للنقل' });
+    }
+    return out;
+  }
+
+  function openPreview(){
+    const toVal = clean(toLocation.value);
+    const vins = parseVins();
+
+    if(!vins.length){ toastMsg('اكتب رقم هيكل واحد على الأقل'); return; }
+    if(!toVal){ toastMsg('اختر المكان الجديد أولاً'); return; }
+
+    const rows = buildPreviewRows(toVal, vins, stateCache.stock, stateCache.moves);
+
+    previewTbody.innerHTML = '';
+    rows.forEach((r, idx)=>{
+      const tr = document.createElement('tr');
+      const st = r.ok ? `<span class="ok">✅ ${r.msg}</span>` : `<span class="bad">⚠️ ${r.msg}</span>`;
+      tr.innerHTML = `
+        <td>${idx+1}</td>
+        <td class="nowrap">${r.vin}</td>
+        <td>${r.car || ''}</td>
+        <td>${r.from || ''}</td>
+        <td>${r.to || ''}</td>
+        <td>${st}</td>
+      `;
+      previewTbody.appendChild(tr);
+    });
+
+    const okCount = rows.filter(r=>r.ok).length;
+    const badCount = rows.length - okCount;
+    liveHint.innerHTML = `جاهز للنقل: <b class="ok">${okCount}</b> — غير قابل للتنفيذ: <b class="bad">${badCount}</b>`;
+
+    previewModal.style.display = 'flex';
+  }
+
+  function closePreview(){
+    previewModal.style.display = 'none';
+  }
+
+  // Execute (Transaction-based)
+  async function executeMove(){
+    const toVal = clean(toLocation.value);
+    const vins = parseVins();
+    const goingIssues = /سيارات بها ملاحظات/.test(toVal);
+    const goingDelivered = /مباع تم التسليم/.test(toVal);
+
+    const issuesTxt = goingIssues ? clean(issuesNotes.value) : '';
+
+    if(!vins.length){ toastMsg('اكتب رقم هيكل واحد على الأقل'); return; }
+    if(!toVal){ toastMsg('اختر المكان الجديد أولاً'); return; }
+    if(goingIssues && !issuesTxt){ toastMsg('الملاحظة مطلوبة عند النقل إلى سيارات بها ملاحظات'); return; }
+
+    isExecuting = true;
+    setStatus('warn','جارِ تنفيذ النقل…');
+
+    try{
+      const result = await runTransaction(db, async (tx)=>{
+        const snap = await tx.get(STATE_REF);
+        const d = snap.exists() ? (snap.data()||{}) : {};
+
+        const stock = Array.isArray(d.stock) ? d.stock.slice() : [];
+        const moves = Array.isArray(d.moves) ? d.moves.slice() : [];
+
+        const rows = buildPreviewRows(toVal, vins, stock, moves);
+        const executable = rows.filter(r=>r.ok);
+
+        if(!executable.length){
+          return { moved:0, errors: rows.filter(r=>!r.ok).map(r=>`${r.vin}: ${r.msg}`), okLines:[] };
+        }
+
+        const stamp = nowStamp();
+        const date  = onlyDate(stamp);
+
+        let moved = 0;
+        const okLines = [];
+        const errors = rows.filter(r=>!r.ok).map(r=>`${r.vin}: ${r.msg}`);
+
+        for(const r of executable){
+          const idx = stock.findIndex(x => normalizeVin(x?.vin) === r.vin);
+          if(idx === -1){
+            errors.push(`${r.vin}: غير موجود في المخزون`);
+            continue;
+          }
+
+          const rec = { ...(stock[idx]||{}) };
+          const oldLoc = clean(rec.location || r.from || '');
+
+          // قيد إضافي: لو المكان الحالي فاضي (حماية)
+          if(!oldLoc){
+            errors.push(`${r.vin}: لا يوجد مكان حالي محفوظ`);
+            continue;
+          }
+
+          // تحديث مكان السيارة
+          rec.location = toVal;
+
+          // ملاحظة سيارات بها ملاحظات: نضيفها على السيارة
+          if(goingIssues && issuesTxt){
+            const existing = clean(rec.notes || '');
+            rec.notes = existing ? `${existing} — ${issuesTxt}` : issuesTxt;
+          }
+
+          stock[idx] = rec;
+
+          // سجل الحركة
+          moves.push({
+            when: stamp,
+            date,
+            vin: rec.vin || r.vin,
+            car: rec.car || r.car || '',
+            from: oldLoc,
+            to: toVal,
+            performedBy: currentUser?.email || '',
+            performedByUid: currentUser?.uid || '',
+            id: rec.id ?? null,
+            adminApproved: null,
+            financeApproved: null,
+            issuesNotes: goingIssues ? issuesTxt : ''
+          });
+
+          moved++;
+          okLines.push(`تم نقل ${rec.car||''} (${rec.vin||r.vin}) من "${oldLoc}" إلى "${toVal}"`);
+        }
+
+        tx.update(STATE_REF, { stock, moves });
+        return { moved, errors, okLines };
+      });
+
+      // reload snapshot after tx
+      await loadOnce();
+
+      if(!result.moved){
+        const msg = result.errors?.[0] || 'لم يتم تنفيذ أي حركة نقل';
+        toastMsg(msg);
+        liveHint.innerHTML = `<span class="bad">⚠️ ${msg}</span>`;
+      }else{
+        const msg = `تم نقل ${result.moved} سيارة بنجاح`;
+        toastMsg(msg);
+        const extra = (result.errors && result.errors.length) ? `<br><span class="hint">ملاحظات: ${result.errors.length} حركات لم تُنفذ</span>` : '';
+        liveHint.innerHTML = `<span class="ok">✅ ${msg}</span>${extra}`;
+      }
+
+      // reset VIN rows
+      vinTbody.innerHTML = '';
+      addVinRow('');
+      issuesNotes.value = '';
+      updateUICounts();
+      closePreview();
+
+      setStatus('ok','تم تنفيذ النقل');
+    }catch(e){
+      console.error(e);
+      toastMsg('تعذّر تنفيذ النقل (خطأ في الحفظ)');
+      setStatus('err','خطأ أثناء النقل');
+    }finally{
+      isExecuting = false;
+      // اشتغل المزامنة تاني
+      setTimeout(()=> setStatus('ok','متصل — مزامنة حيّة'), 400);
+    }
+  }
+
+  // Events
+  toLocation.addEventListener('change', ()=>{ updateIssuesBox(); });
+
+  btnAddVin.addEventListener('click', ()=>{
+    const tr = addVinRow('');
+    tr.querySelector('input[data-vin]')?.focus();
+  });
+
+  btnClear.addEventListener('click', ()=>{
+    vinTbody.innerHTML = '';
+    addVinRow('');
+    toLocation.value = '';
+    issuesNotes.value = '';
+    issuesBox.style.display = 'none';
+    liveHint.textContent = '';
+    updateUICounts();
+    toastMsg('تم المسح');
+  });
+
+  btnOpenPreview.addEventListener('click', openPreview);
+  btnExecute.addEventListener('click', executeMove);
+  previewExecute.addEventListener('click', executeMove);
+
+  previewClose.addEventListener('click', closePreview);
+  previewCancel.addEventListener('click', closePreview);
+  previewModal.addEventListener('click', (e)=>{ if(e.target === previewModal) closePreview(); });
+
+  btnRefresh.addEventListener('click', async ()=>{
+    await loadOnce();
+    toastMsg('تم التحديث');
+  });
+
+  // Auth
+  onAuthStateChanged(auth, async (user)=>{
+    if(user){
+      currentUser = user;
+      const role = await fetchUserRole(user);
+      if(!role || !PAGE_ALLOWED_ROLES.includes(role)){
+        window.location.href = 'unauthorized.html';
+        return;
+      }
+
+      authGate.style.display='none';
+      appRoot.style.display='block';
+      btnSignOut.style.display='inline-flex';
+      setStatus('ok', `متصل كمستخدم: ${user.email} — الدور: ${role}`);
+      liftNoFlash();
+
+      fillLocations();
+      vinTbody.innerHTML = '';
+      addVinRow('');
+      updateUICounts();
+      updateIssuesBox();
+
+      await loadOnce();
+      subscribe();
+    }else{
+      currentUser = null;
+      appRoot.style.display='none';
+      authGate.style.display='grid';
+      btnSignOut.style.display='none';
+      setStatus('warn','لم يتم تسجيل الدخول');
+      liftNoFlash();
+    }
+  });
+
+  btnLogin.addEventListener('click', async ()=>{
+    authHint.textContent='';
+    try{
+      await signInWithEmailAndPassword(auth, emailEl.value.trim(), passEl.value);
+    }catch(e){
+      authHint.textContent='فشل تسجيل الدخول: '+(e?.message||e);
+    }
+  });
+  btnSignup.addEventListener('click', async ()=>{
+    authHint.textContent='';
+    try{
+      await createUserWithEmailAndPassword(auth, emailEl.value.trim(), passEl.value);
+    }catch(e){
+      authHint.textContent='تعذّر إنشاء الحساب: '+(e?.message||e);
+    }
+  });
+  btnSignOut.addEventListener('click', ()=> signOut(auth));
+
+  setStatus('warn','جارِ الاتصال…');
+</script>
+</body>
+</html>

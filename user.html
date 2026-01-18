@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>إدارة الأعضاء | MZJ</title>
+  <style>
+    :root{
+      --bg:#0b0f14; --card:#121a24; --card2:#0f1722; --text:#e9eef7; --muted:#9fb0c6;
+      --border:#243246; --accent:#7dd3fc; --ok:#34d399; --bad:#fb7185; --warn:#fbbf24;
+      --btn:#1b2a3d; --btn2:#20344c; --shadow: 0 10px 28px rgba(0,0,0,.35);
+      --radius:14px;
+    }
+    body{margin:0;background:linear-gradient(180deg,#070a0f,#0b0f14);color:var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Tahoma, Arial;
+    }
+    .wrap{max-width:1150px;margin:0 auto;padding:18px 14px 34px;}
+    .top{
+      display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+      padding:14px 16px; border:1px solid var(--border); border-radius:var(--radius);
+      background:rgba(18,26,36,.9); box-shadow:var(--shadow); position:sticky; top:10px; z-index:10;
+      backdrop-filter: blur(10px);
+    }
+    .brand{display:flex;align-items:center;gap:10px;}
+    .dot{width:12px;height:12px;border-radius:999px;background:var(--warn);box-shadow:0 0 0 4px rgba(251,191,36,.12);}
+    .title{font-weight:900}
+    .sub{color:var(--muted); font-size:12px; margin-top:2px}
+    .pill{
+      display:inline-flex; align-items:center; gap:7px;
+      border:1px solid var(--border); background:rgba(11,15,20,.6);
+      padding:6px 10px; border-radius:999px; font-size:12px; color:var(--muted)
+    }
+    .pill .s{width:8px;height:8px;border-radius:999px;background:var(--warn)}
+    .pill.ok .s{background:var(--ok)}
+    .pill.bad .s{background:var(--bad)}
+    .pill.warn .s{background:var(--warn)}
+
+    .grid{display:grid; grid-template-columns: 1fr; gap:12px; margin-top:12px;}
+    .card{
+      background:rgba(18,26,36,.75); border:1px solid var(--border);
+      border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden;
+    }
+    .card h2{
+      margin:0; padding:12px 14px; font-size:14px; background:rgba(15,23,34,.9);
+      border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .card .body{padding:14px}
+    .row{display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px}
+    @media (max-width: 900px){ .row{grid-template-columns:1fr} }
+
+    label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px}
+    input, select{
+      width:100%; box-sizing:border-box;
+      background:rgba(11,15,20,.7); color:var(--text);
+      border:1px solid var(--border); border-radius:12px;
+      padding:10px 12px; outline:none;
+    }
+    .btns{display:flex; flex-wrap:wrap; gap:8px}
+    button{
+      border:1px solid var(--border); background:var(--btn); color:var(--text);
+      padding:10px 12px; border-radius:12px; cursor:pointer; font-weight:800;
+    }
+    button:hover{background:var(--btn2)}
+    button.primary{border-color: rgba(125,211,252,.35); box-shadow:0 0 0 4px rgba(125,211,252,.08) inset}
+    button.good{border-color: rgba(52,211,153,.35)}
+    button.danger{border-color: rgba(251,113,133,.35)}
+    button:disabled{opacity:.5; cursor:not-allowed}
+
+    table{width:100%; border-collapse:collapse; font-size:13px}
+    th, td{padding:10px 8px; border-bottom:1px solid rgba(36,50,70,.6); text-align:right; vertical-align:middle}
+    th{color:var(--muted); font-weight:800; font-size:12px}
+    .actions{display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-start}
+    .tag{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:5px 9px; border-radius:999px; border:1px solid rgba(36,50,70,.8);
+      background:rgba(11,15,20,.45); color:var(--muted); font-size:12px;
+    }
+    .tag.admin{border-color: rgba(125,211,252,.35); color:#dbeeff}
+    .tag.warn{border-color: rgba(251,191,36,.35); color:#ffe7a7}
+    .tag.ok{border-color: rgba(52,211,153,.35); color:#c9ffe6}
+    .muted{color:var(--muted)}
+    .hint{color:var(--muted); font-size:12px; line-height:1.7}
+
+    /* Modal */
+    .modalBackdrop{position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; padding:14px; z-index:100;}
+    .modal{width:min(680px, 100%); background:rgba(18,26,36,.98); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow); overflow:hidden;}
+    .modal .mh{padding:12px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:10px; background:rgba(15,23,34,.9)}
+    .modal .mb{padding:14px}
+    .modal .mf{padding:12px 14px; border-top:1px solid var(--border); display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-start}
+    .x{background:transparent; border:1px solid var(--border); border-radius:10px; padding:6px 10px; cursor:pointer}
+    .msg{padding:10px 12px; border-radius:12px; border:1px solid rgba(36,50,70,.8); background:rgba(11,15,20,.45); color:var(--muted); margin-top:10px; font-size:12px; line-height:1.7}
+    .msg.ok{border-color: rgba(52,211,153,.35); color:#c9ffe6}
+    .msg.bad{border-color: rgba(251,113,133,.35); color:#ffd0d9}
+  </style>
+</head>
+
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">
+      <span class="dot" id="topDot"></span>
+      <div>
+        <div class="title">إدارة الأعضاء</div>
+        <div class="sub">Firestore: <b>user</b> (Email / Name / role)</div>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center">
+      <span class="pill warn" id="netPill"><span class="s"></span><span id="netTxt">Network: ...</span></span>
+      <span class="pill warn" id="authPill"><span class="s"></span><span id="authTxt">Auth: ...</span></span>
+      <span class="pill warn" id="rolePill"><span class="s"></span><span id="roleTxt">Role: ...</span></span>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>
+        <span>تسجيل الدخول</span>
+        <span class="muted" id="meLine">-</span>
+      </h2>
+      <div class="body">
+        <div class="row">
+          <div>
+            <label>البريد</label>
+            <input id="loginEmail" type="email" placeholder="you@mzjcars.com" />
+          </div>
+          <div>
+            <label>كلمة المرور</label>
+            <input id="loginPass" type="password" placeholder="••••••••" />
+          </div>
+          <div style="display:flex; align-items:end; gap:8px; flex-wrap:wrap">
+            <button class="primary" id="btnLogin">تسجيل دخول</button>
+            <button id="btnLogout">تسجيل خروج</button>
+            <button id="btnInit">تشغيل Firebase</button>
+          </div>
+        </div>
+        <div class="hint" style="margin-top:10px">
+          ✅ التعديل والإضافة مش هتشتغل إلا لو حسابك داخل وRole = <b>الادارة</b> من داخل Collection <b>user</b>.
+        </div>
+        <div id="loginMsg" class="msg" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>
+        <span>الأعضاء</span>
+        <div class="btns">
+          <button class="primary" id="btnAddOpen" disabled>+ إضافة عضو</button>
+          <button id="btnRefresh" disabled>تحديث</button>
+        </div>
+      </h2>
+
+      <div class="body">
+        <div class="row">
+          <div>
+            <label>بحث (اسم/إيميل/Role)</label>
+            <input id="searchBox" placeholder="اكتب أي جزء..." />
+          </div>
+          <div>
+            <label>فلتر Role</label>
+            <select id="roleFilter">
+              <option value="">الكل</option>
+              <option value="الادارة">الادارة</option>
+              <option value="مبيعات">مبيعات</option>
+              <option value="تصوير">تصوير</option>
+              <option value="مونتاج">مونتاج</option>
+              <option value="مخزون">مخزون</option>
+              <option value="متابعة">متابعة</option>
+            </select>
+          </div>
+          <div>
+            <label>عدد النتائج</label>
+            <input id="countBox" disabled />
+          </div>
+        </div>
+
+        <div style="margin-top:12px; overflow:auto; border:1px solid rgba(36,50,70,.6); border-radius:12px">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:24%">الاسم</th>
+                <th style="width:28%">الإيميل</th>
+                <th style="width:14%">Role</th>
+                <th style="width:18%">Doc ID</th>
+                <th style="width:16%">إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="tbody">
+              <tr><td colspan="5" class="muted">شغّل Firebase ثم سجل دخول.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="listMsg" class="msg" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modalBackdrop" id="modalBackdrop">
+  <div class="modal">
+    <div class="mh">
+      <div style="font-weight:900" id="modalTitle">-</div>
+      <button class="x" id="btnClose">✕</button>
+    </div>
+    <div class="mb">
+      <div class="row">
+        <div>
+          <label>الاسم</label>
+          <input id="mName" placeholder="مثال: Ahmed.Manaa" />
+        </div>
+        <div>
+          <label>الإيميل</label>
+          <input id="mEmail" type="email" placeholder="example@mzjcars.com" />
+        </div>
+        <div>
+          <label>Role</label>
+          <select id="mRole">
+            <option value="الادارة">الادارة</option>
+            <option value="مبيعات">مبيعات</option>
+            <option value="تصوير">تصوير</option>
+            <option value="مونتاج">مونتاج</option>
+            <option value="مخزون">مخزون</option>
+            <option value="متابعة">متابعة</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="hint" style="margin-top:10px">
+        - الإضافة هنا بتضيف سجل داخل <b>user</b> فقط. (مش بتعمل إنشاء حساب Auth تلقائيًا)<br/>
+        - لو عايز كمان تعمل إنشاء حساب بالباسورد من نفس الصفحة، قولّي و أضيفه لك.
+      </div>
+
+      <div id="modalMsg" class="msg" style="display:none"></div>
+    </div>
+    <div class="mf">
+      <button class="primary" id="btnSave">حفظ</button>
+      <button class="danger" id="btnDelete" style="display:none">حذف</button>
+      <button id="btnCancel">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import {
+    getAuth, onAuthStateChanged,
+    signInWithEmailAndPassword, signOut
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import {
+    getFirestore,
+    collection, getDocs, doc, getDoc,
+    addDoc, updateDoc, deleteDoc,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC614bGqnYf4Q-weTNemzWENTpa8DjGeHw",
+    authDomain: "mzj-agenda.firebaseapp.com",
+    projectId: "mzj-agenda",
+    storageBucket: "mzj-agenda.firebasestorage.app",
+    messagingSenderId: "834700407721",
+    appId: "1:834700407721:web:75c17665d4f032fd65cab8"
+  };
+
+  const $ = (id)=>document.getElementById(id);
+
+  function setPill(pillEl, state, text){
+    pillEl.classList.remove("ok","bad","warn");
+    pillEl.classList.add(state);
+    pillEl.querySelector("span:last-child").textContent = text;
+  }
+
+  function showMsg(el, text, type=""){
+    el.style.display = "block";
+    el.classList.remove("ok","bad");
+    if(type) el.classList.add(type);
+    el.textContent = text;
+  }
+  function hideMsg(el){ el.style.display="none"; el.textContent=""; el.classList.remove("ok","bad"); }
+
+  function updateNetUI(){
+    const online = navigator.onLine;
+    setPill($("netPill"), online ? "ok" : "bad", online ? "Network: Online" : "Network: Offline");
+    $("topDot").style.background = online ? "var(--ok)" : "var(--bad)";
+  }
+  window.addEventListener("online", updateNetUI);
+  window.addEventListener("offline", updateNetUI);
+  updateNetUI();
+
+  let app=null, auth=null, db=null;
+  let currentUser=null;
+  let myRole=null;
+  let allUsers=[]; // cached list
+  let modalMode="add"; // add|edit
+  let editDocId=null;
+
+  function canAdmin(){
+    return !!currentUser && myRole === "الادارة";
+  }
+
+  function setUIState(){
+    const admin = canAdmin();
+    $("btnAddOpen").disabled = !admin;
+    $("btnRefresh").disabled = !currentUser;
+
+    setPill($("authPill"),
+      currentUser ? "ok" : "warn",
+      currentUser ? "Auth: Signed In" : "Auth: Not Signed In"
+    );
+    setPill($("rolePill"),
+      myRole ? (myRole==="الادارة" ? "ok" : "warn") : "warn",
+      myRole ? `Role: ${myRole}` : "Role: -"
+    );
+
+    $("meLine").textContent = currentUser
+      ? `${currentUser.email || "(no email)"} — UID: ${currentUser.uid}`
+      : "-";
+  }
+
+  async function initFirebase(){
+    try{
+      app = initializeApp(firebaseConfig);
+      auth = getAuth(app);
+      db = getFirestore(app);
+      hideMsg($("loginMsg"));
+      showMsg($("loginMsg"), "تم تشغيل Firebase ✅", "ok");
+
+      onAuthStateChanged(auth, async (user)=>{
+        currentUser = user || null;
+        myRole = null;
+
+        if(currentUser){
+          // اقرأ Role من Collection: user/{uid}
+          // (لو انت بتخزن docId = uid زي الصورة)
+          try{
+            const meRef = doc(db, "user", currentUser.uid);
+            const meSnap = await getDoc(meRef);
+            if(meSnap.exists()){
+              myRole = meSnap.data()?.role || null;
+            }else{
+              myRole = null;
+            }
+          }catch(e){
+            myRole = null;
+            showMsg($("loginMsg"), `خطأ قراءة صلاحيتك من user/${currentUser.uid}: ${e.code || ""} ${e.message}`, "bad");
+          }
+
+          await refreshUsers();
+        }else{
+          allUsers = [];
+          renderTable([]);
+        }
+        setUIState();
+      });
+
+      setUIState();
+    }catch(e){
+      showMsg($("loginMsg"), `فشل تشغيل Firebase: ${e.message}`, "bad");
+    }
+  }
+
+  async function doLogin(){
+    if(!auth) return showMsg($("loginMsg"), "اضغط تشغيل Firebase أولاً.", "bad");
+    const email = $("loginEmail").value.trim();
+    const pass = $("loginPass").value;
+    if(!email || !pass) return showMsg($("loginMsg"), "اكتب الإيميل والباسورد.", "bad");
+
+    try{
+      hideMsg($("loginMsg"));
+      await signInWithEmailAndPassword(auth, email, pass);
+      showMsg($("loginMsg"), "تم تسجيل الدخول ✅", "ok");
+    }catch(e){
+      showMsg($("loginMsg"), `فشل تسجيل الدخول: ${e.code || ""} ${e.message}`, "bad");
+    }
+  }
+
+  async function doLogout(){
+    if(!auth) return;
+    try{
+      await signOut(auth);
+      showMsg($("loginMsg"), "تم تسجيل الخروج ✅", "ok");
+    }catch(e){
+      showMsg($("loginMsg"), `فشل تسجيل الخروج: ${e.code || ""} ${e.message}`, "bad");
+    }
+  }
+
+  function roleTag(role){
+    if(!role) return `<span class="tag warn">-</span>`;
+    if(role==="الادارة") return `<span class="tag admin">الادارة</span>`;
+    return `<span class="tag">${escapeHtml(role)}</span>`;
+  }
+
+  function escapeHtml(s){
+    return String(s ?? "")
+      .replaceAll("&","&amp;").replaceAll("<","&lt;")
+      .replaceAll(">","&gt;").replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  function renderTable(list){
+    const tb = $("tbody");
+    if(!list.length){
+      tb.innerHTML = `<tr><td colspan="5" class="muted">لا توجد نتائج.</td></tr>`;
+      $("countBox").value = "0";
+      return;
+    }
+
+    $("countBox").value = String(list.length);
+
+    const admin = canAdmin();
+    tb.innerHTML = list.map(u=>{
+      const name = u.data?.Name || "";
+      const email = u.data?.Email || "";
+      const role = u.data?.role || "";
+      const docId = u.id;
+
+      const editBtn = admin
+        ? `<button class="primary" data-act="edit" data-id="${escapeHtml(docId)}">تعديل</button>`
+        : `<button disabled>تعديل</button>`;
+
+      const quickRoleBtn = admin
+        ? `<button data-act="promote" data-id="${escapeHtml(docId)}">Role: الادارة</button>`
+        : ``;
+
+      return `
+        <tr>
+          <td>${escapeHtml(name)}</td>
+          <td>${escapeHtml(email)}</td>
+          <td>${roleTag(role)}</td>
+          <td class="muted">${escapeHtml(docId)}</td>
+          <td>
+            <div class="actions">
+              ${editBtn}
+              ${quickRoleBtn}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+    tb.querySelectorAll("button[data-act]").forEach(btn=>{
+      btn.addEventListener("click", async ()=>{
+        const act = btn.getAttribute("data-act");
+        const id = btn.getAttribute("data-id");
+        if(act==="edit") openEdit(id);
+        if(act==="promote") await quickPromoteToAdmin(id);
+      });
+    });
+  }
+
+  function applyFilters(){
+    const q = $("searchBox").value.trim().toLowerCase();
+    const rf = $("roleFilter").value;
+
+    const out = allUsers.filter(u=>{
+      const name = (u.data?.Name || "").toLowerCase();
+      const email = (u.data?.Email || "").toLowerCase();
+      const role = (u.data?.role || "").toLowerCase();
+
+      const okText = !q || name.includes(q) || email.includes(q) || role.includes(q) || u.id.toLowerCase().includes(q);
+      const okRole = !rf || (u.data?.role === rf);
+      return okText && okRole;
+    });
+
+    renderTable(out);
+  }
+
+  async function refreshUsers(){
+    if(!db) return;
+    hideMsg($("listMsg"));
+    try{
+      const snap = await getDocs(collection(db, "user"));
+      const items = [];
+      snap.forEach(d=> items.push({ id: d.id, data: d.data() }));
+      // sort by Email then Name
+      items.sort((a,b)=>{
+        const ae = (a.data?.Email || "").toLowerCase();
+        const be = (b.data?.Email || "").toLowerCase();
+        if(ae < be) return -1;
+        if(ae > be) return 1;
+        const an = (a.data?.Name || "").toLowerCase();
+        const bn = (b.data?.Name || "").toLowerCase();
+        return an.localeCompare(bn);
+      });
+
+      allUsers = items;
+      applyFilters();
+      showMsg($("listMsg"), `تم تحميل ${items.length} عضو ✅`, "ok");
+    }catch(e){
+      showMsg($("listMsg"), `فشل تحميل الأعضاء: ${e.code || ""} ${e.message}`, "bad");
+    }
+  }
+
+  function openModal(){
+    $("modalBackdrop").style.display = "flex";
+  }
+  function closeModal(){
+    $("modalBackdrop").style.display = "none";
+    hideMsg($("modalMsg"));
+  }
+
+  function openAdd(){
+    modalMode = "add";
+    editDocId = null;
+    $("modalTitle").textContent = "إضافة عضو جديد";
+    $("mName").value = "";
+    $("mEmail").value = "";
+    $("mRole").value = "متابعة";
+    $("btnDelete").style.display = "none";
+    openModal();
+  }
+
+  function openEdit(docId){
+    const item = allUsers.find(x=>x.id===docId);
+    if(!item) return;
+
+    modalMode = "edit";
+    editDocId = docId;
+    $("modalTitle").textContent = `تعديل عضو (${docId})`;
+    $("mName").value = item.data?.Name || "";
+    $("mEmail").value = item.data?.Email || "";
+    $("mRole").value = item.data?.role || "متابعة";
+    $("btnDelete").style.display = "inline-block";
+    openModal();
+  }
+
+  async function saveModal(){
+    if(!canAdmin()) return showMsg($("modalMsg"), "غير مسموح. لازم تكون Role = الادارة.", "bad");
+    if(!db) return;
+
+    const Name = $("mName").value.trim();
+    const Email = $("mEmail").value.trim();
+    const role = $("mRole").value;
+
+    if(!Name || !Email || !role) return showMsg($("modalMsg"), "املأ الاسم + الإيميل + role.", "bad");
+
+    try{
+      hideMsg($("modalMsg"));
+
+      if(modalMode === "add"){
+        // addDoc: ينشئ Document ID تلقائي
+        await addDoc(collection(db, "user"), {
+          Name, Email, role,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          updatedBy: currentUser?.uid || null
+        });
+        showMsg($("modalMsg"), "تمت الإضافة ✅", "ok");
+      }else{
+        const ref = doc(db, "user", editDocId);
+        await updateDoc(ref, {
+          Name, Email, role,
+          updatedAt: serverTimestamp(),
+          updatedBy: currentUser?.uid || null
+        });
+        showMsg($("modalMsg"), "تم الحفظ ✅", "ok");
+      }
+
+      await refreshUsers();
+      setTimeout(closeModal, 500);
+
+    }catch(e){
+      showMsg($("modalMsg"), `فشل الحفظ: ${e.code || ""} ${e.message}`, "bad");
+    }
+  }
+
+  async function deleteCurrent(){
+    if(!canAdmin()) return showMsg($("modalMsg"), "غير مسموح. لازم تكون Role = الادارة.", "bad");
+    if(!db || !editDocId) return;
+
+    if(!confirm("تأكيد حذف العضو؟")) return;
+
+    try{
+      await deleteDoc(doc(db, "user", editDocId));
+      showMsg($("modalMsg"), "تم الحذف ✅", "ok");
+      await refreshUsers();
+      setTimeout(closeModal, 500);
+    }catch(e){
+      showMsg($("modalMsg"), `فشل الحذف: ${e.code || ""} ${e.message}`, "bad");
+    }
+  }
+
+  async function quickPromoteToAdmin(docId){
+    if(!canAdmin()) return;
+    try{
+      await updateDoc(doc(db, "user", docId), {
+        role: "الادارة",
+        updatedAt: serverTimestamp(),
+        updatedBy: currentUser?.uid || null
+      });
+      await refreshUsers();
+    }catch(e){
+      showMsg($("listMsg"), `فشل تغيير الصلاحية: ${e.code || ""} ${e.message}`, "bad");
+    }
+  }
+
+  // Events
+  $("btnInit").addEventListener("click", initFirebase);
+  $("btnLogin").addEventListener("click", doLogin);
+  $("btnLogout").addEventListener("click", doLogout);
+
+  $("btnRefresh").addEventListener("click", refreshUsers);
+
+  $("searchBox").addEventListener("input", applyFilters);
+  $("roleFilter").addEventListener("change", applyFilters);
+
+  $("btnAddOpen").addEventListener("click", openAdd);
+  $("btnClose").addEventListener("click", closeModal);
+  $("btnCancel").addEventListener("click", closeModal);
+  $("btnSave").addEventListener("click", saveModal);
+  $("btnDelete").addEventListener("click", deleteCurrent);
+
+  // init pills
+  setPill($("authPill"), "warn", "Auth: Not Ready");
+  setPill($("rolePill"), "warn", "Role: -");
+  setUIState();
+</script>
+</body>
+</html>

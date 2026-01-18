@@ -90,18 +90,6 @@
     .toast{position:fixed;bottom:20px;right:20px;background:#1f2937;color:#fff;padding:9px 13px;border-radius:999px;display:none;font-size:12px;z-index:450}
     .toast.show{display:block;animation:fade .18s ease-out}
     @keyframes fade{from{opacity:0;transform:translate(0,6px)}to{opacity:1;transform:translate(0,0)}}
-
-    /* VIN entry table */
-    .vin-entry-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
-    .vin-entry-table{width:100%;border-collapse:separate;border-spacing:0}
-    .vin-entry-table th,.vin-entry-table td{border:1px solid var(--line);border-left-color:var(--line-strong);padding:8px 10px;text-align:right;vertical-align:top;font-size:13px;background:#fff}
-    .vin-entry-table thead th{position:sticky;top:0;background:#f9fafb;border-bottom:2px solid var(--line-strong);z-index:1}
-    .vin-entry-table tbody tr:nth-child(even) td{background:#fffdf8}
-    .vin-entry-table tbody tr:hover td{background:#f3f4f6}
-    .vin-entry-table .vin-inp{min-width:240px}
-    .vin-entry-table .tiny{font-size:12px;color:var(--muted)}
-    .vin-entry-table .row-actions{white-space:nowrap}
-    .btn-icon{padding:8px 10px;border-radius:12px}
   </style>
 </head>
 <body class="mzj">
@@ -196,26 +184,28 @@
           <h3><i class="fa-solid fa-pen" style="color:var(--beige)"></i> بيانات النقل</h3>
           <div class="grid grid-2">
             <div>
-              <label>أرقام الهياكل</label>
-              <div class="vin-entry-wrap">
-                <table class="vin-entry-table">
+              <div class="row" style="justify-content:space-between;align-items:end;gap:10px">
+                <div>
+                  <label style="margin:0">أرقام الهياكل</label>
+                  <div class="hint" style="margin-top:6px">اكتب VIN في الخانة — كل صف = سيارة. استخدم زر (إضافة رقم هيكل) لإضافة صف جديد.</div>
+                </div>
+                <button class="btn btn-outline" id="btnAddVinRow" type="button"><i class="fa-solid fa-plus"></i> إضافة رقم هيكل</button>
+              </div>
+
+              <div class="table-wrap" style="margin-top:10px">
+                <table>
                   <thead>
                     <tr>
-                      <th style="width:48px">#</th>
-                      <th>رقم الهيكل (VIN)</th>
+                      <th style="width:44px">م</th>
+                      <th style="min-width:170px">رقم الهيكل</th>
                       <th>السيارة</th>
                       <th>المكان الحالي</th>
-                      <th>ملاحظات</th>
-                      <th class="row-actions">إجراء</th>
+                      <th style="min-width:160px">ملاحظات</th>
+                      <th style="width:54px"></th>
                     </tr>
                   </thead>
                   <tbody id="vinTbody"></tbody>
                 </table>
-              </div>
-
-              <div class="row" style="justify-content:space-between;margin-top:10px">
-                <span class="hint">اكتب رقم الهيكل في صفه. تقدر تلصق قائمة VIN (كل رقم في سطر) داخل أول خانة وسيتم توزيعها تلقائيًا.</span>
-                <button class="btn btn-outline" id="btnAddVin" type="button"><i class="fa-solid fa-plus"></i> إضافة رقم هيكل</button>
               </div>
             </div>
             <div>
@@ -342,7 +332,8 @@
   const btnSignup= $('#btnSignup');
   const authHint = $('#authHint');
 
-  const vinTbody    = $('#vinTbody');
+  const vinTbody = $('#vinTbody');
+  const btnAddVinRow = $('#btnAddVinRow');
   const toLocation  = $('#toLocation');
   const issuesBox   = $('#issuesBox');
   const issuesNotes = $('#issuesNotes');
@@ -350,7 +341,6 @@
   const vinCount    = $('#vinCount');
 
   const btnClear = $('#btnClear');
-  const btnAddVin = $('#btnAddVin');
   const btnOpenPreview = $('#btnOpenPreview');
   const btnExecute = $('#btnExecute');
   const btnRefresh = $('#btnRefresh');
@@ -400,123 +390,23 @@
     setTimeout(()=> toast.classList.remove('show'), 1800);
   }
 
-  function getVinInputs(){
-    return Array.from(vinTbody.querySelectorAll('input[data-vin]'));
-  }
-
   function parseVins(){
-    const vals = getVinInputs()
-      .map(inp => clean(normalizeVin(inp.value)))
+    const inputs = Array.from(vinTbody.querySelectorAll('input.vin-input'));
+    const lines = inputs
+      .map(inp => normalizeVin(inp.value))
+      .map(s => clean(s))
       .filter(Boolean);
     const uniq = [];
     const seen = new Set();
-    for(const v of vals){
+    for(const v of lines){
       if(!seen.has(v)) { seen.add(v); uniq.push(v); }
     }
     return uniq;
   }
 
   function updateUICounts(){
-    vinCount.textContent = String(parseVins().length);
-  }
-
-  function lookupCarByVin(vin){
-    const v = clean(normalizeVin(vin));
-    if(!v) return null;
-    return (stateCache.stock||[]).find(r => clean(normalizeVin(r?.vin)) === v) || null;
-  }
-
-  function refreshRowData(tr){
-    const inp = tr.querySelector('input[data-vin]');
-    const carTd = tr.querySelector('[data-col="car"]');
-    const locTd = tr.querySelector('[data-col="loc"]');
-    const notesTd = tr.querySelector('[data-col="notes"]');
-    const idxTd = tr.querySelector('[data-col="idx"]');
-
-    const vin = clean(normalizeVin(inp?.value || ''));
-    if(inp && inp.value !== vin) inp.value = vin;
-
-    if(idxTd){
-      const rows = Array.from(vinTbody.querySelectorAll('tr'));
-      idxTd.textContent = String(rows.indexOf(tr) + 1);
-    }
-
-    if(!vin){
-      carTd.textContent = '—';
-      locTd.textContent = '—';
-      notesTd.innerHTML = '<span class="tiny">—</span>';
-      return;
-    }
-
-    const rec = lookupCarByVin(vin);
-    if(!rec){
-      carTd.innerHTML = `<span class="bad">غير موجود</span>`;
-      locTd.textContent = '—';
-      notesTd.innerHTML = '<span class="tiny">—</span>';
-      return;
-    }
-
-    carTd.textContent = rec.car || rec.model || rec.name || '—';
-    locTd.textContent = clean(rec.location || '—');
-    const n = clean(rec.notes || '');
-    notesTd.innerHTML = n ? `<span class="tiny">${n}</span>` : '<span class="tiny">—</span>';
-  }
-
-  function addVinRow(initialVin=''){
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td data-col="idx" class="tiny">—</td>
-      <td>
-        <input class="input vin-inp" data-vin type="text" placeholder="KMH..." value="${clean(initialVin)}" autocomplete="off" spellcheck="false" />
-      </td>
-      <td data-col="car">—</td>
-      <td data-col="loc">—</td>
-      <td data-col="notes"><span class="tiny">—</span></td>
-      <td class="row-actions">
-        <button class="btn btn-ghost btn-icon" data-remove type="button" title="حذف"><i class="fa-solid fa-trash"></i></button>
-      </td>
-    `;
-    vinTbody.appendChild(tr);
-
-    const inp = tr.querySelector('input[data-vin]');
-    inp.addEventListener('input', ()=>{ refreshRowData(tr); updateUICounts(); });
-
-    // Paste: لو لصقت أكتر من سطر في خانة واحدة، نوزعهم تلقائيًا
-    inp.addEventListener('paste', (e)=>{
-      const text = (e.clipboardData || window.clipboardData)?.getData('text') || '';
-      if(!text) return;
-      const lines = text.split(/\r?\n/).map(x=>clean(normalizeVin(x))).filter(Boolean);
-      if(lines.length <= 1) return;
-      e.preventDefault();
-      inp.value = lines[0];
-      refreshRowData(tr);
-      for(let i=1;i<lines.length;i++) addVinRow(lines[i]);
-      renumberVinRows();
-      updateUICounts();
-    });
-
-    tr.querySelector('[data-remove]').addEventListener('click', ()=>{
-      tr.remove();
-      if(!vinTbody.querySelector('tr')) addVinRow('');
-      renumberVinRows();
-      updateUICounts();
-    });
-
-    refreshRowData(tr);
-    renumberVinRows();
-    updateUICounts();
-    return tr;
-  }
-
-  function renumberVinRows(){
-    Array.from(vinTbody.querySelectorAll('tr')).forEach((tr, i)=>{
-      const idxTd = tr.querySelector('[data-col="idx"]');
-      if(idxTd) idxTd.textContent = String(i+1);
-    });
-  }
-
-  function refreshAllVinRows(){
-    Array.from(vinTbody.querySelectorAll('tr')).forEach(tr=> refreshRowData(tr));
+    const list = parseVins();
+    vinCount.textContent = String(list.length);
   }
 
   function updateIssuesBox(){
@@ -524,6 +414,96 @@
     const isIssues = /سيارات بها ملاحظات/.test(toVal);
     issuesBox.style.display = isIssues ? 'block' : 'none';
     if(!isIssues) issuesNotes.value = '';
+  }
+
+
+  // VIN Table (one VIN per row)
+  function renumberVinRows(){
+    const trs = Array.from(vinTbody.querySelectorAll('tr'));
+    trs.forEach((tr,i)=>{
+      const n = tr.querySelector('[data-col="n"]');
+      if(n) n.textContent = String(i+1);
+    });
+  }
+
+  function fillVinRow(tr, vin){
+    const cellCar = tr.querySelector('[data-col="car"]');
+    const cellFrom = tr.querySelector('[data-col="from"]');
+    const cellNotes = tr.querySelector('[data-col="notes"]');
+
+    if(!vin){
+      cellCar.textContent = '';
+      cellFrom.textContent = '';
+      cellNotes.textContent = '';
+      tr.classList.remove('row-bad');
+      return;
+    }
+
+    const rec = (stateCache.stock || []).find(r => normalizeVin(r?.vin) === vin);
+    if(!rec){
+      cellCar.textContent = '—';
+      cellFrom.textContent = '—';
+      cellNotes.textContent = '';
+      tr.classList.add('row-bad');
+      return;
+    }
+    tr.classList.remove('row-bad');
+    cellCar.textContent = rec.car || '';
+    cellFrom.textContent = rec.location || '';
+    cellNotes.textContent = rec.notes || '';
+  }
+
+  function refreshAllVinRows(){
+    const trs = Array.from(vinTbody.querySelectorAll('tr'));
+    trs.forEach(tr=>{
+      const inp = tr.querySelector('input.vin-input');
+      const v = normalizeVin(inp?.value || '');
+      fillVinRow(tr, clean(v));
+    });
+  }
+
+  function addVinRow(initialVin=''){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td data-col="n" class="nowrap"></td>
+      <td><input class="input vin-input" placeholder="VIN" value="${initialVin || ''}" /></td>
+      <td data-col="car"></td>
+      <td data-col="from"></td>
+      <td data-col="notes"></td>
+      <td class="nowrap"><button class="btn btn-ghost btn-del" type="button" title="حذف"><i class="fa-solid fa-trash"></i></button></td>
+    `;
+    vinTbody.appendChild(tr);
+    renumberVinRows();
+
+    const inp = tr.querySelector('input.vin-input');
+    const del = tr.querySelector('.btn-del');
+
+    const refresh = ()=>{
+      const v = normalizeVin(inp.value);
+      // keep displayed value normalized (but don't annoy while typing)
+      fillVinRow(tr, clean(v));
+      updateUICounts();
+    };
+
+    inp.addEventListener('input', refresh);
+    inp.addEventListener('blur', ()=>{ inp.value = normalizeVin(inp.value); refresh(); });
+
+    del.addEventListener('click', ()=>{
+      tr.remove();
+      if(!vinTbody.querySelector('tr')) addVinRow('');
+      renumberVinRows();
+      updateUICounts();
+    });
+
+    // initial fill
+    refresh();
+    return tr;
+  }
+
+  function resetVinTable(){
+    vinTbody.innerHTML = '';
+    addVinRow('');
+    updateUICounts();
   }
 
   // Roles
@@ -557,15 +537,15 @@
       const okA = m.adminApproved === true;
       const okF = m.financeApproved === true;
       const stateTxt = (okA && okF) ? '✅ مكتملة' : (okA || okF) ? '🟡 جزئية' : '—';
-      const by = clean(m.performedBy || m.by || m.userEmail || '');
       const tr = document.createElement('tr');
+      const who = (m.performedBy || m.by || m.user || m.userEmail || '').toString();
       tr.innerHTML = `
         <td class="nowrap">${m.when || ''}</td>
         <td class="nowrap">${m.vin || ''}</td>
         <td>${m.car || ''}</td>
         <td>${m.from || ''}</td>
         <td>${m.to || ''}</td>
-        <td>${by || '—'}</td>
+        <td class="nowrap">${who || '—'}</td>
         <td>${stateTxt}</td>
       `;
       movesTbody.appendChild(tr);
@@ -576,7 +556,6 @@
   let stateCache = { stock: [], moves: [] };
   let unsub = null;
   let isExecuting = false;
-  let currentUser = null;
 
   async function loadOnce(){
     const snap = await getDoc(STATE_REF);
@@ -612,6 +591,7 @@
   // Preview builder
   function buildPreviewRows(toVal, vins, stock, moves){
     const goingIssues = /سيارات بها ملاحظات/.test(toVal);
+    const goingUnderDelivery = /مباع تحت التسليم/.test(toVal);
     const goingDelivered = /مباع تم التسليم/.test(toVal);
 
     const issuesTxt = goingIssues ? clean(issuesNotes.value) : '';
@@ -640,10 +620,10 @@
       }
 
       if(goingDelivered){
-        const history = (moves||[]).filter(m => normalizeVin(m?.vin) === vin);
-        const hasFull = history.some(m => m.adminApproved===true && m.financeApproved===true);
-        if(!hasFull){
-          out.push({ vin, car: rec.car || '', from, to:toVal, ok:false, msg:'ممنوع: لا توجد موافقة مالية وإدارية مكتملة' });
+        const adminOk   = (rec.adminApproved===true || rec.adminApproval===true || rec.adminApproved==='true' || rec.adminApproval==='true');
+        const financeOk = (rec.financeApproved===true || rec.financeApproval===true || rec.financeApproved==='true' || rec.financeApproval==='true');
+        if(!(adminOk && financeOk)){
+          out.push({ vin, car: rec.car || '', from, to:toVal, ok:false, msg:'ممنوع: لا توجد موافقة مالية وإدارية مكتملة (من الداش بورد)' });
           continue;
         }
       }
@@ -693,6 +673,7 @@
     const toVal = clean(toLocation.value);
     const vins = parseVins();
     const goingIssues = /سيارات بها ملاحظات/.test(toVal);
+    const goingUnderDelivery = /مباع تحت التسليم/.test(toVal);
     const goingDelivered = /مباع تم التسليم/.test(toVal);
 
     const issuesTxt = goingIssues ? clean(issuesNotes.value) : '';
@@ -742,8 +723,24 @@
             continue;
           }
 
-          // تحديث مكان السيارة
+          // منطق جديد: لو اخترت (مباع تحت التسليم)
+          // ننقل السيارة فعليًا إلى (تحت التسليم)، ونُنشئ طلب موافقات داخل moves إلى (مباع تم التسليم)
+          const isUnderDelivery = /مباع تحت التسليم/.test(toVal);
+          const deliveredLocForApproval = isUnderDelivery ? toVal.replace('مباع تحت التسليم','مباع تم التسليم') : '';
+
+          // تحديث مكان السيارة (الفعلية)
           rec.location = toVal;
+
+          // لو تحت التسليم: صفّر الموافقات على السيارة (تبدأ من جديد)
+          if(isUnderDelivery){
+            rec.adminApproved = false; rec.adminApproval = false;
+            rec.financeApproved = false; rec.financeApproval = false;
+            try{ delete rec.adminApprovedAt; }catch(_e){}
+            try{ delete rec.financeApprovedAt; }catch(_e){}
+            // لا نمسح ملاحظات السيارة العامة notes، لكن نمسح ملاحظات الموافقات لو موجودة
+            rec.adminNotes = '';
+            rec.financeNotes = '';
+          }
 
           // ملاحظة سيارات بها ملاحظات: نضيفها على السيارة
           if(goingIssues && issuesTxt){
@@ -753,21 +750,66 @@
 
           stock[idx] = rec;
 
-          // سجل الحركة
-          moves.push({
-            when: stamp,
-            date,
-            vin: rec.vin || r.vin,
-            car: rec.car || r.car || '',
-            from: oldLoc,
-            to: toVal,
-            performedBy: currentUser?.email || '',
-            performedByUid: currentUser?.uid || '',
-            id: rec.id ?? null,
-            adminApproved: null,
-            financeApproved: null,
-            issuesNotes: goingIssues ? issuesTxt : ''
-          });
+          // سجل الحركة / أو طلب الموافقات (حسب المكان)
+          const cu = auth.currentUser;
+          const performedBy = cu?.email || '';
+          const performedByUid = cu?.uid || '';
+
+          const isUnderDelivery2 = /مباع تحت التسليم/.test(toVal);
+          if(isUnderDelivery2){
+            // 1) سجل حركة الدخول إلى (مباع تحت التسليم)
+            moves.push({
+              when: stamp,
+              date,
+              vin: rec.vin || r.vin,
+              car: rec.car || r.car || '',
+              from: oldLoc,
+              to: toVal,
+              id: rec.id ?? null,
+              action: 'move_to_under_delivery',
+              performedBy,
+              performedByUid
+            });
+
+            // 2) طلب موافقات يظهر في كارت (الموافقة المالية والإدارية) بالداش بورد
+            moves.push({
+              when: stamp,
+              date,
+              requestedAt: stamp,
+              createdAt: stamp,
+              vin: rec.vin || r.vin,
+              car: rec.car || r.car || '',
+              from: toVal, // من تحت التسليم
+              to: deliveredLocForApproval,
+              id: rec.id ?? null,
+              status: 'awaiting_approvals',
+              requiresAdminApproval: true,
+              requiresFinanceApproval: true,
+              adminApproved: null,
+              financeApproved: null,
+              adminNote: '',
+              financeNote: '',
+              message: 'طلب نقل إلى مباع تم التسليم — بانتظار الموافقة المالية والإدارية',
+              performedBy,
+              performedByUid
+            });
+          }else{
+            // حركة نقل عادية
+            moves.push({
+              when: stamp,
+              date,
+              vin: rec.vin || r.vin,
+              car: rec.car || r.car || '',
+              from: oldLoc,
+              to: toVal,
+              id: rec.id ?? null,
+              adminApproved: null,
+              financeApproved: null,
+              issuesNotes: goingIssues ? issuesTxt : '',
+              performedBy,
+              performedByUid
+            });
+          }
 
           moved++;
           okLines.push(`تم نقل ${rec.car||''} (${rec.vin||r.vin}) من "${oldLoc}" إلى "${toVal}"`);
@@ -791,9 +833,8 @@
         liveHint.innerHTML = `<span class="ok">✅ ${msg}</span>${extra}`;
       }
 
-      // reset VIN rows
-      vinTbody.innerHTML = '';
-      addVinRow('');
+      // reset inputs (اختياري)
+      resetVinTable();
       issuesNotes.value = '';
       updateUICounts();
       closePreview();
@@ -811,16 +852,12 @@
   }
 
   // Events
-  toLocation.addEventListener('change', ()=>{ updateIssuesBox(); });
+  btnAddVinRow.addEventListener('click', ()=>{ addVinRow(''); });
 
-  btnAddVin.addEventListener('click', ()=>{
-    const tr = addVinRow('');
-    tr.querySelector('input[data-vin]')?.focus();
-  });
+    toLocation.addEventListener('change', ()=>{ updateIssuesBox(); });
 
   btnClear.addEventListener('click', ()=>{
-    vinTbody.innerHTML = '';
-    addVinRow('');
+    resetVinTable();
     toLocation.value = '';
     issuesNotes.value = '';
     issuesBox.style.display = 'none';
@@ -845,7 +882,6 @@
   // Auth
   onAuthStateChanged(auth, async (user)=>{
     if(user){
-      currentUser = user;
       const role = await fetchUserRole(user);
       if(!role || !PAGE_ALLOWED_ROLES.includes(role)){
         window.location.href = 'unauthorized.html';
@@ -859,15 +895,12 @@
       liftNoFlash();
 
       fillLocations();
-      vinTbody.innerHTML = '';
-      addVinRow('');
-      updateUICounts();
+      resetVinTable();
       updateIssuesBox();
 
       await loadOnce();
       subscribe();
     }else{
-      currentUser = null;
       appRoot.style.display='none';
       authGate.style.display='grid';
       btnSignOut.style.display='none';

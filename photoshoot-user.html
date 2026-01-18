@@ -3,6 +3,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl" data-theme="light">
 <head>
@@ -105,16 +106,17 @@
     }
     textarea{min-height:70px;resize:vertical}
 
-    /* Actions dropdown (page switch) */
+    /* Actions dropdown (page switch) — centered */
     .action-head{
       display:grid;
-      grid-template-columns: 1fr 260px;
+      grid-template-columns:1fr;
       gap:10px;
-      align-items:end;
+      align-items:center;
+      justify-items:center;
+      text-align:center;
     }
-    @media(max-width:720px){
-      .action-head{grid-template-columns:1fr}
-    }
+    .action-head > div{width:100%}
+    .action-head select{max-width:320px;margin:0 auto}
 
     /* Table */
     .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px;margin-top:8px;padding-right:24px}
@@ -1337,21 +1339,30 @@
     detailsMsg.className = 'msg';
 
     const d = rec;
+
+    // اعرض كل تفاصيل السيارات في جدول واحد (بدون تكرار نفس البيانات فوق)
+    const carsList = (Array.isArray(d.cars) && d.cars.length)
+      ? d.cars
+      : [{
+          vin: d.vin||'',
+          car: d.car||'',
+          variant: d.variant||'',
+          extColor: d.extColor||'',
+          intColor: d.intColor||'',
+          modelYear: d.modelYear||'',
+          fromLocation: d.fromLocation||'',
+          note: d.note||''
+        }];
+
     detailsGrid.innerHTML = `
       <div class="kv"><div class="k">نوع الطلب</div><div class="v">${d.type||'-'}</div></div>
       <div class="kv"><div class="k">الحالة</div><div class="v">${stepLabel(d.step)}</div></div>
-      <div class="kv"><div class="k">رقم الهيكل</div><div class="v mono">${d.vin||''}</div></div>
-      <div class="kv"><div class="k">السيارة</div><div class="v">${d.car||''}</div></div>
-      <div class="kv"><div class="k">الفئة</div><div class="v">${d.variant||''}</div></div>
-      <div class="kv"><div class="k">الخارجي</div><div class="v">${d.extColor||''}</div></div>
-      <div class="kv"><div class="k">الداخلي</div><div class="v">${d.intColor||''}</div></div>
-      <div class="kv"><div class="k">الموديل</div><div class="v">${d.modelYear||''}</div></div>
-      <div class="kv"><div class="k">المكان الحالي (من)</div><div class="v">${d.fromLocation||''}</div></div>
+      <div class="kv"><div class="k">منشئ الطلب</div><div class="v mono">${(d.createdBy||'-')}</div></div>
+      <div class="kv"><div class="k">تاريخ الإنشاء</div><div class="v">${fmtTS(d.createdAt)||'-'}</div></div>
       <div class="kv"><div class="k">${d.type==='تصوير'?'مكان التصوير':'مكان النقل'} (إلى)</div><div class="v">${d.toLocation||''}</div></div>
-      <div class="kv"><div class="k">تاريخ التصوير</div><div class="v">${d.shootDate||'-'}</div></div>
-      <div class="kv" style="grid-column:1/-1"><div class="k">ملاحظة</div><div class="v">${d.note? d.note : '—'}</div></div>
-    
-      ${(Array.isArray(d.cars) && d.cars.length>1) ? `
+      <div class="kv"><div class="k">تاريخ التصوير</div><div class="v">${d.type==='تصوير' ? (d.shootDate||'-') : '-'}</div></div>
+      <div class="kv"><div class="k">عدد السيارات</div><div class="v">${carsList.length}</div></div>
+
       <div class="kv" style="grid-column:1/-1">
         <div class="k">السيارات داخل الطلب</div>
         <div class="v">
@@ -1363,18 +1374,26 @@
                   <th>رقم الهيكل</th>
                   <th>السيارة</th>
                   <th>الفئة</th>
+                  <th>الخارجي</th>
+                  <th>الداخلي</th>
+                  <th>الموديل</th>
                   <th>المكان الحالي (من)</th>
+                  <th>${d.type==='تصوير'?'مكان التصوير':'مكان النقل'} (إلى)</th>
                   <th>ملاحظة</th>
                 </tr>
               </thead>
               <tbody>
-                ${d.cars.map((c,idx)=>`
+                ${carsList.map((c,idx)=>`
                   <tr>
                     <td>${idx+1}</td>
                     <td class="mono">${c.vin||''}</td>
                     <td>${c.car||''}</td>
                     <td>${c.variant||''}</td>
+                    <td>${c.extColor||''}</td>
+                    <td>${c.intColor||''}</td>
+                    <td>${c.modelYear||''}</td>
                     <td>${c.fromLocation||''}</td>
+                    <td>${d.toLocation||''}</td>
                     <td>${c.note||'—'}</td>
                   </tr>
                 `).join('')}
@@ -1383,7 +1402,6 @@
           </div>
         </div>
       </div>
-      ` : ``}
 `;
 
     const s = Number(d.step||0);

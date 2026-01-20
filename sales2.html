@@ -1,24 +1,4 @@
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -558,6 +538,7 @@
     <div class="tabs" id="tabsBar">
       <button class="tab-btn tab-active" id="tabSearchBtn">بحث عن طلب</button>
       <button class="tab-btn" id="tabListBtn">كل الطلبات</button>
+      <button class="tab-btn" id="tabArchiveBtn">الأرشيف</button>
     </div>
 
     <!-- ERP details -->
@@ -643,7 +624,35 @@
       </div>
     </div>
 
-    <!-- Stages -->
+    
+    <!-- Archive list tab -->
+    <div class="card" id="archivesListCard" style="display:none;">
+      <h3 class="title"><span class="icon">🗄️</span>الأرشيف</h3>
+      <div class="hint">هنا تظهر الطلبات المؤرشفة. اضغط على رقم الطلب لعرض تفاصيله (قراءة فقط).</div>
+      <div class="row" style="margin-top:10px;">
+        <div class="col-6">
+          <label>بحث سريع</label>
+          <input id="archivesSearch" placeholder="اكتب رقم الطلب / اسم العميل / رقم الجوال" />
+          <div class="hint">البحث داخل الأرشيف فقط.</div>
+        </div>
+      </div>
+      <div class="erp-table-wrap">
+        <table>
+          <thead>
+          <tr>
+            <th>رقم الطلب</th>
+            <th>اسم العميل</th>
+            <th>رقم الجوال</th>
+            <th>الفرع</th>
+            <th>تاريخ الأرشفة</th>
+          </tr>
+          </thead>
+          <tbody id="archivesListBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+<!-- Stages -->
     <div class="card" id="stagesCard" style="display:none;">
       <h3 class="title"><span class="icon">🚦</span>مراحل تتبع الطلب</h3>
       <div class="grid-2" id="stagesList"></div>
@@ -689,6 +698,7 @@
       query,
       where,
       getDocs,
+      orderBy,
       limit,
       writeBatch
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
@@ -734,6 +744,13 @@
     const tabListBtn   = document.getElementById("tabListBtn");
     const ordersListCard  = document.getElementById("ordersListCard");
     const ordersListBody  = document.getElementById("ordersListBody");
+    const tabArchiveBtn = document.getElementById("tabArchiveBtn");
+    const archivesListCard = document.getElementById("archivesListCard");
+    const archivesListBody = document.getElementById("archivesListBody");
+    const archivesSearchInput = document.getElementById("archivesSearch");
+    let archivesListCache = [];
+    let currentIsArchiveView = false;
+
 
     const ordersSearchInput = document.getElementById("ordersSearch");
     let ordersListCache = [];
@@ -1108,47 +1125,45 @@ async function openSmsPlus(stageNum, stageLabel){
 `${trackingLink2}\n\n` +
 `مع مجموعة محمد ذعار العجمي للسيارات\n` +
 `أنت نجم الطريق ⭐\n` +
-`📞 920014635`
+`📞 920014635\n` +
+`رابط التواصل واتساب\n` +
+`https://api.whatsapp.com/send?phone=966920014635`
+
+
 
           );
         }
-        case 9:
-          return (
-`عميلنا العزيز يسعدنا إبلاغك بجاهزية سيارتك،
-الآن يمكنك التوجه للاستلام أو طلب خدمة الشحن.
+     case 9:
+  return (
+    `عميلنا العزيز يسعدنا إبلاغك بجاهزية سيارتك،\n` +
+    `الآن يمكنك التوجه للاستلام أو طلب خدمة الشحن.\n\n` +
+    `مواعيد العمل:\n` +
+    `*الفترة الصباحية*\n` +
+    `من الساعة 9 صباحاً إلى 11 صباحاً\n` +
+    `عدا يوم الجمعة\n\n` +
+    `*الفترة المسائية*\n` +
+    `من الساعة 4 مساءً إلى 9 مساءً\n` +
+    `جميع أيام الأسبوع\n\n` +
+    `مع مجموعة محمد ذعار العجمي للسيارات\n` +
+    `أنت نجم الطريق ⭐\n\n` +
+    `📞 920014635\n` +
+    `رابط التواصل واتساب\n` +
+    `https://api.whatsapp.com/send?phone=966920014635`
+  );
 
-مواعيد العمل:
-*الفترة الصباحية*
-من الساعة 9 صباحاً إلى 11 صباحاً
-عدا يوم الجمعة
-
-*الفترة المسائية*
-من الساعة 4 مساءً إلى 9 مساءً
-جميع أيام الأسبوع
-
-مع مجموعة محمد بن ذعار العجمي للسيارات
-أنت نجم الطريق ⭐
-
-📞 920014635`
-
-          );
         case 10:
-          return (`عميلنا العزيز
-` +
-`نبارك لكم إتمام عملية التسليم بنجاح
+  return (
+    `عميلنا العزيز\n` +
+    `نبارك لكم إتمام عملية التسليم بنجاح\n\n` +
+    `*شكراً لثقتكم ونتمنى لكم قيادة آمنة وتجربة ممتعة*\n\n` +
+    `مع مجموعة محمد ذعار العجمي للسيارات\n` +
+    `أنت نجم الطريق ⭐\n\n` +
+    `📞 920014635\n` +
+    `رابط التواصل واتساب\n` +
+    `https://api.whatsapp.com/send?phone=966920014635`
+  );
 
-` +
-`*شكراً لثقتكم ونتمنى لكم قيادة آمنة وتجربة ممتعة*
 
-` +
-`مع مجموعة محمد بن ذعار العجمي للسيارات
-` +
-`أنت نجم الطريق ⭐
-
-` +
-`📞 920014635`
-
-          );
 
         default:
           return `عميلنا العزيز، بخصوص طلبكم رقم ${orderNo}.\nمعرض محمد بن ذعار العجمي للسيارات.`;
@@ -1477,14 +1492,14 @@ function toEnglishDigits(str) {
 
       text =
         `عميلنا العزيز / ${customerName}\n` +
-        `مرحباً بكم في معرض محمد بن ذعار العجمي للسيارات\n\n` +
+        `مرحباً بكم في معرض محمد ذعار العجمي للسيارات\n\n` +
         `تم تسجيل طلب شرائك بنجاح \n\n` +
         `*للسيارة* ${carName}\n` +
         `نوع السيارة : ${carType}\n` +
         `رقم الهيكل : ${vin}\n` +
         `قيمة السيارة : ${amountStr}\n\n` +
         `يمكنك متابعة حالة طلبك عبر الرابط التالي: \n${trackingLink}\n\n` +
-        `#مع_#معرض #محمد #بن #ذعار #العجمي #للسيارات … #أنت #نجم الطريق`;
+        `#مع_#معرض #محمد #ذعار #العجمي #للسيارات … #أنت #نجم الطريق`;
       break;
     }
     case 9:
@@ -1508,7 +1523,7 @@ function toEnglishDigits(str) {
         `جميع أيام الأسبوع 
 
 ` +
-        `#مع_#معرض #محمد #بن #ذعار #العجمي #للسيارات … #أنت #نجم الطريق`;
+        `#مع_#معرض #محمد #ذعار #العجمي #للسيارات … #أنت #نجم الطريق`;
       break;
 // -------------------------
     // 🔟 الخطوة رقم 10 — إتمام التسليم
@@ -1523,7 +1538,7 @@ function toEnglishDigits(str) {
         `*شكراً لثقتكم و نتمنى لكم قيادة آمنة وتجربة ممتعة*
 
 ` +
-        `#مع_#معرض #محمد #بن #ذعار #العجمي #للسيارات … #أنت #نجم الطريق`;
+        `#مع_#معرض #محمد #ذعار #العجمي #للسيارات … #أنت #نجم الطريق`;
       break;
 
 
@@ -1533,7 +1548,7 @@ function toEnglishDigits(str) {
     default:
       text =
         `عميلنا العزيز، بخصوص طلبكم رقم ${orderNo}.\n` +
-        `معرض محمد بن ذعار العجمي للسيارات.`;
+        `معرض محمد ذعار العجمي للسيارات.`;
   }
 
   if (messageOverride && String(messageOverride).trim()) {
@@ -1812,9 +1827,11 @@ function clearErpTable() {
         erpTotals.innerHTML = "";
       }
 
-// تحميل مراحل التتبع للحالة الحالية
-      loadTrackingForCurrentSelection();
-      try{ refreshTrackingQr(); }catch(e){}
+// تحميل مراحل التتبع للحالة الحالية (غير الأرشيف فقط)
+      if (!currentIsArchiveView){
+        loadTrackingForCurrentSelection();
+        try{ refreshTrackingQr(); }catch(e){}
+      }
     }
 
     // STAGES UI
@@ -1898,47 +1915,19 @@ function clearErpTable() {
         actions.appendChild(btnDone);
 
         
-        // زر رسالة SMS للعميل في الخطوات 1 و 9 و 10 فقط
+                    // ===== SMS+ (فقط في الخطوة 1 و 9 و 10) =====
         if (num === 1 || num === 9 || num === 10) {
-          const btnSms = document.createElement("button");
-          btnSms.className = "btn-outline";
-          btnSms.style.fontSize = "12px";
-          btnSms.style.marginRight = "6px";
-          btnSms.textContent = "رسالة SMS للعميل";
-          btnSms.disabled = !currentCustomerPhone;
-          btnSms.onclick = () => openMessageModal("sms", num, label);
-          actions.appendChild(btnSms);
-
-          const btnWa = document.createElement("button");
-          btnWa.className = "btn-outline";
-          btnWa.style.fontSize = "12px";
-          btnWa.style.marginRight = "6px";
-          btnWa.innerHTML = '<i class="fa-brands fa-whatsapp"></i> واتساب للعميل';
-          btnWa.disabled = !currentCustomerPhone;
-          btnWa.onclick = () => openMessageModal("whatsapp", num, label);
-          actions.appendChild(btnWa);
+          const btnSmsPlus = document.createElement("button");
+          btnSmsPlus.className = "btn-outline";
+          btnSmsPlus.style.fontSize = "12px";
+          btnSmsPlus.style.marginRight = "6px";
+          btnSmsPlus.textContent = "SMS+";
+          btnSmsPlus.disabled = !currentCustomerPhone;
+          btnSmsPlus.onclick = () => openSmsPlus(num, label);
+          actions.appendChild(btnSmsPlus);
         }
-    // ===== WhatsApp+ / SMS+ =====
-const btnSmsPlus = document.createElement("button");
-btnSmsPlus.className = "btn-outline";
-btnSmsPlus.style.fontSize = "12px";
-btnSmsPlus.style.marginRight = "6px";
-btnSmsPlus.textContent = "SMS+";
-btnSmsPlus.disabled = !currentCustomerPhone;
-btnSmsPlus.onclick = () => openSmsPlus(num, label);
-actions.appendChild(btnSmsPlus);
 
-const btnWaPlus = document.createElement("button");
-btnWaPlus.className = "btn-outline";
-btnWaPlus.style.fontSize = "12px";
-btnWaPlus.style.marginRight = "6px";
-btnWaPlus.innerHTML = '<i class="fa-brands fa-whatsapp"></i> واتساب+';
-btnWaPlus.disabled = !currentCustomerPhone;
-btnWaPlus.onclick = () => openWhatsAppPlus(num, label);
-actions.appendChild(btnWaPlus);
-
-
-        // زر التراجع
+// زر التراجع
         const btnUndo = document.createElement("button");
         btnUndo.className = "btn-outline";
         btnUndo.style.fontSize = "12px";
@@ -2377,102 +2366,225 @@ actions.appendChild(btnWaPlus);
       }catch(e){}
     }
 
+    async function fmtTs(ts){
+      try{
+        if (!ts) return "";
+        // Firestore Timestamp
+        if (typeof ts.toDate === "function") return ts.toDate().toLocaleString("ar-SA");
+        // ISO/string/date
+        const d = new Date(ts);
+        return isNaN(d.getTime()) ? "" : d.toLocaleString("ar-SA");
+      }catch(_){ return ""; }
+    }
+
+    // HTML escape helper (prevents render errors + XSS)
+    function escapeHtml(text){
+      if (text === undefined || text === null) return "";
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+
+    async function commitWritesInChunks(writeOps, maxOps=450){
+      // writeOps: [{ref, data, options}]
+      let i = 0;
+      while (i < writeOps.length){
+        const batch = writeBatch(db);
+        let used = 0;
+        while (i < writeOps.length && used < maxOps){
+          const op = writeOps[i++];
+          batch.set(op.ref, op.data, op.options || { merge:true });
+          used++;
+        }
+        await batch.commit();
+      }
+    }
+
+    async function commitDeletesInChunks(deleteRefs, maxOps=450){
+      let i = 0;
+      while (i < deleteRefs.length){
+        const batch = writeBatch(db);
+        let used = 0;
+        while (i < deleteRefs.length && used < maxOps){
+          const ref = deleteRefs[i++];
+          batch.delete(ref);
+          used++;
+        }
+        await batch.commit();
+      }
+    }
+
+    async function moveOrderToArchive(orderNo){
+      const ord = String(orderNo||"").trim();
+      if (!ord) throw new Error("Missing orderNo");
+
+      // 1) Fetch ERP lines for this order
+      let erpSnap = await getDocs(query(collection(db, ERP_COLLECTION), where("orderNo","==",ord), limit(500)));
+      let erpDocs = erpSnap.docs || [];
+
+      // fallback (rare): use already loaded records
+      if (!erpDocs.length && Array.isArray(currentOrderRecords) && String(currentOrderId||"") === ord){
+        // We don't have doc IDs here, so we will rebuild doc IDs from itemNo.
+        // We'll write to archive but cannot safely delete unknown ERP doc IDs.
+        console.warn("No ERP docs returned for order. Using currentOrderRecords as fallback (archive copy only).");
+      }
+
+      // Determine itemNos from ERP docs (preferred)
+      const itemNos = [];
+      const erpWriteOps = [];
+      const erpDeleteRefs = [];
+
+      if (erpDocs.length){
+        erpDocs.forEach(d=>{
+          const data = d.data() || {};
+          // itemNo priority: explicit field -> data.item.no -> d.id suffix
+          let itemNo = data.itemNo;
+          if (!itemNo && data.item && data.item.no != null) itemNo = String(data.item.no);
+          if (!itemNo){
+            const parts = String(d.id||"").split("_");
+            itemNo = parts.length>1 ? parts[parts.length-1] : "1";
+          }
+          itemNos.push(String(itemNo));
+          const archRef = doc(db, ARCHIVE_COLLECTION, ord, "erp_lines", d.id);
+          erpWriteOps.push({ ref: archRef, data: { ...data, __fromDocId: d.id }, options: { merge:true } });
+          erpDeleteRefs.push(doc(db, ERP_COLLECTION, d.id));
+        });
+      } else if (Array.isArray(currentOrderRecords) && String(currentOrderId||"") === ord){
+        currentOrderRecords.forEach((rec, idx)=>{
+          const data = rec || {};
+          let itemNo = data.itemNo;
+          if (!itemNo && data.item && data.item.no != null) itemNo = String(data.item.no);
+          if (!itemNo) itemNo = String(idx+1);
+          itemNos.push(String(itemNo));
+          const dId = `${ord}_${itemNo}`;
+          const archRef = doc(db, ARCHIVE_COLLECTION, ord, "erp_lines", dId);
+          erpWriteOps.push({ ref: archRef, data: { ...data, __fromDocId: dId }, options: { merge:true } });
+          // NOTE: deleteRefs unknown here; we will try by reconstructed ID
+          erpDeleteRefs.push(doc(db, ERP_COLLECTION, dId));
+        });
+      }
+
+      // De-dup itemNos
+      const uniqItemNos = Array.from(new Set(itemNos.length ? itemNos : ["1"]));
+
+      // 2) Read orders docs (tracking) for each itemNo
+      const orderWriteOps = [];
+      const statusWriteOps = [];
+      const orderDeleteRefs = [];
+
+      for (const itNo of uniqItemNos){
+        const docId = `${ord}_${itNo}`;
+        const orderRef = doc(db, TRACK_COLLECTION, docId);
+        const orderSnap = await getDoc(orderRef);
+        if (orderSnap.exists()){
+          const orderData = orderSnap.data() || {};
+          orderWriteOps.push({
+            ref: doc(db, ARCHIVE_COLLECTION, ord, "orders", docId),
+            data: { ...orderData, __fromDocId: docId },
+            options: { merge:true }
+          });
+          orderDeleteRefs.push(orderRef);
+        } else {
+          // still delete (noop if missing) not possible via batch; skip
+        }
+
+        // copy public/status if exists (optional but useful for archive view)
+        const pubRef = doc(db, TRACK_COLLECTION, docId, "public", "status");
+        const pubSnap = await getDoc(pubRef);
+        if (pubSnap.exists()){
+          statusWriteOps.push({
+            ref: doc(db, ARCHIVE_COLLECTION, ord, "public_status", docId),
+            data: { ...pubSnap.data(), __fromDocId: docId },
+            options: { merge:true }
+          });
+        }
+      }
+
+      // 3) Write archive summary
+      const firstErpData = erpDocs.length ? (erpDocs[0].data() || {}) : (Array.isArray(currentOrderRecords) ? (currentOrderRecords[0]||{}) : {});
+      const summaryRef = doc(db, ARCHIVE_COLLECTION, ord);
+      const summaryData = {
+        orderNo: ord,
+        branch: firstErpData.branch || firstErpData?.summary?.branch || firstErpData?.branchName || "",
+        customerName: firstErpData.customerName || firstErpData?.summary?.customerName || firstErpData?.customerName || firstErpData?.customer || "",
+        customerPhone: firstErpData.customerPhone || firstErpData?.summary?.customerPhone || "",
+        salesPerson: firstErpData.salesPerson || firstErpData?.summary?.salesPerson || "",
+        totals: firstErpData.totals || firstErpData?.summary?.totals || {},
+        itemsCount: uniqItemNos.length,
+        archivedAt: serverTimestamp(),
+        archivedBy: (auth.currentUser?.email || "")
+      };
+
+      const summaryWriteOps = [{ ref: summaryRef, data: summaryData, options: { merge:true } }];
+
+      // 4) Commit archive writes (summary + lines + orders + public_status)
+      const allWrites = summaryWriteOps.concat(erpWriteOps, orderWriteOps, statusWriteOps);
+      await commitWritesInChunks(allWrites, 450);
+
+      // 5) Mark customer tracking status as archived (keep subdoc so customer sees "منتهي")
+      // Note: deleting main track doc does NOT delete subcollections; we keep public/status.
+      const markWrites = [];
+      for (const itNo of uniqItemNos){
+        const docId = `${ord}_${itNo}`;
+        const publicRef2 = doc(db, TRACK_COLLECTION, docId, "public", "status");
+        markWrites.push({
+          ref: publicRef2,
+          data: { archived: true, archivedAt: serverTimestamp(), updatedAt: serverTimestamp() },
+          options: { merge:true }
+        });
+      }
+      await commitWritesInChunks(markWrites, 450);
+
+      // 6) Delete originals from erp_orders + orders (tracking)
+      // Deleting orders docs will not delete public/status docs.
+      await commitDeletesInChunks(erpDeleteRefs.concat(orderDeleteRefs), 450);
+
+      // Update local archive set
+      archiveSet.add(ord);
+      archiveLoaded = true;
+    }
+
     async function archiveCurrentOrder(){
       if (!currentOrderId) return;
       const ord = String(currentOrderId);
-      const ok = confirm("تأكيد: أرشفة الطلب " + ord + " ؟\nسيختفي من تبويب (كل الطلبات) فقط.");
+      const ok = confirm("تأكيد: أرشفة الطلب " + ord + " ؟\nسيتم نقله بالكامل إلى (الأرشيف) وحذفه من (كل الطلبات).");
       if (!ok) return;
 
       try{
-        const ref = doc(db, ARCHIVE_COLLECTION, ord);
-        await setDoc(ref, {
-          orderNo: ord,
-          archivedAt: serverTimestamp(),
-          archivedBy: (auth.currentUser?.email || "")
-        }, { merge:true });
-
-        // ✅ Mark public tracking status as archived (so customer sees: الطلب منتهي)
-        // We don't add any extra reads; we rely on currentOrderRecords already loaded from ERP.
-        try{
-          const batch2 = writeBatch(db);
-          const recs = Array.isArray(currentOrderRecords) ? currentOrderRecords : [];
-          if (recs.length){
-            recs.forEach((r, idx) => {
-              const itemNoRaw = getFieldFlex("ItemNo", r);
-              const itemNo = (() => {
-                const n = parseInt(itemNoRaw, 10);
-                return (!isNaN(n) && n > 0) ? n : (idx + 1);
-              })();
-
-              const docId2 = ord + "_" + itemNo;
-              const publicRef2 = doc(db, TRACK_COLLECTION, docId2, "public", "status");
-              batch2.set(publicRef2, {
-                archived: true,
-                archivedAt: serverTimestamp(),
-                updatedAt: serverTimestamp()
-              }, { merge: true });
-
-              // mark main track doc too (harmless)
-              const trackRef2 = doc(db, TRACK_COLLECTION, docId2);
-              batch2.set(trackRef2, {
-                archived: true,
-                archivedAt: serverTimestamp()
-              }, { merge: true });
-            });
-            await batch2.commit();
-          } else if (currentItemNo){
-            const docId2 = ord + "_" + currentItemNo;
-            const publicRef2 = doc(db, TRACK_COLLECTION, docId2, "public", "status");
-            await setDoc(publicRef2, { archived:true, archivedAt: serverTimestamp(), updatedAt: serverTimestamp() }, { merge:true });
-            const trackRef2 = doc(db, TRACK_COLLECTION, docId2);
-            await setDoc(trackRef2, { archived:true, archivedAt: serverTimestamp() }, { merge:true });
-          }
-        }catch(e2){
-          console.warn("Failed to mark tracking as archived:", e2);
-        }
-
-
-        archiveSet.add(ord);
-        archiveLoaded = true;
+        await moveOrderToArchive(ord);
         await refreshArchiveUI();
 
-        // لو المستخدم فاتح تبويب كل الطلبات، حدث القائمة فوراً
+        // تحديث القوائم
         if (ordersListCard && ordersListCard.style.display !== "none"){
-          renderOrdersList(ordersSearchInput ? ordersSearchInput.value : "");
+          await loadOrdersList();
         }
-        alert("تمت أرشفة الطلب.");
+        if (archivesListCard && archivesListCard.style.display !== "none"){
+          await loadArchivesList();
+        }
+
+        alert("تمت أرشفة الطلب ونقله إلى الأرشيف.");
       }catch(e){
         console.error(e);
         alert("تعذر أرشفة الطلب. حاول مرة أخرى.");
       }
     }
 
+    // 🚫 إلغاء الأرشفة غير مفعّل لأننا ننقل الطلبات فعليًا (Move)
     async function unarchiveCurrentOrder(){
-      if (!currentOrderId) return;
-      const ord = String(currentOrderId);
-      const ok = confirm("تأكيد: إلغاء أرشفة الطلب " + ord + " ؟");
-      if (!ok) return;
-
-      try{
-        const ref = doc(db, ARCHIVE_COLLECTION, ord);
-        await deleteDoc(ref);
-
-        archiveSet.delete(ord);
-        archiveLoaded = true;
-        await refreshArchiveUI();
-
-        // تحديث القائمة لو مفتوحة
-        if (ordersListCard && ordersListCard.style.display !== "none"){
-          await loadOrdersList();
-        }
-        alert("تم إلغاء الأرشفة.");
-      }catch(e){
-        console.error(e);
-        alert("تعذر إلغاء الأرشفة. حاول مرة أخرى.");
-      }
+      alert("إلغاء الأرشفة غير متاح حالياً.");
     }
 
     if (archiveOrderBtn) archiveOrderBtn.addEventListener("click", archiveCurrentOrder);
+    if (unarchiveOrderBtn) {
+      unarchiveOrderBtn.style.display = "none";
+      unarchiveOrderBtn.addEventListener("click", unarchiveCurrentOrder);
+    }
+
+if (archiveOrderBtn) archiveOrderBtn.addEventListener("click", archiveCurrentOrder);
     if (unarchiveOrderBtn) unarchiveOrderBtn.addEventListener("click", unarchiveCurrentOrder);
 
     function renderOrdersList(filterText=""){
@@ -2602,29 +2714,172 @@ ordersListCache = rows;
       }
     }
 
-    function activateTab(which) {
+    
+    async function loadArchivesList(){
+      try{
+        if (!archivesListBody) return;
+        archivesListBody.innerHTML = "<tr><td class='muted' colspan='5'>جاري التحميل...</td></tr>";
+
+        // Load latest archives (client-side filter for restored)
+        const snap = await getDocs(query(collection(db, ARCHIVE_COLLECTION), orderBy("archivedAt","desc"), limit(300)));
+        let rows = [];
+        snap.forEach(d=>{
+          const data = d.data() || {};
+          if (data.restored === true) return; // skip restored (if any)
+          rows.push({
+            id: d.id,
+            orderNo: data.orderNo || d.id,
+            customerName: data.customerName || "",
+            customerPhone: data.customerPhone || "",
+            branch: data.branch || "",
+            archivedAt: data.archivedAt || ""
+          });
+        });
+
+        archivesListCache = rows;
+
+        renderArchivesList(archivesSearchInput ? archivesSearchInput.value : "");
+      }catch(e){
+        console.error(e);
+        if (archivesListBody) archivesListBody.innerHTML = "<tr><td class='err' colspan='5'>تعذر تحميل الأرشيف.</td></tr>";
+      }
+    }
+
+    function renderArchivesList(filterText=""){
+      const qtxt = String(filterText||"").trim().toLowerCase();
+      const rows = !qtxt ? archivesListCache : archivesListCache.filter(r=>{
+        return String(r.orderNo||"").toLowerCase().includes(qtxt) ||
+               String(r.customerName||"").toLowerCase().includes(qtxt) ||
+               String(r.customerPhone||"").toLowerCase().includes(qtxt);
+      });
+
+      if (!archivesListBody) return;
+
+      if (!rows.length){
+        archivesListBody.innerHTML = "<tr><td class='muted' colspan='5'>لا توجد طلبات مطابقة.</td></tr>";
+        return;
+      }
+
+      archivesListBody.innerHTML = rows.map(r=>{
+        const ord = escapeHtml(String(r.orderNo||""));
+        const name = escapeHtml(String(r.customerName||""));
+        const phone = escapeHtml(String(r.customerPhone||""));
+        const branch = escapeHtml(String(r.branch||""));
+        const at = escapeHtml(fmtTs(r.archivedAt));
+        return `<tr>
+          <td><a href="#" class="open-arch" data-order="${ord}">${ord}</a></td>
+          <td>${name}</td>
+          <td>${phone}</td>
+          <td>${branch}</td>
+          <td>${at}</td>
+        </tr>`;
+      }).join("");
+
+      // bind open
+      Array.from(archivesListBody.querySelectorAll("a.open-arch")).forEach(a=>{
+        a.addEventListener("click", async (ev)=>{
+          ev.preventDefault();
+          const ord = a.getAttribute("data-order");
+          if (!ord) return;
+          await openArchivedOrder(ord);
+        });
+      });
+    }
+
+    async function openArchivedOrder(orderNo){
+      const ord = String(orderNo||"").trim();
+      if (!ord) return;
+
+      try{
+        // Load ERP lines from archive
+        const linesSnap = await getDocs(query(collection(db, ARCHIVE_COLLECTION, ord, "erp_lines"), limit(500)));
+        const records = [];
+        linesSnap.forEach(d=>{
+          const data = d.data() || {};
+          records.push(data);
+        });
+
+        if (!records.length){
+          alert("لا توجد بيانات ERP داخل الأرشيف لهذا الطلب.");
+          return;
+        }
+
+        // set current context
+        currentOrderId = ord;
+        currentOrderRecords = records;
+        currentIsArchiveView = true;
+
+        // show details (read-only)
+        activateTab("search");
+        erpCard.style.display = "";
+        stagesCard.style.display = "none"; // قراءة فقط للأرشيف
+        archiveOrderBtn.style.display = "none"; // already archived
+
+        // render ERP as normal
+        fillErpTable(records);
+
+        // small note
+        if (orderMsg) orderMsg.textContent = "عرض من الأرشيف (قراءة فقط).";
+      }catch(e){
+        console.error(e);
+        alert("تعذر فتح الطلب من الأرشيف.");
+      }
+    }
+
+    if (archivesSearchInput){
+      archivesSearchInput.addEventListener("input", ()=> renderArchivesList(archivesSearchInput.value));
+    }
+
+function activateTab(which) {
+      currentIsArchiveView = (which === "archive");
+
       if (which === "list") {
         orderCard.style.display = "none";
         erpCard.style.display   = "none";
         stagesCard.style.display= "none";
         ordersListCard.style.display = "";
+        archivesListCard.style.display = "none";
+
         tabSearchBtn.classList.remove("tab-active");
         tabListBtn.classList.add("tab-active");
+        if (tabArchiveBtn) tabArchiveBtn.classList.remove("tab-active");
+
         loadOrdersList();
-      } else {
-        orderCard.style.display = "";
-        erpCard.style.display   = currentOrderId ? "" : "none";
-        stagesCard.style.display= "";
-        ordersListCard.style.display = "none";
-        tabSearchBtn.classList.add("tab-active");
-        tabListBtn.classList.remove("tab-active");
+        return;
       }
+
+      if (which === "archive") {
+        orderCard.style.display = "none";
+        erpCard.style.display   = "none";
+        stagesCard.style.display= "none";
+        ordersListCard.style.display = "none";
+        archivesListCard.style.display = "";
+
+        tabSearchBtn.classList.remove("tab-active");
+        tabListBtn.classList.remove("tab-active");
+        if (tabArchiveBtn) tabArchiveBtn.classList.add("tab-active");
+
+        loadArchivesList();
+        return;
+      }
+
+      // search (default)
+      orderCard.style.display = "";
+      erpCard.style.display   = currentOrderId ? "" : "none";
+      stagesCard.style.display= "";
+      ordersListCard.style.display = "none";
+      archivesListCard.style.display = "none";
+
+      tabSearchBtn.classList.add("tab-active");
+      tabListBtn.classList.remove("tab-active");
+      if (tabArchiveBtn) tabArchiveBtn.classList.remove("tab-active");
     }
 
     tabSearchBtn.addEventListener("click", () => activateTab("search"));
     tabListBtn.addEventListener("click", () => activateTab("list"));
+    if (tabArchiveBtn) tabArchiveBtn.addEventListener("click", () => activateTab("archive"));
 
-    if (ordersSearchInput) {
+if (ordersSearchInput) {
       ordersSearchInput.addEventListener("input", () => {
         renderOrdersList(ordersSearchInput.value);
       });

@@ -1,0 +1,931 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <link rel="icon" type="image/x-icon" href="assets/favicon.png">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>سجل الحركات — MZJ Cars</title>
+
+  <!-- No-flash auth gate -->
+  <style id="noFlash">
+    html{background:#fff8ef}
+    body{opacity:0;transition:.14s ease}
+  </style>
+
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+
+  <style>
+    :root{
+      --brown:#3e2420; --beige:#bc8f74; --cream:#fff8ef;
+      --text:#1f2937; --muted:#6b7280;
+      --line:#e5e7eb; --line-strong:#d1d5db;
+      --card:#ffffff; --bg:#fff8ef; --radius:14px;
+      --shadow:0 10px 24px rgba(0,0,0,.06);
+      --ok:#16a34a; --danger:#ef4444; --info:#0ea5e9; --warn:#f59e0b;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:"Tajawal",system-ui,Arial;}
+
+    .container{max-width:1400px;margin:18px auto;padding:0 16px 40px;display:grid;gap:16px;}
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:14px;
+    }
+    .card h3{
+      margin:0 0 10px;
+      color:var(--brown);
+      font-size:16px;
+      font-weight:900;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .muted{color:var(--muted);font-size:12px}
+    .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .spacer{flex:1}
+    .badge{
+      display:inline-block;
+      background:#fff2e9;
+      border:1px solid #f1d0bd;
+      color:var(--brown);
+      padding:2px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:900;
+      white-space:nowrap;
+    }
+
+    label{display:block;font-size:12px;font-weight:900;color:var(--brown);margin-bottom:6px}
+    .input,.select{
+      width:100%;
+      padding:10px 12px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:#fff;
+      font-family:inherit;
+      font-size:13px;
+      transition:border-color .15s, box-shadow .15s;
+      height:42px;
+    }
+    .input:focus,.select:focus{
+      outline:none;border-color:var(--beige);
+      box-shadow:0 0 0 1px rgba(188,143,116,.35);
+    }
+
+    .btn{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius:12px;
+      padding:9px 12px;
+      cursor:pointer;
+      font-weight:900;
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      transition:.15s;
+      font-size:13px;
+      white-space:nowrap;
+      height:42px;
+      justify-content:center;
+    }
+    .btn:active{transform:translateY(1px)}
+    .btn-primary{background:var(--brown);border-color:var(--brown);color:#fff;}
+    .btn-beige{background:var(--beige);border-color:var(--beige);color:#fff;}
+    .btn-outline{background:#fff;border-color:var(--brown);color:var(--brown);}
+    .btn-ghost{background:#fff;}
+    .btn-danger{background:var(--danger);border-color:var(--danger);color:#fff;}
+
+    /* Filter layout (more organized) */
+    .filters{
+      display:grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap:12px;
+      align-items:end;
+    }
+    .group{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius:16px;
+      padding:12px;
+    }
+    .group-title{
+      display:flex;align-items:center;gap:8px;
+      font-weight:900;color:var(--brown);
+      margin:0 0 10px;
+      font-size:13px;
+    }
+    .subgrid{
+      display:grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap:10px;
+      align-items:end;
+    }
+    .field{grid-column: span 3;}
+    .field.span-2{grid-column: span 2;}
+    .field.span-4{grid-column: span 4;}
+    .field.span-5{grid-column: span 5;}
+    .field.span-6{grid-column: span 6;}
+    .field.span-7{grid-column: span 7;}
+    .field.span-8{grid-column: span 8;}
+    .field.span-12{grid-column: span 12;}
+
+    .actions-row{
+      display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;
+      margin-top:10px;
+      padding-top:10px;
+      border-top:1px dashed var(--line);
+    }
+    .actions-row .btn{min-width:160px}
+
+    @media(max-width:1150px){
+      .filters{grid-template-columns: repeat(6, minmax(0, 1fr));}
+      .subgrid{grid-template-columns: repeat(6, minmax(0, 1fr));}
+      .field{grid-column: span 3;}
+      .field.span-4{grid-column: span 6;}
+      .field.span-5{grid-column: span 6;}
+      .field.span-6{grid-column: span 6;}
+      .field.span-7{grid-column: span 6;}
+      .field.span-8{grid-column: span 6;}
+      .field.span-12{grid-column: span 6;}
+      .actions-row{justify-content:stretch}
+      .actions-row .btn{flex:1;min-width:unset}
+    }
+    @media(max-width:720px){
+      .filters{grid-template-columns: repeat(2, minmax(0, 1fr));}
+      .subgrid{grid-template-columns: repeat(2, minmax(0, 1fr));}
+      .field,.field.span-2,.field.span-4,.field.span-5,.field.span-6,.field.span-7,.field.span-8,.field.span-12{grid-column: span 2;}
+      .actions-row .btn{width:100%}
+    }
+
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px;margin-top:10px}
+    table{width:100%;border-collapse:separate;border-spacing:0}
+    th,td{
+      border:1px solid var(--line);
+      border-left-color:var(--line-strong);
+      padding:8px 10px;
+      text-align:right;
+      vertical-align:top;
+      font-size:13px;
+      background:#fff;
+      white-space:nowrap;
+    }
+    thead th{position:sticky;top:0;background:#f9fafb;border-bottom:2px solid var(--line-strong);z-index:1}
+    tbody tr:nth-child(even) td{background:#fffdf8}
+    tbody tr:hover td{background:#f3f4f6}
+    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+
+    /* Auth */
+    .auth-wrap{min-height:60vh;display:grid;place-items:center;padding:24px;}
+    .auth-card{
+      background:#fff;border:1px solid var(--line);
+      border-radius:18px;box-shadow:var(--shadow);
+      padding:18px;max-width:420px;width:96%;
+    }
+    .auth-card h2{margin:0 0 10px;color:var(--brown);font-weight:900}
+    .auth-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .hint{color:var(--muted);font-size:12px}
+
+    .pill{
+      display:inline-flex;align-items:center;gap:6px;
+      border:1px solid var(--line);
+      padding:4px 10px;border-radius:999px;font-size:12px;font-weight:900;
+      background:#fff;
+    }
+    .pill.vt{border-color:#dbeafe;background:#eff6ff;color:#1d4ed8}
+    .pill.req{border-color:#dcfce7;background:#ecfdf5;color:#166534}
+
+    /* Small helper text */
+    .help{
+      display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;
+      margin-top:8px;
+      color:var(--muted);
+      font-size:12px;
+    }
+  </style>
+
+  <link rel="stylesheet" href="./mzj-ui.css"/>
+</head>
+
+<body class="mzj">
+
+<header class="mzj-topbar">
+  <div class="topbar-left">
+    <button class="icon-btn" id="mzjSidebarBtn" aria-label="القائمة">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+    <div class="brand">
+      <div class="brand-mark">MZJ</div>
+      <div class="brand-text">
+        <div class="brand-title">محمد بن ذعار العجمي للسيارات</div>
+        <div class="brand-sub">Workspace</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="topbar-center">
+    <div class="mzj-breadcrumb">
+      <span class="crumb">الرئيسية</span>
+      <i class="fa-solid fa-chevron-left"></i>
+      <span class="crumb current">سجل الحركات</span>
+    </div>
+  </div>
+
+  <div class="topbar-right">
+    <div class="mzj-chip">
+      <span class="dot warn" id="connDot" style="margin-inline-start:2px"></span>
+      <span id="connText">جارِ الاتصال…</span>
+    </div>
+    <button class="mzj-btn mzj-btn-ghost" id="btnSignOut" style="display:none" type="button">
+      <i class="fa-solid fa-right-from-bracket"></i>
+      <span>تسجيل الخروج</span>
+    </button>
+  </div>
+</header>
+
+<div class="mzj-shell" id="mzjShell">
+  <aside class="mzj-sidebar" id="mzjSidebar">
+    <div class="side-section">
+      <div class="side-title">العمليات</div>
+      <nav class="side-nav">
+        <a class="side-link tab" href="./sales.html"><i class="fa-solid fa-handshake"></i><span>تتبع المبيعات</span></a>
+        <a class="side-link tab" href="./dashboard.html"><i class="fa-solid fa-gauge"></i><span>الداش بورد</span></a>
+        <a class="side-link tab" href="./inventory.html"><i class="fa-solid fa-boxes-stacked"></i><span>المخزون</span></a>
+        <a class="side-link tab" href="./vt.html"><i class="fa-solid fa-right-left"></i><span>نقل السيارات</span></a>
+        <a class="side-link tab" href="./requests.html"><i class="fa-solid fa-clipboard-check"></i><span>الطلبات</span></a>
+        <a class="side-link tab" href="./photoshoot-user.html"><i class="fa-solid fa-camera"></i><span>إدارة الطلبات</span></a>
+        <a class="side-link tab" href="./cars.html"><i class="fa-solid fa-car"></i><span>كل السيارات</span></a>
+        <a class="side-link tab" href="./admin.html"><i class="fa-solid fa-shield-halved"></i><span>الإدارة</span></a>
+        <a class="side-link tab" href="./Activity.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل النشاط</span></a>
+        <a class="side-link tab active" href="./act.html"><i class="fa-solid fa-clipboard-list"></i><span>سجل الحركات</span></a>
+      </nav>
+    </div>
+  </aside>
+
+  <div class="mzj-backdrop" id="mzjBackdrop"></div>
+
+  <main class="mzj-content">
+
+    <div id="authGate" class="auth-wrap">
+      <div class="auth-card">
+        <h2>تسجيل الدخول</h2>
+        <label for="email">البريد الإلكتروني</label>
+        <input id="email" type="email" class="input" placeholder="you@example.com"/>
+        <label for="password" style="margin-top:8px">كلمة المرور</label>
+        <input id="password" type="password" class="input" placeholder="••••••••"/>
+        <div class="auth-actions">
+          <button class="btn btn-primary" id="btnLogin">تسجيل الدخول</button>
+          <button class="btn btn-outline" id="btnSignup">إنشاء حساب</button>
+        </div>
+        <p class="hint" id="authHint" style="margin-top:10px"></p>
+      </div>
+    </div>
+
+    <div id="app" style="display:none">
+      <div class="container">
+
+        <div class="card">
+          <div class="row">
+            <h3 style="margin:0"><i class="fa-solid fa-clipboard-list" style="color:var(--beige)"></i> سجل الحركات</h3>
+            <span class="badge">إجمالي النتائج: <span id="resultCount">0</span></span>
+            <div class="spacer"></div>
+            <button class="btn btn-ghost" id="btnRefresh" type="button"><i class="fa-solid fa-rotate"></i> تحديث</button>
+          </div>
+          <div class="help">
+            <div>مصادر السجل: <span class="pill vt">VT</span> + <span class="pill req">Requests (Step 3)</span></div>
+            <div id="pageMsg">—</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="filters">
+
+            <!-- Dates group -->
+            <div class="group" style="grid-column: span 6;">
+              <div class="group-title"><i class="fa-solid fa-calendar-days" style="color:var(--beige)"></i> التاريخ</div>
+              <div class="subgrid">
+                <div class="field span-6">
+                  <label>تاريخ من</label>
+                  <input id="dateFrom" type="date" class="input" />
+                </div>
+                <div class="field span-6">
+                  <label>إلى</label>
+                  <input id="dateTo" type="date" class="input" />
+                </div>
+                <div class="field span-12">
+                  <button class="btn btn-ghost" id="btnClearDates" type="button"><i class="fa-solid fa-broom"></i> مسح التاريخ</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Locations group -->
+            <div class="group" style="grid-column: span 6;">
+              <div class="group-title"><i class="fa-solid fa-location-dot" style="color:var(--beige)"></i> المواقع</div>
+              <div class="subgrid">
+                <div class="field span-6">
+                  <label>من</label>
+                  <select id="fromFilter" class="select"></select>
+                </div>
+                <div class="field span-6">
+                  <label>إلى</label>
+                  <select id="toFilter" class="select"></select>
+                </div>
+                <div class="field span-12 muted" style="margin-top:-6px">
+                  اختيار (من/إلى) اختياري — لو تركتهم فارغ هيرجع الكل.
+                </div>
+              </div>
+            </div>
+
+            <!-- Search group -->
+            <div class="group" style="grid-column: span 12;">
+              <div class="group-title"><i class="fa-solid fa-magnifying-glass" style="color:var(--beige)"></i> البحث</div>
+              <div class="subgrid">
+                <div class="field span-4">
+                  <label>نطاق البحث</label>
+                  <select id="searchScope" class="select">
+                    <option value="all">الكل</option>
+                    <option value="vin">رقم الهيكل</option>
+                    <option value="car">السيارة</option>
+                    <option value="variant">البيان</option>
+                    <option value="from">من</option>
+                    <option value="to">إلى</option>
+                  </select>
+                </div>
+
+                <div class="field span-8">
+                  <label>بحث (VIN / سيارة / بيان / من / إلى)</label>
+                  <input id="searchText" class="input" placeholder="اكتب للبحث..." />
+                </div>
+              </div>
+
+              <div class="actions-row">
+                <button class="btn btn-danger" id="btnClearAll" type="button"><i class="fa-solid fa-trash"></i> مسح</button>
+                <button class="btn btn-beige" id="btnExport" type="button"><i class="fa-solid fa-file-excel"></i> تصدير Excel</button>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>التاريخ</th>
+                  <th>رقم الهيكل</th>
+                  <th>السيارة</th>
+                  <th>البيان</th>
+                  <th>من</th>
+                  <th>إلى</th>
+                  <th>المكان الحالي (المخزون)</th>
+                  <th>اللون الداخلي</th>
+                  <th>حساس</th>
+                  <th>كاميرا</th>
+                  <th>مكيف</th>
+                  <th>مسجل</th>
+                  <th>شاشة</th>
+                  <th>ريموت</th>
+                  <th>فرشات</th>
+                  <th>طفاية</th>
+                  <th>شنطة سلامة</th>
+                  <th>اسبير</th>
+                  <th>المصدر</th>
+                </tr>
+              </thead>
+              <tbody id="tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="./mzj-ui.js"></script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC614bGqnYf4Q-weTNemzWENTpa8DjGeHw",
+    authDomain: "mzj-agenda.firebaseapp.com",
+    projectId: "mzj-agenda",
+    storageBucket: "mzj-agenda.firebasestorage.app",
+    messagingSenderId: "834700407721",
+    appId: "1:834700407721:web:75c17665d4f032fd65cab8"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  const STATE_REF = doc(db, "mzj_admin_state", "v1");
+  const REQ_COL   = collection(db, "requests");
+
+  const ROLE_ADMIN   = 'الادارة';
+  const ROLE_IDARI   = 'اداري';
+  const ROLE_BRANCH  = 'مدراء فروع';
+
+  const ROLE_PAGES = {
+    [ROLE_ADMIN] : 'ALL',
+    [ROLE_IDARI] : ['dashboard.html','vt.html','photoshoot-user.html','cars.html','sales.html','inventory.html','act.html','requests.html','Activity.html','admin.html'],
+    [ROLE_BRANCH]: ['dashboard.html','inventory.html','requests.html','act.html']
+  };
+
+  const PAGE_ALLOWED_ROLES = [ROLE_ADMIN, ROLE_IDARI, ROLE_BRANCH];
+
+  async function fetchUserRole(user){
+    try{
+      const snap = await getDoc(doc(db, 'user', user.uid));
+      if(snap.exists()){
+        const data = snap.data() || {};
+        return data.role || null;
+      }
+    }catch(e){ console.error('Error fetching user role', e); }
+    return null;
+  }
+
+  function applyTabsVisibility(role){
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(tab=>{
+      const href = tab.getAttribute('href') || '';
+      const page = (href.split('/').pop() || '').split('?')[0];
+      if(!page) return;
+      const perm = ROLE_PAGES[role];
+      if(!perm){ tab.style.display='none'; return; }
+      if(perm === 'ALL') return;
+      if(!perm.includes(page)) tab.style.display='none';
+    });
+  }
+
+  const $ = s => document.querySelector(s);
+
+  function liftNoFlash(){
+    const nf = document.getElementById('noFlash');
+    if(nf) nf.remove();
+    document.body.style.opacity = '1';
+  }
+
+  function setConn(mode, txt){
+    const dot = $('#connDot');
+    const t   = $('#connText');
+    dot.className = 'dot ' + (mode==='ok'?'ok':mode==='err'?'err':'warn');
+    t.textContent = txt;
+  }
+
+  const clean = (v)=> String(v ?? '')
+    .replace(/[‎‏‪-‮⁦-⁩]/g,'')
+    .replace(/\s+/g,' ')
+    .trim();
+
+  function normalizeVin(v){
+    if(!v) return '';
+    const ar = {'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9'};
+    return v.toString().trim().split('').map(ch=> ar[ch] ?? ch).join('').toUpperCase();
+  }
+
+  const pad = n => (n<10?'0'+n:n);
+  function ddmmyyyy(dateObj){
+    if(!(dateObj instanceof Date) || isNaN(dateObj)) return '';
+    return `${pad(dateObj.getDate())}-${pad(dateObj.getMonth()+1)}-${dateObj.getFullYear()}`;
+  }
+
+  function dateOnlyYMD(dateObj){
+    if(!(dateObj instanceof Date) || isNaN(dateObj)) return '';
+    return `${dateObj.getFullYear()}-${pad(dateObj.getMonth()+1)}-${pad(dateObj.getDate())}`;
+  }
+
+  function toDateFromTS(ts){
+    try{
+      if(!ts) return null;
+      if(ts.toDate) return ts.toDate();
+      const d = new Date(ts);
+      return isNaN(d) ? null : d;
+    }catch(e){
+      return null;
+    }
+  }
+
+  function yesNo(v){
+    if(v === true) return '✅';
+    if(v === false) return '❌';
+    return '';
+  }
+
+  const FIXED_LOCATIONS = [
+    "المستودع : المخزون المتاح","المستودع : سيارات بها ملاحظات","المستودع : مباع تحت التسليم","المستودع : مباع تم التسليم",
+    "الوكالة : المخزون المتاح","الوكالة : سيارات بها ملاحظات","الوكالة : مباع تحت التسليم","الوكالة : مباع تم التسليم",
+    "فرع 1 الصالة : المخزون المتاح","فرع 1 الصالة : سيارات بها ملاحظات","فرع 1 الصالة : مباع تحت التسليم","فرع 1 الصالة : مباع تم التسليم",
+    "فرع 2 الملتقى : المخزون المتاح","فرع 2 الملتقى : سيارات بها ملاحظات","فرع 2 الملتقى : مباع تحت التسليم","فرع 2 الملتقى : مباع تم التسليم",
+    "فرع 3 القادسية : المخزون المتاح","فرع 3 القادسية : سيارات بها ملاحظات","فرع 3 القادسية : مباع تحت التسليم","فرع 3 القادسية : مباع تم التسليم"
+  ];
+
+  function fillLocationSelect(sel){
+    sel.innerHTML = `<option value="">الكل</option>` + FIXED_LOCATIONS.map(l=>`<option value="${l}">${l}</option>`).join('');
+  }
+
+  const authGate = $('#authGate');
+  const appRoot  = $('#app');
+
+  const btnSignOut = $('#btnSignOut');
+  const btnLogin = $('#btnLogin');
+  const btnSignup= $('#btnSignup');
+  const emailEl  = $('#email');
+  const passEl   = $('#password');
+  const authHint = $('#authHint');
+
+  const dateFromEl = $('#dateFrom');
+  const dateToEl   = $('#dateTo');
+  const btnClearDates = $('#btnClearDates');
+
+  const fromFilter = $('#fromFilter');
+  const toFilter   = $('#toFilter');
+
+  const searchScope = $('#searchScope');
+  const searchText  = $('#searchText');
+
+  const btnClearAll = $('#btnClearAll');
+  const btnExport   = $('#btnExport');
+  const btnRefresh  = $('#btnRefresh');
+
+  const tbody = $('#tbody');
+  const resultCount = $('#resultCount');
+  const pageMsg = $('#pageMsg');
+
+  let stock = [];
+  let movesVT = [];
+  let entries = [];
+  let filtered = [];
+
+  function findStockByVin(vin){
+    const n = normalizeVin(vin);
+    return stock.find(r => normalizeVin(r.vin) === n) || null;
+  }
+
+  function getChecklistFromStock(rec){
+    const cl = (rec && typeof rec.agencyChecklist === 'object' && rec.agencyChecklist) ? rec.agencyChecklist : {};
+    return {
+      sensor: yesNo(cl.sensor),
+      camera: yesNo(cl.camera),
+      ac: yesNo(cl.ac),
+      radio: yesNo(cl.radio),
+      screen: yesNo(cl.screen),
+      remote: yesNo(cl.remote),
+      mats: yesNo(cl.mats),
+      exting: yesNo(cl.exting),
+      safetyBag: yesNo(cl.safetyBag),
+      spare: yesNo(cl.spare)
+    };
+  }
+
+  function buildEntryBaseFromStock(vin){
+    const s = findStockByVin(vin);
+    const cl = getChecklistFromStock(s);
+    return {
+      currentLocation: clean(s?.location || ''),
+      intColor: clean(s?.intColor || ''),
+      sensor: cl.sensor,
+      camera: cl.camera,
+      ac: cl.ac,
+      radio: cl.radio,
+      screen: cl.screen,
+      remote: cl.remote,
+      mats: cl.mats,
+      exting: cl.exting,
+      safetyBag: cl.safetyBag,
+      spare: cl.spare
+    };
+  }
+
+  async function loadState(){
+    const snap = await getDoc(STATE_REF);
+    const d = snap.exists() ? (snap.data()||{}) : {};
+    stock = Array.isArray(d.stock) ? d.stock : [];
+    movesVT = Array.isArray(d.moves) ? d.moves : [];
+  }
+
+  async function loadRequestsForMoves(){
+    const qy = query(REQ_COL, orderBy('createdAt','desc'), limit(2000));
+    const snap = await getDocs(qy);
+    const reqs = snap.docs.map(docu => ({ id: docu.id, ...docu.data() }));
+
+    const moveReqs = reqs.filter(r => !!r.step3At || Number(r.step||0) >= 3);
+
+    const list = [];
+    for(const r of moveReqs){
+      const step3Date = toDateFromTS(r.step3At) || toDateFromTS(r.updatedAt) || toDateFromTS(r.createdAt);
+      if(!step3Date) continue;
+
+      const carsArr = Array.isArray(r.cars) && r.cars.length
+        ? r.cars
+        : [{ vin: r.vin, car: r.car, variant: r.variant, fromLocation: r.fromLocation }];
+
+      for(const c of carsArr){
+        const vin = normalizeVin(c?.vin || r.vin || '');
+        if(!vin) continue;
+
+        const base = buildEntryBaseFromStock(vin);
+
+        list.push({
+          source: 'requests',
+          sourceLabel: 'Requests',
+          dateObj: step3Date,
+          dateStr: ddmmyyyy(step3Date),
+          vin,
+          car: clean(c?.car || r.car || ''),
+          variant: clean(c?.variant || r.variant || ''),
+          from: clean(c?.fromLocation || r.fromLocation || ''),
+          to: clean(r.toLocation || ''),
+          ...base
+        });
+      }
+    }
+    return list;
+  }
+
+  function buildVTEntries(){
+    const list = [];
+    for(const m of movesVT){
+      const vin = normalizeVin(m?.vin || '');
+      if(!vin) continue;
+
+      let d = null;
+      if(m?.when){
+        const tryDate = new Date(String(m.when).replace(' ', 'T'));
+        d = isNaN(tryDate) ? null : tryDate;
+      }
+      if(!d && m?.date){
+        const tryDate = new Date(String(m.date));
+        d = isNaN(tryDate) ? null : tryDate;
+      }
+      if(!d) d = new Date();
+
+      const base = buildEntryBaseFromStock(vin);
+
+      list.push({
+        source: 'vt',
+        sourceLabel: 'VT',
+        dateObj: d,
+        dateStr: ddmmyyyy(d),
+        vin,
+        car: clean(m?.car || ''),
+        variant: clean(m?.variant || ''),
+        from: clean(m?.from || ''),
+        to: clean(m?.to || ''),
+        ...base
+      });
+    }
+    return list;
+  }
+
+  function mergeAndSort(all){
+    return all.sort((a,b)=> (b.dateObj?.getTime?.()||0) - (a.dateObj?.getTime?.()||0));
+  }
+
+  function inDateRange(e){
+    const fromVal = dateFromEl.value;
+    const toVal   = dateToEl.value;
+
+    if(!fromVal && !toVal) return true;
+
+    const t = e.dateObj ? new Date(dateOnlyYMD(e.dateObj)) : null;
+    if(!t) return true;
+
+    if(fromVal){
+      const f = new Date(fromVal);
+      if(t < f) return false;
+    }
+    if(toVal){
+      const tt = new Date(toVal);
+      if(t > tt) return false;
+    }
+    return true;
+  }
+
+  function matchesSearch(e){
+    const q = clean(searchText.value || '').toLowerCase();
+    if(!q) return true;
+
+    const scope = searchScope.value || 'all';
+
+    const hay = {
+      vin: (e.vin||'').toLowerCase(),
+      car: (e.car||'').toLowerCase(),
+      variant: (e.variant||'').toLowerCase(),
+      from: (e.from||'').toLowerCase(),
+      to: (e.to||'').toLowerCase()
+    };
+
+    if(scope === 'vin') return hay.vin.includes(q);
+    if(scope === 'car') return hay.car.includes(q);
+    if(scope === 'variant') return hay.variant.includes(q);
+    if(scope === 'from') return hay.from.includes(q);
+    if(scope === 'to') return hay.to.includes(q);
+
+    return (hay.vin.includes(q) || hay.car.includes(q) || hay.variant.includes(q) || hay.from.includes(q) || hay.to.includes(q));
+  }
+
+  function applyFilters(){
+    const fFrom = clean(fromFilter.value || '');
+    const fTo   = clean(toFilter.value || '');
+
+    filtered = entries.filter(e=>{
+      if(fFrom && clean(e.from) !== fFrom) return false;
+      if(fTo && clean(e.to) !== fTo) return false;
+      if(!inDateRange(e)) return false;
+      if(!matchesSearch(e)) return false;
+      return true;
+    });
+
+    renderTable();
+  }
+
+  function renderTable(){
+    tbody.innerHTML = '';
+
+    if(!filtered.length){
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td colspan="20" class="muted">لا توجد نتائج مطابقة.</td>`;
+      tbody.appendChild(tr);
+      resultCount.textContent = '0';
+      pageMsg.textContent = '—';
+      return;
+    }
+
+    filtered.forEach((e, idx)=>{
+      const tr = document.createElement('tr');
+      const sourcePill = e.source === 'vt' ? `<span class="pill vt">VT</span>` : `<span class="pill req">Requests</span>`;
+      tr.innerHTML = `
+        <td>${idx+1}</td>
+        <td>${e.dateStr || ''}</td>
+        <td class="mono">${e.vin || ''}</td>
+        <td>${e.car || ''}</td>
+        <td>${e.variant || ''}</td>
+        <td>${e.from || ''}</td>
+        <td>${e.to || ''}</td>
+        <td>${e.currentLocation || ''}</td>
+        <td>${e.intColor || ''}</td>
+        <td>${e.sensor || ''}</td>
+        <td>${e.camera || ''}</td>
+        <td>${e.ac || ''}</td>
+        <td>${e.radio || ''}</td>
+        <td>${e.screen || ''}</td>
+        <td>${e.remote || ''}</td>
+        <td>${e.mats || ''}</td>
+        <td>${e.exting || ''}</td>
+        <td>${e.safetyBag || ''}</td>
+        <td>${e.spare || ''}</td>
+        <td>${sourcePill}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    resultCount.textContent = String(filtered.length);
+    pageMsg.textContent = `آخر تحديث: ${new Date().toLocaleString('ar-SA')}`;
+  }
+
+  function clearDates(){
+    dateFromEl.value = '';
+    dateToEl.value = '';
+    applyFilters();
+  }
+
+  function clearAll(){
+    clearDates();
+    fromFilter.value = '';
+    toFilter.value = '';
+    searchScope.value = 'all';
+    searchText.value = '';
+    applyFilters();
+  }
+
+  function exportExcel(){
+    if(!filtered.length){
+      alert('لا توجد بيانات للتصدير.');
+      return;
+    }
+
+    const rows = filtered.map((e, idx)=>({
+      "#": idx+1,
+      "التاريخ": e.dateStr || '',
+      "رقم الهيكل": e.vin || '',
+      "السيارة": e.car || '',
+      "البيان": e.variant || '',
+      "من": e.from || '',
+      "إلى": e.to || '',
+      "المكان الحالي (المخزون)": e.currentLocation || '',
+      "اللون الداخلي": e.intColor || '',
+      "حساس": e.sensor || '',
+      "كاميرا": e.camera || '',
+      "مكيف": e.ac || '',
+      "مسجل": e.radio || '',
+      "شاشة": e.screen || '',
+      "ريموت": e.remote || '',
+      "فرشات": e.mats || '',
+      "طفاية": e.exting || '',
+      "شنطة سلامة": e.safetyBag || '',
+      "اسبير": e.spare || '',
+      "المصدر": (e.sourceLabel || '')
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(rows, { skipHeader: false });
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "سجل الحركات");
+    const filename = `سجل-الحركات-${dateOnlyYMD(new Date())}.xlsx`;
+    XLSX.writeFile(wb, filename);
+  }
+
+  async function refreshData(){
+    setConn('warn', 'جارِ التحميل…');
+    pageMsg.textContent = 'جارِ تحميل السجل…';
+
+    await loadState();
+    const vtList = buildVTEntries();
+    const reqList = await loadRequestsForMoves();
+
+    entries = mergeAndSort([ ...vtList, ...reqList ]);
+
+    setConn('ok', `متصل — سجل: ${entries.length}`);
+    pageMsg.textContent = `تم تحميل السجل — إجمالي: ${entries.length}`;
+
+    applyFilters();
+  }
+
+  btnClearDates.addEventListener('click', clearDates);
+  btnClearAll.addEventListener('click', clearAll);
+  btnExport.addEventListener('click', exportExcel);
+  btnRefresh.addEventListener('click', refreshData);
+
+  dateFromEl.addEventListener('change', applyFilters);
+  dateToEl.addEventListener('change', applyFilters);
+  fromFilter.addEventListener('change', applyFilters);
+  toFilter.addEventListener('change', applyFilters);
+  searchScope.addEventListener('change', applyFilters);
+  searchText.addEventListener('input', applyFilters);
+
+  onAuthStateChanged(auth, async (user)=>{
+    if(user){
+      const role = await fetchUserRole(user);
+      window.__mzjUserRole = role || null;
+
+      if(!role || !PAGE_ALLOWED_ROLES.includes(role)){
+        window.location.href = 'unauthorized.html';
+        return;
+      }
+
+      applyTabsVisibility(role);
+
+      authGate.style.display='none';
+      appRoot.style.display='block';
+      btnSignOut.style.display='inline-flex';
+
+      setConn('ok', `متصل: ${user.email} — الدور: ${role}`);
+      liftNoFlash();
+
+      fillLocationSelect(fromFilter);
+      fillLocationSelect(toFilter);
+
+      await refreshData();
+    }else{
+      appRoot.style.display='none';
+      authGate.style.display='grid';
+      btnSignOut.style.display='none';
+      setConn('warn','لم يتم تسجيل الدخول');
+      liftNoFlash();
+    }
+  });
+
+  btnLogin.addEventListener('click', async ()=>{
+    authHint.textContent='';
+    try{
+      await signInWithEmailAndPassword(auth, emailEl.value.trim(), passEl.value);
+    }catch(e){
+      authHint.textContent='فشل تسجيل الدخول: '+(e?.message||e);
+    }
+  });
+
+  btnSignup.addEventListener('click', async ()=>{
+    authHint.textContent='';
+    try{
+      await createUserWithEmailAndPassword(auth, emailEl.value.trim(), passEl.value);
+    }catch(e){
+      authHint.textContent='تعذّر إنشاء الحساب: '+(e?.message||e);
+    }
+  });
+
+  btnSignOut.addEventListener('click', ()=> signOut(auth));
+
+  setConn('warn','جارِ الاتصال…');
+</script>
+</body>
+</html>

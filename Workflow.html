@@ -2,6 +2,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -716,6 +717,20 @@ html, body {
                   <label>الحالة</label>
                   <select id="inv_status">
                     <option value="">الكل</option>
+                    <option value="مباع تحت التسليم">مباع تحت التسليم</option>
+                    <option value="متاح للبيع">متاح للبيع</option>
+                    <option value="حجز">حجز</option>
+                    <option value="مباع تم التسليم">مباع تم التسليم</option>
+                    <option value="بها ملاحظات">بها ملاحظات</option>
+                    <option value="مؤرشف">أرشيف</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>الأرشيف</label>
+                  <select id="inv_archive">
+                    <option value="active" selected>المخزون</option>
+                    <option value="archived">المؤرشف</option>
+                    <option value="all">الكل</option>
                   </select>
                 </div>
                 <div class="field">
@@ -4545,7 +4560,8 @@ if (ordersSearchInput) {
       const branch = norm($('inv_location')?.value || '').trim();
       const status = norm($('inv_status')?.value || '').trim();
       const model  = norm($('inv_model')?.value || '').trim();
-      return { q, branch, status, model };
+      const archive = norm($('inv_archive')?.value || '').trim();
+      return { q, branch, status, model, archive };
     }
 
     function matchesSearch(car, q){
@@ -4559,15 +4575,23 @@ if (ordersSearchInput) {
       return bag.includes(q);
     }
 
+    function isCarArchived(car){
+      const st = norm(car?.status||'');
+      const loc = norm(car?.location||car?.locationName||car?.locationId||'');
+      return !!(car?.isArchived || st==='مؤرشف' || loc==='archives');
+    }
+
     function renderInventory(){
       const table = $('inv_table');
       if(!table) return;
       let tbody = table.querySelector('tbody');
       if(!tbody){ tbody = document.createElement('tbody'); table.appendChild(tbody); }
 
-      const { q, branch, status, model } = getInvFilters();
+      const { q, branch, status, model, archive } = getInvFilters();
       const filtered = invAll.filter(car=>{
-        if(car && car.isArchived && (!status || status==='الكل')) return false;
+        const archived = isCarArchived(car);
+        if(archive==='active' && archived) return false;
+        if(archive==='archived' && !archived) return false;
         if(branch && branch!=='الكل' && norm(car.location)!==branch) return false;
         if(status && status!=='الكل' && norm(car.status)!==status) return false;
         if(model  && model!=='الكل'  && norm(car.model)!==model) return false;
@@ -6495,7 +6519,7 @@ if (ordersSearchInput) {
     }
 
     // Inventory filters
-    ['inv_search','inv_location','inv_status','inv_model'].forEach(id=>{
+    ['inv_search','inv_location','inv_status','inv_model','inv_archive'].forEach(id=>{
       const el=$(id);
       if(el){
         el.addEventListener('input', renderInventory);
@@ -6507,8 +6531,11 @@ if (ordersSearchInput) {
     const invExport = $('inv_export');
     if(invExport){
       invExport.addEventListener('click', ()=>{
-        const { q, branch, status, model } = getInvFilters();
+        const { q, branch, status, model, archive } = getInvFilters();
         const rows = invAll.filter(car=>{
+          const archived = isCarArchived(car);
+          if(archive==='active' && archived) return false;
+          if(archive==='archived' && !archived) return false;
           if(branch && branch!=='الكل' && norm(car.location)!==branch) return false;
           if(status && status!=='الكل' && norm(car.status)!==status) return false;
           if(model  && model!=='الكل'  && norm(car.model)!==model) return false;

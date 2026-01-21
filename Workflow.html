@@ -1565,6 +1565,14 @@
 /* Embedded in Workflow Dashboard (Tracking Tab) */
 html,body{height:100%;}
 body{background:transparent !important;}
+/* FIX: remove embedded sales chrome + prevent max-width causing empty space */
+.topbar, header, .pagehead, .breadcrumb, .mzj-topbar{display:none !important;}
+.wrap{max-width:none !important; margin:0 !important; padding:16px !important;}
+/* ensure content uses full width inside iframe */
+.legacy-sales, .legacy, .mzj-content{width:100% !important; max-width:none !important;}
+/* avoid weird horizontal blank space */
+body{overflow-x:hidden !important;}
+
 /* safety: hide any leftover global chrome */
 .mzj-topbar,.mzj-sidebar,.mzj-pagehead,#mzjSidebar,#mzjSidebarBtn,.mzj-breadcrumb{display:none !important;}
 .mzj-content{padding:0 !important; margin:0 !important;}

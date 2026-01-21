@@ -1,6 +1,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -308,6 +309,14 @@
 
 body {
   overflow-x: hidden;
+}
+</style>
+
+
+<style>
+html, body {
+  direction: rtl;
+  text-align: right;
 }
 </style>
 
@@ -1188,19 +1197,25 @@ body {
   </div>
 
 
-        <!-- التراكينج (فارغ مؤقتًا) -->
+        <!-- التراكينج -->
         <div class="view" id="view-tracking" role="tabpanel">
-  <div class="card" style="padding:16px;">
-    <iframe title="Tracking" style="width:100%; height:calc(100vh - 260px); border:0; border-radius:12px; background:transparent;" srcdoc="
-&lt;!DOCTYPE html&gt;
-&lt;html lang=&quot;ar&quot; dir=&quot;rtl&quot;&gt;
-&lt;head&gt;
-  &lt;link rel=&quot;icon&quot; type=&quot;image/x-icon&quot; href=&quot;assets/favicon.png&quot;&gt;
-  &lt;meta charset=&quot;UTF-8&quot; /&gt;
-  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;
-  &lt;title&gt;MZJ – تتبع المبيعات&lt;/title&gt;
-  &lt;link href=&quot;https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&amp;display=swap&quot; rel=&quot;stylesheet&quot; /&gt;
-  &lt;style&gt;
+          <div class="card" style="padding:16px;">
+            <iframe id="trackingFrame" title="Tracking"
+              style="width:100%; height:calc(100vh - 260px); border:0; border-radius:12px; background:transparent;"
+              loading="lazy"></iframe>
+
+            <!-- محتوى التراكينج (يُحقن داخل الـ iframe لتجنب مشاكل GitHub مع srcdoc الطويل) -->
+            <template id="trackingSrc">
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <link rel="icon" type="image/x-icon" href="assets/favicon.png">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MZJ – تتبع المبيعات</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <style>
     :root{
       --brown:#3e2420;
       --beige:#bc8f74;
@@ -1212,7 +1227,7 @@ body {
     *{box-sizing:border-box;}
     body{
       margin:0;
-      font-family:&quot;Tajawal&quot;,system-ui,-apple-system,BlinkMacSystemFont,&quot;Segoe UI&quot;,sans-serif;
+      font-family:"Tajawal",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
       background:radial-gradient(circle at top,#fffdf8 0,#fff3e6 40%,#fbe9da 70%,#f5e3d3 100%);
       color:var(--text);
     }
@@ -1569,11 +1584,11 @@ body {
   .topbar-actions{justify-content:flex-start}
 }
 
-&lt;/style&gt;
-  &lt;link rel=&quot;stylesheet&quot; href=&quot;./mzj-ui.css&quot; /&gt;
-  &lt;link href=&quot;https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css&quot; rel=&quot;stylesheet&quot;/&gt;
+</style>
+  <link rel="stylesheet" href="./mzj-ui.css" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
 
-&lt;style&gt;
+<style>
   /* ===== Sales Safe Refactor: hide legacy topbar ONLY (keep #tabsBar visible) ===== */
   .legacy-sales .topbar,
   .legacy-sales .topbar .tabs,
@@ -1583,16 +1598,16 @@ body {
 
   /* Keep content spacing nice */
   .legacy-sales{padding-top: 6px;}
-&lt;/style&gt;
+</style>
 
 
-&lt;style&gt;
+<style>
   /* Ensure the functional tabs bar (بحث عن طلب / كل الطلبات) is visible when JS enables it */
   .legacy-sales #tabsBar{ display:flex !important; }
-  .legacy-sales #tabsBar[style*=&quot;display: none&quot;]{ display:none !important; } /* respect JS when it hides */
-&lt;/style&gt;
+  .legacy-sales #tabsBar[style*="display: none"]{ display:none !important; } /* respect JS when it hides */
+</style>
 
-&lt;style&gt;
+<style>
 /* Embedded in Workflow Dashboard (Tracking Tab) */
 html,body{height:100%;}
 body{background:transparent !important;}
@@ -1608,242 +1623,250 @@ body{overflow-x:hidden !important;}
 .mzj-topbar,.mzj-sidebar,.mzj-pagehead,#mzjSidebar,#mzjSidebarBtn,.mzj-breadcrumb{display:none !important;}
 .mzj-content{padding:0 !important; margin:0 !important;}
 .legacy{padding:0 !important; margin:0 !important;}
-&lt;/style&gt;
-&lt;/head&gt;
-&lt;body class=&quot;mzj&quot;&gt;
+</style>
 
-  &lt;!-- MZJ Unified Topbar --&gt;
-  &lt;div class=&quot;mzj-shell&quot; id=&quot;mzjShell&quot;&gt;
-    &lt;main class=&quot;mzj-content&quot;&gt;
-      &lt;div class=&quot;legacy legacy-sales&quot;&gt;
+<style>
+html, body {
+  direction: rtl;
+  text-align: right;
+}
+</style>
+
+</head>
+<body class="mzj">
+
+  <!-- MZJ Unified Topbar -->
+  <div class="mzj-shell" id="mzjShell">
+    <main class="mzj-content">
+      <div class="legacy legacy-sales">
 
   
-  &lt;!-- Topbar (Matched with Admin) --&gt;
-  &lt;div class=&quot;topbar&quot;&gt;
-    &lt;div class=&quot;topbar-inner&quot;&gt;
-      &lt;div class=&quot;brand&quot;&gt;
-        &lt;div class=&quot;logo&quot; title=&quot;MZJ&quot;&gt;MZJ&lt;/div&gt;
-        &lt;div class=&quot;brand-text&quot;&gt;
-          &lt;h1&gt;لوحة تتبع المبيعات&lt;/h1&gt;
-          &lt;small class=&quot;hint&quot;&gt;مجموعة محمد بن ذعار العجمي للسيارات&lt;/small&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
+  <!-- Topbar (Matched with Admin) -->
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="logo" title="MZJ">MZJ</div>
+        <div class="brand-text">
+          <h1>لوحة تتبع المبيعات</h1>
+          <small class="hint">مجموعة محمد بن ذعار العجمي للسيارات</small>
+        </div>
+      </div>
 
-      &lt;div class=&quot;tabs&quot;&gt;
-        &lt;a class=&quot;tab&quot; href=&quot;admin.html&quot;&gt;الإدارة&lt;/a&gt;
-        &lt;a class=&quot;tab active&quot; href=&quot;sales.html&quot;&gt;المبيعات&lt;/a&gt;
-        &lt;a class=&quot;tab&quot; href=&quot;inventory.html&quot;&gt;المخزون&lt;/a&gt;
-        &lt;a class=&quot;tab&quot; href=&quot;dashboard.html&quot;&gt;الداش بورد&lt;/a&gt;
-        &lt;a class=&quot;tab&quot; href=&quot;vt.html&quot;&gt;نقل السيارات&lt;/a&gt;
-        &lt;a class=&quot;tab&quot; href=&quot;photoshoot-user.html&quot;&gt;إدارة الطلبات&lt;/a&gt;
-        &lt;a class=&quot;tab&quot; href=&quot;cars.html&quot;&gt;كل السيارات&lt;/a&gt;
-        &lt;a class=&quot;tab&quot; href=&quot;Activity.html&quot;&gt;سجل النشاط&lt;/a&gt;
-      &lt;/div&gt;
+      <div class="tabs">
+        <a class="tab" href="admin.html">الإدارة</a>
+        <a class="tab active" href="sales.html">المبيعات</a>
+        <a class="tab" href="inventory.html">المخزون</a>
+        <a class="tab" href="dashboard.html">الداش بورد</a>
+        <a class="tab" href="vt.html">نقل السيارات</a>
+        <a class="tab" href="photoshoot-user.html">إدارة الطلبات</a>
+        <a class="tab" href="cars.html">كل السيارات</a>
+        <a class="tab" href="Activity.html">سجل النشاط</a>
+      </div>
 
-      &lt;div class=&quot;topbar-actions&quot;&gt;
-        &lt;div class=&quot;status-badge&quot;&gt;
-          &lt;span class=&quot;dot warn&quot; id=&quot;connDot&quot;&gt;&lt;/span&gt;
-          &lt;span id=&quot;connText&quot;&gt;—&lt;/span&gt;
-        &lt;/div&gt;
-        &lt;span id=&quot;whoami&quot; class=&quot;whoami&quot;&gt;&lt;/span&gt;
-        &lt;button id=&quot;logoutBtn&quot; class=&quot;tb-btn&quot; style=&quot;display:none;&quot;&gt;تسجيل الخروج&lt;/button&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
-  &lt;/div&gt;
-&lt;div class=&quot;wrap&quot;&gt;
+      <div class="topbar-actions">
+        <div class="status-badge">
+          <span class="dot warn" id="connDot"></span>
+          <span id="connText">—</span>
+        </div>
+        <span id="whoami" class="whoami"></span>
+        <button id="logoutBtn" class="tb-btn" style="display:none;">تسجيل الخروج</button>
+      </div>
+    </div>
+  </div>
+<div class="wrap">
 
-    &lt;!-- Auth --&gt;
-    &lt;div class=&quot;card&quot; id=&quot;authCard&quot;&gt;
-      &lt;h3 class=&quot;title&quot;&gt;&lt;span class=&quot;icon&quot;&gt;🔐&lt;/span&gt;تسجيل الدخول&lt;/h3&gt;
-      &lt;div class=&quot;row&quot;&gt;
-        &lt;div class=&quot;col-4&quot;&gt;
-          &lt;label&gt;البريد الإلكتروني&lt;/label&gt;
-          &lt;input id=&quot;email&quot; type=&quot;email&quot; placeholder=&quot;user@mzjcars.com&quot; /&gt;
-        &lt;/div&gt;
-        &lt;div class=&quot;col-4&quot;&gt;
-          &lt;label&gt;كلمة السر&lt;/label&gt;
-          &lt;input id=&quot;password&quot; type=&quot;password&quot; placeholder=&quot;••••••••&quot; /&gt;
-        &lt;/div&gt;
-        &lt;div class=&quot;col-4&quot; style=&quot;display:flex;align-items:flex-end;gap:8px;&quot;&gt;
-          &lt;button class=&quot;btn&quot; id=&quot;loginBtn&quot;&gt;دخول&lt;/button&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;div id=&quot;authMsg&quot; class=&quot;muted&quot; style=&quot;margin-top:6px;&quot;&gt;&lt;/div&gt;
-      &lt;div class=&quot;hint&quot;&gt;الدخول مطلوب لإدارة الطلبات وتحديث مراحلها.&lt;/div&gt;
-    &lt;/div&gt;
+    <!-- Auth -->
+    <div class="card" id="authCard">
+      <h3 class="title"><span class="icon">🔐</span>تسجيل الدخول</h3>
+      <div class="row">
+        <div class="col-4">
+          <label>البريد الإلكتروني</label>
+          <input id="email" type="email" placeholder="user@mzjcars.com" />
+        </div>
+        <div class="col-4">
+          <label>كلمة السر</label>
+          <input id="password" type="password" placeholder="••••••••" />
+        </div>
+        <div class="col-4" style="display:flex;align-items:flex-end;gap:8px;">
+          <button class="btn" id="loginBtn">دخول</button>
+        </div>
+      </div>
+      <div id="authMsg" class="muted" style="margin-top:6px;"></div>
+      <div class="hint">الدخول مطلوب لإدارة الطلبات وتحديث مراحلها.</div>
+    </div>
 
-    &lt;!-- Search --&gt;
-    &lt;div class=&quot;card&quot; id=&quot;orderCard&quot; style=&quot;display:none;&quot;&gt;
-      &lt;h3 class=&quot;title&quot;&gt;&lt;span class=&quot;icon&quot;&gt;📄&lt;/span&gt;البحث عن طلب&lt;/h3&gt;
-      &lt;div class=&quot;row&quot;&gt;
-        &lt;div class=&quot;col-4&quot;&gt;
-          &lt;label&gt;رقم الطلب&lt;/label&gt;
-          &lt;input id=&quot;orderId&quot; placeholder=&quot;SAL-ORD-2025-01109 أو SAL-ORD-2025-01109_1&quot; /&gt;
-        &lt;/div&gt;
-        &lt;div class=&quot;col-4&quot; style=&quot;display:none;&quot;&gt;
-          &lt;label&gt;رقم الهيكل (VIN)&lt;/label&gt;
-          &lt;input id=&quot;vinInput&quot; placeholder=&quot;اكتب رقم الهيكل (VIN)&quot; /&gt;
-        &lt;/div&gt;
-        &lt;div class=&quot;col-4&quot; style=&quot;display:flex;align-items:flex-end;gap:8px;&quot;&gt;
-          &lt;button class=&quot;btn&quot; id=&quot;loadBtn&quot;&gt;فتح الطلب&lt;/button&gt;
-          &lt;button class=&quot;btn-outline&quot; id=&quot;clearBtn&quot;&gt;تفريغ&lt;/button&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;div id=&quot;orderMsg&quot; class=&quot;muted&quot; style=&quot;margin-top:6px;&quot;&gt;&lt;/div&gt;
-      &lt;div class=&quot;hint&quot;&gt;اكتب رقم الطلب ثم اضغط فتح الطلب.&lt;/div&gt;
-    &lt;/div&gt;
+    <!-- Search -->
+    <div class="card" id="orderCard" style="display:none;">
+      <h3 class="title"><span class="icon">📄</span>البحث عن طلب</h3>
+      <div class="row">
+        <div class="col-4">
+          <label>رقم الطلب</label>
+          <input id="orderId" placeholder="SAL-ORD-2025-01109 أو SAL-ORD-2025-01109_1" />
+        </div>
+        <div class="col-4" style="display:none;">
+          <label>رقم الهيكل (VIN)</label>
+          <input id="vinInput" placeholder="اكتب رقم الهيكل (VIN)" />
+        </div>
+        <div class="col-4" style="display:flex;align-items:flex-end;gap:8px;">
+          <button class="btn" id="loadBtn">فتح الطلب</button>
+          <button class="btn-outline" id="clearBtn">تفريغ</button>
+        </div>
+      </div>
+      <div id="orderMsg" class="muted" style="margin-top:6px;"></div>
+      <div class="hint">اكتب رقم الطلب ثم اضغط فتح الطلب.</div>
+    </div>
 
-    &lt;!-- Tabs --&gt;
-    &lt;div class=&quot;tabs&quot; id=&quot;tabsBar&quot;&gt;
-      &lt;button class=&quot;tab-btn tab-active&quot; id=&quot;tabSearchBtn&quot;&gt;بحث عن طلب&lt;/button&gt;
-      &lt;button class=&quot;tab-btn&quot; id=&quot;tabListBtn&quot;&gt;كل الطلبات&lt;/button&gt;
-      &lt;button class=&quot;tab-btn&quot; id=&quot;tabArchiveBtn&quot;&gt;الأرشيف&lt;/button&gt;
-    &lt;/div&gt;
+    <!-- Tabs -->
+    <div class="tabs" id="tabsBar">
+      <button class="tab-btn tab-active" id="tabSearchBtn">بحث عن طلب</button>
+      <button class="tab-btn" id="tabListBtn">كل الطلبات</button>
+      <button class="tab-btn" id="tabArchiveBtn">الأرشيف</button>
+    </div>
 
-    &lt;!-- ERP details --&gt;
-    &lt;div class=&quot;card&quot; id=&quot;erpCard&quot; style=&quot;display:none;&quot;&gt;
-      &lt;h3 class=&quot;title&quot;&gt;
-        &lt;span class=&quot;icon&quot;&gt;📊&lt;/span&gt;
+    <!-- ERP details -->
+    <div class="card" id="erpCard" style="display:none;">
+      <h3 class="title">
+        <span class="icon">📊</span>
         تفاصيل الطلب من نظام المبيعات (ERP)
-      &lt;/h3&gt;
-      &lt;div id=&quot;erpMeta&quot; class=&quot;muted&quot; style=&quot;margin-bottom:6px;&quot;&gt;&lt;/div&gt;
-      &lt;!-- اختيار رقم الهيكل لو الطلب فيه أكثر من VIN --&gt;
-      &lt;div id=&quot;vinPickerBox&quot; class=&quot;vin-box&quot;&gt;
-        &lt;div class=&quot;vin-box-header&quot;&gt;
-          &lt;div class=&quot;vin-box-title&quot;&gt;اختر رقم الهيكل للعمل عليه&lt;/div&gt;
-          &lt;div class=&quot;vin-chip&quot; id=&quot;vinCountChip&quot;&gt;&lt;/div&gt;
-        &lt;/div&gt;
-        &lt;select id=&quot;vinPicker&quot;&gt;&lt;/select&gt;
-        &lt;div class=&quot;hint&quot;&gt;أي تحديث في مراحل تتبع الطلب سيكون لهذا رقم الهيكل فقط.&lt;/div&gt;
-        &lt;button id=&quot;trackLinkBtn&quot; class=&quot;btn&quot; type=&quot;button&quot; style=&quot;margin-top:8px;width:100%;&quot;&gt;رابط التتبع&lt;/button&gt;
-        &lt;button id=&quot;trackQrBtn&quot; class=&quot;btn-outline&quot; type=&quot;button&quot; style=&quot;margin-top:8px;width:100%;&quot;&gt;QR التتبع (اضغط لفتح)&lt;/button&gt;
-      &lt;/div&gt;
+      </h3>
+      <div id="erpMeta" class="muted" style="margin-bottom:6px;"></div>
+      <!-- اختيار رقم الهيكل لو الطلب فيه أكثر من VIN -->
+      <div id="vinPickerBox" class="vin-box">
+        <div class="vin-box-header">
+          <div class="vin-box-title">اختر رقم الهيكل للعمل عليه</div>
+          <div class="vin-chip" id="vinCountChip"></div>
+        </div>
+        <select id="vinPicker"></select>
+        <div class="hint">أي تحديث في مراحل تتبع الطلب سيكون لهذا رقم الهيكل فقط.</div>
+        <button id="trackLinkBtn" class="btn" type="button" style="margin-top:8px;width:100%;">رابط التتبع</button>
+        <button id="trackQrBtn" class="btn-outline" type="button" style="margin-top:8px;width:100%;">QR التتبع (اضغط لفتح)</button>
+      </div>
 
-      &lt;div id=&quot;erpTotals&quot; class=&quot;totals-box&quot; style=&quot;display:none;&quot;&gt;&lt;/div&gt;
-      &lt;div class=&quot;erp-table-wrap&quot;&gt;
-        &lt;table&gt;
-          &lt;thead&gt;
-          &lt;tr&gt;
-            &lt;th&gt;اسم العميل&lt;/th&gt;
-            &lt;th&gt;الرقم الضريبي للعميل&lt;/th&gt;
-            &lt;th&gt;رقم جوال العميل&lt;/th&gt;
-            &lt;th&gt;الفرع&lt;/th&gt;
-            &lt;th&gt;تاريخ الطلب&lt;/th&gt;
-            &lt;th&gt;تاريخ التسليم&lt;/th&gt;
-            &lt;th&gt;مسؤول المبيعات&lt;/th&gt;
-            &lt;th&gt;رقم الصنف&lt;/th&gt;
-            &lt;th&gt;نوع الصنف&lt;/th&gt;
-            &lt;th&gt;فئة الصنف&lt;/th&gt;
-            &lt;th&gt;الموديل&lt;/th&gt;
-            &lt;th&gt;رقم الهيكل VIN&lt;/th&gt;
-            &lt;th&gt;اللون الداخلي&lt;/th&gt;
-            &lt;th&gt;اللون الخارجي&lt;/th&gt;
-            &lt;th&gt;الوكيل&lt;/th&gt;
-            &lt;th&gt;الكمية&lt;/th&gt;
-            &lt;th&gt;سعر الوحدة&lt;/th&gt;
-            &lt;th&gt;قيمة الصنف&lt;/th&gt;
-            &lt;th&gt;كود الضريبة&lt;/th&gt;
-            &lt;th&gt;نوع الضريبة&lt;/th&gt;
-            &lt;th&gt;نسبة الضريبة&lt;/th&gt;
-            &lt;th&gt;قيمة الضريبة&lt;/th&gt;
-            &lt;th&gt;الإجمالي قبل الضريبة&lt;/th&gt;
-            &lt;th&gt;الإجمالي شامل الضريبة&lt;/th&gt;
-          &lt;/tr&gt;
-          &lt;/thead&gt;
-          &lt;tbody id=&quot;erpBody&quot;&gt;
-          &lt;/tbody&gt;
-        &lt;/table&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
+      <div id="erpTotals" class="totals-box" style="display:none;"></div>
+      <div class="erp-table-wrap">
+        <table>
+          <thead>
+          <tr>
+            <th>اسم العميل</th>
+            <th>الرقم الضريبي للعميل</th>
+            <th>رقم جوال العميل</th>
+            <th>الفرع</th>
+            <th>تاريخ الطلب</th>
+            <th>تاريخ التسليم</th>
+            <th>مسؤول المبيعات</th>
+            <th>رقم الصنف</th>
+            <th>نوع الصنف</th>
+            <th>فئة الصنف</th>
+            <th>الموديل</th>
+            <th>رقم الهيكل VIN</th>
+            <th>اللون الداخلي</th>
+            <th>اللون الخارجي</th>
+            <th>الوكيل</th>
+            <th>الكمية</th>
+            <th>سعر الوحدة</th>
+            <th>قيمة الصنف</th>
+            <th>كود الضريبة</th>
+            <th>نوع الضريبة</th>
+            <th>نسبة الضريبة</th>
+            <th>قيمة الضريبة</th>
+            <th>الإجمالي قبل الضريبة</th>
+            <th>الإجمالي شامل الضريبة</th>
+          </tr>
+          </thead>
+          <tbody id="erpBody">
+          </tbody>
+        </table>
+      </div>
+    </div>
 
-    &lt;!-- Orders list tab --&gt;
-    &lt;div class=&quot;card&quot; id=&quot;ordersListCard&quot; style=&quot;display:none;&quot;&gt;
-      &lt;h3 class=&quot;title&quot;&gt;&lt;span class=&quot;icon&quot;&gt;📋&lt;/span&gt;كل الطلبات&lt;/h3&gt;
-      &lt;div class=&quot;hint&quot;&gt;اضغط على رقم الطلب لفتحه، واختيار رقم الهيكل من الأعلى لو كان أكثر من سيارة.&lt;/div&gt;
-      &lt;div class=&quot;row&quot; style=&quot;margin-top:10px;&quot;&gt;
-        &lt;div class=&quot;col-6&quot;&gt;
-          &lt;label&gt;بحث سريع&lt;/label&gt;
-          &lt;input id=&quot;ordersSearch&quot; placeholder=&quot;اكتب اسم العميل / رقم الجوال / رقم الهيكل (VIN) / رقم الطلب&quot; /&gt;
-          &lt;div class=&quot;hint&quot;&gt;تقدر تبحث بأي جزء من البيانات.&lt;/div&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;erp-table-wrap&quot;&gt;
-        &lt;table&gt;
-          &lt;thead&gt;
-          &lt;tr&gt;
-            &lt;th&gt;رقم الطلب&lt;/th&gt;
-            &lt;th&gt;اسم العميل&lt;/th&gt;
-            &lt;th&gt;رقم الجوال&lt;/th&gt;
-            &lt;th&gt;الفرع&lt;/th&gt;
-            &lt;th&gt;رقم الهيكل VIN&lt;/th&gt;
-          &lt;/tr&gt;
-          &lt;/thead&gt;
-          &lt;tbody id=&quot;ordersListBody&quot;&gt;&lt;/tbody&gt;
-        &lt;/table&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
+    <!-- Orders list tab -->
+    <div class="card" id="ordersListCard" style="display:none;">
+      <h3 class="title"><span class="icon">📋</span>كل الطلبات</h3>
+      <div class="hint">اضغط على رقم الطلب لفتحه، واختيار رقم الهيكل من الأعلى لو كان أكثر من سيارة.</div>
+      <div class="row" style="margin-top:10px;">
+        <div class="col-6">
+          <label>بحث سريع</label>
+          <input id="ordersSearch" placeholder="اكتب اسم العميل / رقم الجوال / رقم الهيكل (VIN) / رقم الطلب" />
+          <div class="hint">تقدر تبحث بأي جزء من البيانات.</div>
+        </div>
+      </div>
+      <div class="erp-table-wrap">
+        <table>
+          <thead>
+          <tr>
+            <th>رقم الطلب</th>
+            <th>اسم العميل</th>
+            <th>رقم الجوال</th>
+            <th>الفرع</th>
+            <th>رقم الهيكل VIN</th>
+          </tr>
+          </thead>
+          <tbody id="ordersListBody"></tbody>
+        </table>
+      </div>
+    </div>
 
     
-    &lt;!-- Archive list tab --&gt;
-    &lt;div class=&quot;card&quot; id=&quot;archivesListCard&quot; style=&quot;display:none;&quot;&gt;
-      &lt;h3 class=&quot;title&quot;&gt;&lt;span class=&quot;icon&quot;&gt;🗄️&lt;/span&gt;الأرشيف&lt;/h3&gt;
-      &lt;div class=&quot;hint&quot;&gt;هنا تظهر الطلبات المؤرشفة. اضغط على رقم الطلب لعرض تفاصيله (قراءة فقط).&lt;/div&gt;
-      &lt;div class=&quot;row&quot; style=&quot;margin-top:10px;&quot;&gt;
-        &lt;div class=&quot;col-6&quot;&gt;
-          &lt;label&gt;بحث سريع&lt;/label&gt;
-          &lt;input id=&quot;archivesSearch&quot; placeholder=&quot;اكتب رقم الطلب / اسم العميل / رقم الجوال&quot; /&gt;
-          &lt;div class=&quot;hint&quot;&gt;البحث داخل الأرشيف فقط.&lt;/div&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;erp-table-wrap&quot;&gt;
-        &lt;table&gt;
-          &lt;thead&gt;
-          &lt;tr&gt;
-            &lt;th&gt;رقم الطلب&lt;/th&gt;
-            &lt;th&gt;اسم العميل&lt;/th&gt;
-            &lt;th&gt;رقم الجوال&lt;/th&gt;
-            &lt;th&gt;الفرع&lt;/th&gt;
-            &lt;th&gt;تاريخ الأرشفة&lt;/th&gt;
-          &lt;/tr&gt;
-          &lt;/thead&gt;
-          &lt;tbody id=&quot;archivesListBody&quot;&gt;&lt;/tbody&gt;
-        &lt;/table&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
+    <!-- Archive list tab -->
+    <div class="card" id="archivesListCard" style="display:none;">
+      <h3 class="title"><span class="icon">🗄️</span>الأرشيف</h3>
+      <div class="hint">هنا تظهر الطلبات المؤرشفة. اضغط على رقم الطلب لعرض تفاصيله (قراءة فقط).</div>
+      <div class="row" style="margin-top:10px;">
+        <div class="col-6">
+          <label>بحث سريع</label>
+          <input id="archivesSearch" placeholder="اكتب رقم الطلب / اسم العميل / رقم الجوال" />
+          <div class="hint">البحث داخل الأرشيف فقط.</div>
+        </div>
+      </div>
+      <div class="erp-table-wrap">
+        <table>
+          <thead>
+          <tr>
+            <th>رقم الطلب</th>
+            <th>اسم العميل</th>
+            <th>رقم الجوال</th>
+            <th>الفرع</th>
+            <th>تاريخ الأرشفة</th>
+          </tr>
+          </thead>
+          <tbody id="archivesListBody"></tbody>
+        </table>
+      </div>
+    </div>
 
-&lt;!-- Stages --&gt;
-    &lt;div class=&quot;card&quot; id=&quot;stagesCard&quot; style=&quot;display:none;&quot;&gt;
-      &lt;h3 class=&quot;title&quot;&gt;&lt;span class=&quot;icon&quot;&gt;🚦&lt;/span&gt;مراحل تتبع الطلب&lt;/h3&gt;
-      &lt;div class=&quot;grid-2&quot; id=&quot;stagesList&quot;&gt;&lt;/div&gt;
-      &lt;div class=&quot;hint&quot; style=&quot;margin-top:8px;&quot;&gt;
-        اضغط على &lt;strong&gt;تم الانتهاء&lt;/strong&gt; أمام أي مرحلة ليتم ختمها وتحديث صفحة تتبع العميل تلقائياً.  
+<!-- Stages -->
+    <div class="card" id="stagesCard" style="display:none;">
+      <h3 class="title"><span class="icon">🚦</span>مراحل تتبع الطلب</h3>
+      <div class="grid-2" id="stagesList"></div>
+      <div class="hint" style="margin-top:8px;">
+        اضغط على <strong>تم الانتهاء</strong> أمام أي مرحلة ليتم ختمها وتحديث صفحة تتبع العميل تلقائياً.  
         بعد ختم جميع المراحل لهذا الهيكل لا يمكن تعديلها مرة أخرى.
-      &lt;/div&gt;
-      &lt;!-- Archive actions --&gt;
-      &lt;div style=&quot;display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-start;width:100%;margin:10px 0 0;&quot;&gt;
-        &lt;button id=&quot;archiveOrderBtn&quot; class=&quot;btn-outline&quot; type=&quot;button&quot; style=&quot;font-size:12px;&quot;&gt;
-          &lt;i class=&quot;fa-solid fa-box-archive&quot;&gt;&lt;/i&gt; أرشفة الطلب
-        &lt;/button&gt;
-        &lt;button id=&quot;unarchiveOrderBtn&quot; class=&quot;btn-outline&quot; type=&quot;button&quot; style=&quot;font-size:12px;display:none;&quot;&gt;
-          &lt;i class=&quot;fa-solid fa-rotate-left&quot;&gt;&lt;/i&gt; إلغاء الأرشفة
-        &lt;/button&gt;
-        &lt;span id=&quot;archiveHint&quot; class=&quot;muted&quot; style=&quot;font-size:12px;&quot;&gt;&lt;/span&gt;
-      &lt;/div&gt;
+      </div>
+      <!-- Archive actions -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-start;width:100%;margin:10px 0 0;">
+        <button id="archiveOrderBtn" class="btn-outline" type="button" style="font-size:12px;">
+          <i class="fa-solid fa-box-archive"></i> أرشفة الطلب
+        </button>
+        <button id="unarchiveOrderBtn" class="btn-outline" type="button" style="font-size:12px;display:none;">
+          <i class="fa-solid fa-rotate-left"></i> إلغاء الأرشفة
+        </button>
+        <span id="archiveHint" class="muted" style="font-size:12px;"></span>
+      </div>
 
       
-      &lt;div class=&quot;muted&quot; id=&quot;stageMsg&quot; style=&quot;margin-top:6px;&quot;&gt;&lt;/div&gt;
-    &lt;/div&gt;
-  &lt;/div&gt;
+      <div class="muted" id="stageMsg" style="margin-top:6px;"></div>
+    </div>
+  </div>
 
-  &lt;script type=&quot;module&quot;&gt;
-    import { initializeApp } from &quot;https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js&quot;;
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import {
       getAuth,
       onAuthStateChanged,
       signInWithEmailAndPassword,
       createUserWithEmailAndPassword,
       signOut
-    } from &quot;https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js&quot;;
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
     import {
       getFirestore,
       doc,
@@ -1860,29 +1883,29 @@ body{overflow-x:hidden !important;}
       orderBy,
       limit,
       writeBatch
-    } from &quot;https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js&quot;;
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
     const firebaseConfig = {
-      apiKey: &quot;AIzaSyCorGtT5_Z68jCtLODvqnv0Fb7QW5eR6MQ&quot;,
-      authDomain: &quot;mzj-tracking.firebaseapp.com&quot;,
-      projectId: &quot;mzj-tracking&quot;,
-      storageBucket: &quot;mzj-tracking.firebasestorage.app&quot;,
-      messagingSenderId: &quot;655452217491&quot;,
-      appId: &quot;1:655452217491:web:9348d172c47bdd411fad66&quot;
+      apiKey: "AIzaSyCorGtT5_Z68jCtLODvqnv0Fb7QW5eR6MQ",
+      authDomain: "mzj-tracking.firebaseapp.com",
+      projectId: "mzj-tracking",
+      storageBucket: "mzj-tracking.firebasestorage.app",
+      messagingSenderId: "655452217491",
+      appId: "1:655452217491:web:9348d172c47bdd411fad66"
     };
 
-    const ERP_COLLECTION      = &quot;erp_orders&quot;;
-    const ERP_VINS_COLLECTION = &quot;erp_vins&quot;;
-    const TRACK_COLLECTION    = &quot;orders&quot;;
-    const ARCHIVE_COLLECTION  = &quot;sales_archives&quot;;
+    const ERP_COLLECTION      = "erp_orders";
+    const ERP_VINS_COLLECTION = "erp_vins";
+    const TRACK_COLLECTION    = "orders";
+    const ARCHIVE_COLLECTION  = "sales_archives";
 
     // ✅ API base (separate project) for WhatsApp/Mersal serverless routes
     const MZJ_TRACKING_API_BASE = window.location.origin; // نفس الدومين (mzj-workflow)
 
     const ERP_FIELDS = [
-      &quot;CustomerName&quot;,&quot;CustomerVAT&quot;,&quot;CustomerPhone&quot;,&quot;Branch&quot;,&quot;OrderDate&quot;,&quot;DeliveryDate&quot;,&quot;SalesPerson&quot;,
-      &quot;ItemNo&quot;,&quot;ItemType&quot;,&quot;ItemCategory&quot;,&quot;ItemModel&quot;,&quot;VIN&quot;,&quot;InteriorColor&quot;,&quot;ExteriorColor&quot;,&quot;Dealer&quot;,
-      &quot;Qty&quot;,&quot;UnitPrice&quot;,&quot;ItemValue&quot;,&quot;TaxCode&quot;,&quot;TaxName&quot;,&quot;TaxRate&quot;,&quot;TaxValue&quot;,&quot;SubtotalExclVAT&quot;,&quot;TotalInclVAT&quot;
+      "CustomerName","CustomerVAT","CustomerPhone","Branch","OrderDate","DeliveryDate","SalesPerson",
+      "ItemNo","ItemType","ItemCategory","ItemModel","VIN","InteriorColor","ExteriorColor","Dealer",
+      "Qty","UnitPrice","ItemValue","TaxCode","TaxName","TaxRate","TaxValue","SubtotalExclVAT","TotalInclVAT"
     ];
 
     const app = initializeApp(firebaseConfig);
@@ -1891,27 +1914,27 @@ body{overflow-x:hidden !important;}
     const db = getFirestore(app);
 
     // UI refs
-    const authCard   = document.getElementById(&quot;authCard&quot;);
-    const orderCard  = document.getElementById(&quot;orderCard&quot;);
-    const erpCard    = document.getElementById(&quot;erpCard&quot;);
-    const stagesCard = document.getElementById(&quot;stagesCard&quot;);
-    const whoami     = document.getElementById(&quot;whoami&quot;);
-    const logoutBtn  = document.getElementById(&quot;logoutBtn&quot;);
+    const authCard   = document.getElementById("authCard");
+    const orderCard  = document.getElementById("orderCard");
+    const erpCard    = document.getElementById("erpCard");
+    const stagesCard = document.getElementById("stagesCard");
+    const whoami     = document.getElementById("whoami");
+    const logoutBtn  = document.getElementById("logoutBtn");
 
-    const tabsBar      = document.getElementById(&quot;tabsBar&quot;);
-    const tabSearchBtn = document.getElementById(&quot;tabSearchBtn&quot;);
-    const tabListBtn   = document.getElementById(&quot;tabListBtn&quot;);
-    const ordersListCard  = document.getElementById(&quot;ordersListCard&quot;);
-    const ordersListBody  = document.getElementById(&quot;ordersListBody&quot;);
-    const tabArchiveBtn = document.getElementById(&quot;tabArchiveBtn&quot;);
-    const archivesListCard = document.getElementById(&quot;archivesListCard&quot;);
-    const archivesListBody = document.getElementById(&quot;archivesListBody&quot;);
-    const archivesSearchInput = document.getElementById(&quot;archivesSearch&quot;);
+    const tabsBar      = document.getElementById("tabsBar");
+    const tabSearchBtn = document.getElementById("tabSearchBtn");
+    const tabListBtn   = document.getElementById("tabListBtn");
+    const ordersListCard  = document.getElementById("ordersListCard");
+    const ordersListBody  = document.getElementById("ordersListBody");
+    const tabArchiveBtn = document.getElementById("tabArchiveBtn");
+    const archivesListCard = document.getElementById("archivesListCard");
+    const archivesListBody = document.getElementById("archivesListBody");
+    const archivesSearchInput = document.getElementById("archivesSearch");
     let archivesListCache = [];
     let currentIsArchiveView = false;
 
 
-    const ordersSearchInput = document.getElementById(&quot;ordersSearch&quot;);
+    const ordersSearchInput = document.getElementById("ordersSearch");
     let ordersListCache = [];
     let ordersReadSet = new Set();
 
@@ -1919,105 +1942,105 @@ body{overflow-x:hidden !important;}
     let archiveLoaded = false;
 
 
-    const email      = document.getElementById(&quot;email&quot;);
-    const password   = document.getElementById(&quot;password&quot;);
-    const loginBtn   = document.getElementById(&quot;loginBtn&quot;);
-    const signupBtn  = document.getElementById(&quot;signupBtn&quot;);
-    const authMsg    = document.getElementById(&quot;authMsg&quot;);
+    const email      = document.getElementById("email");
+    const password   = document.getElementById("password");
+    const loginBtn   = document.getElementById("loginBtn");
+    const signupBtn  = document.getElementById("signupBtn");
+    const authMsg    = document.getElementById("authMsg");
 
-    const orderIdInput = document.getElementById(&quot;orderId&quot;);
-    const vinInput     = document.getElementById(&quot;vinInput&quot;);
-    const loadBtn      = document.getElementById(&quot;loadBtn&quot;);
-    const clearBtn     = document.getElementById(&quot;clearBtn&quot;);
-    const orderMsg     = document.getElementById(&quot;orderMsg&quot;);
+    const orderIdInput = document.getElementById("orderId");
+    const vinInput     = document.getElementById("vinInput");
+    const loadBtn      = document.getElementById("loadBtn");
+    const clearBtn     = document.getElementById("clearBtn");
+    const orderMsg     = document.getElementById("orderMsg");
 
-    const erpMetaEl    = document.getElementById(&quot;erpMeta&quot;);
-    const erpBody      = document.getElementById(&quot;erpBody&quot;);
-    const erpTotals    = document.getElementById(&quot;erpTotals&quot;);
-    const archiveOrderBtn = document.getElementById(&quot;archiveOrderBtn&quot;);
-    const unarchiveOrderBtn = document.getElementById(&quot;unarchiveOrderBtn&quot;);
-    const archiveHint = document.getElementById(&quot;archiveHint&quot;);
+    const erpMetaEl    = document.getElementById("erpMeta");
+    const erpBody      = document.getElementById("erpBody");
+    const erpTotals    = document.getElementById("erpTotals");
+    const archiveOrderBtn = document.getElementById("archiveOrderBtn");
+    const unarchiveOrderBtn = document.getElementById("unarchiveOrderBtn");
+    const archiveHint = document.getElementById("archiveHint");
 
 
-    const vinPickerBox = document.getElementById(&quot;vinPickerBox&quot;);
-    const vinPicker    = document.getElementById(&quot;vinPicker&quot;);
-    const vinCountChip = document.getElementById(&quot;vinCountChip&quot;);
-    const trackLinkBtn = document.getElementById(&quot;trackLinkBtn&quot;);
+    const vinPickerBox = document.getElementById("vinPickerBox");
+    const vinPicker    = document.getElementById("vinPicker");
+    const vinCountChip = document.getElementById("vinCountChip");
+    const trackLinkBtn = document.getElementById("trackLinkBtn");
 
-    const stagesList   = document.getElementById(&quot;stagesList&quot;);
-    const stageMsg     = document.getElementById(&quot;stageMsg&quot;);
+    const stagesList   = document.getElementById("stagesList");
+    const stageMsg     = document.getElementById("stageMsg");
 
     let currentOrderId      = null;
     let currentVin          = null;
     let currentItemNo       = null;
     let currentOrderRecords = [];
-    let currentCustomerPhone = &quot;&quot;; // رقم جوال العميل
+    let currentCustomerPhone = ""; // رقم جوال العميل
     // بيانات نحتاجها لقالب واتساب (tracking_message)
-    let currentCustomerName = &quot;&quot;;
+    let currentCustomerName = "";
     let currentOrderCarsCount = 0;
-    let currentCarsSubtotal = &quot;&quot;;
-    let currentCarsTax = &quot;&quot;;
-    let currentRegFee = &quot;&quot;;
-    let currentGrandTotalIncl = &quot;&quot;;
-    let currentTrackingLink = &quot;&quot;;
+    let currentCarsSubtotal = "";
+    let currentCarsTax = "";
+    let currentRegFee = "";
+    let currentGrandTotalIncl = "";
+    let currentTrackingLink = "";
 
     let currentTrackData = null;
     let currentStagesObjCache = {};
 
     const STAGES = [
-      &quot;1) طلب الشراء (خاص بالعميل)&quot;,
-      &quot;2) إيصال الدفع (خاص بالعميل)&quot;,
-      &quot;3) التواصل من قِبل ممثلي خدمة العملاء بإرسال البطاقة الجركية (خاص بالمعرض)&quot;,
-      &quot;4) سداد رسوم التسجيل (خاص بالعميل)&quot;,
-      &quot;5) التأمين – شرط الربط على السيستم (خاص بالعميل)&quot;,
-      &quot;6) استيفاء المبالغ المتبقية (خاص بالعميل)&quot;,
-      &quot;7) استيفاء الأوراق المتبقية (خاص بالعميل)&quot;,
-      &quot;8) إصدار اللوحات أو نقل الملكية (خاص بالمعرض)&quot;,
-      &quot;9) جاهزية السيارة للاستلام (خاص بالمعرض)&quot;,
-      &quot;10) إتمام عملية التسليم بنجاح&quot;
+      "1) طلب الشراء (خاص بالعميل)",
+      "2) إيصال الدفع (خاص بالعميل)",
+      "3) التواصل من قِبل ممثلي خدمة العملاء بإرسال البطاقة الجركية (خاص بالمعرض)",
+      "4) سداد رسوم التسجيل (خاص بالعميل)",
+      "5) التأمين – شرط الربط على السيستم (خاص بالعميل)",
+      "6) استيفاء المبالغ المتبقية (خاص بالعميل)",
+      "7) استيفاء الأوراق المتبقية (خاص بالعميل)",
+      "8) إصدار اللوحات أو نقل الملكية (خاص بالمعرض)",
+      "9) جاهزية السيارة للاستلام (خاص بالمعرض)",
+      "10) إتمام عملية التسليم بنجاح"
     ];
 
     const FIELD_SYNONYMS = {
-      CustomerName: [&quot;CustomerName&quot;,&quot;customerName&quot;],
-      CustomerVAT:  [&quot;CustomerVAT&quot;,&quot;customerVat&quot;,&quot;customerVAT&quot;],
-      CustomerPhone:[&quot;CustomerPhone&quot;,&quot;customerPhone&quot;,&quot;customer_phone&quot;,&quot;contact_mobile&quot;],
-      Branch:       [&quot;Branch&quot;,&quot;branch&quot;],
-      OrderDate:    [&quot;OrderDate&quot;,&quot;orderDate&quot;],
-      DeliveryDate: [&quot;DeliveryDate&quot;,&quot;deliveryDate&quot;],
-      SalesPerson:  [&quot;SalesPerson&quot;,&quot;salesPerson&quot;],
+      CustomerName: ["CustomerName","customerName"],
+      CustomerVAT:  ["CustomerVAT","customerVat","customerVAT"],
+      CustomerPhone:["CustomerPhone","customerPhone","customer_phone","contact_mobile"],
+      Branch:       ["Branch","branch"],
+      OrderDate:    ["OrderDate","orderDate"],
+      DeliveryDate: ["DeliveryDate","deliveryDate"],
+      SalesPerson:  ["SalesPerson","salesPerson"],
 
-      ItemNo:       [&quot;ItemNo&quot;,&quot;itemNo&quot;,&quot;no&quot;],
-      ItemType:     [&quot;ItemType&quot;,&quot;itemType&quot;,&quot;type&quot;],
-      ItemCategory: [&quot;ItemCategory&quot;,&quot;itemCategory&quot;,&quot;category&quot;],
-      ItemModel:    [&quot;ItemModel&quot;,&quot;itemModel&quot;,&quot;model&quot;],
+      ItemNo:       ["ItemNo","itemNo","no"],
+      ItemType:     ["ItemType","itemType","type"],
+      ItemCategory: ["ItemCategory","itemCategory","category"],
+      ItemModel:    ["ItemModel","itemModel","model"],
 
-      VIN:          [&quot;VIN&quot;,&quot;vin&quot;],
+      VIN:          ["VIN","vin"],
 
-      InteriorColor:[&quot;InteriorColor&quot;,&quot;interiorColor&quot;],
-      ExteriorColor:[&quot;ExteriorColor&quot;,&quot;exteriorColor&quot;],
-      Dealer:       [&quot;Dealer&quot;,&quot;dealer&quot;],
+      InteriorColor:["InteriorColor","interiorColor"],
+      ExteriorColor:["ExteriorColor","exteriorColor"],
+      Dealer:       ["Dealer","dealer"],
 
-      Qty:          [&quot;Qty&quot;,&quot;qty&quot;],
-      UnitPrice:    [&quot;UnitPrice&quot;,&quot;unitPrice&quot;],
-      ItemValue:    [&quot;ItemValue&quot;,&quot;itemValue&quot;,&quot;value&quot;],
+      Qty:          ["Qty","qty"],
+      UnitPrice:    ["UnitPrice","unitPrice"],
+      ItemValue:    ["ItemValue","itemValue","value"],
 
-      TaxCode:         [&quot;taxCode&quot;,&quot;TaxCode&quot;],
-      TaxName:         [&quot;taxName&quot;,&quot;TaxName&quot;],
-      TaxRate:         [&quot;taxRate&quot;,&quot;TaxRate&quot;,&quot;vatRate&quot;,&quot;VATRate&quot;,&quot;tax_rate&quot;,&quot;vat_rate&quot;,&quot;rate&quot;,&quot;VAT&quot;],
-      TaxValue:        [&quot;taxValue&quot;, &quot;TaxValue&quot;, &quot;vatAmount&quot;, &quot;VATAmount&quot;, &quot;vat_amount&quot;, &quot;vatAmount&quot;, &quot;vatValue&quot;, &quot;VATValue&quot;, &quot;tax_amount&quot;, &quot;taxAmount&quot;, &quot;taxValueAmount&quot;, &quot;vat&quot;, &quot;carTaxValue&quot;, &quot;car_tax_value&quot;],
-      SubtotalExclVAT: [&quot;subtotalExclVAT&quot;, &quot;SubtotalExclVAT&quot;, &quot;subtotalExclVat&quot;, &quot;subtotal_excl_vat&quot;, &quot;subtotalBeforeVat&quot;, &quot;SubtotalBeforeVat&quot;, &quot;netTotal&quot;, &quot;net_total&quot;, &quot;amountBeforeTax&quot;, &quot;amount_before_tax&quot;, &quot;subtotal&quot;, &quot;net&quot;, &quot;carSubtotalExclVAT&quot;, &quot;car_subtotal_excl_vat&quot;],
-      TotalInclVAT:    [&quot;totalInclVAT&quot;, &quot;TotalInclVAT&quot;, &quot;totalInclVat&quot;, &quot;total_incl_vat&quot;, &quot;grandTotal&quot;, &quot;GrandTotal&quot;, &quot;grand_total&quot;, &quot;total&quot;, &quot;Total&quot;, &quot;amountAfterTax&quot;, &quot;amount_after_tax&quot;, &quot;carTotalInclVAT&quot;, &quot;car_total_incl_vat&quot;],
+      TaxCode:         ["taxCode","TaxCode"],
+      TaxName:         ["taxName","TaxName"],
+      TaxRate:         ["taxRate","TaxRate","vatRate","VATRate","tax_rate","vat_rate","rate","VAT"],
+      TaxValue:        ["taxValue", "TaxValue", "vatAmount", "VATAmount", "vat_amount", "vatAmount", "vatValue", "VATValue", "tax_amount", "taxAmount", "taxValueAmount", "vat", "carTaxValue", "car_tax_value"],
+      SubtotalExclVAT: ["subtotalExclVAT", "SubtotalExclVAT", "subtotalExclVat", "subtotal_excl_vat", "subtotalBeforeVat", "SubtotalBeforeVat", "netTotal", "net_total", "amountBeforeTax", "amount_before_tax", "subtotal", "net", "carSubtotalExclVAT", "car_subtotal_excl_vat"],
+      TotalInclVAT:    ["totalInclVAT", "TotalInclVAT", "totalInclVat", "total_incl_vat", "grandTotal", "GrandTotal", "grand_total", "total", "Total", "amountAfterTax", "amount_after_tax", "carTotalInclVAT", "car_total_incl_vat"],
 
       // ✅ على مستوى الطلب (رسوم التسجيل/إجمالي الطلب)
-      RegistrationFee: [&quot;registrationFee&quot;,&quot;RegistrationFee&quot;],
-      SubtotalBeforeTax:[&quot;subtotalBeforeTax&quot;,&quot;SubtotalBeforeTax&quot;],
-      GrandTotal:      [&quot;grandTotal&quot;,&quot;GrandTotal&quot;]
+      RegistrationFee: ["registrationFee","RegistrationFee"],
+      SubtotalBeforeTax:["subtotalBeforeTax","SubtotalBeforeTax"],
+      GrandTotal:      ["grandTotal","GrandTotal"]
     };
 
     function buildCandidates(name) {
       const syns = FIELD_SYNONYMS[name] || [name];
       const arr = [];
-      syns.forEach(s =&gt; {
+      syns.forEach(s => {
         if (!s) return;
         arr.push(s);
         arr.push(s.toLowerCase());
@@ -2029,7 +2052,7 @@ body{overflow-x:hidden !important;}
     function lookupIn(obj, candidates) {
       if (!obj) return undefined;
       for (const key of candidates) {
-        if (Object.prototype.hasOwnProperty.call(obj, key) &amp;&amp; obj[key] !== undefined) {
+        if (Object.prototype.hasOwnProperty.call(obj, key) && obj[key] !== undefined) {
           return obj[key];
         }
       }
@@ -2037,7 +2060,7 @@ body{overflow-x:hidden !important;}
     }
 
     function getFieldFlex(fieldName, data) {
-      if (!data) return &quot;-&quot;;
+      if (!data) return "-";
       const candidates = buildCandidates(fieldName);
 
       let v = lookupIn(data, candidates);
@@ -2056,15 +2079,15 @@ body{overflow-x:hidden !important;}
       v = lookupIn(data.summary, candidates);
       if (v !== undefined) return v;
 
-      return &quot;-&quot;;
+      return "-";
     }
 
     function parseAmountFront(value) {
-      if (value === null || value === undefined || value === &quot;-&quot;) return null;
-      if (typeof value === &quot;number&quot;) return value;
+      if (value === null || value === undefined || value === "-") return null;
+      if (typeof value === "number") return value;
       const s = String(value)
-        .replace(/[^\d.,\-]/g, &quot;&quot;)
-        .replace(/,/g, &quot;&quot;);
+        .replace(/[^\d.,\-]/g, "")
+        .replace(/,/g, "");
       const n = parseFloat(s);
       return isNaN(n) ? null : n;
     }
@@ -2072,95 +2095,95 @@ body{overflow-x:hidden !important;}
     
     // تنسيق رقم الجوال لصيغة سعودية 966
         function normalizeSaudiPhone(raw) {
-      if (!raw) return &quot;&quot;;
+      if (!raw) return "";
 
       let digits = String(raw).trim();
 
       // شيل أي حاجة غير أرقام
-      digits = digits.replace(/[^\d]/g, &quot;&quot;);
+      digits = digits.replace(/[^\d]/g, "");
 
       // 009665xxxxxxxx → 9665xxxxxxxx
-      if (digits.startsWith(&quot;00&quot;)) {
+      if (digits.startsWith("00")) {
         digits = digits.slice(2);
       }
 
       // 05xxxxxxxx → 9665xxxxxxxx
-      if (digits.startsWith(&quot;05&quot;)) {
-        digits = &quot;966&quot; + digits.slice(1);
+      if (digits.startsWith("05")) {
+        digits = "966" + digits.slice(1);
       }
 
       // 5xxxxxxxx → 9665xxxxxxxx
-      if (digits.length === 9 &amp;&amp; digits.startsWith(&quot;5&quot;)) {
-        digits = &quot;966&quot; + digits;
+      if (digits.length === 9 && digits.startsWith("5")) {
+        digits = "966" + digits;
       }
 
       // تأكيد نهائي
-      if (!digits.startsWith(&quot;9665&quot;) || digits.length !== 12) {
-        return &quot;&quot;;
+      if (!digits.startsWith("9665") || digits.length !== 12) {
+        return "";
       }
 
       return digits;
     }
-// ===== PLUS CHANNELS (WhatsApp+ &amp; SMS+) =====
+// ===== PLUS CHANNELS (WhatsApp+ & SMS+) =====
 
 // فتح واتساب ويب/ديسكتوب بنفس نص الرسالة
 function openWhatsAppPlus(stageNum, stageLabel){
-  stageMsg.textContent = &quot;&quot;;
+  stageMsg.textContent = "";
 
   if (!currentCustomerPhone) {
-    stageMsg.innerHTML = &quot;&lt;span class=&#x27;err&#x27;&gt;لا يوجد رقم جوال محفوظ لهذا الطلب.&lt;/span&gt;&quot;;
+    stageMsg.innerHTML = "<span class='err'>لا يوجد رقم جوال محفوظ لهذا الطلب.</span>";
     return;
   }
 
   const phone = normalizeSaudiPhone(currentCustomerPhone);
   if (!phone) {
-    stageMsg.innerHTML = &quot;&lt;span class=&#x27;err&#x27;&gt;رقم الجوال غير صالح.&lt;/span&gt;&quot;;
+    stageMsg.innerHTML = "<span class='err'>رقم الجوال غير صالح.</span>";
     return;
   }
 
-  const text = getDefaultStageMessage(stageNum, stageLabel) || &quot;&quot;;
-  const waUrl = `https://web.whatsapp.com/send?phone=${phone}&amp;text=${encodeURIComponent(text)}`;
+  const text = getDefaultStageMessage(stageNum, stageLabel) || "";
+  const waUrl = `https://web.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(text)}`;
 
   // نسخ احتياطي للنص
-  if (navigator.clipboard) navigator.clipboard.writeText(text).catch(()=&gt;{});
+  if (navigator.clipboard) navigator.clipboard.writeText(text).catch(()=>{});
 
-  window.open(waUrl, &quot;_blank&quot;, &quot;noopener,noreferrer&quot;);
+  window.open(waUrl, "_blank", "noopener,noreferrer");
 }
 
 // ====== SMS+ API ======
-const API_BASE = &quot;https://mzj-workflow.vercel.app&quot;;
+const API_BASE = "https://mzj-workflow.vercel.app";
 
 // SMS+ (يرسل المهمة إلى Vercel/Firestore عشان الموبايل الأندرويد يبعتها SMS من شريحتك)
 async function openSmsPlus(stageNum, stageLabel){
   try {
     // ✅ حماية من كسر الصفحة لو stageMsg مش موجود
-    const msgEl = (typeof stageMsg !== &quot;undefined&quot; &amp;&amp; stageMsg) ? stageMsg : null;
-    const setMsg = (html) =&gt; { if (msgEl) msgEl.innerHTML = html; };
+    const msgEl = (typeof stageMsg !== "undefined" && stageMsg) ? stageMsg : null;
+    const setMsg = (html) => { if (msgEl) msgEl.innerHTML = html; };
 
-    if (msgEl) msgEl.textContent = &quot;&quot;;
+    if (msgEl) msgEl.textContent = "";
 
     if (!window.currentCustomerPhone) {
-      setMsg(&quot;&lt;span class=&#x27;err&#x27;&gt;لا يوجد رقم جوال محفوظ لهذا الطلب.&lt;/span&gt;&quot;);
+      setMsg("<span class='err'>لا يوجد رقم جوال محفوظ لهذا الطلب.</span>");
       return;
     }
 
     // ✅ حماية لو normalizeSaudiPhone مش موجودة
-    const phone = (typeof normalizeSaudiPhone === &quot;function&quot;)
+    const phone = (typeof normalizeSaudiPhone === "function")
       ? normalizeSaudiPhone(window.currentCustomerPhone)
-      : String(window.currentCustomerPhone || &quot;&quot;).trim();
+      : String(window.currentCustomerPhone || "").trim();
 
     if (!phone) {
-      setMsg(&quot;&lt;span class=&#x27;err&#x27;&gt;رقم الجوال غير صالح.&lt;/span&gt;&quot;);
+      setMsg("<span class='err'>رقم الجوال غير صالح.</span>");
       return;
     }
 
-    const text = (typeof getDefaultStageMessage === &quot;function&quot;)
-      ? (getDefaultStageMessage(stageNum, stageLabel) || &quot;&quot;)
-      : &quot;&quot;;
+    const text = (typeof getDefaultStageMessage === "function")
+      ? (getDefaultStageMessage(stageNum, stageLabel) || "")
+      : "";
 
     // لازم المستخدم يكون مسجل دخول (عشان نرسل ID Token للـ API)
     if (!auth || !auth.currentUser) {
-      setMsg(&quot;&lt;span class=&#x27;err&#x27;&gt;لازم تسجل دخول الأول.&lt;/span&gt;&quot;);
+      setMsg("<span class='err'>لازم تسجل دخول الأول.</span>");
       return;
     }
 
@@ -2168,45 +2191,45 @@ async function openSmsPlus(stageNum, stageLabel){
 
     // ✅ استخدم API_BASE بدل /api... عشان يشتغل حتى لو الصفحة على دومين مختلف
     const res = await fetch(`${API_BASE}/api/sms/enqueue`, {
-      method: &quot;POST&quot;,
+      method: "POST",
       headers: {
-        &quot;Content-Type&quot;: &quot;application/json&quot;,
-        &quot;Authorization&quot;: &quot;Bearer &quot; + idToken
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + idToken
       },
       body: JSON.stringify({
         phone,
         message: text,
-        source: &quot;sales.html&quot;,
+        source: "sales.html",
         meta: {
           stageNum: Number(stageNum)||null,
-          stageLabel: String(stageLabel||&quot;&quot;),
-          orderId: String(window.currentOrderId||&quot;&quot;),
-          vin: String(window.currentVin||&quot;&quot;)
+          stageLabel: String(stageLabel||""),
+          orderId: String(window.currentOrderId||""),
+          vin: String(window.currentVin||"")
         }
       })
     });
 
     const dataText = await res.text();
     if(!res.ok){
-      throw new Error(dataText || (&quot;HTTP &quot; + res.status));
+      throw new Error(dataText || ("HTTP " + res.status));
     }
 
     let data;
     try{ data = JSON.parse(dataText); }catch{ data = { ok:true, raw:dataText }; }
 
-    if(data &amp;&amp; data.ok){
-      setMsg(&quot;&lt;span class=&#x27;ok&#x27;&gt;تم إرسال الطلب للطابور ✅ (SMS+)&lt;/span&gt;&quot;);
+    if(data && data.ok){
+      setMsg("<span class='ok'>تم إرسال الطلب للطابور ✅ (SMS+)</span>");
     }else{
-      setMsg(&quot;&lt;span class=&#x27;err&#x27;&gt;تعذر إضافة الرسالة للطابور.&lt;/span&gt;&quot;);
+      setMsg("<span class='err'>تعذر إضافة الرسالة للطابور.</span>");
     }
 
   } catch(e){
     console.error(e);
-    if (typeof stageMsg !== &quot;undefined&quot; &amp;&amp; stageMsg) {
+    if (typeof stageMsg !== "undefined" && stageMsg) {
       stageMsg.innerHTML =
-        &quot;&lt;span class=&#x27;err&#x27;&gt;تعذر إرسال SMS+ للطابور: &quot; +
-        String(e &amp;&amp; (e.message||e)).slice(0,240) +
-        &quot;&lt;/span&gt;&quot;;
+        "<span class='err'>تعذر إرسال SMS+ للطابور: " +
+        String(e && (e.message||e)).slice(0,240) +
+        "</span>";
     }
   }
 }
@@ -2215,61 +2238,61 @@ async function openSmsPlus(stageNum, stageLabel){
     
     // ===== Message Templates (shared for SMS + WhatsApp) =====
     function getDefaultStageMessage(stageNum, stageLabel){
-      const orderNo = currentOrderId || &quot;&quot;;
-      const vin = currentVin || &quot;&quot;;
-      const trackingLink = vin ? `https://mzj-tracking.vercel.app/Test-Track.html?vin=${vin}` : &quot;&quot;;
+      const orderNo = currentOrderId || "";
+      const vin = currentVin || "";
+      const trackingLink = vin ? `https://mzj-tracking.vercel.app/Test-Track.html?vin=${vin}` : "";
 
       switch(stageNum){
         case 1: {
           // ✅ رسالة ملخص الطلب (ديناميكية حسب الطلب) — بدون بيانات سيارة فردية
-          const rec0 = (currentOrderRecords &amp;&amp; currentOrderRecords.length) ? currentOrderRecords[0] : {};
-          const customerName = getFieldFlex(&quot;CustomerName&quot;, rec0) || &quot;&quot;;
+          const rec0 = (currentOrderRecords && currentOrderRecords.length) ? currentOrderRecords[0] : {};
+          const customerName = getFieldFlex("CustomerName", rec0) || "";
 
           // VIN المختار فقط للرابط (نقطة دخول للتتبع)
-          const vinForLink = vin || &quot;&quot;;
-          const trackingLink2 = vinForLink ? `https://mzj-tracking.vercel.app/Test-Track.html?vin=${vinForLink}` : &quot;&quot;;
+          const vinForLink = vin || "";
+          const trackingLink2 = vinForLink ? `https://mzj-tracking.vercel.app/Test-Track.html?vin=${vinForLink}` : "";
 
           // رسوم التسجيل (إجمالي الطلب)
-          const regFeeNum = (() =&gt; {
-            const v = getFieldFlex(&quot;RegistrationFee&quot;, rec0);
+          const regFeeNum = (() => {
+            const v = getFieldFlex("RegistrationFee", rec0);
             const n = parseAmountFront(v);
-            return (n !== null &amp;&amp; n &gt; 0) ? n : 0;
+            return (n !== null && n > 0) ? n : 0;
           })();
 
-          const rows = (currentOrderRecords &amp;&amp; currentOrderRecords.length) ? currentOrderRecords : [];
+          const rows = (currentOrderRecords && currentOrderRecords.length) ? currentOrderRecords : [];
           const totalCars = rows.length || 0;
 
           let carsSubtotal = 0;
           let carsTax = 0;
 
-          rows.forEach(r =&gt; {
-            const subVal = parseAmountFront(getFieldFlex(&quot;SubtotalExclVAT&quot;, r));
-            const taxVal = parseAmountFront(getFieldFlex(&quot;TaxValue&quot;, r));
+          rows.forEach(r => {
+            const subVal = parseAmountFront(getFieldFlex("SubtotalExclVAT", r));
+            const taxVal = parseAmountFront(getFieldFlex("TaxValue", r));
             if (subVal !== null) carsSubtotal += subVal;
             if (taxVal !== null) carsTax += taxVal;
           });
 
           // fallback لو السطور مش كاملة
-          if (carsSubtotal === 0 &amp;&amp; carsTax === 0) {
-            const headerSubBT = parseAmountFront(getFieldFlex(&quot;SubtotalBeforeTax&quot;, rec0));
-            const headerTax   = parseAmountFront(getFieldFlex(&quot;TaxValue&quot;, rec0));
+          if (carsSubtotal === 0 && carsTax === 0) {
+            const headerSubBT = parseAmountFront(getFieldFlex("SubtotalBeforeTax", rec0));
+            const headerTax   = parseAmountFront(getFieldFlex("TaxValue", rec0));
             if (headerSubBT !== null) carsSubtotal = Math.max(0, (headerSubBT || 0) - (regFeeNum || 0));
             if (headerTax !== null)   carsTax = headerTax || 0;
           }
 
           const grandTotalIncl = (carsSubtotal + carsTax) + (regFeeNum || 0);
 
-          const fmt = (n) =&gt; (n || 0).toLocaleString(&quot;ar-SA&quot;, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          const fmt = (n) => (n || 0).toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
           // ✅ تخزين القيم للقالب (tracking_message)
-          currentCustomerName = customerName || &quot;&quot;;
+          currentCustomerName = customerName || "";
           window.currentCustomerName = currentCustomerName;
           currentOrderCarsCount = totalCars || 0;
           currentCarsSubtotal = fmt(carsSubtotal);
           currentCarsTax = fmt(carsTax);
           currentRegFee = fmt(regFeeNum || 0);
           currentGrandTotalIncl = fmt(grandTotalIncl);
-          currentTrackingLink = trackingLink2 || &quot;&quot;;
+          currentTrackingLink = trackingLink2 || "";
 
           return (
 `عميلنا العزيز / ${customerName}\n` +
@@ -2278,7 +2301,7 @@ async function openSmsPlus(stageNum, stageLabel){
 `عدد السيارات: ${totalCars}\n` +
 `الإجمالي قبل الضريبة: ${fmt(carsSubtotal)} ر.س\n` +
 `قيمة الضريبة: ${fmt(carsTax)} ر.س\n` +
-(regFeeNum &gt; 0 ? (`رسوم التسجيل: ${fmt(regFeeNum)} ر.س\n`) : ``) +
+(regFeeNum > 0 ? (`رسوم التسجيل: ${fmt(regFeeNum)} ر.س\n`) : ``) +
 `الإجمالي شامل الضريبة: ${fmt(grandTotalIncl)} ر.س\n\n` +
 `يمكنكم متابعة حالة الطلب عبر الرابط التالي:\n` +
 `${trackingLink2}\n\n` +
@@ -2330,37 +2353,37 @@ async function openSmsPlus(stageNum, stageLabel){
     }
 
     // ===== Modal: Edit before send =====
-    const msgModal        = document.getElementById(&quot;msgModal&quot;);
-    const msgModalBackdrop= document.getElementById(&quot;msgModalBackdrop&quot;);
-    const msgModalClose   = document.getElementById(&quot;msgModalClose&quot;);
-    const msgModalTitle   = document.getElementById(&quot;msgModalTitle&quot;);
-    const msgModalSub     = document.getElementById(&quot;msgModalSub&quot;);
-    const msgModalText    = document.getElementById(&quot;msgModalText&quot;);
-    const msgModalSend    = document.getElementById(&quot;msgModalSend&quot;);
-    const msgModalReset   = document.getElementById(&quot;msgModalReset&quot;);
-    const msgModalCopy    = document.getElementById(&quot;msgModalCopy&quot;);
-    const msgModalMsg     = document.getElementById(&quot;msgModalMsg&quot;);
-    const msgModalChannel = document.getElementById(&quot;msgModalChannel&quot;);
-    const msgModalPhone   = document.getElementById(&quot;msgModalPhone&quot;);
-    const msgModalVin     = document.getElementById(&quot;msgModalVin&quot;);
+    const msgModal        = document.getElementById("msgModal");
+    const msgModalBackdrop= document.getElementById("msgModalBackdrop");
+    const msgModalClose   = document.getElementById("msgModalClose");
+    const msgModalTitle   = document.getElementById("msgModalTitle");
+    const msgModalSub     = document.getElementById("msgModalSub");
+    const msgModalText    = document.getElementById("msgModalText");
+    const msgModalSend    = document.getElementById("msgModalSend");
+    const msgModalReset   = document.getElementById("msgModalReset");
+    const msgModalCopy    = document.getElementById("msgModalCopy");
+    const msgModalMsg     = document.getElementById("msgModalMsg");
+    const msgModalChannel = document.getElementById("msgModalChannel");
+    const msgModalPhone   = document.getElementById("msgModalPhone");
+    const msgModalVin     = document.getElementById("msgModalVin");
 
-    let modalCtx = { channel:&quot;sms&quot;, stageNum:0, stageLabel:&quot;&quot;, defaultText:&quot;&quot; };
+    let modalCtx = { channel:"sms", stageNum:0, stageLabel:"", defaultText:"" };
 
     function closeMessageModal(){
       if(!msgModal) return;
-      msgModal.style.display = &quot;none&quot;;
-      msgModalMsg.textContent = &quot;&quot;;
+      msgModal.style.display = "none";
+      msgModalMsg.textContent = "";
       msgModalSend.disabled = false;
     }
     function openMessageModal(channel, stageNum, stageLabel){
-      stageMsg.textContent = &quot;&quot;;
+      stageMsg.textContent = "";
       if (!currentCustomerPhone) {
-        stageMsg.innerHTML = &quot;&lt;span class=&#x27;err&#x27;&gt;لا يوجد رقم جوال محفوظ لهذا الطلب.&lt;/span&gt;&quot;;
+        stageMsg.innerHTML = "<span class='err'>لا يوجد رقم جوال محفوظ لهذا الطلب.</span>";
         return;
       }
       const phone = normalizeSaudiPhone(currentCustomerPhone);
       if (!phone) {
-        stageMsg.innerHTML = &quot;&lt;span class=&#x27;err&#x27;&gt;رقم الجوال غير صالح.&lt;/span&gt;&quot;;
+        stageMsg.innerHTML = "<span class='err'>رقم الجوال غير صالح.</span>";
         return;
       }
 
@@ -2368,51 +2391,51 @@ async function openSmsPlus(stageNum, stageLabel){
 
       modalCtx = { channel, stageNum, stageLabel, defaultText: defText };
 
-      msgModalTitle.textContent = (channel === &quot;whatsapp&quot;) ? &quot;إرسال واتساب للعميل&quot; : &quot;إرسال SMS للعميل&quot;;
-      msgModalSub.textContent = `المرحلة ${stageNum}: ${stageLabel || &quot;&quot;}`;
+      msgModalTitle.textContent = (channel === "whatsapp") ? "إرسال واتساب للعميل" : "إرسال SMS للعميل";
+      msgModalSub.textContent = `المرحلة ${stageNum}: ${stageLabel || ""}`;
       msgModalText.value = defText;
 
-      msgModalChannel.textContent = (channel === &quot;whatsapp&quot;) ? &quot;WhatsApp&quot; : &quot;SMS&quot;;
-      msgModalPhone.textContent = phone ? (&quot;966…&quot; + phone.slice(-3)) : &quot;—&quot;;
-      msgModalVin.textContent = (currentVin ? (&quot;VIN: &quot; + currentVin) : &quot;VIN: —&quot;);
+      msgModalChannel.textContent = (channel === "whatsapp") ? "WhatsApp" : "SMS";
+      msgModalPhone.textContent = phone ? ("966…" + phone.slice(-3)) : "—";
+      msgModalVin.textContent = (currentVin ? ("VIN: " + currentVin) : "VIN: —");
 
-      msgModal.style.display = &quot;block&quot;;
-      setTimeout(() =&gt; msgModalText.focus(), 50);
+      msgModal.style.display = "block";
+      setTimeout(() => msgModalText.focus(), 50);
     }
 
-    if (msgModalBackdrop) msgModalBackdrop.addEventListener(&quot;click&quot;, closeMessageModal);
-    if (msgModalClose) msgModalClose.addEventListener(&quot;click&quot;, closeMessageModal);
+    if (msgModalBackdrop) msgModalBackdrop.addEventListener("click", closeMessageModal);
+    if (msgModalClose) msgModalClose.addEventListener("click", closeMessageModal);
 
-    if (msgModalReset) msgModalReset.addEventListener(&quot;click&quot;, () =&gt; {
-      msgModalText.value = modalCtx.defaultText || &quot;&quot;;
-      msgModalMsg.innerHTML = &quot;&lt;span class=&#x27;muted&#x27;&gt;تم الرجوع للنص الأصلي.&lt;/span&gt;&quot;;
-      setTimeout(()=&gt; msgModalMsg.textContent=&quot;&quot;, 1200);
+    if (msgModalReset) msgModalReset.addEventListener("click", () => {
+      msgModalText.value = modalCtx.defaultText || "";
+      msgModalMsg.innerHTML = "<span class='muted'>تم الرجوع للنص الأصلي.</span>";
+      setTimeout(()=> msgModalMsg.textContent="", 1200);
     });
 
-    if (msgModalCopy) msgModalCopy.addEventListener(&quot;click&quot;, async () =&gt; {
+    if (msgModalCopy) msgModalCopy.addEventListener("click", async () => {
       try{
-        await navigator.clipboard.writeText(msgModalText.value || &quot;&quot;);
-        msgModalMsg.innerHTML = &quot;&lt;span class=&#x27;ok&#x27;&gt;تم نسخ النص.&lt;/span&gt;&quot;;
+        await navigator.clipboard.writeText(msgModalText.value || "");
+        msgModalMsg.innerHTML = "<span class='ok'>تم نسخ النص.</span>";
       }catch(e){
-        msgModalMsg.innerHTML = &quot;&lt;span class=&#x27;err&#x27;&gt;تعذر نسخ النص.&lt;/span&gt;&quot;;
+        msgModalMsg.innerHTML = "<span class='err'>تعذر نسخ النص.</span>";
       }
-      setTimeout(()=&gt; msgModalMsg.textContent=&quot;&quot;, 1200);
+      setTimeout(()=> msgModalMsg.textContent="", 1200);
     });
 
     async function sendWhatsAppFreeText(phone, text, stageNum){
       // ✅ Send via Mersal WhatsApp API (server-side in mzj-tracking project)
       return fetch(`${MZJ_TRACKING_API_BASE}/api/mersal-wa`, {
-        method: &quot;POST&quot;,
-        headers: { &quot;Content-Type&quot;: &quot;application/json&quot; },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          phone: String(phone || &quot;&quot;).trim(),     // must be like 9665xxxxxxxx
-          message: String(text || &quot;&quot;),
+          phone: String(phone || "").trim(),     // must be like 9665xxxxxxxx
+          message: String(text || ""),
           stageNum: stageNum ?? null,
-          orderId: window.__mzj_current_order_id || &quot;&quot;
+          orderId: window.__mzj_current_order_id || ""
         })
-      }).then(async (res)=&gt;{
+      }).then(async (res)=>{
         const bodyText = await res.text();
-        if(!res.ok) throw new Error(bodyText || (&quot;HTTP &quot; + res.status));
+        if(!res.ok) throw new Error(bodyText || ("HTTP " + res.status));
         try { return JSON.parse(bodyText); } catch { return { ok:true, raw: bodyText }; }
       });
     }
@@ -2421,19 +2444,19 @@ async function openSmsPlus(stageNum, stageLabel){
       // ✅ Template-based WhatsApp message via mzj-tracking project
       // Expects a serverless route: /api/mersal-wa-template
       return fetch(`${MZJ_TRACKING_API_BASE}/api/mersal-wa-template`, {
-        method: &quot;POST&quot;,
-        headers: { &quot;Content-Type&quot;: &quot;application/json&quot; },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          phone: String(phone || &quot;&quot;).trim(),
-          template_name: String(templateName || &quot;&quot;).trim(),
-          template_language: String(templateLanguage || &quot;ar&quot;).trim(),
+          phone: String(phone || "").trim(),
+          template_name: String(templateName || "").trim(),
+          template_language: String(templateLanguage || "ar").trim(),
           body_params: Array.isArray(bodyParams) ? bodyParams : [],
           stageNum: stageNum ?? null,
-          orderId: window.__mzj_current_order_id || &quot;&quot;
+          orderId: window.__mzj_current_order_id || ""
         })
-      }).then(async (res)=&gt;{
+      }).then(async (res)=>{
         const bodyText = await res.text();
-        if(!res.ok) throw new Error(bodyText || (&quot;HTTP &quot; + res.status));
+        if(!res.ok) throw new Error(bodyText || ("HTTP " + res.status));
         try { return JSON.parse(bodyText); } catch { return { ok:true, raw: bodyText }; }
       });
     }
@@ -2442,55 +2465,55 @@ async function openSmsPlus(stageNum, stageLabel){
 
     // Direct send for Step 1 ONLY (same logic as send temp bay ajax.html)
     // NOTE: Token is embedded client-side by request.
-    const MERSAL_DIRECT_TOKEN_STEP1 = &quot;N47Nm9eP20Ppctd3RmM6EBiM5b7dAaoljMHVJyns16b42721&quot;;
+    const MERSAL_DIRECT_TOKEN_STEP1 = "N47Nm9eP20Ppctd3RmM6EBiM5b7dAaoljMHVJyns16b42721";
 
     async function sendWhatsAppTemplateDirectStep1(phone, bodyParams){
-      return fetch(&quot;https://w-mersal.com/api/wpbox/sendtemplatemessage&quot;, {
-        method: &quot;POST&quot;,
-        headers: { &quot;Content-Type&quot;: &quot;application/json&quot; },
+      return fetch("https://w-mersal.com/api/wpbox/sendtemplatemessage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           token: MERSAL_DIRECT_TOKEN_STEP1,
-          phone: String(phone || &quot;&quot;).trim(),
-          template_name: &quot;tracking_message&quot;,
-          template_language: &quot;ar&quot;,
+          phone: String(phone || "").trim(),
+          template_name: "tracking_message",
+          template_language: "ar",
           components: [
             {
-              type: &quot;body&quot;,
-              parameters: (Array.isArray(bodyParams) ? bodyParams : []).map(v =&gt; ({
-                type: &quot;text&quot;,
-                text: String(v ?? &quot;&quot;)
+              type: "body",
+              parameters: (Array.isArray(bodyParams) ? bodyParams : []).map(v => ({
+                type: "text",
+                text: String(v ?? "")
               }))
             }
           ]
         })
-      }).then(async (res)=&gt;{
+      }).then(async (res)=>{
         const bodyText = await res.text();
-        if(!res.ok) throw new Error(bodyText || (&quot;HTTP &quot; + res.status));
+        if(!res.ok) throw new Error(bodyText || ("HTTP " + res.status));
         try { return JSON.parse(bodyText); } catch { return ({ ok:true, raw: bodyText }); }
       });
     }
 function toEnglishDigits(str) {
       return String(str)
-        .replace(/[٠-٩]/g, d =&gt; &quot;0123456789&quot;[&quot;٠١٢٣٤٥٦٧٨٩&quot;.indexOf(d)])
-        .replace(/[٬]/g, &quot;,&quot;)
-        .replace(/[٫]/g, &quot;.&quot;)
-        .replace(/\u00A0/g, &quot; &quot;);
+        .replace(/[٠-٩]/g, d => "0123456789"["٠١٢٣٤٥٦٧٨٩".indexOf(d)])
+        .replace(/[٬]/g, ",")
+        .replace(/[٫]/g, ".")
+        .replace(/\u00A0/g, " ");
     }
-    function safeParam(v, fallback = &quot;0&quot;){
-      const s = (v === null || v === undefined) ? &quot;&quot; : String(v);
+    function safeParam(v, fallback = "0"){
+      const s = (v === null || v === undefined) ? "" : String(v);
       const cleaned = toEnglishDigits(s).trim();
       return cleaned ? cleaned : fallback;
     }
 
     function buildTrackingTemplateParams(){
       // mapping for template tracking_message: {{1}}..{{7}}
-      const customerName = safeParam((currentCustomerName || &quot;&quot;).trim(), &quot;عميلنا العزيز&quot;);
-      const totalCars    = safeParam(currentOrderCarsCount, &quot;0&quot;);
-      const subtotal     = safeParam(currentCarsSubtotal, &quot;0&quot;);
-      const tax          = safeParam(currentCarsTax, &quot;0&quot;);
-      const regFee       = safeParam(currentRegFee, &quot;0&quot;); // ✅ ممنوع يبقى فاضي
-      const totalIncl    = safeParam(currentGrandTotalIncl, &quot;0&quot;);
-      const trackingLink = safeParam(currentTrackingLink, &quot;https://mzj-tracking.vercel.app/&quot;);
+      const customerName = safeParam((currentCustomerName || "").trim(), "عميلنا العزيز");
+      const totalCars    = safeParam(currentOrderCarsCount, "0");
+      const subtotal     = safeParam(currentCarsSubtotal, "0");
+      const tax          = safeParam(currentCarsTax, "0");
+      const regFee       = safeParam(currentRegFee, "0"); // ✅ ممنوع يبقى فاضي
+      const totalIncl    = safeParam(currentGrandTotalIncl, "0");
+      const trackingLink = safeParam(currentTrackingLink, "https://mzj-tracking.vercel.app/");
 
       return [customerName, totalCars, subtotal, tax, regFee, totalIncl, trackingLink];
     }
@@ -2507,53 +2530,53 @@ function toEnglishDigits(str) {
 
       if (st === 9){
         // قالب: السيارة جاهزة للتسليم
-        return sendWhatsAppTemplate(phone, &quot;mzj_car_ready_delivery&quot;, &quot;ar&quot;, [], st);
+        return sendWhatsAppTemplate(phone, "mzj_car_ready_delivery", "ar", [], st);
       }
 
       if (st === 10){
         // قالب: تم التسليم
-        return sendWhatsAppTemplate(phone, &quot;mzj_delivery_completed&quot;, &quot;ar&quot;, [], st);
+        return sendWhatsAppTemplate(phone, "mzj_delivery_completed", "ar", [], st);
       }
 
       return sendWhatsAppFreeText(phone, text, st);
     }
 
 
-    if (msgModalSend) msgModalSend.addEventListener(&quot;click&quot;, async () =&gt; {
-      msgModalMsg.textContent = &quot;&quot;;
+    if (msgModalSend) msgModalSend.addEventListener("click", async () => {
+      msgModalMsg.textContent = "";
       msgModalSend.disabled = true;
 
       const phone = normalizeSaudiPhone(currentCustomerPhone);
-      const msg = (msgModalText.value || &quot;&quot;).trim();
+      const msg = (msgModalText.value || "").trim();
 
       try{
-        if (modalCtx.channel === &quot;whatsapp&quot;) {
+        if (modalCtx.channel === "whatsapp") {
           await sendWhatsAppMessage(phone, msg, modalCtx.stageNum);
-          msgModalMsg.innerHTML = &quot;&lt;span class=&#x27;ok&#x27;&gt;تم إرسال الرسالة من الرقم الموحد عبر واتساب API.&lt;/span&gt;&quot;;
+          msgModalMsg.innerHTML = "<span class='ok'>تم إرسال الرسالة من الرقم الموحد عبر واتساب API.</span>";
         } else {
           await sendStcSmsForStage(modalCtx.stageNum, modalCtx.stageLabel, msg);
           // sendStcSmsForStage writes to stageMsg; mirror here too:
-          msgModalMsg.innerHTML = &quot;&lt;span class=&#x27;ok&#x27;&gt;تم إرسال SMS (أو تم تنفيذ محاولة الإرسال).&lt;/span&gt;&quot;;
+          msgModalMsg.innerHTML = "<span class='ok'>تم إرسال SMS (أو تم تنفيذ محاولة الإرسال).</span>";
         }
       }catch(e){
         console.error(e);
-        msgModalMsg.innerHTML = &quot;&lt;span class=&#x27;err&#x27;&gt;حصل خطأ أثناء الإرسال: &quot; + String(e &amp;&amp; (e.message||e)).slice(0,180) + &quot;&lt;/span&gt;&quot;;
+        msgModalMsg.innerHTML = "<span class='err'>حصل خطأ أثناء الإرسال: " + String(e && (e.message||e)).slice(0,180) + "</span>";
       }finally{
         msgModalSend.disabled = false;
       }
     });
 
     // ===== Dynamic QR (click to open tracking) =====
-    const trackQrBtn = document.getElementById(&quot;trackQrBtn&quot;);
-    const trackQrModal = document.getElementById(&quot;trackQrModal&quot;);
-    const trackQrBackdrop = document.getElementById(&quot;trackQrBackdrop&quot;);
-    const trackQrClose = document.getElementById(&quot;trackQrClose&quot;);
-    const trackQrImg = document.getElementById(&quot;trackQrImg&quot;);
-    const trackQrLink = document.getElementById(&quot;trackQrLink&quot;);
-    const trackQrCopy = document.getElementById(&quot;trackQrCopy&quot;);
+    const trackQrBtn = document.getElementById("trackQrBtn");
+    const trackQrModal = document.getElementById("trackQrModal");
+    const trackQrBackdrop = document.getElementById("trackQrBackdrop");
+    const trackQrClose = document.getElementById("trackQrClose");
+    const trackQrImg = document.getElementById("trackQrImg");
+    const trackQrLink = document.getElementById("trackQrLink");
+    const trackQrCopy = document.getElementById("trackQrCopy");
 
     function getTrackingUrl(){
-      return currentVin ? `https://mzj-tracking.vercel.app/Test-Track.html?vin=${encodeURIComponent(currentVin)}` : &quot;&quot;;
+      return currentVin ? `https://mzj-tracking.vercel.app/Test-Track.html?vin=${encodeURIComponent(currentVin)}` : "";
     }
 
     function refreshTrackingQr(){
@@ -2561,14 +2584,14 @@ function toEnglishDigits(str) {
       if(!trackQrImg || !trackQrLink) return;
 
       if(!url){
-        trackQrImg.src = &quot;&quot;;
-        trackQrLink.href = &quot;#&quot;;
+        trackQrImg.src = "";
+        trackQrLink.href = "#";
         trackQrImg.style.opacity = .4;
         return;
       }
 
       // Use a reliable QR image endpoint (no library needed)
-      const qrUrl = &quot;https://api.qrserver.com/v1/create-qr-code/?size=240x240&amp;data=&quot; + encodeURIComponent(url);
+      const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=" + encodeURIComponent(url);
       trackQrImg.src = qrUrl;
       trackQrLink.href = url;
       trackQrImg.style.opacity = 1;
@@ -2576,52 +2599,52 @@ function toEnglishDigits(str) {
 
     function openTrackQr(){
       if(!currentVin){
-        alert(&quot;اختر رقم الهيكل أولاً.&quot;);
+        alert("اختر رقم الهيكل أولاً.");
         return;
       }
       refreshTrackingQr();
-      if(trackQrModal) trackQrModal.style.display = &quot;block&quot;;
+      if(trackQrModal) trackQrModal.style.display = "block";
     }
     function closeTrackQr(){
-      if(trackQrModal) trackQrModal.style.display = &quot;none&quot;;
+      if(trackQrModal) trackQrModal.style.display = "none";
     }
 
-    if (trackQrBtn) trackQrBtn.addEventListener(&quot;click&quot;, openTrackQr);
-    if (trackQrBackdrop) trackQrBackdrop.addEventListener(&quot;click&quot;, closeTrackQr);
-    if (trackQrClose) trackQrClose.addEventListener(&quot;click&quot;, closeTrackQr);
+    if (trackQrBtn) trackQrBtn.addEventListener("click", openTrackQr);
+    if (trackQrBackdrop) trackQrBackdrop.addEventListener("click", closeTrackQr);
+    if (trackQrClose) trackQrClose.addEventListener("click", closeTrackQr);
 
-    if (trackQrCopy) trackQrCopy.addEventListener(&quot;click&quot;, async () =&gt; {
+    if (trackQrCopy) trackQrCopy.addEventListener("click", async () => {
       const url = getTrackingUrl();
       if(!url) return;
       try{
         await navigator.clipboard.writeText(url);
-        alert(&quot;تم نسخ رابط التتبع&quot;);
+        alert("تم نسخ رابط التتبع");
       }catch(e){
-        alert(&quot;تعذر نسخ الرابط&quot;);
+        alert("تعذر نسخ الرابط");
       }
     });
 
 
     // إرسال SMS عبر endpoint /api/stc-sms
    async function sendStcSmsForStage(stageNum, stageLabel, messageOverride=null) {
-  stageMsg.textContent = &quot;&quot;;
+  stageMsg.textContent = "";
 
   if (!currentCustomerPhone) {
-    stageMsg.innerHTML = &quot;&lt;span class=&#x27;err&#x27;&gt;لا يوجد رقم جوال محفوظ لهذا الطلب.&lt;/span&gt;&quot;;
+    stageMsg.innerHTML = "<span class='err'>لا يوجد رقم جوال محفوظ لهذا الطلب.</span>";
     return;
   }
 
   const phone = normalizeSaudiPhone(currentCustomerPhone);
   if (!phone) {
-    stageMsg.innerHTML = &quot;&lt;span class=&#x27;err&#x27;&gt;رقم الجوال غير صالح.&lt;/span&gt;&quot;;
+    stageMsg.innerHTML = "<span class='err'>رقم الجوال غير صالح.</span>";
     return;
   }
 
-  const orderNo = currentOrderId || &quot;&quot;;
-  const vin = currentVin || &quot;&quot;;
-  const trackingLink = vin ? `https://mzj-tracking.vercel.app/Test-Track.html?vin=${vin}` : &quot;&quot;;
+  const orderNo = currentOrderId || "";
+  const vin = currentVin || "";
+  const trackingLink = vin ? `https://mzj-tracking.vercel.app/Test-Track.html?vin=${vin}` : "";
 
-  let text = &quot;&quot;;
+  let text = "";
 
   switch (stageNum) {
 
@@ -2630,24 +2653,24 @@ function toEnglishDigits(str) {
     // -------------------------
     case 1: {
       // ✅ قيمة السيارة = للهيكل المختار فقط (مش إجمالي الطلب)
-      const rec = (currentOrderRecords &amp;&amp; currentOrderRecords.length)
-        ? (currentOrderRecords.find(r =&gt; String(getFieldFlex(&quot;VIN&quot;, r) || &quot;&quot;).trim() === String(vin || &quot;&quot;).trim()) || currentOrderRecords[0])
+      const rec = (currentOrderRecords && currentOrderRecords.length)
+        ? (currentOrderRecords.find(r => String(getFieldFlex("VIN", r) || "").trim() === String(vin || "").trim()) || currentOrderRecords[0])
         : {};
 
-      const customerName = getFieldFlex(&quot;CustomerName&quot;, rec) || &quot;&quot;;
-      const carName = getFieldFlex(&quot;ItemType&quot;, rec) || &quot;&quot;;
-      const carType = getFieldFlex(&quot;ItemCategory&quot;, rec) || &quot;&quot;;
+      const customerName = getFieldFlex("CustomerName", rec) || "";
+      const carName = getFieldFlex("ItemType", rec) || "";
+      const carType = getFieldFlex("ItemCategory", rec) || "";
 
-      const sub = parseAmountFront(getFieldFlex(&quot;SubtotalExclVAT&quot;, rec));
-      const itemVal = parseAmountFront(getFieldFlex(&quot;ItemValue&quot;, rec));
-      const tax = parseAmountFront(getFieldFlex(&quot;TaxValue&quot;, rec));
+      const sub = parseAmountFront(getFieldFlex("SubtotalExclVAT", rec));
+      const itemVal = parseAmountFront(getFieldFlex("ItemValue", rec));
+      const tax = parseAmountFront(getFieldFlex("TaxValue", rec));
 
       const base = (sub !== null ? sub : (itemVal !== null ? itemVal : null));
       const lineTotalNum = (base !== null ? (base + (tax || 0)) : null);
 
       const amountStr = (lineTotalNum !== null)
-        ? lineTotalNum.toLocaleString(&quot;ar-SA&quot;, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + &quot; ر.س&quot;
-        : &quot;&quot;;
+        ? lineTotalNum.toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ر.س"
+        : "";
 
       text =
         `عميلنا العزيز / ${customerName}\n` +
@@ -2710,40 +2733,40 @@ function toEnglishDigits(str) {
         `معرض محمد ذعار العجمي للسيارات.`;
   }
 
-  if (messageOverride &amp;&amp; String(messageOverride).trim()) {
+  if (messageOverride && String(messageOverride).trim()) {
     text = String(messageOverride);
   }
 
   try {
-    const res = await fetch(&quot;/api/stc-sms&quot;, {
-      method: &quot;POST&quot;,
-      headers: { &quot;Content-Type&quot;: &quot;application/json&quot; },
+    const res = await fetch("/api/stc-sms", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ phone, message: text, orderNo, stageNum })
     });
 
     if (!res.ok) {
       const errText = await res.text();
-      console.error(&quot;SMS API error:&quot;, errText);
-      throw new Error(errText || &quot;SMS API failed&quot;);
+      console.error("SMS API error:", errText);
+      throw new Error(errText || "SMS API failed");
     }
 
-    stageMsg.innerHTML = &quot;&lt;span class=&#x27;ok&#x27;&gt;تم إرسال رسالة SMS للعميل بنجاح.&lt;/span&gt;&quot;;
+    stageMsg.innerHTML = "<span class='ok'>تم إرسال رسالة SMS للعميل بنجاح.</span>";
   } catch (err) {
     console.error(err);
     stageMsg.innerHTML =
-      &quot;&lt;span class=&#x27;err&#x27;&gt;تعذر إرسال رسالة SMS، تأكد من إعدادات STC أو تواصل مع المسؤول التقني.&lt;/span&gt;&quot;;
+      "<span class='err'>تعذر إرسال رسالة SMS، تأكد من إعدادات STC أو تواصل مع المسؤول التقني.</span>";
   }
 }
 
 
 function clearErpTable() {
-      erpMetaEl.textContent = &quot;&quot;;
-      erpBody.innerHTML = &quot;&quot;;
-      erpTotals.style.display = &quot;none&quot;;
-      erpTotals.innerHTML = &quot;&quot;;
-      vinPickerBox.style.display = &quot;none&quot;;
-      vinPicker.innerHTML = &quot;&quot;;
-      vinCountChip.textContent = &quot;&quot;;
+      erpMetaEl.textContent = "";
+      erpBody.innerHTML = "";
+      erpTotals.style.display = "none";
+      erpTotals.innerHTML = "";
+      vinPickerBox.style.display = "none";
+      vinPicker.innerHTML = "";
+      vinCountChip.textContent = "";
     }
 
     function resolveItemNoForVin(vin, records){
@@ -2751,66 +2774,66 @@ function clearErpTable() {
       let itemNo = null;
 
       if (vin) {
-        const matched = records.find(r =&gt; {
-          const v = (getFieldFlex(&quot;VIN&quot;, r) || &quot;&quot;).toString().trim();
-          return v &amp;&amp; v === vin.toString().trim();
+        const matched = records.find(r => {
+          const v = (getFieldFlex("VIN", r) || "").toString().trim();
+          return v && v === vin.toString().trim();
         });
         if (matched) {
-          itemNo = getFieldFlex(&quot;ItemNo&quot;, matched);
+          itemNo = getFieldFlex("ItemNo", matched);
         }
       }
 
-      if (itemNo === null || itemNo === &quot;-&quot; || itemNo === &quot;&quot;) {
+      if (itemNo === null || itemNo === "-" || itemNo === "") {
         const first = records[0] || null;
-        if (first) itemNo = getFieldFlex(&quot;ItemNo&quot;, first);
+        if (first) itemNo = getFieldFlex("ItemNo", first);
       }
 
       const parsed = parseInt(itemNo, 10);
-      return (!isNaN(parsed) &amp;&amp; parsed &gt; 0) ? parsed : 1;
+      return (!isNaN(parsed) && parsed > 0) ? parsed : 1;
     }
 
-    function fillErpTable(records, preferredVin = &quot;&quot;){
+    function fillErpTable(records, preferredVin = ""){
       if (!records || !records.length) {
-        erpCard.style.display = &quot;none&quot;;
+        erpCard.style.display = "none";
         clearErpTable();
         return;
       }
-      erpCard.style.display = &quot;&quot;;
+      erpCard.style.display = "";
       clearErpTable();
 
       // نحتفظ بنسخة من سجلات السيارات فقط
       currentOrderRecords = records.slice();
 
       const first = records[0] || {};
-      const orderNo = first.orderNo || first.OrderNo || currentOrderId || &quot;&quot;;
-      currentCustomerPhone = getFieldFlex(&quot;CustomerPhone&quot;, first) || getFieldFlex(&quot;CustomerMobile&quot;, first) || getFieldFlex(&quot;Mobile&quot;, first) || getFieldFlex(&quot;Phone&quot;, first) || getFieldFlex(&quot;UserMobile&quot;, first) || getFieldFlex(&quot;UserPhone&quot;, first) || &quot;&quot;;
+      const orderNo = first.orderNo || first.OrderNo || currentOrderId || "";
+      currentCustomerPhone = getFieldFlex("CustomerPhone", first) || getFieldFlex("CustomerMobile", first) || getFieldFlex("Mobile", first) || getFieldFlex("Phone", first) || getFieldFlex("UserMobile", first) || getFieldFlex("UserPhone", first) || "";
       window.currentCustomerPhone = currentCustomerPhone;
-      let vinBadgeLabel = &quot;&quot;;
+      let vinBadgeLabel = "";
 
-      // ✅ VINs (نهمل &#x27;-&#x27; و القيم الفارغة)
+      // ✅ VINs (نهمل '-' و القيم الفارغة)
       const vins = Array.from(new Set(
         records
-          .map(r =&gt; (getFieldFlex(&quot;VIN&quot;, r) || &quot;&quot;).toString().trim())
-          .filter(v =&gt; v &amp;&amp; v !== &quot;-&quot; &amp;&amp; v !== &quot;—&quot;)
+          .map(r => (getFieldFlex("VIN", r) || "").toString().trim())
+          .filter(v => v && v !== "-" && v !== "—")
       ));
 
       if (vins.length === 1) {
-        vinBadgeLabel = &quot;VIN: &quot; + vins[0];
-      } else if (vins.length &gt; 1) {
-        vinBadgeLabel = &quot;أكثر من هيكل (&quot; + vins.length + &quot;)&quot;;
+        vinBadgeLabel = "VIN: " + vins[0];
+      } else if (vins.length > 1) {
+        vinBadgeLabel = "أكثر من هيكل (" + vins.length + ")";
       } else {
-        vinBadgeLabel = &quot;لا يوجد VIN في البيانات&quot;;
+        vinBadgeLabel = "لا يوجد VIN في البيانات";
       }
 
       erpMetaEl.innerHTML =
-        &#x27;&lt;span class=&quot;badge&quot;&gt;رقم الطلب: &#x27; + (orderNo || &quot;غير متوفر&quot;) + &#x27;&lt;/span&gt;&#x27; +
-        &#x27;&lt;span class=&quot;badge&quot;&gt;&#x27; + vinBadgeLabel + &#x27;&lt;/span&gt;&#x27;;
+        '<span class="badge">رقم الطلب: ' + (orderNo || "غير متوفر") + '</span>' +
+        '<span class="badge">' + vinBadgeLabel + '</span>';
 
       // ===== رسوم التسجيل (قد تكون في الطلب حتى لو فيه هيكل واحد) =====
-      const regFeeNum = (() =&gt; {
-        const v = getFieldFlex(&quot;RegistrationFee&quot;, first);
+      const regFeeNum = (() => {
+        const v = getFieldFlex("RegistrationFee", first);
         const n = parseAmountFront(v);
-        return (n !== null &amp;&amp; n &gt; 0) ? n : 0;
+        return (n !== null && n > 0) ? n : 0;
       })();
 
       // ✅ نعرض في الجدول سيارات فقط (رسوم التسجيل تظهر أعلى في صندوق الإجماليات)
@@ -2818,24 +2841,24 @@ function clearErpTable() {
       const displayRecords = records.slice();
 
       // تعبئة جدول ERP
-      displayRecords.forEach(rec =&gt; {
-        const tr = document.createElement(&quot;tr&quot;);
-        ERP_FIELDS.forEach(field =&gt; {
-          const td = document.createElement(&quot;td&quot;);
+      displayRecords.forEach(rec => {
+        const tr = document.createElement("tr");
+        ERP_FIELDS.forEach(field => {
+          const td = document.createElement("td");
           let val = getFieldFlex(field, rec);
 
           // ✅ فallback + تصحيح: بعض الطلبات ترجع TotalInclVAT على مستوى الطلب وتكرره بكل سطر
-          // هنا نُجبره يكون &quot;لكل هيكل&quot; = (قبل الضريبة + الضريبة) + (رسوم التسجيل ÷ عدد الهياكل)
-          if (field === &quot;TotalInclVAT&quot;) {
-            const _sub = parseAmountFront(getFieldFlex(&quot;SubtotalExclVAT&quot;, rec));
-            const _tax = parseAmountFront(getFieldFlex(&quot;TaxValue&quot;, rec));
+          // هنا نُجبره يكون "لكل هيكل" = (قبل الضريبة + الضريبة) + (رسوم التسجيل ÷ عدد الهياكل)
+          if (field === "TotalInclVAT") {
+            const _sub = parseAmountFront(getFieldFlex("SubtotalExclVAT", rec));
+            const _tax = parseAmountFront(getFieldFlex("TaxValue", rec));
             const computed = (_sub || 0) + (_tax || 0);
 
-            const perReg = (regFeeNum &gt; 0 &amp;&amp; totalCars &gt; 0) ? (regFeeNum / totalCars) : 0;
+            const perReg = (regFeeNum > 0 && totalCars > 0) ? (regFeeNum / totalCars) : 0;
             const computedPerLine = computed + perReg;
 
             // لو عندنا subtotal/tax — اعتمد الحسبة دي دائمًا (خصوصًا لو الطلب متعدد الهياكل)
-            if (computed &gt; 0) {
+            if (computed > 0) {
               val = computedPerLine;
             } else {
               // fallback لو مفيش subtotal/tax
@@ -2846,15 +2869,15 @@ function clearErpTable() {
             }
           }
 
-          if (field === &quot;TaxRate&quot;) {
+          if (field === "TaxRate") {
             const num = parseAmountFront(val);
-            let pc = num !== null ? (num &lt;= 1 ? num * 100 : num) : 15;
-            const pcStr = pc.toString().replace(/\.0+$/, &quot;&quot;);
-            val = pcStr + &quot; %&quot;;
-          } else if (field === &quot;TotalInclVAT&quot; || field === &quot;TaxValue&quot; || field === &quot;SubtotalExclVAT&quot;) {
+            let pc = num !== null ? (num <= 1 ? num * 100 : num) : 15;
+            const pcStr = pc.toString().replace(/\.0+$/, "");
+            val = pcStr + " %";
+          } else if (field === "TotalInclVAT" || field === "TaxValue" || field === "SubtotalExclVAT") {
             const num = parseAmountFront(val);
             if (num !== null) {
-              val = num.toLocaleString(&#x27;en-US&#x27;, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + &quot; ر.س&quot;;
+              val = num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ر.س";
             }
           }
 
@@ -2865,32 +2888,32 @@ function clearErpTable() {
       });
 
       // إدارة VIN للدروب داون
-      let selectedVin = preferredVin &amp;&amp; vins.includes(preferredVin) ? preferredVin : null;
-      if (!selectedVin &amp;&amp; vins.length === 1) {
+      let selectedVin = preferredVin && vins.includes(preferredVin) ? preferredVin : null;
+      if (!selectedVin && vins.length === 1) {
         selectedVin = vins[0];
       }
 
-      if (vins.length &gt; 1) {
-        vinPickerBox.style.display = &quot;block&quot;;
-        vinPicker.innerHTML = vins.map(v =&gt; `&lt;option value=&quot;${v}&quot;&gt;${v}&lt;/option&gt;`).join(&quot;&quot;);
-        vinCountChip.textContent = vins.length + &quot; أرقام هياكل في هذا الطلب&quot;;
-        if (selectedVin &amp;&amp; vins.includes(selectedVin)) {
+      if (vins.length > 1) {
+        vinPickerBox.style.display = "block";
+        vinPicker.innerHTML = vins.map(v => `<option value="${v}">${v}</option>`).join("");
+        vinCountChip.textContent = vins.length + " أرقام هياكل في هذا الطلب";
+        if (selectedVin && vins.includes(selectedVin)) {
           vinPicker.value = selectedVin;
         } else {
           vinPicker.value = vins[0];
           selectedVin = vins[0];
         }
       } else if (vins.length === 1) {
-        vinPickerBox.style.display = &quot;block&quot;;
-        vinPicker.innerHTML = `&lt;option value=&quot;${vins[0]}&quot;&gt;${vins[0]}&lt;/option&gt;`;
+        vinPickerBox.style.display = "block";
+        vinPicker.innerHTML = `<option value="${vins[0]}">${vins[0]}</option>`;
         vinPicker.disabled = false;
-        vinCountChip.textContent = &quot;هيكل واحد في هذا الطلب&quot;;
+        vinCountChip.textContent = "هيكل واحد في هذا الطلب";
         selectedVin = vins[0];
       } else {
-        vinPickerBox.style.display = &quot;none&quot;;
+        vinPickerBox.style.display = "none";
       }
 
-      currentVin    = selectedVin || (vins[0] || preferredVin || &quot;&quot;);
+      currentVin    = selectedVin || (vins[0] || preferredVin || "");
       try{ refreshTrackingQr(); }catch(e){}
       currentItemNo = resolveItemNoForVin(currentVin, records);
 
@@ -2909,35 +2932,35 @@ function clearErpTable() {
       // ونتعامل مع TotalInclVAT بحذر (تجميعي فقط لو كان مختلفًا لكل سطر).
       const totVals = [];
 
-      records.forEach(rec =&gt; {
-        const subVal = parseAmountFront(getFieldFlex(&quot;SubtotalExclVAT&quot;, rec));
-        const taxVal = parseAmountFront(getFieldFlex(&quot;TaxValue&quot;, rec));
-        const totVal = parseAmountFront(getFieldFlex(&quot;TotalInclVAT&quot;, rec));
+      records.forEach(rec => {
+        const subVal = parseAmountFront(getFieldFlex("SubtotalExclVAT", rec));
+        const taxVal = parseAmountFront(getFieldFlex("TaxValue", rec));
+        const totVal = parseAmountFront(getFieldFlex("TotalInclVAT", rec));
 
         if (subVal !== null) carsSubtotal += subVal;
         if (taxVal !== null) carsTax      += taxVal;
 
-        if (totVal !== null &amp;&amp; totVal &gt; 0) totVals.push(totVal);
+        if (totVal !== null && totVal > 0) totVals.push(totVal);
       });
 
       // لو TotalInclVAT موجود:
-      // - لو قيمة واحدة مكررة مع تعدد السطور =&gt; اعتبرها إجمالي الطلب (لا تجمعها)
-      // - لو قيم متعددة مختلفة =&gt; اجمعها (يعني TotalInclVAT لكل سطر فعلاً)
+      // - لو قيمة واحدة مكررة مع تعدد السطور => اعتبرها إجمالي الطلب (لا تجمعها)
+      // - لو قيم متعددة مختلفة => اجمعها (يعني TotalInclVAT لكل سطر فعلاً)
       if (totVals.length) {
-        const uniq = Array.from(new Set(totVals.map(v =&gt; Number(v).toFixed(2))));
-        if (uniq.length === 1 &amp;&amp; totVals.length &gt; 1) {
+        const uniq = Array.from(new Set(totVals.map(v => Number(v).toFixed(2))));
+        if (uniq.length === 1 && totVals.length > 1) {
           carsTotal = parseFloat(uniq[0]); // إجمالي الطلب (سيارات فقط) مكرر داخل السطور
         } else {
-          carsTotal = totVals.reduce((a, b) =&gt; a + b, 0); // إجمالي لكل سطر
+          carsTotal = totVals.reduce((a, b) => a + b, 0); // إجمالي لكل سطر
         }
       }
 
       // ✅ لو السطور ما فيها إجماليات (طلبات قديمة/بدون أعمدة Y/Z) خُدها مرة واحدة من الهيدر
-      if (carsSubtotal === 0 &amp;&amp; carsTax === 0 &amp;&amp; carsTotal === 0) {
-        const headerGrand = parseAmountFront(getFieldFlex(&quot;GrandTotal&quot;, first));
-        const headerSubBT = parseAmountFront(getFieldFlex(&quot;SubtotalBeforeTax&quot;, first));
-        const headerSub   = parseAmountFront(getFieldFlex(&quot;SubtotalExclVAT&quot;, first));
-        const headerTax   = parseAmountFront(getFieldFlex(&quot;TaxValue&quot;, first));
+      if (carsSubtotal === 0 && carsTax === 0 && carsTotal === 0) {
+        const headerGrand = parseAmountFront(getFieldFlex("GrandTotal", first));
+        const headerSubBT = parseAmountFront(getFieldFlex("SubtotalBeforeTax", first));
+        const headerSub   = parseAmountFront(getFieldFlex("SubtotalExclVAT", first));
+        const headerTax   = parseAmountFront(getFieldFlex("TaxValue", first));
 
         // الأفضل: (SubtotalBeforeTax + Tax) أو GrandTotal مباشرة
         if (headerSubBT !== null) {
@@ -2948,15 +2971,15 @@ function clearErpTable() {
 
         if (headerGrand !== null) {
           carsTotal = Math.max(0, (headerGrand || 0) - (regFeeNum || 0));
-        } else if (headerSubBT !== null &amp;&amp; headerTax !== null) {
+        } else if (headerSubBT !== null && headerTax !== null) {
           carsTotal = Math.max(0, ((headerSubBT || 0) + (headerTax || 0)) - (regFeeNum || 0));
         }
 
         if (headerTax !== null) {
           carsTax = headerTax || 0;
-        } else if (carsTotal &gt; 0 || carsSubtotal &gt; 0) {
+        } else if (carsTotal > 0 || carsSubtotal > 0) {
           const inferred = (carsTotal || 0) - (carsSubtotal || 0);
-          carsTax = inferred &gt; 0 ? inferred : 0;
+          carsTax = inferred > 0 ? inferred : 0;
         }
       }
 
@@ -2968,22 +2991,22 @@ function clearErpTable() {
       const grandTotalIncl = (carsTotal || 0) + (regFeeNum || 0);
 
       // عرض صندوق الإجماليات (بالمسميات المطلوبة)
-      const hasTotals = (carsSubtotal &gt; 0 || carsTax &gt; 0 || carsTotal &gt; 0 || regFeeNum &gt; 0);
+      const hasTotals = (carsSubtotal > 0 || carsTax > 0 || carsTotal > 0 || regFeeNum > 0);
       if (hasTotals) {
         const parts = [];
-        parts.push(`&lt;span&gt;عدد السيارات في الطلب: &lt;strong&gt;${totalCars}&lt;/strong&gt;&lt;/span&gt;`);
-        parts.push(`&lt;span&gt;قيمة الضريبة: &lt;strong&gt;${(carsTax||0).toLocaleString(&#x27;ar-SA&#x27;,{minimumFractionDigits:2, maximumFractionDigits:2})} ر.س&lt;/strong&gt;&lt;/span&gt;`);
-        parts.push(`&lt;span&gt;الإجمالي قبل الضريبة: &lt;strong&gt;${(carsSubtotal||0).toLocaleString(&#x27;ar-SA&#x27;,{minimumFractionDigits:2, maximumFractionDigits:2})} ر.س&lt;/strong&gt;&lt;/span&gt;`);
-        if (regFeeNum &gt; 0) {
-          parts.push(`&lt;span&gt;رسوم التسجيل: &lt;strong&gt;${regFeeNum.toLocaleString(&#x27;ar-SA&#x27;,{minimumFractionDigits:2, maximumFractionDigits:2})} ر.س&lt;/strong&gt;&lt;/span&gt;`);
+        parts.push(`<span>عدد السيارات في الطلب: <strong>${totalCars}</strong></span>`);
+        parts.push(`<span>قيمة الضريبة: <strong>${(carsTax||0).toLocaleString('ar-SA',{minimumFractionDigits:2, maximumFractionDigits:2})} ر.س</strong></span>`);
+        parts.push(`<span>الإجمالي قبل الضريبة: <strong>${(carsSubtotal||0).toLocaleString('ar-SA',{minimumFractionDigits:2, maximumFractionDigits:2})} ر.س</strong></span>`);
+        if (regFeeNum > 0) {
+          parts.push(`<span>رسوم التسجيل: <strong>${regFeeNum.toLocaleString('ar-SA',{minimumFractionDigits:2, maximumFractionDigits:2})} ر.س</strong></span>`);
         }
-        parts.push(`&lt;span&gt;الإجمالي شامل الضريبة: &lt;strong&gt;${(grandTotalIncl||0).toLocaleString(&#x27;ar-SA&#x27;,{minimumFractionDigits:2, maximumFractionDigits:2})} ر.س&lt;/strong&gt;&lt;/span&gt;`);
+        parts.push(`<span>الإجمالي شامل الضريبة: <strong>${(grandTotalIncl||0).toLocaleString('ar-SA',{minimumFractionDigits:2, maximumFractionDigits:2})} ر.س</strong></span>`);
 
-        erpTotals.innerHTML = parts.join(&quot;&quot;);
-        erpTotals.style.display = &quot;flex&quot;;
+        erpTotals.innerHTML = parts.join("");
+        erpTotals.style.display = "flex";
       } else {
-        erpTotals.style.display = &quot;none&quot;;
-        erpTotals.innerHTML = &quot;&quot;;
+        erpTotals.style.display = "none";
+        erpTotals.innerHTML = "";
       }
 
 // تحميل مراحل التتبع للحالة الحالية (غير الأرشيف فقط)
@@ -2996,28 +3019,28 @@ function clearErpTable() {
     // STAGES UI
 
     function buildStagesUI(orderData = {}) {
-      stagesList.innerHTML = &quot;&quot;;
+      stagesList.innerHTML = "";
 
-      const currentUserEmail = (auth.currentUser?.email || &quot;&quot;).toLowerCase();
+      const currentUserEmail = (auth.currentUser?.email || "").toLowerCase();
       function isStageVisible(stageNum){
-        const email = (currentUserEmail || &quot;&quot;).trim().toLowerCase();
+        const email = (currentUserEmail || "").trim().toLowerCase();
 
         // ✅ CFO / COO: all stages (1-10)
-        if (email === &quot;cfo@mzjcars.com&quot; || email === &quot;coo@mzjcars.com&quot;){
+        if (email === "cfo@mzjcars.com" || email === "coo@mzjcars.com"){
           return true;
         }
 
         // ✅ محددين: فقط 1 و 2 و 9 و 10
         if (
-          email === &quot;aldynmtwlys@gmail.com&quot; ||
-          email === &quot;alaasamak100@gmail.com&quot; ||
-          email === &quot;kamelashraf948@gmail.com&quot;
+          email === "aldynmtwlys@gmail.com" ||
+          email === "alaasamak100@gmail.com" ||
+          email === "kamelashraf948@gmail.com"
         ){
           return (stageNum === 1 || stageNum === 2 || stageNum === 9 || stageNum === 10);
         }
 
         // ✅ Samir: اخفاء 1 و 2 و 6 و 7 و 9 و 10
-        if (email === &quot;samirali19918@gmail.com&quot;){
+        if (email === "samirali19918@gmail.com"){
           return !(stageNum === 1 || stageNum === 2 || stageNum === 6 || stageNum === 7 || stageNum === 9 || stageNum === 10);
         }
 
@@ -3026,74 +3049,74 @@ function clearErpTable() {
       }
       const stagesObj = orderData.stages || {};
 
-      const doneKeys = Object.keys(stagesObj).filter(k =&gt; stagesObj[k]);
+      const doneKeys = Object.keys(stagesObj).filter(k => stagesObj[k]);
       const doneCount = doneKeys.length;
-      const allDone = STAGES.every((_, idx) =&gt; {
-        const key = &quot;s&quot; + (idx + 1);
+      const allDone = STAGES.every((_, idx) => {
+        const key = "s" + (idx + 1);
         return !!stagesObj[key];
       });
 
-      STAGES.forEach((label, idx) =&gt; {
+      STAGES.forEach((label, idx) => {
         const num = idx + 1;
 
         if (!isStageVisible(num)) return;
-        const key = &quot;s&quot; + num;
+        const key = "s" + num;
         const ts  = stagesObj[key];
 
         const tsStr = ts
-          ? new Date(ts.toDate ? ts.toDate() : ts).toLocaleString(&quot;ar-SA&quot;)
+          ? new Date(ts.toDate ? ts.toDate() : ts).toLocaleString("ar-SA")
           : null;
 
-        const wrap = document.createElement(&quot;div&quot;);
-        wrap.className = &quot;stage&quot;;
-        if (tsStr) wrap.classList.add(&quot;done&quot;);
+        const wrap = document.createElement("div");
+        wrap.className = "stage";
+        if (tsStr) wrap.classList.add("done");
 
-        const header = document.createElement(&quot;div&quot;);
-        header.className = &quot;stage-header&quot;;
+        const header = document.createElement("div");
+        header.className = "stage-header";
 
-        const tEl = document.createElement(&quot;div&quot;);
-        tEl.innerHTML = &quot;&lt;strong&gt;&quot; + label + &quot;&lt;/strong&gt;&quot;;
+        const tEl = document.createElement("div");
+        tEl.innerHTML = "<strong>" + label + "</strong>";
 
-        const meta = document.createElement(&quot;div&quot;);
+        const meta = document.createElement("div");
         meta.innerHTML = tsStr
-          ? &quot;&lt;small&gt;تم الانتهاء: &quot; + tsStr + &quot;&lt;/small&gt;&quot;
-          : &quot;&lt;small&gt;لم تُنفّذ بعد&lt;/small&gt;&quot;;
+          ? "<small>تم الانتهاء: " + tsStr + "</small>"
+          : "<small>لم تُنفّذ بعد</small>";
 
         header.appendChild(tEl);
         header.appendChild(meta);
 
-        const actions = document.createElement(&quot;div&quot;);
+        const actions = document.createElement("div");
 
         // زر تم الانتهاء
-        const btnDone = document.createElement(&quot;button&quot;);
-        btnDone.className = &quot;btn-outline&quot;;
-        btnDone.style.fontSize = &quot;12px&quot;;
-        btnDone.textContent = &quot;تم الانتهاء&quot;;
+        const btnDone = document.createElement("button");
+        btnDone.className = "btn-outline";
+        btnDone.style.fontSize = "12px";
+        btnDone.textContent = "تم الانتهاء";
         btnDone.disabled = !!tsStr || allDone;
-        btnDone.onclick = () =&gt; completeStage(num);
+        btnDone.onclick = () => completeStage(num);
         actions.appendChild(btnDone);
 
         
                     // ===== SMS+ (فقط في الخطوة 1 و 9 و 10) =====
         if (num === 1 || num === 9 || num === 10) {
-          const btnSmsPlus = document.createElement(&quot;button&quot;);
-          btnSmsPlus.className = &quot;btn-outline&quot;;
-          btnSmsPlus.style.fontSize = &quot;12px&quot;;
-          btnSmsPlus.style.marginRight = &quot;6px&quot;;
-          btnSmsPlus.textContent = &quot;SMS+&quot;;
+          const btnSmsPlus = document.createElement("button");
+          btnSmsPlus.className = "btn-outline";
+          btnSmsPlus.style.fontSize = "12px";
+          btnSmsPlus.style.marginRight = "6px";
+          btnSmsPlus.textContent = "SMS+";
           btnSmsPlus.disabled = !currentCustomerPhone;
-          btnSmsPlus.onclick = () =&gt; openSmsPlus(num, label);
+          btnSmsPlus.onclick = () => openSmsPlus(num, label);
           actions.appendChild(btnSmsPlus);
         }
 
 // زر التراجع
-        const btnUndo = document.createElement(&quot;button&quot;);
-        btnUndo.className = &quot;btn-outline&quot;;
-        btnUndo.style.fontSize = &quot;12px&quot;;
-        btnUndo.style.marginRight = &quot;6px&quot;;
-        btnUndo.textContent = &quot;تراجع&quot;;
+        const btnUndo = document.createElement("button");
+        btnUndo.className = "btn-outline";
+        btnUndo.style.fontSize = "12px";
+        btnUndo.style.marginRight = "6px";
+        btnUndo.textContent = "تراجع";
         btnUndo.disabled = !tsStr;
-        btnUndo.onclick = () =&gt; revertStage(num);
+        btnUndo.onclick = () => revertStage(num);
         actions.appendChild(btnUndo);
 
         wrap.appendChild(header);
@@ -3103,30 +3126,30 @@ function clearErpTable() {
       });
 
       if (allDone) {
-        const info = document.createElement(&quot;div&quot;);
-        info.className = &quot;hint&quot;;
-        info.style.marginTop = &quot;8px&quot;;
-        info.textContent = &quot;تم إكمال جميع المراحل لهذا رقم الهيكل، ولا يمكن إضافة مراحل جديدة.&quot;;
+        const info = document.createElement("div");
+        info.className = "hint";
+        info.style.marginTop = "8px";
+        info.textContent = "تم إكمال جميع المراحل لهذا رقم الهيكل، ولا يمكن إضافة مراحل جديدة.";
         stagesList.appendChild(info);
       }
     }
 
 
     async function completeStage(num) {
-      stageMsg.textContent = &quot;&quot;;
+      stageMsg.textContent = "";
       if (!currentOrderId || !currentItemNo) {
-        stageMsg.innerHTML = &quot;&lt;span class=&#x27;err&#x27;&gt;اختر طلب ورقم هيكل أولاً قبل تحديث المراحل.&lt;/span&gt;&quot;;
+        stageMsg.innerHTML = "<span class='err'>اختر طلب ورقم هيكل أولاً قبل تحديث المراحل.</span>";
         return;
       }
 
       const baseId = currentOrderId;
-      const docId = baseId + &quot;_&quot; + currentItemNo;
-      const key = &quot;s&quot; + num;
+      const docId = baseId + "_" + currentItemNo;
+      const key = "s" + num;
 
       // ✅ استخدم كاش المراحل (بدون قراءة getDoc كل مرة)
       const stagesObj = Object.assign({}, currentStagesObjCache || {});
       if (stagesObj[key]) {
-        stageMsg.innerHTML = &quot;&lt;span class=&#x27;muted&#x27;&gt;هذه المرحلة تم ختمها مسبقاً.&lt;/span&gt;&quot;;
+        stageMsg.innerHTML = "<span class='muted'>هذه المرحلة تم ختمها مسبقاً.</span>";
         return;
       }
 
@@ -3135,32 +3158,32 @@ function clearErpTable() {
       currentStagesObjCache = optimisticStages;
       currentTrackData = currentTrackData || {
         orderId: baseId,
-        vin: currentVin || &quot;&quot;,
+        vin: currentVin || "",
         itemNo: currentItemNo || 1,
         currentStage: 0,
         stages: {}
       };
       currentTrackData.orderId = baseId;
-      currentTrackData.vin = currentVin || &quot;&quot;;
+      currentTrackData.vin = currentVin || "";
       currentTrackData.itemNo = currentItemNo || 1;
       currentTrackData.stages = optimisticStages;
 
-      const doneCount = Object.keys(optimisticStages).filter(k =&gt; optimisticStages[k]).length;
+      const doneCount = Object.keys(optimisticStages).filter(k => optimisticStages[k]).length;
       currentTrackData.currentStage = doneCount;
 
       buildStagesUI(currentTrackData);
-      stageMsg.innerHTML = &quot;&lt;span class=&#x27;muted&#x27;&gt;جاري حفظ المرحلة...&lt;/span&gt;&quot;;
+      stageMsg.innerHTML = "<span class='muted'>جاري حفظ المرحلة...</span>";
 
       try {
         const orderRef  = doc(db, TRACK_COLLECTION, docId);
-        const publicRef = doc(db, TRACK_COLLECTION, docId, &quot;public&quot;, &quot;status&quot;);
+        const publicRef = doc(db, TRACK_COLLECTION, docId, "public", "status");
 
         // ✅ كتابة واحدة (Batch) بدل 2 setDoc متتابعين
         const batch = writeBatch(db);
 
         batch.set(orderRef, {
           orderId: baseId,
-          vin: currentVin || &quot;&quot;,
+          vin: currentVin || "",
           itemNo: currentItemNo || 1,
           currentStage: doneCount,
           stages: { [key]: serverTimestamp() }
@@ -3168,7 +3191,7 @@ function clearErpTable() {
 
         batch.set(publicRef, {
           orderId: baseId,
-          vin: currentVin || &quot;&quot;,
+          vin: currentVin || "",
           itemNo: currentItemNo || 1,
           currentStage: doneCount,
           stages: { [key]: serverTimestamp() },
@@ -3177,10 +3200,10 @@ function clearErpTable() {
 
         await batch.commit();
 
-        stageMsg.innerHTML = &quot;&lt;span class=&#x27;ok&#x27;&gt;تم ختم المرحلة رقم &quot; + num + &quot; وتحديث صفحة التتبع.&lt;/span&gt;&quot;;
+        stageMsg.innerHTML = "<span class='ok'>تم ختم المرحلة رقم " + num + " وتحديث صفحة التتبع.</span>";
       } catch (e) {
         console.error(e);
-        stageMsg.innerHTML = &quot;&lt;span class=&#x27;err&#x27;&gt;حدث خطأ أثناء حفظ المرحلة. حاول مرة أخرى.&lt;/span&gt;&quot;;
+        stageMsg.innerHTML = "<span class='err'>حدث خطأ أثناء حفظ المرحلة. حاول مرة أخرى.</span>";
         // رجّع الداتا من السيرفر لضمان التطابق (قراءة واحدة فقط عند الفشل)
         try { await loadTrackingForCurrentSelection(); } catch(e2) {}
       }
@@ -3189,19 +3212,19 @@ function clearErpTable() {
 
 
     async function revertStage(num) {
-      stageMsg.textContent = &quot;&quot;;
+      stageMsg.textContent = "";
       if (!currentOrderId || !currentItemNo) {
-        stageMsg.innerHTML = &quot;&lt;span class=&#x27;err&#x27;&gt;اختر طلب ورقم هيكل أولاً قبل التراجع عن المرحلة.&lt;/span&gt;&quot;;
+        stageMsg.innerHTML = "<span class='err'>اختر طلب ورقم هيكل أولاً قبل التراجع عن المرحلة.</span>";
         return;
       }
 
       const baseId = currentOrderId;
-      const docId = baseId + &quot;_&quot; + currentItemNo;
-      const key = &quot;s&quot; + num;
+      const docId = baseId + "_" + currentItemNo;
+      const key = "s" + num;
 
       const stagesObj = Object.assign({}, currentStagesObjCache || {});
       if (!stagesObj[key]) {
-        stageMsg.innerHTML = &quot;&lt;span class=&#x27;muted&#x27;&gt;هذه المرحلة غير مكتملة أصلاً.&lt;/span&gt;&quot;;
+        stageMsg.innerHTML = "<span class='muted'>هذه المرحلة غير مكتملة أصلاً.</span>";
         return;
       }
 
@@ -3211,25 +3234,25 @@ function clearErpTable() {
 
       currentTrackData = currentTrackData || {
         orderId: baseId,
-        vin: currentVin || &quot;&quot;,
+        vin: currentVin || "",
         itemNo: currentItemNo || 1,
         currentStage: 0,
         stages: {}
       };
       currentTrackData.orderId = baseId;
-      currentTrackData.vin = currentVin || &quot;&quot;;
+      currentTrackData.vin = currentVin || "";
       currentTrackData.itemNo = currentItemNo || 1;
       currentTrackData.stages = stagesObj;
 
-      const doneCount = Object.keys(stagesObj).filter(k =&gt; stagesObj[k]).length;
+      const doneCount = Object.keys(stagesObj).filter(k => stagesObj[k]).length;
       currentTrackData.currentStage = doneCount;
 
       buildStagesUI(currentTrackData);
-      stageMsg.innerHTML = &quot;&lt;span class=&#x27;muted&#x27;&gt;جاري حفظ التراجع...&lt;/span&gt;&quot;;
+      stageMsg.innerHTML = "<span class='muted'>جاري حفظ التراجع...</span>";
 
       try {
         const orderRef  = doc(db, TRACK_COLLECTION, docId);
-        const publicRef = doc(db, TRACK_COLLECTION, docId, &quot;public&quot;, &quot;status&quot;);
+        const publicRef = doc(db, TRACK_COLLECTION, docId, "public", "status");
 
         const batch = writeBatch(db);
 
@@ -3246,10 +3269,10 @@ function clearErpTable() {
 
         await batch.commit();
 
-        stageMsg.innerHTML = &quot;&lt;span class=&#x27;ok&#x27;&gt;تم التراجع عن المرحلة رقم &quot; + num + &quot; لهذا رقم الهيكل.&lt;/span&gt;&quot;;
+        stageMsg.innerHTML = "<span class='ok'>تم التراجع عن المرحلة رقم " + num + " لهذا رقم الهيكل.</span>";
       } catch (e) {
         console.error(e);
-        stageMsg.innerHTML = &quot;&lt;span class=&#x27;err&#x27;&gt;حدث خطأ أثناء حفظ التراجع. حاول مرة أخرى.&lt;/span&gt;&quot;;
+        stageMsg.innerHTML = "<span class='err'>حدث خطأ أثناء حفظ التراجع. حاول مرة أخرى.</span>";
         try { await loadTrackingForCurrentSelection(); } catch(e2) {}
       }
     }
@@ -3261,7 +3284,7 @@ function clearErpTable() {
       }
       try{
         const baseId = currentOrderId;
-        const docId  = baseId + &quot;_&quot; + currentItemNo;
+        const docId  = baseId + "_" + currentItemNo;
 
         const orderRef = doc(db, TRACK_COLLECTION, docId);
         const trackSnap = await getDoc(orderRef);
@@ -3271,16 +3294,16 @@ function clearErpTable() {
         } else {
           trackData = {
             orderId: baseId,
-            vin: currentVin || &quot;&quot;,
+            vin: currentVin || "",
             itemNo: currentItemNo || 1,
             currentStage: 0,
             stages:{}
           };
           await setDoc(orderRef, trackData, {merge:true});
-          const publicRef = doc(db, TRACK_COLLECTION, docId, &quot;public&quot;, &quot;status&quot;);
+          const publicRef = doc(db, TRACK_COLLECTION, docId, "public", "status");
           await setDoc(publicRef, {
             orderId: baseId,
-            vin: currentVin || &quot;&quot;,
+            vin: currentVin || "",
             itemNo: currentItemNo || 1,
             currentStage: 0,
             stages:{},
@@ -3289,7 +3312,7 @@ function clearErpTable() {
         }
 
         const stagesObj = trackData.stages || {};
-        const doneKeys = Object.keys(stagesObj).filter(k =&gt; stagesObj[k]);
+        const doneKeys = Object.keys(stagesObj).filter(k => stagesObj[k]);
         const doneCount = doneKeys.length;
         trackData.currentStage = doneCount;
 
@@ -3309,13 +3332,13 @@ function clearErpTable() {
 
       const colRef = collection(db, ERP_COLLECTION);
 
-      let q1 = query(colRef, where(&quot;vin&quot;,&quot;==&quot;,val));
+      let q1 = query(colRef, where("vin","==",val));
       let snap = await getDocs(q1);
       if (!snap.empty) return snap.docs[0];
 
       const asNum = Number(val);
       if (!Number.isNaN(asNum)) {
-        q1 = query(colRef, where(&quot;vin&quot;,&quot;==&quot;,asNum));
+        q1 = query(colRef, where("vin","==",asNum));
         snap = await getDocs(q1);
         if (!snap.empty) return snap.docs[0];
       }
@@ -3331,21 +3354,21 @@ function clearErpTable() {
             const ordSnap = await getDoc(ordRef);
             if (ordSnap.exists()) return ordSnap;
 
-            const q2 = query(colRef, where(&quot;orderNo&quot;,&quot;==&quot;,ordNo));
+            const q2 = query(colRef, where("orderNo","==",ordNo));
             const s2 = await getDocs(q2);
             if (!s2.empty) return s2.docs[0];
           }
         }
       } catch (e) {
-        console.error(&quot;VIN lookup via erp_vins failed&quot;, e);
+        console.error("VIN lookup via erp_vins failed", e);
       }
 
       return null;
     }
 
     async function loadOrder(){
-      orderMsg.textContent = &quot;&quot;;
-      stageMsg.textContent = &quot;&quot;;
+      orderMsg.textContent = "";
+      stageMsg.textContent = "";
       clearErpTable();
       currentOrderId      = null;
       currentVin          = null;
@@ -3355,9 +3378,9 @@ function clearErpTable() {
       const idRaw  = orderIdInput.value.trim();
       const vinRaw = vinInput.value.trim();
 
-      if(!idRaw &amp;&amp; !vinRaw){
-        orderMsg.innerHTML = &quot;&lt;span class=&#x27;err&#x27;&gt;أدخل رقم الطلب أو رقم الهيكل.&lt;/span&gt;&quot;;
-        erpCard.style.display = &quot;none&quot;;
+      if(!idRaw && !vinRaw){
+        orderMsg.innerHTML = "<span class='err'>أدخل رقم الطلب أو رقم الهيكل.</span>";
+        erpCard.style.display = "none";
         buildStagesUI({ });
         return;
       }
@@ -3376,27 +3399,27 @@ function clearErpTable() {
         }
 
         let baseOrder = idRaw;
-        if(!erpRecords.length &amp;&amp; baseOrder){
-          if(baseOrder.includes(&quot;_&quot;)) baseOrder = baseOrder.split(&quot;_&quot;)[0];
-          const q = query(collection(db, ERP_COLLECTION), where(&quot;orderNo&quot;,&quot;==&quot;,baseOrder));
+        if(!erpRecords.length && baseOrder){
+          if(baseOrder.includes("_")) baseOrder = baseOrder.split("_")[0];
+          const q = query(collection(db, ERP_COLLECTION), where("orderNo","==",baseOrder));
           const qsnap = await getDocs(q);
           if(!qsnap.empty){
-            erpRecords = qsnap.docs.map(d =&gt; d.data());
+            erpRecords = qsnap.docs.map(d => d.data());
             erpDocId = qsnap.docs[0].id;
           }
         }
 
-        if(!erpRecords.length &amp;&amp; vinRaw){
+        if(!erpRecords.length && vinRaw){
           const d = await findByVin(vinRaw);
           if(d){
             const data = d.data();
             erpDocId = d.id;
             const ordNo = data.orderNo || data.OrderNo || null;
             if (ordNo) {
-              const q2 = query(collection(db, ERP_COLLECTION), where(&quot;orderNo&quot;,&quot;==&quot;,ordNo));
+              const q2 = query(collection(db, ERP_COLLECTION), where("orderNo","==",ordNo));
               const s2 = await getDocs(q2);
               if (!s2.empty) {
-                erpRecords = s2.docs.map(docSnap =&gt; docSnap.data());
+                erpRecords = s2.docs.map(docSnap => docSnap.data());
               } else {
                 erpRecords = [data];
               }
@@ -3407,8 +3430,8 @@ function clearErpTable() {
         }
 
         if(!erpRecords.length){
-          orderMsg.innerHTML = &quot;&lt;span class=&#x27;err&#x27;&gt;لا يوجد طلب مطابق في بيانات ERP.&lt;/span&gt;&quot;;
-          erpCard.style.display = &quot;none&quot;;
+          orderMsg.innerHTML = "<span class='err'>لا يوجد طلب مطابق في بيانات ERP.</span>";
+          erpCard.style.display = "none";
           buildStagesUI({ });
           return;
         }
@@ -3418,44 +3441,44 @@ function clearErpTable() {
 
         currentOrderId = detectedOrderNo;
 
-        orderIdInput.value = detectedOrderNo || &quot;&quot;;
+        orderIdInput.value = detectedOrderNo || "";
         const preferredVin =
           vinRaw ||
-          (erpRecords.length === 1 ? (getFieldFlex(&quot;VIN&quot;, firstRec) || &quot;&quot;) : &quot;&quot;);
+          (erpRecords.length === 1 ? (getFieldFlex("VIN", firstRec) || "") : "");
 
         fillErpTable(erpRecords, preferredVin);
         await refreshArchiveUI();
 
-        stagesCard.style.display = &quot;&quot;;
+        stagesCard.style.display = "";
         ordersListCard.style.display = ordersListCard.style.display;
 
-        orderMsg.innerHTML = &quot;&lt;span class=&#x27;ok&#x27;&gt;تم تحميل الطلب وربطه بالتتبع.&lt;/span&gt;&quot;;
+        orderMsg.innerHTML = "<span class='ok'>تم تحميل الطلب وربطه بالتتبع.</span>";
       }catch(e){
         console.error(e);
-        orderMsg.innerHTML = &quot;&lt;span class=&#x27;err&#x27;&gt;حدث خطأ أثناء تحميل الطلب.&lt;/span&gt;&quot;;
-        erpCard.style.display = &quot;none&quot;;
+        orderMsg.innerHTML = "<span class='err'>حدث خطأ أثناء تحميل الطلب.</span>";
+        erpCard.style.display = "none";
         buildStagesUI({ });
       }
     }
 
     loadBtn.onclick = loadOrder;
 
-    clearBtn.onclick = () =&gt; {
-      orderIdInput.value = &quot;&quot;;
-      vinInput.value = &quot;&quot;;
-      orderMsg.textContent = &quot;&quot;;
-      stageMsg.textContent = &quot;&quot;;
+    clearBtn.onclick = () => {
+      orderIdInput.value = "";
+      vinInput.value = "";
+      orderMsg.textContent = "";
+      stageMsg.textContent = "";
       currentOrderId      = null;
       currentVin          = null;
       currentItemNo       = null;
       currentOrderRecords = [];
       clearErpTable();
-      erpCard.style.display = &quot;none&quot;;
+      erpCard.style.display = "none";
       buildStagesUI({ });
       refreshArchiveUI();
     };
 
-    vinPicker.addEventListener(&quot;change&quot;, () =&gt; {
+    vinPicker.addEventListener("change", () => {
       if (!currentOrderId || !currentOrderRecords.length) return;
       const selected = vinPicker.value;
       currentVin    = selected;
@@ -3468,31 +3491,31 @@ function clearErpTable() {
     
     function loadReadOrders(){
       try{
-        const arr = JSON.parse(localStorage.getItem(&quot;mzj_read_orders&quot;) || &quot;[]&quot;);
+        const arr = JSON.parse(localStorage.getItem("mzj_read_orders") || "[]");
         if (Array.isArray(arr)) ordersReadSet = new Set(arr.map(String));
       }catch(e){ ordersReadSet = new Set(); }
     }
     function saveReadOrders(){
       try{
-        localStorage.setItem(&quot;mzj_read_orders&quot;, JSON.stringify(Array.from(ordersReadSet)));
+        localStorage.setItem("mzj_read_orders", JSON.stringify(Array.from(ordersReadSet)));
       }catch(e){}
     }
 
-    // ---- أرشفة الطلبات (لتخفيف قائمة &quot;كل الطلبات&quot;) ----
+    // ---- أرشفة الطلبات (لتخفيف قائمة "كل الطلبات") ----
     async function loadArchiveSet(force=false){
       try{
-        if (archiveLoaded &amp;&amp; !force) return archiveSet;
+        if (archiveLoaded && !force) return archiveSet;
         archiveSet = new Set();
         // ✅ قراءة واحدة فقط (محدودة) لكل الأرشيف
         const snap = await getDocs(query(collection(db, ARCHIVE_COLLECTION), limit(1000)));
-        snap.forEach(ds =&gt; {
+        snap.forEach(ds => {
           const id = ds.id;
           if (id) archiveSet.add(String(id));
         });
         archiveLoaded = true;
         return archiveSet;
       }catch(e){
-        console.warn(&quot;archive load failed&quot;, e);
+        console.warn("archive load failed", e);
         archiveLoaded = true;
         return archiveSet;
       }
@@ -3500,61 +3523,61 @@ function clearErpTable() {
 
     async function refreshArchiveUI(){
       if (!archiveOrderBtn || !unarchiveOrderBtn || !archiveHint) return;
-      archiveHint.textContent = &quot;&quot;;
+      archiveHint.textContent = "";
       if (!currentOrderId){
-        archiveOrderBtn.style.display = &quot;none&quot;;
-        unarchiveOrderBtn.style.display = &quot;none&quot;;
+        archiveOrderBtn.style.display = "none";
+        unarchiveOrderBtn.style.display = "none";
         return;
       }
-      archiveOrderBtn.style.display = &quot;inline-flex&quot;;
-      unarchiveOrderBtn.style.display = &quot;none&quot;;
+      archiveOrderBtn.style.display = "inline-flex";
+      unarchiveOrderBtn.style.display = "none";
 
       try{
         // نستخدم الكاش لو متاح
         if (!archiveLoaded) await loadArchiveSet();
         const isArchived = archiveSet.has(String(currentOrderId));
         if (isArchived){
-          archiveOrderBtn.style.display = &quot;none&quot;;
-          unarchiveOrderBtn.style.display = &quot;inline-flex&quot;;
-          archiveHint.textContent = &quot;هذا الطلب مؤرشف ولن يظهر في (كل الطلبات).&quot;;
+          archiveOrderBtn.style.display = "none";
+          unarchiveOrderBtn.style.display = "inline-flex";
+          archiveHint.textContent = "هذا الطلب مؤرشف ولن يظهر في (كل الطلبات).";
         } else {
-          archiveOrderBtn.style.display = &quot;inline-flex&quot;;
-          unarchiveOrderBtn.style.display = &quot;none&quot;;
-          archiveHint.textContent = &quot;&quot;;
+          archiveOrderBtn.style.display = "inline-flex";
+          unarchiveOrderBtn.style.display = "none";
+          archiveHint.textContent = "";
         }
       }catch(e){}
     }
 
     async function fmtTs(ts){
       try{
-        if (!ts) return &quot;&quot;;
+        if (!ts) return "";
         // Firestore Timestamp
-        if (typeof ts.toDate === &quot;function&quot;) return ts.toDate().toLocaleString(&quot;ar-SA&quot;);
+        if (typeof ts.toDate === "function") return ts.toDate().toLocaleString("ar-SA");
         // ISO/string/date
         const d = new Date(ts);
-        return isNaN(d.getTime()) ? &quot;&quot; : d.toLocaleString(&quot;ar-SA&quot;);
-      }catch(_){ return &quot;&quot;; }
+        return isNaN(d.getTime()) ? "" : d.toLocaleString("ar-SA");
+      }catch(_){ return ""; }
     }
 
     // HTML escape helper (prevents render errors + XSS)
     function escapeHtml(text){
-      if (text === undefined || text === null) return &quot;&quot;;
+      if (text === undefined || text === null) return "";
       return String(text)
-        .replace(/&amp;/g, &quot;&amp;amp;&quot;)
-        .replace(/&lt;/g, &quot;&amp;lt;&quot;)
-        .replace(/&gt;/g, &quot;&amp;gt;&quot;)
-        .replace(/&quot;/g, &quot;&amp;quot;&quot;)
-        .replace(/&#x27;/g, &quot;&amp;#039;&quot;);
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
     }
 
 
     async function commitWritesInChunks(writeOps, maxOps=450){
       // writeOps: [{ref, data, options}]
       let i = 0;
-      while (i &lt; writeOps.length){
+      while (i < writeOps.length){
         const batch = writeBatch(db);
         let used = 0;
-        while (i &lt; writeOps.length &amp;&amp; used &lt; maxOps){
+        while (i < writeOps.length && used < maxOps){
           const op = writeOps[i++];
           batch.set(op.ref, op.data, op.options || { merge:true });
           used++;
@@ -3565,10 +3588,10 @@ function clearErpTable() {
 
     async function commitDeletesInChunks(deleteRefs, maxOps=450){
       let i = 0;
-      while (i &lt; deleteRefs.length){
+      while (i < deleteRefs.length){
         const batch = writeBatch(db);
         let used = 0;
-        while (i &lt; deleteRefs.length &amp;&amp; used &lt; maxOps){
+        while (i < deleteRefs.length && used < maxOps){
           const ref = deleteRefs[i++];
           batch.delete(ref);
           used++;
@@ -3578,18 +3601,18 @@ function clearErpTable() {
     }
 
     async function moveOrderToArchive(orderNo){
-      const ord = String(orderNo||&quot;&quot;).trim();
-      if (!ord) throw new Error(&quot;Missing orderNo&quot;);
+      const ord = String(orderNo||"").trim();
+      if (!ord) throw new Error("Missing orderNo");
 
       // 1) Fetch ERP lines for this order
-      let erpSnap = await getDocs(query(collection(db, ERP_COLLECTION), where(&quot;orderNo&quot;,&quot;==&quot;,ord), limit(500)));
+      let erpSnap = await getDocs(query(collection(db, ERP_COLLECTION), where("orderNo","==",ord), limit(500)));
       let erpDocs = erpSnap.docs || [];
 
       // fallback (rare): use already loaded records
-      if (!erpDocs.length &amp;&amp; Array.isArray(currentOrderRecords) &amp;&amp; String(currentOrderId||&quot;&quot;) === ord){
-        // We don&#x27;t have doc IDs here, so we will rebuild doc IDs from itemNo.
-        // We&#x27;ll write to archive but cannot safely delete unknown ERP doc IDs.
-        console.warn(&quot;No ERP docs returned for order. Using currentOrderRecords as fallback (archive copy only).&quot;);
+      if (!erpDocs.length && Array.isArray(currentOrderRecords) && String(currentOrderId||"") === ord){
+        // We don't have doc IDs here, so we will rebuild doc IDs from itemNo.
+        // We'll write to archive but cannot safely delete unknown ERP doc IDs.
+        console.warn("No ERP docs returned for order. Using currentOrderRecords as fallback (archive copy only).");
       }
 
       // Determine itemNos from ERP docs (preferred)
@@ -3598,29 +3621,29 @@ function clearErpTable() {
       const erpDeleteRefs = [];
 
       if (erpDocs.length){
-        erpDocs.forEach(d=&gt;{
+        erpDocs.forEach(d=>{
           const data = d.data() || {};
-          // itemNo priority: explicit field -&gt; data.item.no -&gt; d.id suffix
+          // itemNo priority: explicit field -> data.item.no -> d.id suffix
           let itemNo = data.itemNo;
-          if (!itemNo &amp;&amp; data.item &amp;&amp; data.item.no != null) itemNo = String(data.item.no);
+          if (!itemNo && data.item && data.item.no != null) itemNo = String(data.item.no);
           if (!itemNo){
-            const parts = String(d.id||&quot;&quot;).split(&quot;_&quot;);
-            itemNo = parts.length&gt;1 ? parts[parts.length-1] : &quot;1&quot;;
+            const parts = String(d.id||"").split("_");
+            itemNo = parts.length>1 ? parts[parts.length-1] : "1";
           }
           itemNos.push(String(itemNo));
-          const archRef = doc(db, ARCHIVE_COLLECTION, ord, &quot;erp_lines&quot;, d.id);
+          const archRef = doc(db, ARCHIVE_COLLECTION, ord, "erp_lines", d.id);
           erpWriteOps.push({ ref: archRef, data: { ...data, __fromDocId: d.id }, options: { merge:true } });
           erpDeleteRefs.push(doc(db, ERP_COLLECTION, d.id));
         });
-      } else if (Array.isArray(currentOrderRecords) &amp;&amp; String(currentOrderId||&quot;&quot;) === ord){
-        currentOrderRecords.forEach((rec, idx)=&gt;{
+      } else if (Array.isArray(currentOrderRecords) && String(currentOrderId||"") === ord){
+        currentOrderRecords.forEach((rec, idx)=>{
           const data = rec || {};
           let itemNo = data.itemNo;
-          if (!itemNo &amp;&amp; data.item &amp;&amp; data.item.no != null) itemNo = String(data.item.no);
+          if (!itemNo && data.item && data.item.no != null) itemNo = String(data.item.no);
           if (!itemNo) itemNo = String(idx+1);
           itemNos.push(String(itemNo));
           const dId = `${ord}_${itemNo}`;
-          const archRef = doc(db, ARCHIVE_COLLECTION, ord, &quot;erp_lines&quot;, dId);
+          const archRef = doc(db, ARCHIVE_COLLECTION, ord, "erp_lines", dId);
           erpWriteOps.push({ ref: archRef, data: { ...data, __fromDocId: dId }, options: { merge:true } });
           // NOTE: deleteRefs unknown here; we will try by reconstructed ID
           erpDeleteRefs.push(doc(db, ERP_COLLECTION, dId));
@@ -3628,7 +3651,7 @@ function clearErpTable() {
       }
 
       // De-dup itemNos
-      const uniqItemNos = Array.from(new Set(itemNos.length ? itemNos : [&quot;1&quot;]));
+      const uniqItemNos = Array.from(new Set(itemNos.length ? itemNos : ["1"]));
 
       // 2) Read orders docs (tracking) for each itemNo
       const orderWriteOps = [];
@@ -3642,7 +3665,7 @@ function clearErpTable() {
         if (orderSnap.exists()){
           const orderData = orderSnap.data() || {};
           orderWriteOps.push({
-            ref: doc(db, ARCHIVE_COLLECTION, ord, &quot;orders&quot;, docId),
+            ref: doc(db, ARCHIVE_COLLECTION, ord, "orders", docId),
             data: { ...orderData, __fromDocId: docId },
             options: { merge:true }
           });
@@ -3652,11 +3675,11 @@ function clearErpTable() {
         }
 
         // copy public/status if exists (optional but useful for archive view)
-        const pubRef = doc(db, TRACK_COLLECTION, docId, &quot;public&quot;, &quot;status&quot;);
+        const pubRef = doc(db, TRACK_COLLECTION, docId, "public", "status");
         const pubSnap = await getDoc(pubRef);
         if (pubSnap.exists()){
           statusWriteOps.push({
-            ref: doc(db, ARCHIVE_COLLECTION, ord, &quot;public_status&quot;, docId),
+            ref: doc(db, ARCHIVE_COLLECTION, ord, "public_status", docId),
             data: { ...pubSnap.data(), __fromDocId: docId },
             options: { merge:true }
           });
@@ -3668,14 +3691,14 @@ function clearErpTable() {
       const summaryRef = doc(db, ARCHIVE_COLLECTION, ord);
       const summaryData = {
         orderNo: ord,
-        branch: firstErpData.branch || firstErpData?.summary?.branch || firstErpData?.branchName || &quot;&quot;,
-        customerName: firstErpData.customerName || firstErpData?.summary?.customerName || firstErpData?.customerName || firstErpData?.customer || &quot;&quot;,
-        customerPhone: firstErpData.customerPhone || firstErpData?.summary?.customerPhone || &quot;&quot;,
-        salesPerson: firstErpData.salesPerson || firstErpData?.summary?.salesPerson || &quot;&quot;,
+        branch: firstErpData.branch || firstErpData?.summary?.branch || firstErpData?.branchName || "",
+        customerName: firstErpData.customerName || firstErpData?.summary?.customerName || firstErpData?.customerName || firstErpData?.customer || "",
+        customerPhone: firstErpData.customerPhone || firstErpData?.summary?.customerPhone || "",
+        salesPerson: firstErpData.salesPerson || firstErpData?.summary?.salesPerson || "",
         totals: firstErpData.totals || firstErpData?.summary?.totals || {},
         itemsCount: uniqItemNos.length,
         archivedAt: serverTimestamp(),
-        archivedBy: (auth.currentUser?.email || &quot;&quot;)
+        archivedBy: (auth.currentUser?.email || "")
       };
 
       const summaryWriteOps = [{ ref: summaryRef, data: summaryData, options: { merge:true } }];
@@ -3684,12 +3707,12 @@ function clearErpTable() {
       const allWrites = summaryWriteOps.concat(erpWriteOps, orderWriteOps, statusWriteOps);
       await commitWritesInChunks(allWrites, 450);
 
-      // 5) Mark customer tracking status as archived (keep subdoc so customer sees &quot;منتهي&quot;)
+      // 5) Mark customer tracking status as archived (keep subdoc so customer sees "منتهي")
       // Note: deleting main track doc does NOT delete subcollections; we keep public/status.
       const markWrites = [];
       for (const itNo of uniqItemNos){
         const docId = `${ord}_${itNo}`;
-        const publicRef2 = doc(db, TRACK_COLLECTION, docId, &quot;public&quot;, &quot;status&quot;);
+        const publicRef2 = doc(db, TRACK_COLLECTION, docId, "public", "status");
         markWrites.push({
           ref: publicRef2,
           data: { archived: true, archivedAt: serverTimestamp(), updatedAt: serverTimestamp() },
@@ -3710,7 +3733,7 @@ function clearErpTable() {
     async function archiveCurrentOrder(){
       if (!currentOrderId) return;
       const ord = String(currentOrderId);
-      const ok = confirm(&quot;تأكيد: أرشفة الطلب &quot; + ord + &quot; ؟\nسيتم نقله بالكامل إلى (الأرشيف) وحذفه من (كل الطلبات).&quot;);
+      const ok = confirm("تأكيد: أرشفة الطلب " + ord + " ؟\nسيتم نقله بالكامل إلى (الأرشيف) وحذفه من (كل الطلبات).");
       if (!ok) return;
 
       try{
@@ -3718,62 +3741,62 @@ function clearErpTable() {
         await refreshArchiveUI();
 
         // تحديث القوائم
-        if (ordersListCard &amp;&amp; ordersListCard.style.display !== &quot;none&quot;){
+        if (ordersListCard && ordersListCard.style.display !== "none"){
           await loadOrdersList();
         }
-        if (archivesListCard &amp;&amp; archivesListCard.style.display !== &quot;none&quot;){
+        if (archivesListCard && archivesListCard.style.display !== "none"){
           await loadArchivesList();
         }
 
-        alert(&quot;تمت أرشفة الطلب ونقله إلى الأرشيف.&quot;);
+        alert("تمت أرشفة الطلب ونقله إلى الأرشيف.");
       }catch(e){
         console.error(e);
-        alert(&quot;تعذر أرشفة الطلب. حاول مرة أخرى.&quot;);
+        alert("تعذر أرشفة الطلب. حاول مرة أخرى.");
       }
     }
 
     // 🚫 إلغاء الأرشفة غير مفعّل لأننا ننقل الطلبات فعليًا (Move)
     async function unarchiveCurrentOrder(){
-      alert(&quot;إلغاء الأرشفة غير متاح حالياً.&quot;);
+      alert("إلغاء الأرشفة غير متاح حالياً.");
     }
 
-    if (archiveOrderBtn) archiveOrderBtn.addEventListener(&quot;click&quot;, archiveCurrentOrder);
+    if (archiveOrderBtn) archiveOrderBtn.addEventListener("click", archiveCurrentOrder);
     if (unarchiveOrderBtn) {
-      unarchiveOrderBtn.style.display = &quot;none&quot;;
-      unarchiveOrderBtn.addEventListener(&quot;click&quot;, unarchiveCurrentOrder);
+      unarchiveOrderBtn.style.display = "none";
+      unarchiveOrderBtn.addEventListener("click", unarchiveCurrentOrder);
     }
 
-if (archiveOrderBtn) archiveOrderBtn.addEventListener(&quot;click&quot;, archiveCurrentOrder);
-    if (unarchiveOrderBtn) unarchiveOrderBtn.addEventListener(&quot;click&quot;, unarchiveCurrentOrder);
+if (archiveOrderBtn) archiveOrderBtn.addEventListener("click", archiveCurrentOrder);
+    if (unarchiveOrderBtn) unarchiveOrderBtn.addEventListener("click", unarchiveCurrentOrder);
 
-    function renderOrdersList(filterText=&quot;&quot;){
-      const q = String(filterText||&quot;&quot;).trim().toLowerCase();
+    function renderOrdersList(filterText=""){
+      const q = String(filterText||"").trim().toLowerCase();
       const rows = Array.isArray(ordersListCache) ? ordersListCache : [];
-      const baseRows = rows.filter(r =&gt; !archiveSet.has(String(r.orderNo||&quot;&quot;)));
-      const filtered = !q ? baseRows : baseRows.filter(r =&gt; {
+      const baseRows = rows.filter(r => !archiveSet.has(String(r.orderNo||"")));
+      const filtered = !q ? baseRows : baseRows.filter(r => {
         const hay = [
           r.orderNo, r.customerName, r.customerPhone, r.branch, r.vinVal, r.vinRaw
-        ].filter(Boolean).join(&quot; &quot;).toLowerCase();
+        ].filter(Boolean).join(" ").toLowerCase();
         return hay.includes(q);
       });
 
-      ordersListBody.innerHTML = &quot;&quot;;
+      ordersListBody.innerHTML = "";
       if (!filtered.length){
-        ordersListBody.innerHTML = &quot;&lt;tr&gt;&lt;td class=&#x27;muted&#x27; colspan=&#x27;5&#x27;&gt;لا توجد نتائج مطابقة.&lt;/td&gt;&lt;/tr&gt;&quot;;
+        ordersListBody.innerHTML = "<tr><td class='muted' colspan='5'>لا توجد نتائج مطابقة.</td></tr>";
         return;
       }
 
-      filtered.forEach(r =&gt; {
-        const tr = document.createElement(&quot;tr&quot;);
-        const isUnread = !ordersReadSet.has(String(r.orderNo||&quot;&quot;));
-        if (isUnread) tr.classList.add(&quot;unread-row&quot;);
+      filtered.forEach(r => {
+        const tr = document.createElement("tr");
+        const isUnread = !ordersReadSet.has(String(r.orderNo||""));
+        if (isUnread) tr.classList.add("unread-row");
 
         tr.innerHTML = `
-          &lt;td&gt;&lt;button class=&quot;link-btn&quot; data-order=&quot;${r.orderNo}&quot;&gt;${r.orderNo}&lt;/button&gt;&lt;/td&gt;
-          &lt;td&gt;${r.customerName || &quot;—&quot;}&lt;/td&gt;
-          &lt;td&gt;${r.customerPhone || &quot;—&quot;}&lt;/td&gt;
-          &lt;td&gt;${r.branch || &quot;—&quot;}&lt;/td&gt;
-          &lt;td&gt;${r.vinVal || &quot;—&quot;}&lt;/td&gt;
+          <td><button class="link-btn" data-order="${r.orderNo}">${r.orderNo}</button></td>
+          <td>${r.customerName || "—"}</td>
+          <td>${r.customerPhone || "—"}</td>
+          <td>${r.branch || "—"}</td>
+          <td>${r.vinVal || "—"}</td>
         `;
         ordersListBody.appendChild(tr);
       });
@@ -3781,14 +3804,14 @@ if (archiveOrderBtn) archiveOrderBtn.addEventListener(&quot;click&quot;, archive
 
 
     async function loadOrdersList() {
-      ordersListBody.innerHTML = &quot;&lt;tr&gt;&lt;td class=&#x27;muted&#x27; colspan=&#x27;5&#x27;&gt;جاري تحميل الطلبات...&lt;/td&gt;&lt;/tr&gt;&quot;;
+      ordersListBody.innerHTML = "<tr><td class='muted' colspan='5'>جاري تحميل الطلبات...</td></tr>";
       try {
         await loadArchiveSet();
         // ✅ نقرأ آخر 200 سجل من erp_orders (قد يكون في تكرار لأن كل سيارة سجل)
         const q = query(collection(db, ERP_COLLECTION), limit(200));
         const snap = await getDocs(q);
         if (snap.empty) {
-          ordersListBody.innerHTML = &quot;&lt;tr&gt;&lt;td class=&#x27;muted&#x27; colspan=&#x27;5&#x27;&gt;لا توجد طلبات مسجلة حالياً.&lt;/td&gt;&lt;/tr&gt;&quot;;
+          ordersListBody.innerHTML = "<tr><td class='muted' colspan='5'>لا توجد طلبات مسجلة حالياً.</td></tr>";
           return;
         }
         // ✅ نجمع حسب orderNo لتجنب تكرار الطلبات في القائمة
@@ -3811,25 +3834,25 @@ if (archiveOrderBtn) archiveOrderBtn.addEventListener(&quot;click&quot;, archive
 
           const vins = Array.from(new Set(
             docsArr
-              .map(x =&gt; (getFieldFlex(&quot;VIN&quot;, x) || &quot;&quot;).toString().trim())
-              .filter(v =&gt; v &amp;&amp; v !== &quot;-&quot; &amp;&amp; v !== &quot;—&quot;)
+              .map(x => (getFieldFlex("VIN", x) || "").toString().trim())
+              .filter(v => v && v !== "-" && v !== "—")
           ));
 
-          const vinVal = (vins.length &lt;= 1)
-            ? (vins[0] || &quot;—&quot;)
-            : (&quot;(&quot; + vins.length + &quot;) هياكل&quot;);
+          const vinVal = (vins.length <= 1)
+            ? (vins[0] || "—")
+            : ("(" + vins.length + ") هياكل");
 
-          const customerName = getFieldFlex(&quot;CustomerName&quot;, first) || &quot;&quot;;
-          const customerPhone = getFieldFlex(&quot;CustomerPhone&quot;, first) || &quot;&quot;;
-          const branch = getFieldFlex(&quot;Branch&quot;, first) || &quot;&quot;;
-          const orderDateRaw = getFieldFlex(&quot;OrderDate&quot;, first) || &quot;&quot;;
+          const customerName = getFieldFlex("CustomerName", first) || "";
+          const customerPhone = getFieldFlex("CustomerPhone", first) || "";
+          const branch = getFieldFlex("Branch", first) || "";
+          const orderDateRaw = getFieldFlex("OrderDate", first) || "";
 
           // حالة التتبع
           // 🚀 تحسين أداء: لا نقرأ مراحل التتبع لكل طلب داخل القائمة (يسبب بطء شديد).
-          // التتبع والإجراءات تظهر بعد فتح الطلب من تبويب &quot;بحث عن طلب&quot;.
+          // التتبع والإجراءات تظهر بعد فتح الطلب من تبويب "بحث عن طلب".
           
 
-          rows.push({ orderNo: group.orderNo, vinVal, vinRaw: vins.join(&quot; &quot;), customerName, customerPhone, branch, orderDateRaw });
+          rows.push({ orderNo: group.orderNo, vinVal, vinRaw: vins.join(" "), customerName, customerPhone, branch, orderDateRaw });
         }
         
         // ترتيب الصفوف بالأحدث أولاً (بدون الاعتماد على orderBy لتفادي مشاكل الفهارس/اختلاف أسماء الحقول)
@@ -3840,7 +3863,7 @@ if (archiveOrderBtn) archiveOrderBtn.addEventListener(&quot;click&quot;, archive
           // JS Date
           if (v instanceof Date) return v.getTime();
           // number
-          if (typeof v === &quot;number&quot;) return v;
+          if (typeof v === "number") return v;
           // string
           const s = String(v).trim();
           // try parse ISO / normal date
@@ -3850,26 +3873,26 @@ if (archiveOrderBtn) archiveOrderBtn.addEventListener(&quot;click&quot;, archive
           const m = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
           if (m){
             const dd = parseInt(m[1],10), mm = parseInt(m[2],10)-1, yy = parseInt(m[3],10);
-            const yyyy = yy &lt; 100 ? (2000 + yy) : yy;
+            const yyyy = yy < 100 ? (2000 + yy) : yy;
             const d = new Date(yyyy, mm, dd);
             return d.getTime() || 0;
           }
           return 0;
         }
 
-        rows.sort((a,b) =&gt; {
-          const aMs = toMillis(a.orderDateRaw || a.deliveryDate || &quot;&quot;);
-          const bMs = toMillis(b.orderDateRaw || b.deliveryDate || &quot;&quot;);
+        rows.sort((a,b) => {
+          const aMs = toMillis(a.orderDateRaw || a.deliveryDate || "");
+          const bMs = toMillis(b.orderDateRaw || b.deliveryDate || "");
           // desc
           return bMs - aMs;
         });
 
 ordersListCache = rows;
         loadReadOrders();
-        renderOrdersList(ordersSearchInput ? ordersSearchInput.value : &quot;&quot;);
+        renderOrdersList(ordersSearchInput ? ordersSearchInput.value : "");
 } catch (err) {
         console.error(err);
-        ordersListBody.innerHTML = &quot;&lt;tr&gt;&lt;td class=&#x27;err&#x27; colspan=&#x27;5&#x27;&gt;تعذر تحميل قائمة الطلبات.&lt;/td&gt;&lt;/tr&gt;&quot;;
+        ordersListBody.innerHTML = "<tr><td class='err' colspan='5'>تعذر تحميل قائمة الطلبات.</td></tr>";
       }
     }
 
@@ -3877,68 +3900,68 @@ ordersListCache = rows;
     async function loadArchivesList(){
       try{
         if (!archivesListBody) return;
-        archivesListBody.innerHTML = &quot;&lt;tr&gt;&lt;td class=&#x27;muted&#x27; colspan=&#x27;5&#x27;&gt;جاري التحميل...&lt;/td&gt;&lt;/tr&gt;&quot;;
+        archivesListBody.innerHTML = "<tr><td class='muted' colspan='5'>جاري التحميل...</td></tr>";
 
         // Load latest archives (client-side filter for restored)
-        const snap = await getDocs(query(collection(db, ARCHIVE_COLLECTION), orderBy(&quot;archivedAt&quot;,&quot;desc&quot;), limit(300)));
+        const snap = await getDocs(query(collection(db, ARCHIVE_COLLECTION), orderBy("archivedAt","desc"), limit(300)));
         let rows = [];
-        snap.forEach(d=&gt;{
+        snap.forEach(d=>{
           const data = d.data() || {};
           if (data.restored === true) return; // skip restored (if any)
           rows.push({
             id: d.id,
             orderNo: data.orderNo || d.id,
-            customerName: data.customerName || &quot;&quot;,
-            customerPhone: data.customerPhone || &quot;&quot;,
-            branch: data.branch || &quot;&quot;,
-            archivedAt: data.archivedAt || &quot;&quot;
+            customerName: data.customerName || "",
+            customerPhone: data.customerPhone || "",
+            branch: data.branch || "",
+            archivedAt: data.archivedAt || ""
           });
         });
 
         archivesListCache = rows;
 
-        renderArchivesList(archivesSearchInput ? archivesSearchInput.value : &quot;&quot;);
+        renderArchivesList(archivesSearchInput ? archivesSearchInput.value : "");
       }catch(e){
         console.error(e);
-        if (archivesListBody) archivesListBody.innerHTML = &quot;&lt;tr&gt;&lt;td class=&#x27;err&#x27; colspan=&#x27;5&#x27;&gt;تعذر تحميل الأرشيف.&lt;/td&gt;&lt;/tr&gt;&quot;;
+        if (archivesListBody) archivesListBody.innerHTML = "<tr><td class='err' colspan='5'>تعذر تحميل الأرشيف.</td></tr>";
       }
     }
 
-    function renderArchivesList(filterText=&quot;&quot;){
-      const qtxt = String(filterText||&quot;&quot;).trim().toLowerCase();
-      const rows = !qtxt ? archivesListCache : archivesListCache.filter(r=&gt;{
-        return String(r.orderNo||&quot;&quot;).toLowerCase().includes(qtxt) ||
-               String(r.customerName||&quot;&quot;).toLowerCase().includes(qtxt) ||
-               String(r.customerPhone||&quot;&quot;).toLowerCase().includes(qtxt);
+    function renderArchivesList(filterText=""){
+      const qtxt = String(filterText||"").trim().toLowerCase();
+      const rows = !qtxt ? archivesListCache : archivesListCache.filter(r=>{
+        return String(r.orderNo||"").toLowerCase().includes(qtxt) ||
+               String(r.customerName||"").toLowerCase().includes(qtxt) ||
+               String(r.customerPhone||"").toLowerCase().includes(qtxt);
       });
 
       if (!archivesListBody) return;
 
       if (!rows.length){
-        archivesListBody.innerHTML = &quot;&lt;tr&gt;&lt;td class=&#x27;muted&#x27; colspan=&#x27;5&#x27;&gt;لا توجد طلبات مطابقة.&lt;/td&gt;&lt;/tr&gt;&quot;;
+        archivesListBody.innerHTML = "<tr><td class='muted' colspan='5'>لا توجد طلبات مطابقة.</td></tr>";
         return;
       }
 
-      archivesListBody.innerHTML = rows.map(r=&gt;{
-        const ord = escapeHtml(String(r.orderNo||&quot;&quot;));
-        const name = escapeHtml(String(r.customerName||&quot;&quot;));
-        const phone = escapeHtml(String(r.customerPhone||&quot;&quot;));
-        const branch = escapeHtml(String(r.branch||&quot;&quot;));
+      archivesListBody.innerHTML = rows.map(r=>{
+        const ord = escapeHtml(String(r.orderNo||""));
+        const name = escapeHtml(String(r.customerName||""));
+        const phone = escapeHtml(String(r.customerPhone||""));
+        const branch = escapeHtml(String(r.branch||""));
         const at = escapeHtml(fmtTs(r.archivedAt));
-        return `&lt;tr&gt;
-          &lt;td&gt;&lt;a href=&quot;#&quot; class=&quot;open-arch&quot; data-order=&quot;${ord}&quot;&gt;${ord}&lt;/a&gt;&lt;/td&gt;
-          &lt;td&gt;${name}&lt;/td&gt;
-          &lt;td&gt;${phone}&lt;/td&gt;
-          &lt;td&gt;${branch}&lt;/td&gt;
-          &lt;td&gt;${at}&lt;/td&gt;
-        &lt;/tr&gt;`;
-      }).join(&quot;&quot;);
+        return `<tr>
+          <td><a href="#" class="open-arch" data-order="${ord}">${ord}</a></td>
+          <td>${name}</td>
+          <td>${phone}</td>
+          <td>${branch}</td>
+          <td>${at}</td>
+        </tr>`;
+      }).join("");
 
       // bind open
-      Array.from(archivesListBody.querySelectorAll(&quot;a.open-arch&quot;)).forEach(a=&gt;{
-        a.addEventListener(&quot;click&quot;, async (ev)=&gt;{
+      Array.from(archivesListBody.querySelectorAll("a.open-arch")).forEach(a=>{
+        a.addEventListener("click", async (ev)=>{
           ev.preventDefault();
-          const ord = a.getAttribute(&quot;data-order&quot;);
+          const ord = a.getAttribute("data-order");
           if (!ord) return;
           await openArchivedOrder(ord);
         });
@@ -3946,20 +3969,20 @@ ordersListCache = rows;
     }
 
     async function openArchivedOrder(orderNo){
-      const ord = String(orderNo||&quot;&quot;).trim();
+      const ord = String(orderNo||"").trim();
       if (!ord) return;
 
       try{
         // Load ERP lines from archive
-        const linesSnap = await getDocs(query(collection(db, ARCHIVE_COLLECTION, ord, &quot;erp_lines&quot;), limit(500)));
+        const linesSnap = await getDocs(query(collection(db, ARCHIVE_COLLECTION, ord, "erp_lines"), limit(500)));
         const records = [];
-        linesSnap.forEach(d=&gt;{
+        linesSnap.forEach(d=>{
           const data = d.data() || {};
           records.push(data);
         });
 
         if (!records.length){
-          alert(&quot;لا توجد بيانات ERP داخل الأرشيف لهذا الطلب.&quot;);
+          alert("لا توجد بيانات ERP داخل الأرشيف لهذا الطلب.");
           return;
         }
 
@@ -3969,116 +3992,116 @@ ordersListCache = rows;
         currentIsArchiveView = true;
 
         // show details (read-only)
-        activateTab(&quot;search&quot;);
-        erpCard.style.display = &quot;&quot;;
-        stagesCard.style.display = &quot;none&quot;; // قراءة فقط للأرشيف
-        archiveOrderBtn.style.display = &quot;none&quot;; // already archived
+        activateTab("search");
+        erpCard.style.display = "";
+        stagesCard.style.display = "none"; // قراءة فقط للأرشيف
+        archiveOrderBtn.style.display = "none"; // already archived
 
         // render ERP as normal
         fillErpTable(records);
 
         // small note
-        if (orderMsg) orderMsg.textContent = &quot;عرض من الأرشيف (قراءة فقط).&quot;;
+        if (orderMsg) orderMsg.textContent = "عرض من الأرشيف (قراءة فقط).";
       }catch(e){
         console.error(e);
-        alert(&quot;تعذر فتح الطلب من الأرشيف.&quot;);
+        alert("تعذر فتح الطلب من الأرشيف.");
       }
     }
 
     if (archivesSearchInput){
-      archivesSearchInput.addEventListener(&quot;input&quot;, ()=&gt; renderArchivesList(archivesSearchInput.value));
+      archivesSearchInput.addEventListener("input", ()=> renderArchivesList(archivesSearchInput.value));
     }
 
 function activateTab(which) {
-      currentIsArchiveView = (which === &quot;archive&quot;);
+      currentIsArchiveView = (which === "archive");
 
-      if (which === &quot;list&quot;) {
-        orderCard.style.display = &quot;none&quot;;
-        erpCard.style.display   = &quot;none&quot;;
-        stagesCard.style.display= &quot;none&quot;;
-        ordersListCard.style.display = &quot;&quot;;
-        archivesListCard.style.display = &quot;none&quot;;
+      if (which === "list") {
+        orderCard.style.display = "none";
+        erpCard.style.display   = "none";
+        stagesCard.style.display= "none";
+        ordersListCard.style.display = "";
+        archivesListCard.style.display = "none";
 
-        tabSearchBtn.classList.remove(&quot;tab-active&quot;);
-        tabListBtn.classList.add(&quot;tab-active&quot;);
-        if (tabArchiveBtn) tabArchiveBtn.classList.remove(&quot;tab-active&quot;);
+        tabSearchBtn.classList.remove("tab-active");
+        tabListBtn.classList.add("tab-active");
+        if (tabArchiveBtn) tabArchiveBtn.classList.remove("tab-active");
 
         loadOrdersList();
         return;
       }
 
-      if (which === &quot;archive&quot;) {
-        orderCard.style.display = &quot;none&quot;;
-        erpCard.style.display   = &quot;none&quot;;
-        stagesCard.style.display= &quot;none&quot;;
-        ordersListCard.style.display = &quot;none&quot;;
-        archivesListCard.style.display = &quot;&quot;;
+      if (which === "archive") {
+        orderCard.style.display = "none";
+        erpCard.style.display   = "none";
+        stagesCard.style.display= "none";
+        ordersListCard.style.display = "none";
+        archivesListCard.style.display = "";
 
-        tabSearchBtn.classList.remove(&quot;tab-active&quot;);
-        tabListBtn.classList.remove(&quot;tab-active&quot;);
-        if (tabArchiveBtn) tabArchiveBtn.classList.add(&quot;tab-active&quot;);
+        tabSearchBtn.classList.remove("tab-active");
+        tabListBtn.classList.remove("tab-active");
+        if (tabArchiveBtn) tabArchiveBtn.classList.add("tab-active");
 
         loadArchivesList();
         return;
       }
 
       // search (default)
-      orderCard.style.display = &quot;&quot;;
-      erpCard.style.display   = currentOrderId ? &quot;&quot; : &quot;none&quot;;
-      stagesCard.style.display= &quot;&quot;;
-      ordersListCard.style.display = &quot;none&quot;;
-      archivesListCard.style.display = &quot;none&quot;;
+      orderCard.style.display = "";
+      erpCard.style.display   = currentOrderId ? "" : "none";
+      stagesCard.style.display= "";
+      ordersListCard.style.display = "none";
+      archivesListCard.style.display = "none";
 
-      tabSearchBtn.classList.add(&quot;tab-active&quot;);
-      tabListBtn.classList.remove(&quot;tab-active&quot;);
-      if (tabArchiveBtn) tabArchiveBtn.classList.remove(&quot;tab-active&quot;);
+      tabSearchBtn.classList.add("tab-active");
+      tabListBtn.classList.remove("tab-active");
+      if (tabArchiveBtn) tabArchiveBtn.classList.remove("tab-active");
     }
 
-    tabSearchBtn.addEventListener(&quot;click&quot;, () =&gt; activateTab(&quot;search&quot;));
-    tabListBtn.addEventListener(&quot;click&quot;, () =&gt; activateTab(&quot;list&quot;));
-    if (tabArchiveBtn) tabArchiveBtn.addEventListener(&quot;click&quot;, () =&gt; activateTab(&quot;archive&quot;));
+    tabSearchBtn.addEventListener("click", () => activateTab("search"));
+    tabListBtn.addEventListener("click", () => activateTab("list"));
+    if (tabArchiveBtn) tabArchiveBtn.addEventListener("click", () => activateTab("archive"));
 
 if (ordersSearchInput) {
-      ordersSearchInput.addEventListener(&quot;input&quot;, () =&gt; {
+      ordersSearchInput.addEventListener("input", () => {
         renderOrdersList(ordersSearchInput.value);
       });
     }
 
-    ordersListBody.addEventListener(&quot;click&quot;, async (e) =&gt; {
-      const btn = e.target.closest(&quot;button.link-btn&quot;);
+    ordersListBody.addEventListener("click", async (e) => {
+      const btn = e.target.closest("button.link-btn");
       if (!btn) return;
       const ord = btn.dataset.order;
       // mark as read (opened once) like mail behavior
-      ordersReadSet.add(String(ord || &quot;&quot;));
+      ordersReadSet.add(String(ord || ""));
       saveReadOrders();
 
       try { await navigator.clipboard.writeText(ord); } catch(e) { console.warn(e); }
       orderIdInput.value = ord;
-      vinInput.value = &quot;&quot;;
-      activateTab(&quot;search&quot;);
+      vinInput.value = "";
+      activateTab("search");
       loadOrder();
     });
 
     // زر توليد رابط التتبع
     if (trackLinkBtn) {
-      trackLinkBtn.addEventListener(&quot;click&quot;, async () =&gt; {
+      trackLinkBtn.addEventListener("click", async () => {
         if (!currentVin) {
-          alert(&quot;لم يتم اختيار رقم الهيكل.&quot;);
+          alert("لم يتم اختيار رقم الهيكل.");
           return;
         }
 
         const url = `https://mzj-tracking.vercel.app/Test-Track.html?vin=${encodeURIComponent(currentVin)}`;
 
         // فتح الرابط في تبويب جديد
-        window.open(url, &quot;_blank&quot;);
+        window.open(url, "_blank");
 
         // نسخ الرابط إلى الحافظة
-        if (navigator.clipboard &amp;&amp; navigator.clipboard.writeText) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
           try {
             await navigator.clipboard.writeText(url);
-            alert(&quot;تم نسخ رابط التتبع:\n&quot; + url);
+            alert("تم نسخ رابط التتبع:\n" + url);
           } catch (err) {
-            console.warn(&quot;لم يتم النسخ إلى الحافظة&quot;, err);
+            console.warn("لم يتم النسخ إلى الحافظة", err);
           }
         }
       });
@@ -4086,82 +4109,82 @@ if (ordersSearchInput) {
 
 
     // إدارة حالة تسجيل الدخول وتوزيع الواجهات
-    onAuthStateChanged(auth, (user) =&gt; {
+    onAuthStateChanged(auth, (user) => {
       if (user) {
         // مستخدم مسجل دخول
-        whoami.textContent = user.email || &quot;&quot;;
-        logoutBtn.style.display = &quot;inline-flex&quot;;
+        whoami.textContent = user.email || "";
+        logoutBtn.style.display = "inline-flex";
 
-        authCard.style.display = &quot;none&quot;;
-        tabsBar.style.display  = &quot;flex&quot;;
+        authCard.style.display = "none";
+        tabsBar.style.display  = "flex";
 
-        orderCard.style.display  = &quot;&quot;;
+        orderCard.style.display  = "";
         if (currentOrderId) {
-          erpCard.style.display    = &quot;&quot;;
-          stagesCard.style.display = &quot;&quot;;
+          erpCard.style.display    = "";
+          stagesCard.style.display = "";
         } else {
-          erpCard.style.display    = &quot;none&quot;;
-          stagesCard.style.display = &quot;none&quot;;
+          erpCard.style.display    = "none";
+          stagesCard.style.display = "none";
         }
-        ordersListCard.style.display = &quot;none&quot;;
+        ordersListCard.style.display = "none";
         refreshArchiveUI();
       } else {
         // لا يوجد مستخدم
-        whoami.textContent = &quot;&quot;;
-        logoutBtn.style.display = &quot;none&quot;;
+        whoami.textContent = "";
+        logoutBtn.style.display = "none";
 
-        authCard.style.display     = &quot;&quot;;
-        tabsBar.style.display      = &quot;none&quot;;
-        orderCard.style.display    = &quot;none&quot;;
-        erpCard.style.display      = &quot;none&quot;;
-        stagesCard.style.display   = &quot;none&quot;;
-        ordersListCard.style.display = &quot;none&quot;;
+        authCard.style.display     = "";
+        tabsBar.style.display      = "none";
+        orderCard.style.display    = "none";
+        erpCard.style.display      = "none";
+        stagesCard.style.display   = "none";
+        ordersListCard.style.display = "none";
         refreshArchiveUI();
       }
     });
 
     // زر تسجيل الدخول
-    loginBtn.addEventListener(&quot;click&quot;, async () =&gt; {
-      authMsg.textContent = &quot;&quot;;
-      const emailVal = (email.value || &quot;&quot;).trim();
-      const passVal  = (password.value || &quot;&quot;).trim();
+    loginBtn.addEventListener("click", async () => {
+      authMsg.textContent = "";
+      const emailVal = (email.value || "").trim();
+      const passVal  = (password.value || "").trim();
 
       if (!emailVal || !passVal) {
-        authMsg.innerHTML = &quot;&lt;span class=&#x27;err&#x27;&gt;أدخل البريد الإلكتروني وكلمة السر.&lt;/span&gt;&quot;;
+        authMsg.innerHTML = "<span class='err'>أدخل البريد الإلكتروني وكلمة السر.</span>";
         return;
       }
 
       try {
         await signInWithEmailAndPassword(auth, emailVal, passVal);
-        authMsg.innerHTML = &quot;&lt;span class=&#x27;ok&#x27;&gt;تم تسجيل الدخول بنجاح.&lt;/span&gt;&quot;;
+        authMsg.innerHTML = "<span class='ok'>تم تسجيل الدخول بنجاح.</span>";
       } catch (e) {
         console.error(e);
-        authMsg.innerHTML = &quot;&lt;span class=&#x27;err&#x27;&gt;تعذر تسجيل الدخول. تأكد من البيانات أو تواصل مع المسؤول.&lt;/span&gt;&quot;;
+        authMsg.innerHTML = "<span class='err'>تعذر تسجيل الدخول. تأكد من البيانات أو تواصل مع المسؤول.</span>";
       }
     });
 
     // زر إنشاء حساب جديد (للمشرف فقط)
-    if (signupBtn) signupBtn.addEventListener(&quot;click&quot;, async () =&gt; {
-      authMsg.textContent = &quot;&quot;;
-      const emailVal = (email.value || &quot;&quot;).trim();
-      const passVal  = (password.value || &quot;&quot;).trim();
+    if (signupBtn) signupBtn.addEventListener("click", async () => {
+      authMsg.textContent = "";
+      const emailVal = (email.value || "").trim();
+      const passVal  = (password.value || "").trim();
 
       if (!emailVal || !passVal) {
-        authMsg.innerHTML = &quot;&lt;span class=&#x27;err&#x27;&gt;أدخل البريد الإلكتروني وكلمة السر.&lt;/span&gt;&quot;;
+        authMsg.innerHTML = "<span class='err'>أدخل البريد الإلكتروني وكلمة السر.</span>";
         return;
       }
 
       try {
         await createUserWithEmailAndPassword(auth, emailVal, passVal);
-        authMsg.innerHTML = &quot;&lt;span class=&#x27;ok&#x27;&gt;تم إنشاء الحساب وتسجيل الدخول.&lt;/span&gt;&quot;;
+        authMsg.innerHTML = "<span class='ok'>تم إنشاء الحساب وتسجيل الدخول.</span>";
       } catch (e) {
         console.error(e);
-        authMsg.innerHTML = &quot;&lt;span class=&#x27;err&#x27;&gt;تعذر إنشاء الحساب. ربما يكون البريد مستخدم من قبل.&lt;/span&gt;&quot;;
+        authMsg.innerHTML = "<span class='err'>تعذر إنشاء الحساب. ربما يكون البريد مستخدم من قبل.</span>";
       }
     });
 
     // زر تسجيل الخروج
-    logoutBtn.addEventListener(&quot;click&quot;, async () =&gt; {
+    logoutBtn.addEventListener("click", async () => {
       try {
         await signOut(auth);
       } catch (e) {
@@ -4170,106 +4193,109 @@ if (ordersSearchInput) {
     });
 
     // تهيئة أولية للصفحة
-    tabsBar.style.display      = &quot;none&quot;;
-    orderCard.style.display    = &quot;none&quot;;
-    erpCard.style.display      = &quot;none&quot;;
-    stagesCard.style.display   = &quot;none&quot;;
-    ordersListCard.style.display = &quot;none&quot;;
+    tabsBar.style.display      = "none";
+    orderCard.style.display    = "none";
+    erpCard.style.display      = "none";
+    stagesCard.style.display   = "none";
+    ordersListCard.style.display = "none";
 
     clearErpTable();
     buildStagesUI({ });
 
-  &lt;/script&gt;
+  </script>
 
-&lt;script&gt;
+<script>
   // Topbar connection badge helper (non-invasive)
   (function(){
-    const who = document.getElementById(&#x27;whoami&#x27;);
-    const dot = document.getElementById(&#x27;connDot&#x27;);
-    const txt = document.getElementById(&#x27;connText&#x27;);
+    const who = document.getElementById('whoami');
+    const dot = document.getElementById('connDot');
+    const txt = document.getElementById('connText');
     function tick(){
-      const hasUser = who &amp;&amp; (who.textContent||&#x27;&#x27;).trim().length&gt;0;
-      if(dot) dot.className = &#x27;dot &#x27; + (hasUser ? &#x27;ok&#x27; : &#x27;warn&#x27;);
-      if(txt) txt.textContent = hasUser ? &#x27;متصل&#x27; : &#x27;غير مسجل&#x27;;
+      const hasUser = who && (who.textContent||'').trim().length>0;
+      if(dot) dot.className = 'dot ' + (hasUser ? 'ok' : 'warn');
+      if(txt) txt.textContent = hasUser ? 'متصل' : 'غير مسجل';
     }
     setInterval(tick, 700);
     setTimeout(tick, 50);
   })();
-&lt;/script&gt;
+</script>
 
-  &lt;script src=&quot;./mzj-ui.js&quot;&gt;&lt;/script&gt;
+  <script src="./mzj-ui.js"></script>
 
-      &lt;/div&gt;
-    &lt;/main&gt;
-  &lt;/div&gt;
-
-
-  &lt;!-- Message Modal (Edit before send) --&gt;
-  &lt;div id=&quot;msgModal&quot; style=&quot;display:none;position:fixed;inset:0;z-index:9999;&quot;&gt;
-    &lt;div id=&quot;msgModalBackdrop&quot; style=&quot;position:absolute;inset:0;background:rgba(0,0,0,.45);&quot;&gt;&lt;/div&gt;
-    &lt;div style=&quot;position:relative;max-width:680px;margin:7vh auto;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden;&quot;&gt;
-      &lt;div style=&quot;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid #e5e7eb;&quot;&gt;
-        &lt;div style=&quot;display:flex;align-items:center;gap:10px;&quot;&gt;
-          &lt;div style=&quot;width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:rgba(188,143,116,.16);color:var(--brown);font-weight:900;&quot;&gt;
-            &lt;i class=&quot;fa-solid fa-paper-plane&quot;&gt;&lt;/i&gt;
-          &lt;/div&gt;
-          &lt;div&gt;
-            &lt;div id=&quot;msgModalTitle&quot; style=&quot;font-weight:900;color:var(--brown);&quot;&gt;إرسال رسالة&lt;/div&gt;
-            &lt;div id=&quot;msgModalSub&quot; style=&quot;font-size:12px;color:var(--muted);margin-top:2px;&quot;&gt;—&lt;/div&gt;
-          &lt;/div&gt;
-        &lt;/div&gt;
-        &lt;button id=&quot;msgModalClose&quot; class=&quot;btn-outline&quot; type=&quot;button&quot; style=&quot;font-size:12px;&quot;&gt;إغلاق&lt;/button&gt;
-      &lt;/div&gt;
-
-      &lt;div style=&quot;padding:12px 14px;&quot;&gt;
-        &lt;label style=&quot;margin:0 0 6px 0;&quot;&gt;نص الرسالة (تقدر تعدّل قبل الإرسال)&lt;/label&gt;
-        &lt;textarea id=&quot;msgModalText&quot; rows=&quot;9&quot; style=&quot;width:100%;padding:10px 12px;border-radius:12px;border:1px solid #e5e7eb;background:#f9fafb;font-family:inherit;font-size:14px;outline:none;resize:vertical;&quot;&gt;&lt;/textarea&gt;
-        &lt;div style=&quot;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-top:10px;&quot;&gt;
-          &lt;div class=&quot;muted&quot; style=&quot;font-size:12px;&quot;&gt;
-            &lt;span class=&quot;badge&quot; id=&quot;msgModalChannel&quot;&gt;—&lt;/span&gt;
-            &lt;span class=&quot;badge&quot; id=&quot;msgModalPhone&quot;&gt;—&lt;/span&gt;
-            &lt;span class=&quot;badge&quot; id=&quot;msgModalVin&quot;&gt;—&lt;/span&gt;
-          &lt;/div&gt;
-          &lt;div style=&quot;display:flex;gap:8px;flex-wrap:wrap;&quot;&gt;
-            &lt;button id=&quot;msgModalCopy&quot; class=&quot;btn-outline&quot; type=&quot;button&quot; style=&quot;font-size:12px;&quot;&gt;&lt;i class=&quot;fa-regular fa-copy&quot;&gt;&lt;/i&gt; نسخ النص&lt;/button&gt;
-            &lt;button id=&quot;msgModalReset&quot; class=&quot;btn-outline&quot; type=&quot;button&quot; style=&quot;font-size:12px;&quot;&gt;&lt;i class=&quot;fa-solid fa-rotate-left&quot;&gt;&lt;/i&gt; رجوع للنص الأصلي&lt;/button&gt;
-            &lt;button id=&quot;msgModalSend&quot; class=&quot;btn&quot; type=&quot;button&quot; style=&quot;font-size:12px;&quot;&gt;&lt;i class=&quot;fa-solid fa-paper-plane&quot;&gt;&lt;/i&gt; إرسال&lt;/button&gt;
-          &lt;/div&gt;
-        &lt;/div&gt;
-        &lt;div id=&quot;msgModalMsg&quot; class=&quot;muted&quot; style=&quot;margin-top:8px;&quot;&gt;&lt;/div&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
-  &lt;/div&gt;
-
-  &lt;!-- Dynamic QR (Clickable) --&gt;
-  &lt;div id=&quot;trackQrModal&quot; style=&quot;display:none;position:fixed;inset:0;z-index:9998;&quot;&gt;
-    &lt;div id=&quot;trackQrBackdrop&quot; style=&quot;position:absolute;inset:0;background:rgba(0,0,0,.45);&quot;&gt;&lt;/div&gt;
-    &lt;div style=&quot;position:relative;max-width:420px;margin:10vh auto;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden;&quot;&gt;
-      &lt;div style=&quot;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid #e5e7eb;&quot;&gt;
-        &lt;div style=&quot;display:flex;align-items:center;gap:10px;&quot;&gt;
-          &lt;div style=&quot;width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:rgba(188,143,116,.16);color:var(--brown);font-weight:900;&quot;&gt;
-            &lt;i class=&quot;fa-solid fa-qrcode&quot;&gt;&lt;/i&gt;
-          &lt;/div&gt;
-          &lt;div&gt;
-            &lt;div style=&quot;font-weight:900;color:var(--brown);&quot;&gt;QR تتبع العميل&lt;/div&gt;
-            &lt;div id=&quot;trackQrSub&quot; style=&quot;font-size:12px;color:var(--muted);margin-top:2px;&quot;&gt;اضغط على الـ QR لفتح التتبع مباشرة&lt;/div&gt;
-          &lt;/div&gt;
-        &lt;/div&gt;
-        &lt;button id=&quot;trackQrClose&quot; class=&quot;btn-outline&quot; type=&quot;button&quot; style=&quot;font-size:12px;&quot;&gt;إغلاق&lt;/button&gt;
-      &lt;/div&gt;
-      &lt;div style=&quot;padding:14px;text-align:center;&quot;&gt;
-        &lt;a id=&quot;trackQrLink&quot; href=&quot;#&quot; target=&quot;_blank&quot; style=&quot;display:inline-block;text-decoration:none;&quot;&gt;
-          &lt;img id=&quot;trackQrImg&quot; alt=&quot;QR Tracking&quot; style=&quot;width:240px;height:240px;border-radius:14px;border:1px solid #e5e7eb;background:#fff;&quot;/&gt;
-        &lt;/a&gt;
-        &lt;div class=&quot;hint&quot; style=&quot;margin-top:10px;&quot;&gt;رابط التتبع: &lt;button id=&quot;trackQrCopy&quot; class=&quot;link-btn&quot; type=&quot;button&quot;&gt;نسخ الرابط&lt;/button&gt;&lt;/div&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
-  &lt;/div&gt;
-
-&lt;/body&gt;
-&lt;/html&gt;
-"></iframe>
+      </div>
+    </main>
   </div>
+
+
+  <!-- Message Modal (Edit before send) -->
+  <div id="msgModal" style="display:none;position:fixed;inset:0;z-index:9999;">
+    <div id="msgModalBackdrop" style="position:absolute;inset:0;background:rgba(0,0,0,.45);"></div>
+    <div style="position:relative;max-width:680px;margin:7vh auto;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid #e5e7eb;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:rgba(188,143,116,.16);color:var(--brown);font-weight:900;">
+            <i class="fa-solid fa-paper-plane"></i>
+          </div>
+          <div>
+            <div id="msgModalTitle" style="font-weight:900;color:var(--brown);">إرسال رسالة</div>
+            <div id="msgModalSub" style="font-size:12px;color:var(--muted);margin-top:2px;">—</div>
+          </div>
+        </div>
+        <button id="msgModalClose" class="btn-outline" type="button" style="font-size:12px;">إغلاق</button>
+      </div>
+
+      <div style="padding:12px 14px;">
+        <label style="margin:0 0 6px 0;">نص الرسالة (تقدر تعدّل قبل الإرسال)</label>
+        <textarea id="msgModalText" rows="9" style="width:100%;padding:10px 12px;border-radius:12px;border:1px solid #e5e7eb;background:#f9fafb;font-family:inherit;font-size:14px;outline:none;resize:vertical;"></textarea>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-top:10px;">
+          <div class="muted" style="font-size:12px;">
+            <span class="badge" id="msgModalChannel">—</span>
+            <span class="badge" id="msgModalPhone">—</span>
+            <span class="badge" id="msgModalVin">—</span>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button id="msgModalCopy" class="btn-outline" type="button" style="font-size:12px;"><i class="fa-regular fa-copy"></i> نسخ النص</button>
+            <button id="msgModalReset" class="btn-outline" type="button" style="font-size:12px;"><i class="fa-solid fa-rotate-left"></i> رجوع للنص الأصلي</button>
+            <button id="msgModalSend" class="btn" type="button" style="font-size:12px;"><i class="fa-solid fa-paper-plane"></i> إرسال</button>
+          </div>
+        </div>
+        <div id="msgModalMsg" class="muted" style="margin-top:8px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dynamic QR (Clickable) -->
+  <div id="trackQrModal" style="display:none;position:fixed;inset:0;z-index:9998;">
+    <div id="trackQrBackdrop" style="position:absolute;inset:0;background:rgba(0,0,0,.45);"></div>
+    <div style="position:relative;max-width:420px;margin:10vh auto;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid #e5e7eb;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:rgba(188,143,116,.16);color:var(--brown);font-weight:900;">
+            <i class="fa-solid fa-qrcode"></i>
+          </div>
+          <div>
+            <div style="font-weight:900;color:var(--brown);">QR تتبع العميل</div>
+            <div id="trackQrSub" style="font-size:12px;color:var(--muted);margin-top:2px;">اضغط على الـ QR لفتح التتبع مباشرة</div>
+          </div>
+        </div>
+        <button id="trackQrClose" class="btn-outline" type="button" style="font-size:12px;">إغلاق</button>
+      </div>
+      <div style="padding:14px;text-align:center;">
+        <a id="trackQrLink" href="#" target="_blank" style="display:inline-block;text-decoration:none;">
+          <img id="trackQrImg" alt="QR Tracking" style="width:240px;height:240px;border-radius:14px;border:1px solid #e5e7eb;background:#fff;"/>
+        </a>
+        <div class="hint" style="margin-top:10px;">رابط التتبع: <button id="trackQrCopy" class="link-btn" type="button">نسخ الرابط</button></div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
+
+            </template>
+          </div>
+        </div>
+
 </div>
         </div>
 
@@ -6540,12 +6566,26 @@ if (ordersSearchInput) {
 
     // ===== UI: Tabs =====
     const tabs = Array.from(document.querySelectorAll('.tab'));
+
+    // ===== Tracking iframe (inject srcdoc safely) =====
+    let __trackingLoaded = false;
+    function ensureTrackingLoaded(){
+      if(__trackingLoaded) return;
+      const frame = document.getElementById('trackingFrame');
+      const tpl = document.getElementById('trackingSrc');
+      if(!frame || !tpl) return;
+      // Inject once to avoid GitHub/HTML attribute parsing issues with long srcdoc
+      frame.srcdoc = tpl.innerHTML;
+      __trackingLoaded = true;
+    }
+
     function openView(viewId){
       tabs.forEach(t=>t.classList.toggle('active', t.dataset.view===viewId));
       document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.id===viewId));
       if(viewId==='view-inventory') startInventoryLive();
       else stopInventoryLive();
       if(viewId==='view-dashboard'){ startDashboardLive(); startDashCardsLive(); } else stopDashboardLive();
+      if(viewId==='view-tracking') ensureTrackingLoaded();
     }
     tabs.forEach(t=>t.addEventListener('click', ()=>openView(t.dataset.view)));
 

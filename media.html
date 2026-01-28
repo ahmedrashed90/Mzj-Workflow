@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl" data-theme="light">
 <head>
@@ -289,6 +290,27 @@ th.col-year, td.col-year {
   .filter-grid{grid-template-columns:1fr!important;}
   .filter-grid .search{grid-column:span 1!important;}
 }
+</style>
+
+
+<style id="mzj-embed-mode">
+  /* Embed Mode: hide sidebar/navigation only when ?embed=1 */
+  html.embed-mode .mzj-sidebar,
+  html.embed-mode aside,
+  html.embed-mode nav,
+  html.embed-mode .side-nav,
+  html.embed-mode .side-section {
+    display: none !important;
+  }
+
+  html.embed-mode .mzj-shell {
+    grid-template-columns: 1fr !important;
+  }
+
+  html.embed-mode .mzj-content {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
 </style>
 
 </head>
@@ -1253,6 +1275,18 @@ function getMedia(docId){
   }
 
   setStatus('warn','جارِ الاتصال…');
+</script>
+
+
+<script>
+  (function () {
+    try {
+      var p = new URLSearchParams(window.location.search);
+      if (p.get('embed') === '1') {
+        document.documentElement.classList.add('embed-mode');
+      }
+    } catch (e) {}
+  })();
 </script>
 
 </body>
